@@ -11,7 +11,7 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 1,
-      title: Column(
+      title: const Column(
         children: [
           CircleAvatar(
             radius: 25,
@@ -19,8 +19,8 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               'https://via.placeholder.com/50',
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Sergeant Whitaker',
             style: TextStyle(
               color: Colors.black,
@@ -28,14 +28,14 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Text(
+          Text(
             'Get motivated and unleash your greatness',
             style: TextStyle(
               color: Colors.grey,
               fontSize: 12,
             ),
           ),
-          const Text(
+          Text(
             'By @cai-official',
             style: TextStyle(
               color: Colors.grey,

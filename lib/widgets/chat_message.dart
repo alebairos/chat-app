@@ -19,7 +19,7 @@ class ChatMessage extends StatelessWidget {
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(
+            const CircleAvatar(
               backgroundImage: NetworkImage('https://via.placeholder.com/40'),
             ),
             const SizedBox(width: 8),
