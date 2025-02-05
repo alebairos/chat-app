@@ -51,6 +51,7 @@ lib/generated_plugin_registrant.dart
 .env
 *.env
 .env.*
+!.env.example
 
 # Android related
 **/android/**/gradle-wrapper.jar
