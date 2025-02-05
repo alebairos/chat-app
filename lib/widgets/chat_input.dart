@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'audio_recorder.dart';
 
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
@@ -61,16 +62,7 @@ class ChatInput extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[200],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.phone),
-              onPressed: () {},
-            ),
-          ),
+          const AudioRecorder(),
         ],
       ),
     );

@@ -19,8 +19,10 @@ class ChatMessage extends StatelessWidget {
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            const CircleAvatar(
-              backgroundImage: NetworkImage('https://via.placeholder.com/40'),
+            CircleAvatar(
+              backgroundImage: const NetworkImage(
+                'https://api.dicebear.com/7.x/bottts/png?seed=sergeant-oracle',
+              ),
             ),
             const SizedBox(width: 8),
           ],

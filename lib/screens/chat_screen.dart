@@ -105,8 +105,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundImage:
-                              NetworkImage('https://via.placeholder.com/40'),
+                          backgroundImage: NetworkImage(
+                            'https://api.dicebear.com/7.x/bottts/png?seed=sergeant-oracle',
+                          ),
                         ),
                         SizedBox(width: 8),
                         Text('Claude is typing...'),
