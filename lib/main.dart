@@ -5,7 +5,11 @@ import 'screens/chat_screen.dart';
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    await dotenv.load(fileName: ".env");
+    await dotenv.load(
+      fileName: ".env",
+      isOptional: true,
+      mergeWith: {'ENCODING': 'UTF-8'},
+    );
     runApp(const ChatApp());
   } catch (e) {
     print('Error during initialization: $e');

@@ -15,7 +15,8 @@ class ClaudeService {
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json; charset=utf-8',
           'x-api-key': _apiKey,
           'anthropic-version': '2023-06-01',
         },
@@ -29,10 +30,11 @@ class ClaudeService {
             }
           ],
         }),
+        encoding: utf8,
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         return data['content'][0]['text'];
       } else {
         throw Exception('Failed to get response from Claude: ${response.body}');
