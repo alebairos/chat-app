@@ -3,13 +3,13 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.3
+Current version: v1.0.4
 
 ## Features
 
 - Real-time chat interface
 - AI-powered responses using Claude API
-- Basic audio notes support
+- Audio messages with OpenAI Whisper transcription
 - Clean and intuitive UI
 
 ## Setup
@@ -32,6 +32,13 @@ This project is built with Flutter. For help getting started with Flutter develo
 - [Flutter Cookbook](https://docs.flutter.dev/cookbook)
 
 ## Changelog
+
+### v1.0.4
+- Improved audio message UI with duration display
+- Switched from Vosk to OpenAI Whisper for transcription
+- Unified message styling with grey background
+- Enhanced audio controls UI
+- Fixed UTF-8 encoding in responses
 
 ### v1.0.3
 - Audio Message implementation
