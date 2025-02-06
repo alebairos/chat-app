@@ -72,13 +72,14 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _handleAudioMessage(String audioPath) {
+  void _handleAudioMessage(String audioPath, Duration duration) {
     setState(() {
       _messages.add(
         ChatMessage(
-          text: '', // Empty for audio messages
+          text: '',
           isUser: true,
           audioPath: audioPath,
+          duration: duration,
         ),
       );
     });

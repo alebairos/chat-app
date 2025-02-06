@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:async';
 
 class AudioRecorder extends StatefulWidget {
-  final Function(String path)? onSendAudio;
+  final Function(String path, Duration duration)? onSendAudio;
 
   const AudioRecorder({
     this.onSendAudio,
@@ -21,6 +22,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
   bool _isRecording = false;
   bool _isPlaying = false;
   String? _recordedFilePath;
+  Duration _recordDuration = Duration.zero;
+  Timer? _recordingTimer;
 
   @override
   void initState() {
@@ -43,6 +46,10 @@ class _AudioRecorderState extends State<AudioRecorder> {
           samplingRate: 44100,
         );
 
+        _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          setState(() => _recordDuration += const Duration(seconds: 1));
+        });
+
         setState(() {
           _isRecording = true;
           _recordedFilePath = filePath;
@@ -55,6 +62,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   Future<void> _stopRecording() async {
     try {
+      _recordingTimer?.cancel();
       await _audioRecorder.stop();
       setState(() => _isRecording = false);
     } catch (e) {
@@ -80,8 +88,11 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   Future<void> _sendAudio() async {
     if (_recordedFilePath != null) {
-      widget.onSendAudio?.call(_recordedFilePath!);
-      setState(() => _recordedFilePath = null);
+      widget.onSendAudio?.call(_recordedFilePath!, _recordDuration);
+      setState(() {
+        _recordedFilePath = null;
+        _recordDuration = Duration.zero;
+      });
     }
   }
 
@@ -137,6 +148,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   @override
   void dispose() {
+    _recordingTimer?.cancel();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
     super.dispose();

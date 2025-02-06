@@ -5,12 +5,14 @@ class ChatMessage extends StatelessWidget {
   final String text;
   final bool isUser;
   final String? audioPath;
+  final Duration? duration;
 
   const ChatMessage({
     super.key,
     required this.text,
     required this.isUser,
     this.audioPath,
+    this.duration,
   });
 
   @override
@@ -34,6 +36,7 @@ class ChatMessage extends StatelessWidget {
                 ? AudioMessage(
                     audioPath: audioPath!,
                     isUser: isUser,
+                    duration: duration ?? Duration.zero,
                   )
                 : Container(
                     padding: const EdgeInsets.all(12),

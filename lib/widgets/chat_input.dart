@@ -4,7 +4,7 @@ import 'audio_recorder.dart';
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
-  final Function(String path) onSendAudio;
+  final Function(String path, Duration duration) onSendAudio;
 
   const ChatInput({
     super.key,
