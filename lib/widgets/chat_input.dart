@@ -4,11 +4,13 @@ import 'audio_recorder.dart';
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
+  final Function(String path) onSendAudio;
 
   const ChatInput({
     super.key,
     required this.controller,
     required this.onSend,
+    required this.onSendAudio,
   });
 
   @override
@@ -62,7 +64,9 @@ class ChatInput extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          const AudioRecorder(),
+          AudioRecorder(
+            onSendAudio: onSendAudio,
+          ),
         ],
       ),
     );

@@ -72,6 +72,18 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _handleAudioMessage(String audioPath) {
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          text: '', // Empty for audio messages
+          isUser: true,
+          audioPath: audioPath,
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,6 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ChatInput(
                   controller: _messageController,
                   onSend: _sendMessage,
+                  onSendAudio: _handleAudioMessage,
                 ),
                 Container(
                   padding: const EdgeInsets.all(8.0),

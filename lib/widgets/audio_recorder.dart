@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class AudioRecorder extends StatefulWidget {
-  const AudioRecorder({super.key});
+  final Function(String path)? onSendAudio;
+
+  const AudioRecorder({
+    this.onSendAudio,
+    super.key,
+  });
 
   @override
   State<AudioRecorder> createState() => _AudioRecorderState();
@@ -76,7 +80,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   Future<void> _sendAudio() async {
     if (_recordedFilePath != null) {
-      debugPrint('Sending audio file: $_recordedFilePath');
+      widget.onSendAudio?.call(_recordedFilePath!);
       setState(() => _recordedFilePath = null);
     }
   }
