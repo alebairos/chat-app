@@ -3,19 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/chat_screen.dart';
 
 Future<void> main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
-    await dotenv.load(
-      fileName: ".env",
-      isOptional: true,
-      mergeWith: {'ENCODING': 'UTF-8'},
-    );
-    runApp(const ChatApp());
-  } catch (e) {
-    print('Error during initialization: $e');
-    // Still run the app even if .env fails to load
-    runApp(const ChatApp());
-  }
+  await dotenv.load(fileName: '.env');
+  runApp(const ChatApp());
 }
 
 class ChatApp extends StatelessWidget {

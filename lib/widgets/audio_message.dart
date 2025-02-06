@@ -4,13 +4,13 @@ import 'package:audioplayers/audioplayers.dart';
 class AudioMessage extends StatefulWidget {
   final String audioPath;
   final bool isUser;
-  final String? transcription;
+  final String transcription;
   final Duration duration;
 
   const AudioMessage({
     required this.audioPath,
     required this.isUser,
-    this.transcription,
+    required this.transcription,
     required this.duration,
     super.key,
   });
@@ -48,15 +48,16 @@ class _AudioMessageState extends State<AudioMessage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: widget.isUser ? Colors.blue : Colors.grey[200],
+        color: Colors.grey[200],
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Audio controls in a more subtle color
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -64,28 +65,30 @@ class _AudioMessageState extends State<AudioMessage> {
                 onPressed: _togglePlayback,
                 icon: Icon(
                   _isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: widget.isUser ? Colors.white : Colors.black,
+                  color: Colors.grey[700],
                 ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${widget.duration.inMinutes}:${(widget.duration.inSeconds % 60).toString().padLeft(2, '0')}',
                 style: TextStyle(
-                  color: widget.isUser ? Colors.white70 : Colors.black54,
+                  color: Colors.grey[600],
+                  fontSize: 12,
                 ),
               ),
             ],
           ),
-          if (widget.transcription != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 4),
-              child: Text(
-                widget.transcription!,
-                style: TextStyle(
-                  color: widget.isUser ? Colors.white70 : Colors.black87,
-                  fontSize: 12,
-                ),
-              ),
+          const SizedBox(height: 4),
+          // Transcription text
+          Text(
+            widget.transcription,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 14,
             ),
+          ),
         ],
       ),
     );

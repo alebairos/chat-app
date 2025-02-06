@@ -4,6 +4,7 @@ import '../widgets/chat_input.dart';
 import '../widgets/chat_app_bar.dart';
 import '../services/claude_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/transcription_service.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -18,6 +19,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final ClaudeService _claudeService = ClaudeService();
   bool _isTyping = false;
   String? _error;
+  final OpenAITranscriptionService _transcriptionService =
+      OpenAITranscriptionService();
 
   @override
   void initState() {
@@ -72,17 +75,41 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _handleAudioMessage(String audioPath, Duration duration) {
+  void _handleAudioMessage(String audioPath, Duration duration) async {
     setState(() {
       _messages.add(
         ChatMessage(
-          text: '',
+          text: 'Transcribing...',
           isUser: true,
           audioPath: audioPath,
           duration: duration,
         ),
       );
     });
+
+    final transcription =
+        await _transcriptionService.transcribeAudio(audioPath);
+
+    setState(() {
+      _messages.last = _messages.last.copyWith(
+        text: transcription,
+      );
+    });
+
+    // Send transcription to Claude with audio context
+    try {
+      final response = await _claudeService.sendMessage(transcription);
+      setState(() {
+        _messages.add(
+          ChatMessage(
+            text: response,
+            isUser: false,
+          ),
+        );
+      });
+    } catch (e) {
+      debugPrint('Error sending to Claude: $e');
+    }
   }
 
   @override

@@ -87,3 +87,6 @@ lib/generated_plugin_registrant.dart
 **/ios/Flutter/flutter_assets/
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
+
+# Vosk model files
+assets/models/

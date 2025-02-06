@@ -8,12 +8,26 @@ class ChatMessage extends StatelessWidget {
   final Duration? duration;
 
   const ChatMessage({
-    super.key,
     required this.text,
     required this.isUser,
     this.audioPath,
     this.duration,
+    super.key,
   });
+
+  ChatMessage copyWith({
+    String? text,
+    bool? isUser,
+    String? audioPath,
+    Duration? duration,
+  }) {
+    return ChatMessage(
+      text: text ?? this.text,
+      isUser: isUser ?? this.isUser,
+      audioPath: audioPath ?? this.audioPath,
+      duration: duration ?? this.duration,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +50,7 @@ class ChatMessage extends StatelessWidget {
                 ? AudioMessage(
                     audioPath: audioPath!,
                     isUser: isUser,
+                    transcription: text,
                     duration: duration ?? Duration.zero,
                   )
                 : Container(

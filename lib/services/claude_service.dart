@@ -21,7 +21,7 @@ class ClaudeService {
           'anthropic-version': '2023-06-01',
         },
         body: jsonEncode({
-          'model': 'claude-3-sonnet-20240229',
+          'model': 'claude-3-opus-20240229',
           'max_tokens': 1024,
           'messages': [
             {
@@ -36,9 +36,9 @@ class ClaudeService {
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         return data['content'][0]['text'];
-      } else {
-        throw Exception('Failed to get response from Claude: ${response.body}');
       }
+
+      throw Exception('Failed to get response from Claude: ${response.body}');
     } catch (e) {
       return 'Error: Unable to connect to Claude: $e';
     }
