@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'audio_message.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ChatMessage extends StatelessWidget {
   final String text;
   final bool isUser;
   final String? audioPath;
   final Duration? duration;
+  final bool isTest;
 
   const ChatMessage({
     required this.text,
     required this.isUser,
     this.audioPath,
     this.duration,
+    this.isTest = false,
     super.key,
   });
 
@@ -20,12 +23,14 @@ class ChatMessage extends StatelessWidget {
     bool? isUser,
     String? audioPath,
     Duration? duration,
+    bool? isTest,
   }) {
     return ChatMessage(
       text: text ?? this.text,
       isUser: isUser ?? this.isUser,
       audioPath: audioPath ?? this.audioPath,
       duration: duration ?? this.duration,
+      isTest: isTest ?? this.isTest,
     );
   }
 
@@ -38,11 +43,15 @@ class ChatMessage extends StatelessWidget {
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            const CircleAvatar(
-              backgroundImage: NetworkImage(
-                'https://api.dicebear.com/7.x/bottts/png?seed=sergeant-oracle',
-              ),
-            ),
+            isTest
+                ? const SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Placeholder(),
+                  )
+                : const CircleAvatar(
+                    backgroundImage: AssetImage('assets/images/avatar.png'),
+                  ),
             const SizedBox(width: 8),
           ],
           Flexible(
@@ -59,10 +68,12 @@ class ChatMessage extends StatelessWidget {
                       color: isUser ? Colors.blue : Colors.grey[200],
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      text,
-                      style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black,
+                    child: MarkdownBody(
+                      data: text,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          color: isUser ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
                   ),
