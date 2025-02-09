@@ -8,9 +8,12 @@ class OpenAITranscriptionService {
   static const String _baseUrl =
       'https://api.openai.com/v1/audio/transcriptions';
   final String _apiKey;
+  final http.Client _client;
   bool _initialized = false;
 
-  OpenAITranscriptionService() : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '' {
+  OpenAITranscriptionService({http.Client? client})
+      : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '',
+        _client = client ?? http.Client() {
     _initialized = _apiKey.isNotEmpty;
   }
 
@@ -29,14 +32,16 @@ class OpenAITranscriptionService {
 
       final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
         ..headers['Authorization'] = 'Bearer $_apiKey'
+        ..headers['Accept'] = 'application/json; charset=utf-8'
+        ..headers['Content-Type'] = 'multipart/form-data; charset=utf-8'
         ..files.add(await http.MultipartFile.fromPath('file', audioPath))
         ..fields['model'] = 'whisper-1';
 
-      final response = await request.send();
-      final responseData = await response.stream.bytesToString();
+      final streamedResponse = await _client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(responseData);
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         return jsonResponse['text'] ?? 'No transcription available';
       }
       return 'Transcription failed: ${response.statusCode}';

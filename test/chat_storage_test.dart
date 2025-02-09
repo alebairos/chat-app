@@ -321,4 +321,69 @@ void main() {
       );
     });
   });
+
+  group('Concurrency Tests', () {
+    test('maintains message order during concurrent saves', () async {
+      final futures = <Future>[];
+
+      // Simulate multiple concurrent message saves
+      for (var i = 0; i < 5; i++) {
+        futures.add(storage.saveMessage(
+          text: 'Concurrent message $i',
+          isUser: true,
+          type: MessageType.text,
+        ));
+        // Force a small delay to ensure concurrent execution
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+
+      // Wait for all saves to complete
+      await Future.wait(futures);
+
+      // Verify messages are in correct order
+      final messages = await storage.getMessages();
+      expect(messages.length, 5);
+
+      // Verify timestamps are in descending order
+      for (var i = 0; i < messages.length - 1; i++) {
+        expect(
+          messages[i].timestamp.isAfter(messages[i + 1].timestamp),
+          true,
+          reason: 'Messages should be in reverse chronological order',
+        );
+      }
+    });
+
+    test('handles concurrent delete and edit operations', () async {
+      // Create a message to test with
+      await storage.saveMessage(
+        text: 'Original message',
+        isUser: true,
+        type: MessageType.text,
+      );
+
+      final messages = await storage.getMessages();
+      final messageId = messages.first.id;
+
+      // Simulate concurrent delete and edit
+      final futures = <Future>[
+        storage.deleteMessage(messageId),
+        storage.saveMessage(
+          text: 'Edited message',
+          isUser: true,
+          type: MessageType.text,
+        ),
+      ];
+
+      await Future.wait(futures);
+
+      // Verify message was deleted
+      final afterOperations = await storage.getMessages();
+      expect(
+        afterOperations.any((m) => m.id == messageId),
+        false,
+        reason: 'Original message should be deleted',
+      );
+    });
+  });
 }

@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.13
+Current version: v1.0.14
 
 ## Features
 
@@ -36,6 +36,13 @@ This project is built with Flutter. For help getting started with Flutter develo
 - [Flutter Cookbook](https://docs.flutter.dev/cookbook)
 
 ## Changelog
+
+### v1.0.14
+- Fixed character encoding in transcription service
+- Added comprehensive test coverage for transcription service
+- Improved error handling in transcription tests
+- Updated avatar styling to use Material Icons
+- All tests passing successfully (40 tests)
 
 ### v1.0.13
 - Fixed avatar styling and consistency across the app

@@ -54,7 +54,8 @@ class ChatMessage extends StatelessWidget {
                     child: Placeholder(),
                   )
                 : const CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/avatar.png'),
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.military_tech, color: Colors.white),
                   ),
             const SizedBox(width: 8),
           ],

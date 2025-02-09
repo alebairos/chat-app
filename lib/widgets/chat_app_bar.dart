@@ -9,9 +9,8 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: const Row(
         children: [
           CircleAvatar(
-            backgroundImage: AssetImage('assets/images/avatar.png'),
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.smart_toy, color: Colors.white),
+            backgroundColor: Colors.deepPurple,
+            child: Icon(Icons.military_tech, color: Colors.white),
           ),
           SizedBox(width: 8),
           Text('Sergeant Oracle'),
