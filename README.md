@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.11
+Current version: v1.0.13
 
 ## Features
 
@@ -36,6 +36,21 @@ This project is built with Flutter. For help getting started with Flutter develo
 - [Flutter Cookbook](https://docs.flutter.dev/cookbook)
 
 ## Changelog
+
+### v1.0.13
+- Fixed avatar styling and consistency across the app
+- Improved message editing functionality
+- Fixed message menu actions (copy, edit, delete)
+- Enhanced scroll behavior for new messages
+- All tests passing successfully
+
+### v1.0.12
+- Added message editing functionality
+- Added message menu with copy, edit, delete, and report options
+- Fixed pagination and message ordering issues
+- Added comprehensive tests for message editing
+- Fixed message deletion tests
+- Improved error handling in storage service
 
 ### v1.0.11
 - Added loading states and visual feedback
