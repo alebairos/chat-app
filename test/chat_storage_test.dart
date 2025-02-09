@@ -203,5 +203,122 @@ void main() {
       expect(oldMessages.length, 1);
       expect(oldMessages.first.text, 'Old message');
     });
+
+    test('handles pagination correctly', () async {
+      // Create 25 messages
+      for (var i = 0; i < 25; i++) {
+        await storage.saveMessage(
+          text: 'Message $i',
+          isUser: true,
+          type: MessageType.text,
+        );
+        // Add small delay to ensure distinct timestamps
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+
+      // Get first page (20 messages)
+      final firstPage = await storage.getMessages(limit: 20);
+      expect(firstPage.length, 20);
+      expect(firstPage.first.text, 'Message 24');
+      expect(firstPage.last.text, 'Message 5');
+
+      // Get second page using last message timestamp
+      final secondPage = await storage.getMessages(
+        limit: 20,
+        before: firstPage.last.timestamp,
+      );
+      expect(secondPage.length, 5);
+      expect(secondPage.first.text, 'Message 4');
+      expect(secondPage.last.text, 'Message 0');
+    });
+
+    test('handles empty pages gracefully', () async {
+      // Create 5 messages
+      for (var i = 0; i < 5; i++) {
+        await storage.saveMessage(
+          text: 'Message $i',
+          isUser: true,
+          type: MessageType.text,
+        );
+      }
+
+      // Get first page
+      final firstPage = await storage.getMessages(limit: 10);
+      expect(firstPage.length, 5);
+
+      // Try to get second page
+      final secondPage = await storage.getMessages(
+        limit: 10,
+        before: firstPage.last.timestamp,
+      );
+      expect(secondPage.isEmpty, true);
+    });
+
+    test('maintains message order during pagination', () async {
+      final timestamps = <DateTime>[];
+
+      // Create 30 messages with controlled timestamps
+      for (var i = 0; i < 30; i++) {
+        final timestamp = DateTime.now();
+        timestamps.add(timestamp);
+
+        await storage.saveMessage(
+          text: 'Message $i',
+          isUser: true,
+          type: MessageType.text,
+        );
+
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+
+      // Get messages in pages
+      final page1 = await storage.getMessages(limit: 10);
+      final page2 = await storage.getMessages(
+        limit: 10,
+        before: page1.last.timestamp,
+      );
+      final page3 = await storage.getMessages(
+        limit: 10,
+        before: page2.last.timestamp,
+      );
+
+      // Verify each page has correct size
+      expect(page1.length, 10);
+      expect(page2.length, 10);
+      expect(page3.length, 10);
+
+      // Verify messages are in correct order
+      for (var i = 0; i < 9; i++) {
+        expect(
+          page1[i].timestamp.isAfter(page1[i + 1].timestamp),
+          true,
+          reason: 'Messages in page 1 should be in descending order',
+        );
+        expect(
+          page2[i].timestamp.isAfter(page2[i + 1].timestamp),
+          true,
+          reason: 'Messages in page 2 should be in descending order',
+        );
+        expect(
+          page3[i].timestamp.isAfter(page3[i + 1].timestamp),
+          true,
+          reason: 'Messages in page 3 should be in descending order',
+        );
+      }
+
+      // Verify page boundaries
+      expect(
+        page1.last.timestamp.isAfter(page2.first.timestamp),
+        true,
+        reason:
+            'Last message of page 1 should be newer than first message of page 2',
+      );
+      expect(
+        page2.last.timestamp.isAfter(page3.first.timestamp),
+        true,
+        reason:
+            'Last message of page 2 should be newer than first message of page 3',
+      );
+    });
   });
 }

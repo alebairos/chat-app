@@ -4,47 +4,50 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomChatAppBar({super.key});
 
   @override
-  Size get preferredSize => const Size.fromHeight(120);
-
-  @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 1,
-      title: const Column(
+      title: const Row(
         children: [
           CircleAvatar(
-            radius: 25,
-            backgroundImage: NetworkImage(
-              'https://api.dicebear.com/7.x/bottts/png?seed=sergeant-oracle',
-            ),
+            backgroundImage: AssetImage('assets/images/avatar.png'),
+            backgroundColor: Colors.grey,
+            child: Icon(Icons.smart_toy, color: Colors.white),
           ),
-          SizedBox(height: 8),
-          Text(
-            'Sergeant Oracle',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            'Get motivated and unleash your greatness',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
-          ),
-          Text(
-            'By @cai-official',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
-          ),
+          SizedBox(width: 8),
+          Text('Sergeant Oracle'),
         ],
       ),
-      toolbarHeight: 120,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.info_outline),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('About Sergeant Oracle'),
+                content: const Text(
+                  'Sergeant Oracle is an AI assistant powered by Claude. '
+                  'It combines ancient Roman wisdom with futuristic insights.\n\n'
+                  'You can:\n'
+                  '• Send text messages\n'
+                  '• Record audio messages\n'
+                  '• Long press your messages to delete them\n'
+                  '• Scroll up to load older messages',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

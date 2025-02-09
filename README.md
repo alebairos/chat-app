@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.10
+Current version: v1.0.11
 
 ## Features
 
@@ -11,6 +11,8 @@ Current version: v1.0.10
 - AI-powered responses using Claude API
 - Audio messages with OpenAI Whisper transcription
 - Local message storage with Isar Database
+- Message deletion and search functionality
+- Infinite scroll pagination
 - Clean and intuitive UI
 
 ## Setup
@@ -34,6 +36,16 @@ This project is built with Flutter. For help getting started with Flutter develo
 - [Flutter Cookbook](https://docs.flutter.dev/cookbook)
 
 ## Changelog
+
+### v1.0.11
+- Added loading states and visual feedback
+- Improved error handling with user-friendly messages
+- Added infinite scroll pagination UI
+- Added message deletion UI with long press
+- Added empty state and loading indicators
+- Added info dialog with usage instructions
+- Added comprehensive UI tests
+- Fixed avatar image issues
 
 ### v1.0.10
 - Added local storage implementation with Isar Database

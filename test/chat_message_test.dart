@@ -302,5 +302,49 @@ void main() {
       // Verify duration is displayed correctly
       expect(find.text('0:30'), findsOneWidget);
     });
+
+    testWidgets('supports message deletion for user messages', (tester) async {
+      bool deletePressed = false;
+      final userMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Deletable message',
+            isUser: true,
+            isTest: true,
+            onDelete: () => deletePressed = true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(userMessage);
+      await tester.pumpAndSettle();
+
+      // Long press should trigger delete
+      await tester.longPress(find.text('Deletable message'));
+      expect(deletePressed, isTrue,
+          reason: 'Delete callback should be triggered');
+    });
+
+    testWidgets('prevents deletion of non-user messages', (tester) async {
+      bool deletePressed = false;
+      final botMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Bot message',
+            isUser: false,
+            isTest: true,
+            onDelete: () => deletePressed = true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(botMessage);
+      await tester.pumpAndSettle();
+
+      // Long press should not trigger delete for bot messages
+      await tester.longPress(find.text('Bot message'));
+      expect(deletePressed, isFalse,
+          reason: 'Delete callback should not be triggered for bot messages');
+    });
   });
 }

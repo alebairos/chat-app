@@ -8,6 +8,7 @@ class ChatMessage extends StatelessWidget {
   final String? audioPath;
   final Duration? duration;
   final bool isTest;
+  final VoidCallback? onDelete;
 
   const ChatMessage({
     required this.text,
@@ -15,6 +16,7 @@ class ChatMessage extends StatelessWidget {
     this.audioPath,
     this.duration,
     this.isTest = false,
+    this.onDelete,
     super.key,
   });
 
@@ -24,6 +26,7 @@ class ChatMessage extends StatelessWidget {
     String? audioPath,
     Duration? duration,
     bool? isTest,
+    VoidCallback? onDelete,
   }) {
     return ChatMessage(
       text: text ?? this.text,
@@ -31,6 +34,7 @@ class ChatMessage extends StatelessWidget {
       audioPath: audioPath ?? this.audioPath,
       duration: duration ?? this.duration,
       isTest: isTest ?? this.isTest,
+      onDelete: onDelete ?? this.onDelete,
     );
   }
 
@@ -55,28 +59,31 @@ class ChatMessage extends StatelessWidget {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: audioPath != null
-                ? AudioMessage(
-                    audioPath: audioPath!,
-                    isUser: isUser,
-                    transcription: text,
-                    duration: duration ?? Duration.zero,
-                  )
-                : Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUser ? Colors.blue : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: MarkdownBody(
-                      data: text,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(
-                          color: isUser ? Colors.white : Colors.black,
+            child: GestureDetector(
+              onLongPress: isUser ? onDelete : null,
+              child: audioPath != null
+                  ? AudioMessage(
+                      audioPath: audioPath!,
+                      isUser: isUser,
+                      transcription: text,
+                      duration: duration ?? Duration.zero,
+                    )
+                  : Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isUser ? Colors.blue : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: MarkdownBody(
+                        data: text,
+                        styleSheet: MarkdownStyleSheet(
+                          p: TextStyle(
+                            color: isUser ? Colors.white : Colors.black,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+            ),
           ),
         ],
       ),
