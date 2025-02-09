@@ -40,19 +40,15 @@ This project is built with Flutter. For help getting started with Flutter develo
 - All tests passing successfully
 
 ### v1.0.7
-- Added comprehensive test coverage for ChatMessage widget
-- Added text color tests for user/non-user messages
-- Added long message wrapping tests
-- Added accessibility tests
-- Added invalid audio path handling tests
-- Added audio player controls tests
-
-### v1.0.6
-- Added comprehensive test coverage for ChatMessage widget
-- Added test mode to avoid asset loading issues
-- Added tests for user messages, audio messages, and layout
-- Added tests for copyWith functionality and edge cases
-- All tests passing
+- Added comprehensive test coverage for ChatMessage widget:
+  - Text color tests for user/non-user messages
+  - Long message wrapping tests
+  - Accessibility tests
+  - Invalid audio path handling tests
+  - Audio player controls tests
+  - Test mode to avoid asset loading issues
+  - Tests for user messages, audio messages, and layout
+  - Tests for copyWith functionality and edge cases
 
 ### v1.0.5
 - Fixed auto-stop recording when sending audio message
