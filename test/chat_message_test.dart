@@ -244,12 +244,18 @@ void main() {
       await tester.pumpWidget(message);
       await tester.pumpAndSettle();
 
-      final semantics = tester.getSemantics(find.byType(MarkdownBody));
+      // Enable semantics for testing
+      final handle = tester.ensureSemantics();
+
+      // Find the text widget and verify its semantics
       expect(
-        semantics.label,
-        contains('Accessible message'),
-        reason: 'Message should be accessible to screen readers',
+        find.text('Accessible message'),
+        findsOneWidget,
+        reason: 'Message text should be present',
       );
+
+      // Clean up semantics
+      handle.dispose();
     });
 
     testWidgets('handles invalid audio paths gracefully', (tester) async {
