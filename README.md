@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.7
+Current version: v1.0.8
 
 ## Features
 
@@ -33,6 +33,11 @@ This project is built with Flutter. For help getting started with Flutter develo
 - [Flutter Cookbook](https://docs.flutter.dev/cookbook)
 
 ## Changelog
+
+### v1.0.8
+- Fixed accessibility test implementation
+- Improved test cleanup with proper semantics handling
+- All tests passing successfully
 
 ### v1.0.7
 - Added comprehensive test coverage for ChatMessage widget
