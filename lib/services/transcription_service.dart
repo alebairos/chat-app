@@ -7,14 +7,26 @@ import 'package:http/http.dart' as http;
 class OpenAITranscriptionService {
   static const String _baseUrl =
       'https://api.openai.com/v1/audio/transcriptions';
-  late final String _apiKey;
+  final String _apiKey;
+  bool _initialized = false;
 
-  OpenAITranscriptionService() {
-    _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+  OpenAITranscriptionService() : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '' {
+    _initialized = _apiKey.isNotEmpty;
   }
 
+  bool get isInitialized => _initialized;
+
   Future<String> transcribeAudio(String audioPath) async {
+    if (!isInitialized) {
+      return 'Transcription unavailable: Service not initialized';
+    }
+
     try {
+      final file = File(audioPath);
+      if (!await file.exists()) {
+        return 'Transcription unavailable';
+      }
+
       final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
         ..headers['Authorization'] = 'Bearer $_apiKey'
         ..files.add(await http.MultipartFile.fromPath('file', audioPath))

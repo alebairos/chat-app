@@ -16,6 +16,7 @@ dependencies:
   record: ^4.4.4
   audioplayers: ^5.2.1
   path_provider: ^2.1.2
+  flutter_markdown: ^0.6.20
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +27,4 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/avatar.png

@@ -87,6 +87,10 @@ class _AudioRecorderState extends State<AudioRecorder> {
   }
 
   Future<void> _sendAudio() async {
+    if (_isRecording) {
+      await _stopRecording();
+    }
+
     if (_recordedFilePath != null) {
       widget.onSendAudio?.call(_recordedFilePath!, _recordDuration);
       setState(() {
