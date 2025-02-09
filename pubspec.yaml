@@ -17,11 +17,22 @@ dependencies:
   audioplayers: ^5.2.1
   path_provider: ^2.1.2
   flutter_markdown: ^0.6.20
+  # Isar Database
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  # Isar Generator
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.8
+  # Test dependencies
+  plugin_platform_interface: ^2.1.8
+  path_provider_platform_interface: ^2.1.2
+  mockito: ^5.4.4
 
 flutter:
   uses-material-design: true
