@@ -11,8 +11,8 @@ void main() {
     transcriptionService = OpenAITranscriptionService();
   });
 
-  test('OpenAI service initializes with API key', () {
-    expect(transcriptionService._apiKey.isNotEmpty, true,
+  test('OpenAI service initializes correctly', () {
+    expect(transcriptionService.isInitialized, true,
         reason: 'OpenAI API key should be loaded from .env');
   });
 
