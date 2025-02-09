@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-import 'dart:io';
-=======
->>>>>>> test-coverage
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,31 +12,13 @@ void main() {
   group('ChatMessage Widget', () {
     late Widget testWidget;
 
-<<<<<<< HEAD
-    setUpAll(() async {
-      // Create fake asset bundle
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMessageHandler(
-        'flutter/assets',
-        (ByteData? message) async {
-          return Uint8List(0).buffer.asByteData();
-        },
-      );
-    });
-
-=======
->>>>>>> test-coverage
     setUp(() {
       testWidget = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: TestMessage.formattedMessage,
             isUser: false,
-<<<<<<< HEAD
-            isTest: true,
-=======
             isTest: true, // Use test mode to avoid loading network images
->>>>>>> test-coverage
           ),
         ),
       );
@@ -50,14 +28,6 @@ void main() {
       await tester.pumpWidget(testWidget);
       await tester.pumpAndSettle();
 
-<<<<<<< HEAD
-      // Verify text content is present
-      expect(find.textContaining(TestMessage.gesture), findsOneWidget);
-      expect(find.textContaining(TestMessage.greeting), findsOneWidget);
-      expect(find.textContaining(TestMessage.boldText), findsOneWidget);
-      expect(find.textContaining(TestMessage.italicText), findsOneWidget);
-      expect(find.textContaining(TestMessage.emoji), findsOneWidget);
-=======
       // Find markdown text
       final markdownFinder = find.byType(MarkdownBody);
       expect(markdownFinder, findsOneWidget);
@@ -69,7 +39,6 @@ void main() {
       expect(markdownBody.data, contains(TestMessage.boldText));
       expect(markdownBody.data, contains(TestMessage.italicText));
       expect(markdownBody.data, contains(TestMessage.emoji));
->>>>>>> test-coverage
     });
 
     testWidgets('applies correct text styling', (tester) async {
@@ -80,19 +49,12 @@ void main() {
       final markdownFinder = find.byType(MarkdownBody);
       expect(markdownFinder, findsOneWidget);
 
-<<<<<<< HEAD
-      // Verify text styling through markdown
-      final markdownBody = tester.widget<MarkdownBody>(markdownFinder);
-      expect(markdownBody.data, contains('**${TestMessage.boldText}**'));
-      expect(markdownBody.data, contains('_${TestMessage.italicText}_'));
-=======
       // Verify markdown formatting
       final markdownBody = tester.widget<MarkdownBody>(markdownFinder);
       expect(markdownBody.data, contains('**${TestMessage.boldText}**'),
           reason: 'Text should contain bold markdown syntax');
       expect(markdownBody.data, contains('_${TestMessage.italicText}_'),
           reason: 'Text should contain italic markdown syntax');
->>>>>>> test-coverage
     });
 
     testWidgets('renders user message correctly', (tester) async {
@@ -203,34 +165,136 @@ void main() {
           tester.widget<MarkdownBody>(find.byType(MarkdownBody));
       expect(markdownBody.data, isEmpty);
     });
+
+    testWidgets('applies correct text colors based on user/non-user',
+        (tester) async {
+      // Test user message (should be white text)
+      final userMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'User message',
+            isUser: true,
+            isTest: true,
+          ),
+        ),
+      );
+      await tester.pumpWidget(userMessage);
+      await tester.pumpAndSettle();
+
+      final userMarkdown =
+          tester.widget<MarkdownBody>(find.byType(MarkdownBody));
+      expect(
+        userMarkdown.styleSheet?.p?.color ?? Colors.black,
+        equals(Colors.white),
+        reason: 'User messages should have white text',
+      );
+
+      // Test non-user message (should be black text)
+      final nonUserMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Bot message',
+            isUser: false,
+            isTest: true,
+          ),
+        ),
+      );
+      await tester.pumpWidget(nonUserMessage);
+      await tester.pumpAndSettle();
+
+      final nonUserMarkdown =
+          tester.widget<MarkdownBody>(find.byType(MarkdownBody));
+      expect(
+        nonUserMarkdown.styleSheet?.p?.color ?? Colors.white,
+        equals(Colors.black),
+        reason: 'Non-user messages should have black text',
+      );
+    });
+
+    testWidgets('handles long messages with proper wrapping', (tester) async {
+      final longMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'A' * 300, // Very long message
+            isUser: false,
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(longMessage);
+      await tester.pumpAndSettle();
+
+      final messageFinder = find.byType(Flexible);
+      expect(messageFinder, findsOneWidget,
+          reason: 'Long messages should be wrapped in Flexible widget');
+    });
+
+    testWidgets('supports accessibility features', (tester) async {
+      final message = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Accessible message',
+            isUser: false,
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(message);
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(MarkdownBody));
+      expect(
+        semantics.label,
+        contains('Accessible message'),
+        reason: 'Message should be accessible to screen readers',
+      );
+    });
+
+    testWidgets('handles invalid audio paths gracefully', (tester) async {
+      final invalidAudioMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Invalid audio',
+            isUser: true,
+            audioPath: 'invalid_path.m4a',
+            duration: const Duration(seconds: 1),
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(invalidAudioMessage);
+      await tester.pumpAndSettle();
+
+      // Should still render without crashing
+      expect(find.byType(AudioMessage), findsOneWidget);
+      expect(find.text('Invalid audio'), findsOneWidget);
+    });
+
+    testWidgets('audio player controls are responsive', (tester) async {
+      final audioMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Test audio',
+            isUser: true,
+            audioPath: 'test_audio.m4a',
+            duration: const Duration(seconds: 30),
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(audioMessage);
+      await tester.pumpAndSettle();
+
+      // Verify play button is present and tappable
+      final playButton = find.byIcon(Icons.play_arrow);
+      expect(playButton, findsOneWidget);
+
+      // Verify duration is displayed correctly
+      expect(find.text('0:30'), findsOneWidget);
+    });
   });
 }
-<<<<<<< HEAD
-
-// Helper class to mock network images
-class NetworkImageTester {
-  static void mockNetworkImages(Future<void> Function() callback) {
-    HttpOverrides.runZoned(
-      () async {
-        await callback();
-      },
-      createHttpClient: (SecurityContext? context) {
-        return _createMockImageHttpClient(context);
-      },
-    );
-  }
-
-  static HttpClient _createMockImageHttpClient(SecurityContext? context) {
-    final client = _MockHttpClient();
-    return client;
-  }
-}
-
-class _MockHttpClient implements HttpClient {
-  @override
-  dynamic noSuchMethod(Invocation invocation) {
-    return super.noSuchMethod(invocation);
-  }
-}
-=======
->>>>>>> test-coverage
