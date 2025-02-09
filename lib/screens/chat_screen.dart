@@ -10,7 +10,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/transcription_service.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final ChatStorageService? storageService;
+  final ClaudeService? claudeService;
+
+  const ChatScreen({
+    this.storageService,
+    this.claudeService,
+    super.key,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -19,8 +26,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
-  final ClaudeService _claudeService = ClaudeService();
-  final ChatStorageService _storageService = ChatStorageService();
+  late final ClaudeService _claudeService;
+  late final ChatStorageService _storageService;
   bool _isTyping = false;
   bool _isLoadingMore = false;
   bool _isInitialLoading = true;
@@ -34,6 +41,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _claudeService = widget.claudeService ?? ClaudeService();
+    _storageService = widget.storageService ?? ChatStorageService();
     _checkEnvironment();
     _loadMessages();
     _setupScrollListener();
@@ -103,24 +112,23 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  ChatMessage _createChatMessage(ChatMessageModel model) {
-    return ChatMessage(
-      key: ValueKey(model.id),
-      text: model.text,
-      isUser: model.isUser,
-      audioPath: model.mediaPath,
-      duration: model.duration,
-      onDelete: () => _deleteMessage(model.id),
-    );
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   Future<void> _deleteMessage(int id) async {
     try {
       await _storageService.deleteMessage(id);
+      if (!mounted) return;
       setState(() {
         _messages.removeWhere((m) => m.key == ValueKey(id));
       });
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Message deleted'),
@@ -138,6 +146,163 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _showEditDialog(String messageId, String currentText) async {
+    print('=== EDIT FLOW START ===');
+    print('1. _showEditDialog called with:');
+    print('   - Message ID: $messageId');
+    print('   - Current text: $currentText');
+
+    print('2. Creating edit dialog with TextField controller');
+    final controller = TextEditingController(text: currentText);
+
+    print('3. Building edit dialog');
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Message'),
+        content: TextField(
+          key: const Key('edit-message-field'),
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Enter new message"),
+          keyboardType: TextInputType.multiline,
+          maxLines: null,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              print('4a. Cancel button pressed');
+              Navigator.pop(context);
+              print('4b. Dialog dismissed via cancel');
+            },
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final newText = controller.text;
+              print('5a. Save button pressed');
+              print('   - New text: $newText');
+
+              if (newText.trim().isEmpty) {
+                print('5b. Empty text detected - not saving');
+                return;
+              }
+
+              print('5c. Closing dialog before edit');
+              Navigator.pop(context);
+              print('5d. Calling _editMessage');
+              _editMessage(messageId, newText);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editMessage(String id, String newText) async {
+    print('\n=== EDIT MESSAGE START ===');
+    print('1. _editMessage called with:');
+    print('   - Message ID: $id');
+    print('   - New text: $newText');
+
+    if (newText.trim().isEmpty) {
+      print('2a. Empty text validation failed');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message cannot be empty'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      print('3. Saving edit to storage');
+      await _storageService.editMessage(int.parse(id), newText);
+
+      if (!mounted) {
+        print('4a. Widget not mounted after storage save');
+        return;
+      }
+
+      print('4b. Fetching updated message from storage');
+      final isar = await _storageService.db;
+      final updatedModel = await isar.chatMessageModels.get(int.parse(id));
+
+      if (updatedModel != null) {
+        print('5a. Updated message retrieved:');
+        print('   - ID: ${updatedModel.id}');
+        print('   - Text: ${updatedModel.text}');
+
+        setState(() {
+          final index =
+              _messages.indexWhere((m) => m.key == ValueKey(int.parse(id)));
+          print('5b. Found message at index: $index');
+
+          if (index != -1) {
+            _messages[index] = _createChatMessage(updatedModel);
+            print('5c. Message updated in UI');
+          } else {
+            print('5d. ERROR: Message not found in UI list');
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message edited'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        print('6. Success snackbar shown');
+      } else {
+        print('5x. ERROR: Updated message not found in storage');
+      }
+    } catch (e) {
+      print('ERROR in _editMessage:');
+      print(e.toString());
+
+      if (!mounted) {
+        print('Widget not mounted after error');
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error editing message: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    print('=== EDIT MESSAGE END ===\n');
+  }
+
+  ChatMessage _createChatMessage(ChatMessageModel model) {
+    print('\n=== CREATE CHAT MESSAGE ===');
+    print('Creating ChatMessage widget:');
+    print('- ID: ${model.id}');
+    print('- Text: ${model.text}');
+    print('- Is user: ${model.isUser}');
+
+    return ChatMessage(
+      key: ValueKey(model.id),
+      text: model.text,
+      isUser: model.isUser,
+      audioPath: model.mediaPath,
+      duration: model.duration,
+      onDelete: () => _deleteMessage(model.id),
+      onEdit: model.isUser
+          ? (text) {
+              print('\n=== EDIT CALLBACK TRIGGERED ===');
+              print('Edit callback for message:');
+              print('- ID: ${model.id}');
+              print('- Current text: $text');
+              _showEditDialog(model.id.toString(), text);
+            }
+          : null,
+    );
+  }
+
   void _checkEnvironment() {
     if (dotenv.env['ANTHROPIC_API_KEY']?.isEmpty ?? true) {
       setState(() {
@@ -150,43 +315,49 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_messageController.text.isEmpty) return;
 
     final userMessage = _messageController.text;
-    final userChatMessage = ChatMessage(
+    final userMessageModel = ChatMessageModel(
       text: userMessage,
       isUser: true,
+      type: MessageType.text,
+      timestamp: DateTime.now(),
     );
 
-    setState(() {
-      _messages.insert(0, userChatMessage);
-      _isTyping = true;
-    });
-    _messageController.clear();
-
     try {
-      // Save user message
-      await _storageService.saveMessage(
-        text: userMessage,
-        isUser: true,
-        type: MessageType.text,
-      );
+      // Save user message and get ID
+      final isar = await _storageService.db;
+      late final int messageId;
+      await isar.writeTxn(() async {
+        messageId = await isar.chatMessageModels.put(userMessageModel);
+      });
+      userMessageModel.id = messageId;
+
+      setState(() {
+        _messages.insert(0, _createChatMessage(userMessageModel));
+        _isTyping = true;
+      });
+      _messageController.clear();
+      _scrollToBottom();
 
       // Get AI response
       final response = await _claudeService.sendMessage(userMessage);
-      final aiChatMessage = ChatMessage(
-        text: response,
-        isUser: false,
-      );
-
-      // Save AI response
-      await _storageService.saveMessage(
+      final aiMessageModel = ChatMessageModel(
         text: response,
         isUser: false,
         type: MessageType.text,
+        timestamp: DateTime.now(),
       );
 
+      // Save AI response and get ID
+      await isar.writeTxn(() async {
+        final aiMessageId = await isar.chatMessageModels.put(aiMessageModel);
+        aiMessageModel.id = aiMessageId;
+      });
+
       setState(() {
-        _messages.insert(0, aiChatMessage);
+        _messages.insert(0, _createChatMessage(aiMessageModel));
         _isTyping = false;
       });
+      _scrollToBottom();
     } catch (e) {
       setState(() {
         _messages.insert(
@@ -218,24 +389,13 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _messages.insert(0, transcribingMessage);
     });
+    _scrollToBottom();
 
     try {
       final transcription =
           await _transcriptionService.transcribeAudio(audioPath);
 
-      // Update UI with transcription
-      final userAudioMessage = ChatMessage(
-        text: transcription,
-        isUser: true,
-        audioPath: audioPath,
-        duration: duration,
-      );
-
-      setState(() {
-        _messages[0] = userAudioMessage;
-      });
-
-      // Save audio message
+      // Save audio message first
       await _storageService.saveMessage(
         text: transcription,
         isUser: true,
@@ -244,12 +404,28 @@ class _ChatScreenState extends State<ChatScreen> {
         duration: duration,
       );
 
+      // Get the saved message ID from storage
+      final messages = await _storageService.getMessages(limit: 1);
+      final messageId = messages.first.id;
+
+      // Update UI with transcription
+      final userAudioMessage = ChatMessage(
+        key: ValueKey(messageId),
+        text: transcription,
+        isUser: true,
+        audioPath: audioPath,
+        duration: duration,
+        onDelete: () => _deleteMessage(messageId),
+        onEdit: (text) => _showEditDialog(messageId.toString(), text),
+      );
+
+      setState(() {
+        _messages[0] = userAudioMessage;
+      });
+      _scrollToBottom();
+
       // Send transcription to Claude
       final response = await _claudeService.sendMessage(transcription);
-      final aiMessage = ChatMessage(
-        text: response,
-        isUser: false,
-      );
 
       // Save AI response
       await _storageService.saveMessage(
@@ -258,9 +434,21 @@ class _ChatScreenState extends State<ChatScreen> {
         type: MessageType.text,
       );
 
+      // Get the saved AI message ID
+      final aiMessages = await _storageService.getMessages(limit: 1);
+      final aiMessageId = aiMessages.first.id;
+
+      final aiMessage = ChatMessage(
+        key: ValueKey(aiMessageId),
+        text: response,
+        isUser: false,
+        onDelete: () => _deleteMessage(aiMessageId),
+      );
+
       setState(() {
         _messages.insert(0, aiMessage);
       });
+      _scrollToBottom();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -268,7 +456,7 @@ class _ChatScreenState extends State<ChatScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      debugPrint('Error processing audio message: $e');
+      print('Error processing audio message: $e');
     }
   }
 

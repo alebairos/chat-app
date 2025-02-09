@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/chat_message_model.dart';
@@ -32,6 +33,14 @@ class ChatStorageService {
     Duration? duration,
   }) async {
     final isar = await db;
+
+    // Verify audio file exists if it's an audio message
+    if (type == MessageType.audio && mediaPath != null) {
+      final file = File(mediaPath);
+      if (!await file.exists()) {
+        throw Exception('Audio file not found at $mediaPath');
+      }
+    }
 
     final message = ChatMessageModel(
       text: text,
@@ -70,7 +79,32 @@ class ChatStorageService {
   Future<void> deleteMessage(Id id) async {
     final isar = await db;
     await isar.writeTxn(() async {
-      await isar.chatMessageModels.delete(id);
+      final message = await isar.chatMessageModels.get(id);
+      if (message != null && message.isUser) {
+        // Delete the audio file if it exists
+        if (message.type == MessageType.audio && message.mediaPath != null) {
+          final file = File(message.mediaPath!);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        }
+        // Delete the message from the database
+        await isar.chatMessageModels.delete(id);
+      }
+    });
+  }
+
+  Future<void> editMessage(Id id, String newText) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final message = await isar.chatMessageModels.get(id);
+      if (message != null && message.isUser) {
+        // Only allow editing user messages
+        message.text = newText;
+        message.timestamp =
+            DateTime.now(); // Update timestamp to mark as edited
+        await isar.chatMessageModels.put(message);
+      }
     });
   }
 

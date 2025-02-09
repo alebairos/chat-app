@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'audio_message.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
@@ -9,6 +10,7 @@ class ChatMessage extends StatelessWidget {
   final Duration? duration;
   final bool isTest;
   final VoidCallback? onDelete;
+  final Function(String)? onEdit;
 
   const ChatMessage({
     required this.text,
@@ -17,8 +19,82 @@ class ChatMessage extends StatelessWidget {
     this.duration,
     this.isTest = false,
     this.onDelete,
+    this.onEdit,
     super.key,
   });
+
+  void _showMessageMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final Offset offset = button.localToGlobal(Offset.zero);
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy,
+        offset.dx + button.size.width,
+        offset.dy + button.size.height,
+      ),
+      items: [
+        if (isUser) ...[
+          PopupMenuItem(
+            child: const ListTile(
+              leading: Icon(Icons.edit),
+              title: Text('Edit'),
+            ),
+            onTap: () {
+              if (onEdit != null) {
+                // Delay to allow menu to close
+                Future.delayed(const Duration(milliseconds: 10), () {
+                  onEdit!(text);
+                });
+              }
+            },
+          ),
+          PopupMenuItem(
+            child: const ListTile(
+              leading: Icon(Icons.delete),
+              title: Text('Delete'),
+            ),
+            onTap: () {
+              if (onDelete != null) {
+                onDelete!();
+              }
+            },
+          ),
+        ],
+        PopupMenuItem(
+          child: const ListTile(
+            leading: Icon(Icons.copy),
+            title: Text('Copy'),
+          ),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: text));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Message copied to clipboard'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+        PopupMenuItem(
+          child: const ListTile(
+            leading: Icon(Icons.flag),
+            title: Text('Report'),
+          ),
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Message reported'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
 
   ChatMessage copyWith({
     String? text,
@@ -27,6 +103,7 @@ class ChatMessage extends StatelessWidget {
     Duration? duration,
     bool? isTest,
     VoidCallback? onDelete,
+    Function(String)? onEdit,
   }) {
     return ChatMessage(
       text: text ?? this.text,
@@ -35,6 +112,7 @@ class ChatMessage extends StatelessWidget {
       duration: duration ?? this.duration,
       isTest: isTest ?? this.isTest,
       onDelete: onDelete ?? this.onDelete,
+      onEdit: onEdit ?? this.onEdit,
     );
   }
 
@@ -60,30 +138,41 @@ class ChatMessage extends StatelessWidget {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: GestureDetector(
-              onLongPress: isUser ? onDelete : null,
-              child: audioPath != null
-                  ? AudioMessage(
-                      audioPath: audioPath!,
-                      isUser: isUser,
-                      transcription: text,
-                      duration: duration ?? Duration.zero,
-                    )
-                  : Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isUser ? Colors.blue : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: MarkdownBody(
-                        data: text,
-                        styleSheet: MarkdownStyleSheet(
-                          p: TextStyle(
-                            color: isUser ? Colors.white : Colors.black,
-                          ),
+            child: audioPath != null
+                ? AudioMessage(
+                    audioPath: audioPath!,
+                    isUser: isUser,
+                    transcription: text,
+                    duration: duration ?? Duration.zero,
+                  )
+                : Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isUser ? Colors.blue : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: MarkdownBody(
+                      data: text,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          color: isUser ? Colors.white : Colors.black,
                         ),
                       ),
                     ),
+                  ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isUser ? Colors.blue[700] : Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.more_vert, size: 20),
+              onPressed: () => _showMessageMenu(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              color: isUser ? Colors.white : Colors.grey[700],
             ),
           ),
         ],

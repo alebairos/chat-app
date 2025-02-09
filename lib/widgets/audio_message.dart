@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -37,11 +38,32 @@ class _AudioMessageState extends State<AudioMessage> {
         await _player.pause();
         setState(() => _isPlaying = false);
       } else {
-        await _player.play(DeviceFileSource(widget.audioPath));
+        // Check if file exists
+        final file = File(widget.audioPath);
+        if (!await file.exists()) {
+          throw Exception('Audio file not found at ${widget.audioPath}');
+        }
+
+        // Stop any currently playing audio first
+        await _player.stop();
+
+        // Set up the audio source
+        await _player.setSourceDeviceFile(widget.audioPath);
+
+        // Start playback
+        await _player.resume();
         setState(() => _isPlaying = true);
       }
     } catch (e) {
       debugPrint('Error playing audio: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error playing audio: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -96,6 +118,7 @@ class _AudioMessageState extends State<AudioMessage> {
 
   @override
   void dispose() {
+    _player.stop();
     _player.dispose();
     super.dispose();
   }

@@ -84,7 +84,7 @@ void main() {
       );
 
       final decoration = container.decoration as BoxDecoration;
-      expect(decoration.color, equals(Colors.blue));
+      expect(decoration.color, equals(Colors.blue[700]));
 
       final row = tester.widget<Row>(find.byType(Row));
       expect(row.mainAxisAlignment, equals(MainAxisAlignment.end));
@@ -319,8 +319,14 @@ void main() {
       await tester.pumpWidget(userMessage);
       await tester.pumpAndSettle();
 
-      // Long press should trigger delete
-      await tester.longPress(find.text('Deletable message'));
+      // Tap the menu button
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Tap the delete option in the menu
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
       expect(deletePressed, isTrue,
           reason: 'Delete callback should be triggered');
     });
@@ -341,10 +347,164 @@ void main() {
       await tester.pumpWidget(botMessage);
       await tester.pumpAndSettle();
 
-      // Long press should not trigger delete for bot messages
-      await tester.longPress(find.text('Bot message'));
+      // Tap the menu button
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Verify delete option is not present in menu
+      expect(find.text('Delete'), findsNothing,
+          reason: 'Delete option should not be available for bot messages');
       expect(deletePressed, isFalse,
           reason: 'Delete callback should not be triggered for bot messages');
+    });
+
+    testWidgets('shows menu button for all messages', (tester) async {
+      // Test user message - should have menu
+      final userMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'User message',
+            isUser: true,
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(userMessage);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.more_vert), findsOneWidget,
+          reason: 'Menu button should be visible for user messages');
+
+      // Test bot message - should have menu
+      final botMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Bot message',
+            isUser: false,
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(botMessage);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.more_vert), findsOneWidget,
+          reason: 'Menu button should be visible for bot messages');
+    });
+
+    testWidgets('shows all menu options for user messages', (tester) async {
+      final message = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Test message',
+            isUser: true,
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(message);
+      await tester.pumpAndSettle();
+
+      // Tap menu button to show menu
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Verify all menu options are present
+      expect(find.text('Edit'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.text('Report'), findsOneWidget);
+    });
+
+    testWidgets('shows limited menu options for bot messages', (tester) async {
+      final message = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Bot message',
+            isUser: false,
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(message);
+      await tester.pumpAndSettle();
+
+      // Tap the menu button
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Verify only copy and report options are present
+      expect(find.text('Edit'), findsNothing);
+      expect(find.text('Delete'), findsNothing);
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.text('Report'), findsOneWidget);
+    });
+
+    testWidgets('supports message editing for user messages', (tester) async {
+      String? editedText;
+      final userMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Original message',
+            isUser: true,
+            isTest: true,
+            onEdit: (text) => editedText = text,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(userMessage);
+      await tester.pumpAndSettle();
+
+      // Tap menu button to show menu
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Tap the edit option
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+
+      // Verify edit dialog appears with TextField
+      expect(find.byType(TextField), findsOneWidget);
+
+      // Get the text from the TextField
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.controller?.text, equals('Original message'));
+
+      // Tap save to trigger edit callback
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(editedText, equals('Original message'),
+          reason: 'Edit callback should be triggered with original text');
+    });
+
+    testWidgets('supports message copying', (tester) async {
+      final message = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Copy this text',
+            isUser: true,
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(message);
+      await tester.pumpAndSettle();
+
+      // Tap menu button to show menu
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Tap the copy option
+      await tester.tap(find.text('Copy'));
+      await tester.pumpAndSettle();
+
+      // Verify snackbar appears
+      expect(find.text('Message copied to clipboard'), findsOneWidget);
     });
   });
 }

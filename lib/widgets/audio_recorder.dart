@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -36,8 +37,18 @@ class _AudioRecorderState extends State<AudioRecorder> {
   Future<void> _startRecording() async {
     try {
       if (await _audioRecorder.hasPermission()) {
-        final dir = await getTemporaryDirectory();
-        final filePath = '${dir.path}/audio_note.m4a';
+        final dir = await getApplicationDocumentsDirectory();
+        debugPrint('Documents directory: ${dir.path}');
+
+        final audioDir = Directory('${dir.path}/audio');
+        if (!await audioDir.exists()) {
+          await audioDir.create(recursive: true);
+        }
+        debugPrint('Audio directory: ${audioDir.path}');
+
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath = '${audioDir.path}/audio_$timestamp.m4a';
+        debugPrint('Recording to file: $filePath');
 
         await _audioRecorder.start(
           path: filePath,
@@ -57,6 +68,14 @@ class _AudioRecorderState extends State<AudioRecorder> {
       }
     } catch (e) {
       debugPrint('Error recording audio: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error recording audio: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -77,11 +96,24 @@ class _AudioRecorderState extends State<AudioRecorder> {
           await _audioPlayer.stop();
           setState(() => _isPlaying = false);
         } else {
-          await _audioPlayer.play(DeviceFileSource(_recordedFilePath!));
+          final file = File(_recordedFilePath!);
+          if (!await file.exists()) {
+            throw Exception('Audio file not found');
+          }
+          await _audioPlayer.setSourceDeviceFile(_recordedFilePath!);
+          await _audioPlayer.resume();
           setState(() => _isPlaying = true);
         }
       } catch (e) {
         debugPrint('Error playing audio: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error playing audio: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
