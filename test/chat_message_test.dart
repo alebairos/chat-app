@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'dart:io';
+=======
+>>>>>>> test-coverage
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +16,7 @@ void main() {
   group('ChatMessage Widget', () {
     late Widget testWidget;
 
+<<<<<<< HEAD
     setUpAll(() async {
       // Create fake asset bundle
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -24,13 +28,19 @@ void main() {
       );
     });
 
+=======
+>>>>>>> test-coverage
     setUp(() {
       testWidget = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: TestMessage.formattedMessage,
             isUser: false,
+<<<<<<< HEAD
             isTest: true,
+=======
+            isTest: true, // Use test mode to avoid loading network images
+>>>>>>> test-coverage
           ),
         ),
       );
@@ -40,12 +50,26 @@ void main() {
       await tester.pumpWidget(testWidget);
       await tester.pumpAndSettle();
 
+<<<<<<< HEAD
       // Verify text content is present
       expect(find.textContaining(TestMessage.gesture), findsOneWidget);
       expect(find.textContaining(TestMessage.greeting), findsOneWidget);
       expect(find.textContaining(TestMessage.boldText), findsOneWidget);
       expect(find.textContaining(TestMessage.italicText), findsOneWidget);
       expect(find.textContaining(TestMessage.emoji), findsOneWidget);
+=======
+      // Find markdown text
+      final markdownFinder = find.byType(MarkdownBody);
+      expect(markdownFinder, findsOneWidget);
+
+      // Verify text content through markdown
+      final markdownBody = tester.widget<MarkdownBody>(markdownFinder);
+      expect(markdownBody.data, contains(TestMessage.gesture));
+      expect(markdownBody.data, contains(TestMessage.greeting));
+      expect(markdownBody.data, contains(TestMessage.boldText));
+      expect(markdownBody.data, contains(TestMessage.italicText));
+      expect(markdownBody.data, contains(TestMessage.emoji));
+>>>>>>> test-coverage
     });
 
     testWidgets('applies correct text styling', (tester) async {
@@ -56,10 +80,19 @@ void main() {
       final markdownFinder = find.byType(MarkdownBody);
       expect(markdownFinder, findsOneWidget);
 
+<<<<<<< HEAD
       // Verify text styling through markdown
       final markdownBody = tester.widget<MarkdownBody>(markdownFinder);
       expect(markdownBody.data, contains('**${TestMessage.boldText}**'));
       expect(markdownBody.data, contains('_${TestMessage.italicText}_'));
+=======
+      // Verify markdown formatting
+      final markdownBody = tester.widget<MarkdownBody>(markdownFinder);
+      expect(markdownBody.data, contains('**${TestMessage.boldText}**'),
+          reason: 'Text should contain bold markdown syntax');
+      expect(markdownBody.data, contains('_${TestMessage.italicText}_'),
+          reason: 'Text should contain italic markdown syntax');
+>>>>>>> test-coverage
     });
 
     testWidgets('renders user message correctly', (tester) async {
@@ -172,6 +205,7 @@ void main() {
     });
   });
 }
+<<<<<<< HEAD
 
 // Helper class to mock network images
 class NetworkImageTester {
@@ -198,3 +232,5 @@ class _MockHttpClient implements HttpClient {
     return super.noSuchMethod(invocation);
   }
 }
+=======
+>>>>>>> test-coverage

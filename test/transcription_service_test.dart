@@ -13,7 +13,7 @@ void main() {
 
   test('OpenAI service initializes correctly', () {
     expect(transcriptionService.isInitialized, true,
-        reason: 'OpenAI API key should be loaded from .env');
+        reason: 'OpenAI service should be initialized with API key from .env');
   });
 
   test('Transcription handles errors gracefully', () async {
