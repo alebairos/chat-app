@@ -7,9 +7,13 @@ import 'dart:async';
 
 class AudioRecorder extends StatefulWidget {
   final Function(String path, Duration duration)? onSendAudio;
+  final Record? testRecord;
+  final AudioPlayer? testPlayer;
 
   const AudioRecorder({
     this.onSendAudio,
+    this.testRecord,
+    this.testPlayer,
     super.key,
   });
 
@@ -18,8 +22,8 @@ class AudioRecorder extends StatefulWidget {
 }
 
 class _AudioRecorderState extends State<AudioRecorder> {
-  final _audioRecorder = Record();
-  final _audioPlayer = AudioPlayer();
+  late final Record _audioRecorder;
+  late final AudioPlayer _audioPlayer;
   bool _isRecording = false;
   bool _isPlaying = false;
   String? _recordedFilePath;
@@ -29,6 +33,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
   @override
   void initState() {
     super.initState();
+    _audioRecorder = widget.testRecord ?? Record();
+    _audioPlayer = widget.testPlayer ?? AudioPlayer();
     _audioPlayer.onPlayerComplete.listen((event) {
       setState(() => _isPlaying = false);
     });

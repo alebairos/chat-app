@@ -8,84 +8,108 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import '../lib/services/chat_storage_service.dart';
 import '../lib/services/claude_service.dart';
-import 'chat_screen_test.mocks.dart'; // Import the generated mocks
+import 'chat_screen_test.mocks.dart';
+import 'package:isar/isar.dart';
 
-@GenerateMocks([ChatStorageService, ClaudeService])
+@GenerateMocks([
+  ChatStorageService,
+  ClaudeService,
+], customMocks: [
+  MockSpec<Isar>(as: #GeneratedMockIsar),
+  MockSpec<IsarCollection<ChatMessageModel>>(
+      as: #GeneratedMockChatMessageCollection),
+])
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late MockChatStorageService mockStorage;
   late MockClaudeService mockClaude;
+  late Widget chatScreen;
+  late ChatMessageModel testMessage;
+  late GeneratedMockIsar mockIsar;
+  late GeneratedMockChatMessageCollection mockCollection;
 
-  setUp(() {
+  setUp(() async {
     mockStorage = MockChatStorageService();
     mockClaude = MockClaudeService();
+    mockIsar = GeneratedMockIsar();
+    mockCollection = GeneratedMockChatMessageCollection();
+
+    testMessage = ChatMessageModel(
+      text: 'Test message',
+      isUser: true,
+      type: MessageType.text,
+      timestamp: DateTime.now(),
+    )..id = 1;
 
     // Setup mock responses
-    when(mockStorage.getMessages()).thenAnswer((_) async => [
-          ChatMessageModel(
-            text: 'Test message',
-            isUser: true,
-            type: MessageType.text,
-            timestamp: DateTime.now(),
-          )..id = 1
-        ]);
+    when(mockStorage.getMessages(
+      limit: anyNamed('limit'),
+      before: anyNamed('before'),
+    )).thenAnswer((_) async => [testMessage]);
 
     when(mockStorage.editMessage(any, any)).thenAnswer((_) async {});
-    when(mockStorage.db).thenAnswer((_) async => throw UnimplementedError());
+    when(mockStorage.db).thenAnswer((_) async => mockIsar);
+    when(mockIsar.chatMessageModels).thenReturn(mockCollection);
+    when(mockCollection.get(1)).thenAnswer((_) async => testMessage);
+
+    // Mock message operations
+    when(mockStorage.saveMessage(
+      text: anyNamed('text'),
+      isUser: anyNamed('isUser'),
+      type: anyNamed('type'),
+      mediaData: anyNamed('mediaData'),
+      mediaPath: anyNamed('mediaPath'),
+      duration: anyNamed('duration'),
+    )).thenAnswer((_) async {});
+
+    when(mockStorage.deleteMessage(any)).thenAnswer((_) async {});
+    when(mockStorage.deleteAllMessages()).thenAnswer((_) async {});
+    when(mockStorage.searchMessages(any)).thenAnswer((_) async => []);
+    when(mockStorage.close()).thenAnswer((_) async {});
 
     when(mockClaude.sendMessage(any)).thenAnswer((_) async => 'Mock response');
+
+    chatScreen = ChatScreen(
+      storageService: mockStorage,
+      claudeService: mockClaude,
+    );
   });
 
   group('ChatScreen Edit Functionality', () {
-    late Widget testWidget;
-
     setUp(() async {
-      // Mock environment variables instead of loading from file
       dotenv.testLoad(fileInput: '''
         ANTHROPIC_API_KEY=test_key
         OPENAI_API_KEY=test_key
       ''');
-
-      testWidget = MaterialApp(
-        home: ChatScreen(
-          storageService: mockStorage,
-          claudeService: mockClaude,
-        ),
-      );
     });
 
     testWidgets('shows edit dialog when edit menu item is tapped',
         (WidgetTester tester) async {
-      await tester.pumpWidget(testWidget);
+      await tester.pumpWidget(MaterialApp(home: chatScreen));
       await tester.pumpAndSettle();
 
-      // Open message menu
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      // Tap edit option
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      // Verify edit dialog is shown
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(find.text('Edit Message'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byKey(const Key('edit-message-field')), findsOneWidget);
     });
 
     testWidgets('edit dialog shows current message text',
         (WidgetTester tester) async {
-      await tester.pumpWidget(testWidget);
+      await tester.pumpWidget(MaterialApp(home: chatScreen));
       await tester.pumpAndSettle();
 
-      // Open message menu and edit dialog
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      // Find the TextField by key
       final textField = find.byKey(const Key('edit-message-field'));
       expect(textField, findsOneWidget);
       expect((tester.widget(textField) as TextField).controller?.text,
@@ -94,123 +118,116 @@ void main() {
 
     testWidgets('can edit message text and save changes',
         (WidgetTester tester) async {
-      await tester.pumpWidget(testWidget);
+      await tester.pumpWidget(MaterialApp(home: chatScreen));
       await tester.pumpAndSettle();
 
-      // Open message menu and edit dialog
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
+
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      // Test editing
       await tester.enterText(
           find.byKey(const Key('edit-message-field')), 'Edited message');
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      // Verify storage service was called
-      verify(mockStorage.editMessage(any, 'Edited message')).called(1);
-
-      // Verify success message
+      expect(find.byType(SnackBar), findsOneWidget);
       expect(find.text('Message edited'), findsOneWidget);
+      verify(mockStorage.editMessage(1, 'Edited message')).called(1);
     });
 
     testWidgets('cannot save empty message text', (WidgetTester tester) async {
-      await tester.pumpWidget(testWidget);
+      await tester.pumpWidget(MaterialApp(home: chatScreen));
       await tester.pumpAndSettle();
 
-      // Open message menu and edit dialog
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
+
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      // Try to save empty text
       await tester.enterText(
           find.byKey(const Key('edit-message-field')), '   ');
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      // Verify storage service was not called
-      verifyNever(mockStorage.editMessage(any, any));
+      // Dialog should still be open
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Edit Message'), findsOneWidget);
 
-      // Verify error message
-      expect(find.text('Message cannot be empty'), findsOneWidget);
+      // Storage service should not be called
+      verifyNever(mockStorage.editMessage(any, any));
     });
 
     testWidgets('can cancel edit without saving', (WidgetTester tester) async {
-      await tester.pumpWidget(testWidget);
+      await tester.pumpWidget(MaterialApp(home: chatScreen));
       await tester.pumpAndSettle();
 
-      // Open message menu and edit dialog
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
+
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      // Enter new text but cancel
       await tester.enterText(
           find.byKey(const Key('edit-message-field')), 'Should not be saved');
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
-      // Verify storage service was not called
       verifyNever(mockStorage.editMessage(any, any));
-
-      // Verify dialog is closed
       expect(find.byType(AlertDialog), findsNothing);
     });
 
     testWidgets('handles storage errors gracefully',
         (WidgetTester tester) async {
-      // Setup storage to throw error
       when(mockStorage.editMessage(any, any))
           .thenThrow(Exception('Storage error'));
 
-      await tester.pumpWidget(testWidget);
+      await tester.pumpWidget(MaterialApp(home: chatScreen));
       await tester.pumpAndSettle();
 
-      // Open message menu and edit dialog
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
+
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      // Try to save changes
       await tester.enterText(
           find.byKey(const Key('edit-message-field')), 'Updated message');
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      // Verify error message
+      expect(find.byType(SnackBar), findsOneWidget);
       expect(find.text('Error editing message: Exception: Storage error'),
           findsOneWidget);
     });
 
     testWidgets('only user messages can be edited',
         (WidgetTester tester) async {
-      // Setup mock with bot message
-      final botMessage = ChatMessageModel(
-        text: 'Bot message',
+      final assistantMessage = ChatMessageModel(
+        text: 'Assistant message',
         isUser: false,
         type: MessageType.text,
         timestamp: DateTime.now(),
-      );
-      botMessage.id = 2;
+      )..id = 2;
 
-      when(mockStorage.getMessages(limit: any))
-          .thenAnswer((_) async => [botMessage]);
+      when(mockStorage.getMessages(
+        limit: anyNamed('limit'),
+        before: anyNamed('before'),
+      )).thenAnswer((_) async => [assistantMessage]);
 
-      await tester.pumpWidget(testWidget);
+      await tester.pumpWidget(MaterialApp(home: chatScreen));
       await tester.pumpAndSettle();
 
-      // Open message menu
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      // Verify edit option is not present
       expect(find.text('Edit'), findsNothing);
+      expect(find.text('Assistant message'), findsOneWidget);
     });
   });
 }

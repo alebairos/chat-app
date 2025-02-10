@@ -45,4 +45,27 @@ class ChatMessageModel {
   set duration(Duration? value) {
     durationInMillis = value?.inMilliseconds;
   }
+
+  ChatMessageModel copyWith({
+    Id? id,
+    DateTime? timestamp,
+    String? text,
+    bool? isUser,
+    MessageType? type,
+    List<byte>? mediaData,
+    String? mediaPath,
+    Duration? duration,
+  }) {
+    final model = ChatMessageModel(
+      text: text ?? this.text,
+      isUser: isUser ?? this.isUser,
+      type: type ?? this.type,
+      timestamp: timestamp ?? this.timestamp,
+      mediaData: mediaData ?? this.mediaData,
+      mediaPath: mediaPath ?? this.mediaPath,
+      duration: duration ?? this.duration,
+    );
+    model.id = id ?? this.id;
+    return model;
+  }
 }

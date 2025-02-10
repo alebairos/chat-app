@@ -6,32 +6,42 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: const Row(
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             backgroundColor: Colors.deepPurple,
             child: Icon(Icons.military_tech, color: Colors.white),
           ),
-          SizedBox(width: 8),
-          Text('Sergeant Oracle'),
+          const SizedBox(width: 8),
+          const Text('Sergeant Oracle'),
         ],
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.info_outline),
+          tooltip: 'Information',
           onPressed: () {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('About Sergeant Oracle'),
-                content: const Text(
-                  'Sergeant Oracle is an AI assistant powered by Claude. '
-                  'It combines ancient Roman wisdom with futuristic insights.\n\n'
-                  'You can:\n'
-                  '• Send text messages\n'
-                  '• Record audio messages\n'
-                  '• Long press your messages to delete them\n'
-                  '• Scroll up to load older messages',
+                content: const SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          'Sergeant Oracle is an AI assistant powered by Claude.'),
+                      SizedBox(height: 16),
+                      Text('You can:'),
+                      SizedBox(height: 8),
+                      Text('• Send text messages'),
+                      Text('• Record audio messages'),
+                      Text('• Long press your messages to delete them'),
+                      Text('• Scroll up to load older messages'),
+                    ],
+                  ),
                 ),
                 actions: [
                   TextButton(

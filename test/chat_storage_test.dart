@@ -6,6 +6,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import '../lib/services/chat_storage_service.dart';
 import '../lib/models/message_type.dart';
 import 'dart:typed_data';
+import 'dart:io';
 
 class MockPathProvider
     with MockPlatformInterfaceMixin
@@ -77,22 +78,35 @@ void main() {
     });
 
     test('saves and retrieves audio message', () async {
-      final audioData = Uint8List.fromList([1, 2, 3, 4]);
-      await storage.saveMessage(
-        text: 'Audio transcription',
-        isUser: true,
-        type: MessageType.audio,
-        mediaData: audioData,
-        mediaPath: 'audio.m4a',
-        duration: const Duration(seconds: 30),
-      );
+      // Create test audio file
+      final testAudioPath = 'test/assets/test_audio.m4a';
+      final audioFile = File(testAudioPath);
+      await audioFile.create(recursive: true);
+      await audioFile.writeAsBytes(Uint8List.fromList([1, 2, 3, 4]));
 
-      final messages = await storage.getMessages();
-      expect(messages.length, 1);
-      expect(messages.first.type, MessageType.audio);
-      expect(messages.first.mediaData, audioData);
-      expect(messages.first.mediaPath, 'audio.m4a');
-      expect(messages.first.duration?.inSeconds, 30);
+      try {
+        final audioData = Uint8List.fromList([1, 2, 3, 4]);
+        await storage.saveMessage(
+          text: 'Audio transcription',
+          isUser: true,
+          type: MessageType.audio,
+          mediaData: audioData,
+          mediaPath: testAudioPath,
+          duration: const Duration(seconds: 30),
+        );
+
+        final messages = await storage.getMessages();
+        expect(messages.length, 1);
+        expect(messages.first.type, MessageType.audio);
+        expect(messages.first.mediaData, audioData);
+        expect(messages.first.mediaPath, testAudioPath);
+        expect(messages.first.duration?.inSeconds, 30);
+      } finally {
+        // Cleanup
+        if (await audioFile.exists()) {
+          await audioFile.delete();
+        }
+      }
     });
 
     test('retrieves messages in descending order', () async {

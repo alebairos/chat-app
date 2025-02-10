@@ -60,7 +60,12 @@ class ChatInput extends StatelessWidget {
                 Icons.arrow_forward,
                 color: Colors.white,
               ),
-              onPressed: onSend,
+              onPressed: () {
+                if (controller.text.trim().isNotEmpty) {
+                  onSend();
+                  controller.clear();
+                }
+              },
             ),
           ),
           const SizedBox(width: 8),
