@@ -96,6 +96,16 @@ class _AudioRecorderState extends State<AudioRecorder> {
   }
 
   Future<void> _playRecording() async {
+    if (_isRecording) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot play while recording'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (_recordedFilePath != null) {
       try {
         if (_isPlaying) {
@@ -106,6 +116,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
           if (!await file.exists()) {
             throw Exception('Audio file not found');
           }
+          await _audioPlayer.stop(); // Ensure any previous playback is stopped
           await _audioPlayer.setSourceDeviceFile(_recordedFilePath!);
           await _audioPlayer.resume();
           setState(() => _isPlaying = true);

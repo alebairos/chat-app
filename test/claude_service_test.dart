@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import '../lib/services/claude_service.dart';
+import '../lib/config/config_loader.dart';
+import 'mock_config_loader.dart';
 import 'claude_service_test.mocks.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -11,19 +13,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  setUpAll(() {
+    dotenv.testLoad(fileInput: '''
+      ANTHROPIC_API_KEY=test_key
+    ''');
+    // Replace the real ConfigLoader with our mock
+    ConfigLoader.loadSystemPromptImpl = MockConfigLoader.loadSystemPrompt;
+  });
+
   group('ClaudeService', () {
     late ClaudeService service;
     late MockClient mockClient;
 
     setUp(() async {
-      // Skip loading .env file for now
-      // await dotenv.load(fileName: '.env.example');
       mockClient = MockClient();
-      service = ClaudeService();
+      service = ClaudeService(client: mockClient);
     });
 
-    /* Commenting out failing tests until .env setup is fixed
-    test('sends message with correct headers and body', () async {
+    test('maintains conversation history', () async {
       when(mockClient.post(
         any,
         headers: anyNamed('headers'),
@@ -32,27 +39,37 @@ void main() {
       )).thenAnswer((_) async => http.Response(
             jsonEncode({
               'content': [
-                {'text': 'Test response'}
+                {'text': 'First response'}
               ]
             }),
             200,
           ));
 
-      final response = await service.sendMessage('Hello');
-      expect(response, equals('Test response'));
+      // Send first message
+      final firstResponse = await service.sendMessage('Hello');
+      expect(firstResponse, equals('First response'));
+      expect(service.conversationHistory.length,
+          equals(2)); // User message + Assistant response
 
+      // Verify first message includes correct history
       verify(mockClient.post(
         Uri.parse('https://api.anthropic.com/v1/messages'),
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Accept': 'application/json; charset=utf-8',
-          'x-api-key': 'your_api_key_here',
-          'anthropic-version': '2023-06-01',
-        },
+        headers: argThat(
+          predicate((Map<String, String> headers) =>
+              headers['Content-Type'] == 'application/json; charset=utf-8' &&
+              headers['Accept'] == 'application/json; charset=utf-8' &&
+              headers['anthropic-version'] == '2023-06-01' &&
+              headers['x-api-key'] != null),
+          named: 'headers',
+        ),
         body: jsonEncode({
           'model': 'claude-3-opus-20240229',
           'max_tokens': 1024,
           'messages': [
+            {
+              'role': 'system',
+              'content': 'Test system prompt',
+            },
             {
               'role': 'user',
               'content': 'Hello',
@@ -61,9 +78,8 @@ void main() {
         }),
         encoding: utf8,
       )).called(1);
-    });
 
-    test('handles successful response with special characters', () async {
+      // Setup mock for second message
       when(mockClient.post(
         any,
         headers: anyNamed('headers'),
@@ -72,14 +88,75 @@ void main() {
       )).thenAnswer((_) async => http.Response(
             jsonEncode({
               'content': [
-                {'text': '*adjusts toga* `⚔️` Salve, amice!'}
+                {'text': 'Second response'}
               ]
             }),
             200,
           ));
 
-      final response = await service.sendMessage('Ave!');
-      expect(response, equals('*adjusts toga* `⚔️` Salve, amice!'));
+      // Send second message
+      final secondResponse = await service.sendMessage('How are you?');
+      expect(secondResponse, equals('Second response'));
+      expect(service.conversationHistory.length,
+          equals(4)); // Two user messages + two assistant responses
+
+      // Verify second message includes full history
+      verify(mockClient.post(
+        Uri.parse('https://api.anthropic.com/v1/messages'),
+        headers: argThat(
+          predicate((Map<String, String> headers) =>
+              headers['Content-Type'] == 'application/json; charset=utf-8' &&
+              headers['Accept'] == 'application/json; charset=utf-8' &&
+              headers['anthropic-version'] == '2023-06-01' &&
+              headers['x-api-key'] != null),
+          named: 'headers',
+        ),
+        body: jsonEncode({
+          'model': 'claude-3-opus-20240229',
+          'max_tokens': 1024,
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'Test system prompt',
+            },
+            {
+              'role': 'user',
+              'content': 'Hello',
+            },
+            {
+              'role': 'assistant',
+              'content': 'First response',
+            },
+            {
+              'role': 'user',
+              'content': 'How are you?',
+            }
+          ],
+        }),
+        encoding: utf8,
+      )).called(1);
+    });
+
+    test('clears conversation history', () async {
+      when(mockClient.post(
+        any,
+        headers: anyNamed('headers'),
+        body: anyNamed('body'),
+        encoding: anyNamed('encoding'),
+      )).thenAnswer((_) async => http.Response(
+            jsonEncode({
+              'content': [
+                {'text': 'Response'}
+              ]
+            }),
+            200,
+          ));
+
+      await service.sendMessage('Hello');
+      expect(service.conversationHistory.length, equals(2));
+
+      service.clearConversation();
+      expect(service.conversationHistory.length, equals(0));
     });
 
     test('handles network errors gracefully', () async {
@@ -92,6 +169,8 @@ void main() {
 
       final response = await service.sendMessage('Hello');
       expect(response, startsWith('Error: Unable to connect to Claude'));
+      expect(service.conversationHistory.length,
+          equals(1)); // Only user message is added
     });
 
     test('handles API errors gracefully', () async {
@@ -107,6 +186,8 @@ void main() {
 
       final response = await service.sendMessage('Hello');
       expect(response, startsWith('Error: Unable to connect to Claude'));
+      expect(service.conversationHistory.length,
+          equals(1)); // Only user message is added
     });
 
     test('handles malformed JSON response gracefully', () async {
@@ -135,6 +216,5 @@ void main() {
       final response = await service.sendMessage('Hello');
       expect(response, startsWith('Error: Unable to connect to Claude'));
     });
-    */
   });
 }

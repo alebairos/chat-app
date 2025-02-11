@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.15
+Current version: v1.0.16
 
 ## Features
 
@@ -42,17 +42,24 @@ Current test status: 64 total tests (64 passing)
 - Transcription Service tests: All passing (error handling, response parsing)
 - Chat Input tests: All passing (text input, audio recording)
 - Chat App Bar tests: Basic functionality passing (2 tests temporarily disabled)
-- Claude Service tests: Basic functionality tests (6 tests temporarily disabled pending .env setup)
+- Claude Service tests: All passing (conversation history, error handling)
 - Message tests: All passing (UI, formatting, accessibility)
 
 ### Temporarily Disabled Tests
 - Chat App Bar:
   - Layout tests for different screen sizes
   - Accessibility label tests
-- Claude Service:
-  - API interaction tests (pending .env configuration)
 
 ## Changelog
+
+### v1.0.16
+- Fixed audio playback during recording issue
+- Added proper error handling for audio playback
+- Improved ConfigLoader with mock support for testing
+- Added mock system prompt for tests
+- Updated ClaudeService initialization
+- Added comprehensive tests for audio recording functionality
+- All tests passing successfully
 
 ### v1.0.15
 - Improved test stability by temporarily disabling failing tests
