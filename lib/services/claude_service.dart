@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../config/config_loader.dart';
+import 'life_plan_mcp_service.dart';
 
 class ClaudeService {
   static const String _baseUrl = 'https://api.anthropic.com/v1/messages';
@@ -10,15 +11,23 @@ class ClaudeService {
   String? _systemPrompt;
   bool _isInitialized = false;
   final http.Client _client;
+  final LifePlanMCPService? _lifePlanMCP;
+  final ConfigLoader _configLoader;
 
-  ClaudeService({http.Client? client}) : _client = client ?? http.Client() {
+  ClaudeService({
+    http.Client? client,
+    LifePlanMCPService? lifePlanMCP,
+    ConfigLoader? configLoader,
+  })  : _client = client ?? http.Client(),
+        _lifePlanMCP = lifePlanMCP,
+        _configLoader = configLoader ?? ConfigLoader() {
     _apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
   }
 
   Future<bool> initialize() async {
     if (!_isInitialized) {
       try {
-        _systemPrompt = await ConfigLoader.loadSystemPrompt();
+        _systemPrompt = await _configLoader.loadSystemPrompt();
         _isInitialized = true;
       } catch (e) {
         print('Error initializing Claude service: $e');
@@ -31,6 +40,33 @@ class ClaudeService {
   Future<String> sendMessage(String message) async {
     try {
       await initialize();
+
+      // Check if message contains a life plan command
+      if (_lifePlanMCP != null && message.startsWith('{')) {
+        try {
+          final Map<String, dynamic> command = json.decode(message);
+          final action = command['action'] as String?;
+
+          if (action == null) {
+            return json.encode({
+              'status': 'error',
+              'message': 'Missing required parameter: action'
+            });
+          }
+
+          try {
+            return await _lifePlanMCP!.processCommand(message);
+          } catch (e) {
+            return json.encode({
+              'status': 'error',
+              'message': 'Missing required parameter: ${e.toString()}'
+            });
+          }
+        } catch (e) {
+          return json
+              .encode({'status': 'error', 'message': 'Invalid command format'});
+        }
+      }
 
       // Add user message to history
       _conversationHistory.add({
@@ -83,7 +119,10 @@ class ClaudeService {
 
       throw Exception('Failed to get response from Claude: ${response.body}');
     } catch (e) {
-      return 'Error: Unable to connect to Claude: $e';
+      return json.encode({
+        'status': 'error',
+        'message': 'Error: Unable to connect to Claude: $e'
+      });
     }
   }
 
