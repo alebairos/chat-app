@@ -3,10 +3,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 class ConfigLoader {
-  static Future<String> Function() _loadSystemPromptImpl =
-      _defaultLoadSystemPrompt;
+  Future<String> Function() _loadSystemPromptImpl = _defaultLoadSystemPrompt;
 
-  static Future<String> loadSystemPrompt() async {
+  Future<String> loadSystemPrompt() async {
     return _loadSystemPromptImpl();
   }
 
@@ -23,7 +22,7 @@ class ConfigLoader {
   }
 
   @visibleForTesting
-  static set loadSystemPromptImpl(Future<String> Function() impl) {
+  void setLoadSystemPromptImpl(Future<String> Function() impl) {
     _loadSystemPromptImpl = impl;
   }
 }

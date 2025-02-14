@@ -244,6 +244,21 @@ class MockClaudeService extends _i1.Mock implements _i8.ClaudeService {
   }
 
   @override
+  List<Map<String, String>> get conversationHistory => (super.noSuchMethod(
+        Invocation.getter(#conversationHistory),
+        returnValue: <Map<String, String>>[],
+      ) as List<Map<String, String>>);
+
+  @override
+  _i3.Future<bool> initialize() => (super.noSuchMethod(
+        Invocation.method(
+          #initialize,
+          [],
+        ),
+        returnValue: _i3.Future<bool>.value(false),
+      ) as _i3.Future<bool>);
+
+  @override
   _i3.Future<String> sendMessage(String? message) => (super.noSuchMethod(
         Invocation.method(
           #sendMessage,
@@ -257,6 +272,15 @@ class MockClaudeService extends _i1.Mock implements _i8.ClaudeService {
           ),
         )),
       ) as _i3.Future<String>);
+
+  @override
+  void clearConversation() => super.noSuchMethod(
+        Invocation.method(
+          #clearConversation,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [Isar].

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'audio_recorder.dart';
 
 class ChatInput extends StatelessWidget {
@@ -45,6 +46,24 @@ class ChatInput extends StatelessWidget {
                     horizontal: 16,
                     vertical: 12,
                   ),
+                ),
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                enableSuggestions: true,
+                enableIMEPersonalizedLearning: true,
+                textInputAction: TextInputAction.newline,
+                maxLines: null,
+                style: const TextStyle(
+                  locale: Locale('pt', 'BR'),
+                ),
+                // iOS specific keyboard configurations
+                keyboardAppearance: Brightness.light,
+                autocorrect: true,
+                smartDashesType: SmartDashesType.enabled,
+                smartQuotesType: SmartQuotesType.enabled,
+                strutStyle: const StrutStyle(
+                  height: 1.2,
+                  leading: 0.5,
                 ),
               ),
             ),
