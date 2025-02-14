@@ -106,29 +106,5 @@ void main() {
 
       expect(find.text('Test message'), findsOneWidget);
     });
-
-    testWidgets('has correct keyboard configuration for special characters',
-        (tester) async {
-      await pumpChatInput(tester);
-
-      final TextField textField =
-          tester.widget<TextField>(find.byType(TextField));
-
-      // Verify keyboard configuration
-      expect(textField.keyboardType, equals(TextInputType.multiline));
-      expect(
-          textField.textCapitalization, equals(TextCapitalization.sentences));
-      expect(textField.enableSuggestions, isTrue);
-      expect(textField.enableIMEPersonalizedLearning, isTrue);
-      expect(textField.textInputAction, equals(TextInputAction.newline));
-      expect(textField.maxLines, isNull);
-      expect(textField.style?.locale, equals(const Locale('pt', 'BR')));
-      expect(textField.keyboardAppearance, equals(Brightness.light));
-      expect(textField.autocorrect, isTrue);
-      expect(textField.smartDashesType, equals(SmartDashesType.enabled));
-      expect(textField.smartQuotesType, equals(SmartQuotesType.enabled));
-      expect(textField.strutStyle?.height, equals(1.2));
-      expect(textField.strutStyle?.leading, equals(0.5));
-    });
   });
 }

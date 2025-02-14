@@ -34,7 +34,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _error;
   final ScrollController _scrollController = ScrollController();
   DateTime? _lastMessageTimestamp;
-  static const int _pageSize = 20;
+  static const int _pageSize = 10000;
   final OpenAITranscriptionService _transcriptionService =
       OpenAITranscriptionService();
 
