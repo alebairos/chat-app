@@ -41,39 +41,51 @@ class _AudioRecorderState extends State<AudioRecorder> {
   }
 
   Future<void> _startRecording() async {
+    debugPrint('\n🎙️ Starting recording process');
     try {
       if (await _audioRecorder.hasPermission()) {
+        debugPrint('✓ Recording permission granted');
+
         final dir = await getApplicationDocumentsDirectory();
-        debugPrint('Documents directory: ${dir.path}');
+        debugPrint('📂 Documents directory: ${dir.path}');
 
         final audioDir = Directory('${dir.path}/audio');
         if (!await audioDir.exists()) {
           await audioDir.create(recursive: true);
+          debugPrint('📁 Created audio directory: ${audioDir.path}');
         }
-        debugPrint('Audio directory: ${audioDir.path}');
 
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final filePath = '${audioDir.path}/audio_$timestamp.m4a';
-        debugPrint('Recording to file: $filePath');
+        debugPrint('📝 Recording to file: $filePath');
 
+        debugPrint('🎬 Starting record.start()');
         await _audioRecorder.start(
           path: filePath,
           encoder: AudioEncoder.aacLc,
           bitRate: 128000,
           samplingRate: 44100,
         );
+        debugPrint('✓ record.start() completed');
 
         _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          setState(() => _recordDuration += const Duration(seconds: 1));
+          setState(() {
+            _recordDuration += const Duration(seconds: 1);
+            debugPrint('⏱️ Recording duration: ${_recordDuration.inSeconds}s');
+          });
         });
 
+        debugPrint('🔄 Updating recording state');
         setState(() {
           _isRecording = true;
           _recordedFilePath = filePath;
         });
+        debugPrint('✓ State updated - isRecording: $_isRecording');
+      } else {
+        debugPrint('❌ No recording permission');
       }
     } catch (e) {
-      debugPrint('Error recording audio: $e');
+      debugPrint('❌ Error recording audio: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

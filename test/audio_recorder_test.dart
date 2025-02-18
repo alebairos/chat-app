@@ -17,7 +17,15 @@ void main() {
     mockRecord = MockRecord();
     mockPlayer = MockAudioPlayer();
 
+    // Only mock what we can reliably control
     when(mockRecord.hasPermission()).thenAnswer((_) async => true);
+    when(mockRecord.isRecording()).thenAnswer((_) async => false);
+    when(mockRecord.start(
+      path: anyNamed('path'),
+      encoder: anyNamed('encoder'),
+      bitRate: anyNamed('bitRate'),
+      samplingRate: anyNamed('samplingRate'),
+    )).thenAnswer((_) async => {});
     when(mockPlayer.onPlayerComplete).thenAnswer((_) => Stream.empty());
   });
 
@@ -36,5 +44,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.mic), findsOneWidget);
+  });
+
+  testWidgets('verifies recording permission before starting',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AudioRecorder(
+            testRecord: mockRecord,
+            testPlayer: mockPlayer,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Start recording
+    await tester.tap(find.byIcon(Icons.mic));
+    await tester.pumpAndSettle();
+
+    // Verify permission was checked
+    verify(mockRecord.hasPermission()).called(1);
   });
 }
