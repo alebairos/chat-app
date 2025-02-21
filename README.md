@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.16
+Current version: v1.0.17
 
 ## Features
 
@@ -37,13 +37,21 @@ This project is built with Flutter. For help getting started with Flutter develo
 
 ## Test Status
 
-Current test status: 64 total tests (64 passing)
+Current test status: 88 total tests (88 passing)
 - Chat Screen tests: All passing (message editing, UI interactions)
 - Transcription Service tests: All passing (error handling, response parsing)
 - Chat Input tests: All passing (text input, audio recording)
 - Chat App Bar tests: Basic functionality passing (2 tests temporarily disabled)
 - Claude Service tests: All passing (conversation history, error handling)
 - Message tests: All passing (UI, formatting, accessibility)
+- Audio Recorder tests: All passing (24 focused tests for delete functionality)
+  - Delete button behavior and interactions
+  - Button styles and state transitions
+  - Edge case handling
+  - Consistent spacing and layout
+  - Playback controls during deletion
+  - Send button states
+  - Recording state management
 
 ### Temporarily Disabled Tests
 - Chat App Bar:
@@ -51,6 +59,18 @@ Current test status: 64 total tests (64 passing)
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.17
+- Added comprehensive test suite for audio recorder delete functionality
+- Added focused tests for delete button behavior and interactions
+- Added tests for button styles and state transitions
+- Added test helper class for reusable test functionality
+- Added edge case testing for audio recording states
+- Improved test organization with focused, simple tests
+- All 88 tests passing successfully
+- Enhanced button state management during recording and playback
+- Improved UI consistency with proper spacing and layout
+- Added comprehensive documentation for test cases
 
 ### v1.0.16
 - Fixed audio playback during recording issue
