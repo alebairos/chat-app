@@ -26,6 +26,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
   late final AudioPlayer _audioPlayer;
   bool _isRecording = false;
   bool _isPlaying = false;
+  bool _isDeleting = false;
   String? _recordedFilePath;
   Duration _recordDuration = Duration.zero;
   Timer? _recordingTimer;
@@ -161,6 +162,44 @@ class _AudioRecorderState extends State<AudioRecorder> {
     }
   }
 
+  Future<void> _deleteRecording() async {
+    if (_recordedFilePath == null) return;
+
+    try {
+      setState(() => _isDeleting = true);
+
+      // Stop playback if playing
+      if (_isPlaying) {
+        await _audioPlayer.stop();
+        setState(() => _isPlaying = false);
+      }
+
+      // Delete file
+      final file = File(_recordedFilePath!);
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      // Reset state
+      setState(() {
+        _recordedFilePath = null;
+        _recordDuration = Duration.zero;
+        _isDeleting = false;
+      });
+    } catch (e) {
+      debugPrint('❌ Error deleting audio: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting audio: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      setState(() => _isDeleting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -186,9 +225,18 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 backgroundColor: Colors.red[100],
               ),
             ),
-          if (_recordedFilePath != null) ...[
+          if (_recordedFilePath != null && !_isDeleting) ...[
             IconButton(
-              onPressed: _playRecording,
+              onPressed: _deleteRecording,
+              icon: const Icon(Icons.delete),
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(),
+                backgroundColor: Colors.grey[200],
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: _isDeleting ? null : _playRecording,
               icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
@@ -197,11 +245,11 @@ class _AudioRecorderState extends State<AudioRecorder> {
             ),
             const SizedBox(width: 8),
             IconButton(
-              onPressed: _sendAudio,
+              onPressed: _isDeleting ? null : _sendAudio,
               icon: const Icon(Icons.send),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
               ),
             ),

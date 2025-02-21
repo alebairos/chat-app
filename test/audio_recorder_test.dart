@@ -17,7 +17,6 @@ void main() {
     mockRecord = MockRecord();
     mockPlayer = MockAudioPlayer();
 
-    // Only mock what we can reliably control
     when(mockRecord.hasPermission()).thenAnswer((_) async => true);
     when(mockRecord.isRecording()).thenAnswer((_) async => false);
     when(mockRecord.start(
@@ -26,6 +25,7 @@ void main() {
       bitRate: anyNamed('bitRate'),
       samplingRate: anyNamed('samplingRate'),
     )).thenAnswer((_) async => {});
+    when(mockRecord.stop()).thenAnswer((_) async => '');
     when(mockPlayer.onPlayerComplete).thenAnswer((_) => Stream.empty());
   });
 
