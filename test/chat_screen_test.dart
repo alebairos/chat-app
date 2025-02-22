@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/screens/chat_screen.dart';
 import 'package:character_ai_clone/models/chat_message_model.dart';
 import 'package:character_ai_clone/models/message_type.dart';
+import 'package:character_ai_clone/widgets/chat_input.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
@@ -10,6 +11,7 @@ import '../lib/services/chat_storage_service.dart';
 import '../lib/services/claude_service.dart';
 import 'chat_screen_test.mocks.dart';
 import 'package:isar/isar.dart';
+import 'dart:async';
 
 @GenerateMocks([
   ChatStorageService,
@@ -58,10 +60,12 @@ void main() {
       text: anyNamed('text'),
       isUser: anyNamed('isUser'),
       type: anyNamed('type'),
-      mediaData: anyNamed('mediaData'),
-      mediaPath: anyNamed('mediaPath'),
-      duration: anyNamed('duration'),
-    )).thenAnswer((_) async {});
+    )).thenAnswer((_) async => ChatMessageModel(
+          text: 'Test message',
+          isUser: true,
+          type: MessageType.text,
+          timestamp: DateTime.now(),
+        )..id = 2);
 
     when(mockStorage.deleteMessage(any)).thenAnswer((_) async {});
     when(mockStorage.deleteAllMessages()).thenAnswer((_) async {});
@@ -230,4 +234,32 @@ void main() {
       expect(find.text('Assistant message'), findsOneWidget);
     });
   });
+
+  testWidgets('oracle avatars have consistent deep purple background',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.deepPurple,
+                child: Icon(Icons.military_tech, color: Colors.white),
+              ),
+              SizedBox(width: 8),
+              Text('Claude is typing...'),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify avatar background color
+    final avatar = tester.widget<CircleAvatar>(find.byType(CircleAvatar));
+    expect(avatar.backgroundColor, Colors.deepPurple);
+  });
 }
+
+class MockIsarCollection extends Mock
+    implements IsarCollection<ChatMessageModel> {}

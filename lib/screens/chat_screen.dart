@@ -528,7 +528,8 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/avatar.png'),
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.military_tech, color: Colors.white),
                   ),
                   SizedBox(width: 8),
                   Text('Claude is typing...'),

@@ -214,6 +214,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
               ),
             ),
           if (_isRecording)
@@ -222,7 +224,9 @@ class _AudioRecorderState extends State<AudioRecorder> {
               icon: const Icon(Icons.stop, color: Colors.red),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
-                backgroundColor: Colors.red[100],
+                backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
               ),
             ),
           if (_recordedFilePath != null && !_isDeleting) ...[
@@ -232,6 +236,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
               ),
             ),
             const SizedBox(width: 8),
@@ -241,6 +247,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
               ),
             ),
             const SizedBox(width: 8),
@@ -251,6 +259,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 shape: const CircleBorder(),
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
               ),
             ),
           ],
