@@ -37,21 +37,32 @@ This project is built with Flutter. For help getting started with Flutter develo
 
 ## Test Status
 
-Current test status: 88 total tests (88 passing)
-- Chat Screen tests: All passing (message editing, UI interactions)
-- Transcription Service tests: All passing (error handling, response parsing)
-- Chat Input tests: All passing (text input, audio recording)
-- Chat App Bar tests: Basic functionality passing (2 tests temporarily disabled)
-- Claude Service tests: All passing (conversation history, error handling)
-- Message tests: All passing (UI, formatting, accessibility)
-- Audio Recorder tests: All passing (24 focused tests for delete functionality)
-  - Delete button behavior and interactions
-  - Button styles and state transitions
-  - Edge case handling
-  - Consistent spacing and layout
-  - Playback controls during deletion
-  - Send button states
-  - Recording state management
+Current test status: 91 test functions with 183 assertions (all passing)
+- Audio Recorder tests: 24 tests (delete functionality, state management)
+- Chat Storage tests: 13 tests (CRUD operations, pagination)
+- Life Plan Service tests: 16 tests (MCP and core functionality)
+- Claude Service tests: 12 tests (conversation, error handling)
+- Transcription Service tests: 13 tests (API integration, error handling)
+- UTF-8 Handling tests: 3 tests (character encoding)
+- Chat Message tests: 1 test (formatting)
+- Widget tests: 2 tests (basic app functionality)
+- Integration tests: 7 tests (end-to-end functionality)
+
+### Test Coverage Details
+- 91 individual test functions
+- 183 total assertions/expectations
+- Comprehensive coverage across UI, business logic, and integration
+- All assertions passing successfully
+
+### Test Coverage by Feature
+- Delete button behavior and interactions
+- Button styles and state transitions
+- Edge case handling
+- Storage operations and pagination
+- Character encoding and UTF-8
+- API integration and error handling
+- State management and UI updates
+- Message formatting and display
 
 ### Temporarily Disabled Tests
 - Chat App Bar:
