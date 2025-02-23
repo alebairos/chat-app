@@ -41,6 +41,61 @@ class _AudioRecorderState extends State<AudioRecorder> {
     });
   }
 
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    debugPrint('\n=== SHOWING ERROR SNACKBAR ===');
+    debugPrint('Screen width: $screenWidth');
+    debugPrint('Expected width: 400.0');
+    debugPrint('Expected left margin: ${(screenWidth - 400.0) / 2}');
+
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: Text(
+          'Error: $message',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14.0,
+          ),
+        ),
+        backgroundColor: Colors.red,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 14.0,
+        ),
+        elevation: 6.0,
+        forceActionsBelow: false,
+        leadingPadding: EdgeInsets.zero,
+        actions: [
+          TextButton(
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+            child: const Text(
+              'DISMISS',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Auto-dismiss after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      }
+    });
+
+    // Schedule a post-frame callback to check the actual dimensions
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      debugPrint('\nActual Banner state:');
+      debugPrint(
+          'ScaffoldMessenger is mounted: ${ScaffoldMessenger.of(context).mounted}');
+    });
+  }
+
   Future<void> _startRecording() async {
     debugPrint('\n🎙️ Starting recording process');
     try {
@@ -87,14 +142,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
       }
     } catch (e) {
       debugPrint('❌ Error recording audio: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error recording audio: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showErrorSnackBar('Recording audio: $e');
     }
   }
 
@@ -110,12 +158,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   Future<void> _playRecording() async {
     if (_isRecording) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot play while recording'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorSnackBar('Cannot play while recording');
       return;
     }
 
@@ -136,14 +179,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
         }
       } catch (e) {
         debugPrint('Error playing audio: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error playing audio: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        _showErrorSnackBar('Playing audio: $e');
       }
     }
   }
@@ -188,14 +224,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
       });
     } catch (e) {
       debugPrint('❌ Error deleting audio: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting audio: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showErrorSnackBar('Deleting audio: $e');
       setState(() => _isDeleting = false);
     }
   }
