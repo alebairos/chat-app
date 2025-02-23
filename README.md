@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.17
+Current version: v1.0.18
 
 ## Features
 
@@ -38,7 +38,7 @@ This project is built with Flutter. For help getting started with Flutter develo
 ## Test Status
 
 Current test status: 91 test functions with 183 assertions (all passing)
-- Audio Recorder tests: 24 tests (delete functionality, state management)
+- Audio Recorder tests: 38 tests (see [detailed coverage analysis](docs/test_coverage_analysis.md))
 - Chat Storage tests: 13 tests (CRUD operations, pagination)
 - Life Plan Service tests: 16 tests (MCP and core functionality)
 - Claude Service tests: 12 tests (conversation, error handling)
@@ -70,6 +70,13 @@ Current test status: 91 test functions with 183 assertions (all passing)
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.18
+- Simplified avatar consistency test to focus on UI styling
+- Removed unnecessary mocks from UI tests
+- Improved test maintainability and readability
+- Fixed typing indicator test
+- All tests passing successfully
 
 ### v1.0.17
 - Added comprehensive test suite for audio recorder delete functionality
