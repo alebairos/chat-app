@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.20
+Current version: v1.0.21
 
 ## Features
 
@@ -74,6 +74,11 @@ Current test status: 94 test functions with 199 assertions (all passing)
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.21
+- Fixed SSH key configuration for deployment
+- Updated documentation for SSH key setup
+- Ensured proper authentication for git operations
 
 ### v1.0.20
 - Fixed @Skip annotation placement in audio recorder concurrency tests
