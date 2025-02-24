@@ -74,16 +74,8 @@ class ClaudeService {
         'content': message,
       });
 
-      // Prepare messages array with system prompt and history
+      // Prepare messages array with history
       final messages = <Map<String, String>>[];
-
-      // Add system prompt if available
-      if (_systemPrompt != null) {
-        messages.add({
-          'role': 'system',
-          'content': _systemPrompt!,
-        });
-      }
 
       // Add conversation history
       messages.addAll(_conversationHistory);
@@ -100,6 +92,7 @@ class ClaudeService {
           'model': 'claude-3-opus-20240229',
           'max_tokens': 1024,
           'messages': messages,
+          'system': _systemPrompt,
         }),
         encoding: utf8,
       );

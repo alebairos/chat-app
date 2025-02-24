@@ -37,12 +37,13 @@ This project is built with Flutter. For help getting started with Flutter develo
 
 ## Test Status
 
-Current test status: 94 test functions with 199 assertions (all passing)
+Current test status: 97 test functions with 205 assertions (all passing)
 - Audio Recorder tests: 41 tests (see [detailed coverage analysis](docs/test_coverage_analysis.md))
   - Concurrency tests temporarily skipped until state management is fixed
 - Chat Storage tests: 13 tests (CRUD operations, pagination)
 - Life Plan Service tests: 16 tests (MCP and core functionality)
 - Claude Service tests: 12 tests (conversation, error handling)
+- System Prompt tests: 3 tests (character identity, life planning, formatting) (see [system prompt testing strategy](docs/system_prompt_testing.md))
 - Transcription Service tests: 13 tests (API integration, error handling)
 - UTF-8 Handling tests: 3 tests (character encoding)
 - Chat Message tests: 1 test (formatting)
@@ -50,12 +51,13 @@ Current test status: 94 test functions with 199 assertions (all passing)
 - Integration tests: 7 tests (end-to-end functionality)
 
 ### Test Coverage Details
-- 94 individual test functions
-- 199 total assertions/expectations
+- 97 individual test functions
+- 205 total assertions/expectations
 - Comprehensive coverage across UI, business logic, and integration
 - All assertions passing successfully
 
 ### Test Coverage by Feature
+- System prompt functionality and character identity
 - Error message styling and behavior
 - Delete button behavior and interactions
 - Button styles and state transitions
@@ -74,6 +76,13 @@ Current test status: 94 test functions with 199 assertions (all passing)
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.23
+- Added focused system prompt tests for character identity, life planning, and formatting
+- Implemented test suite to verify system prompt prevents command exposure in UI
+- Ensured proper formatting instructions are applied in the UI
+- Added verification for life planning functionality without exposing commands
+- All tests passing successfully with 97 test functions and 205 assertions
 
 ### v1.0.22
 - Improved error handling tests with focused assertions

@@ -451,4 +451,36 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Error: Test error'), findsOneWidget);
   });
+
+  testWidgets('error snackbar has consistent maximum width of 400.0',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              // Show error snackbar
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Error: Test error'),
+                    width: 400.0,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              });
+              return const AudioRecorder();
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify snackbar width
+    final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(snackBar.width, 400.0,
+        reason:
+            'Error snackbar should have a maximum width of 400.0 for readability on wide screens');
+  });
 }

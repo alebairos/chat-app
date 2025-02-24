@@ -44,12 +44,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final maxWidth = 400.0;
-    final width = (screenWidth - 30.0).clamp(0.0, maxWidth);
-
-    ScaffoldMessenger.of(context).showMaterialBanner(
-      MaterialBanner(
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
         content: Text(
           'Error: $message',
           style: const TextStyle(
@@ -63,26 +59,11 @@ class _AudioRecorderState extends State<AudioRecorder> {
           vertical: 14.0,
         ),
         elevation: 6.0,
-        actions: [
-          TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-            },
-            child: const Text(
-              'DISMISS',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
+        width: 400.0,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
       ),
     );
-
-    // Auto-dismiss after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-      }
-    });
   }
 
   Future<void> _startRecording() async {
