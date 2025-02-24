@@ -45,10 +45,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
     if (!mounted) return;
 
     final screenWidth = MediaQuery.of(context).size.width;
-    debugPrint('\n=== SHOWING ERROR SNACKBAR ===');
-    debugPrint('Screen width: $screenWidth');
-    debugPrint('Expected width: 400.0');
-    debugPrint('Expected left margin: ${(screenWidth - 400.0) / 2}');
+    final maxWidth = 400.0;
+    final width = (screenWidth - 30.0).clamp(0.0, maxWidth);
 
     ScaffoldMessenger.of(context).showMaterialBanner(
       MaterialBanner(
@@ -65,12 +63,11 @@ class _AudioRecorderState extends State<AudioRecorder> {
           vertical: 14.0,
         ),
         elevation: 6.0,
-        forceActionsBelow: false,
-        leadingPadding: EdgeInsets.zero,
         actions: [
           TextButton(
-            onPressed: () =>
-                ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+            },
             child: const Text(
               'DISMISS',
               style: TextStyle(color: Colors.white),
@@ -85,14 +82,6 @@ class _AudioRecorderState extends State<AudioRecorder> {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
       }
-    });
-
-    // Schedule a post-frame callback to check the actual dimensions
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      debugPrint('\nActual Banner state:');
-      debugPrint(
-          'ScaffoldMessenger is mounted: ${ScaffoldMessenger.of(context).mounted}');
     });
   }
 

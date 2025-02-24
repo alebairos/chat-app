@@ -133,6 +133,25 @@ class AudioRecorderTestHelper {
     );
   }
 
+  static Future<void> simulateRecording(WidgetTester tester) async {
+    // Start recording
+    await tester.tap(find.byIcon(Icons.mic));
+    await tester.pump();
+
+    // Verify recording state
+    expect(find.byIcon(Icons.stop), findsOneWidget);
+    expect(find.byIcon(Icons.mic), findsNothing);
+
+    // Stop recording
+    await tester.tap(find.byIcon(Icons.stop));
+    await tester.pump();
+
+    // Verify post-recording state
+    expect(find.byIcon(Icons.delete), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+    expect(find.byIcon(Icons.send), findsOneWidget);
+  }
+
   static Future<void> simulateRecordingComplete(WidgetTester tester) async {
     // Initial state check
     expect(find.byIcon(Icons.mic), findsOneWidget);

@@ -7,6 +7,7 @@
 - `test/audio_recorder_delete_test.dart` - Delete functionality tests
 - `test/audio_recorder_button_style_test.dart` - Button style tests
 - `test/audio_recorder_error_handling_test.dart` - Error handling and styling tests
+- `test/audio_recorder_concurrency_test.dart` - Concurrency tests (temporarily skipped)
 - `test/helpers/audio_recorder_test_helper.dart` - Test helper utilities
 
 ### Component Features Coverage
@@ -47,12 +48,14 @@
 - ✓ Stop recording
 - ✓ Recording state management
 - Missing: Error cases for permission denial
+- Note: Concurrency tests temporarily skipped
 
 #### E. Playback Functionality (90%)
 - ✓ Play/Stop toggle
 - ✓ Playback state management
 - ✓ Error handling during playback
 - Missing: Some edge cases
+- Note: Concurrency tests temporarily skipped
 
 #### F. Delete Functionality (100%)
 - ✓ Delete button appearance
@@ -100,6 +103,7 @@
 - Zero-length recordings
 - Multiple rapid state transitions
 - Memory constraints
+- State management during concurrent operations (temporarily skipped)
 
 #### 3. Lifecycle Management
 - Disposal during operations
@@ -115,4 +119,4 @@
 6. Add tests for state preservation during widget rebuilds
 
 ### Test Implementation Status
-Last updated: v1.0.19 
+Last updated: v1.0.20 
