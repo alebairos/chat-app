@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import '../lib/widgets/audio_recorder.dart';
 import 'helpers/audio_recorder_test_helper.dart';
 
-@Skip('Temporarily skipping concurrency tests until state management is fixed')
 void main() {
   testWidgets('cannot start recording while already recording',
       (WidgetTester tester) async {
