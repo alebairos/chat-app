@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.23
+Current version: v1.0.24
 
 ## Features
 
@@ -50,6 +50,36 @@ Current test status: 97 test functions with 205 assertions (all passing)
 - Widget tests: 2 tests (basic app functionality)
 - Integration tests: 7 tests (end-to-end functionality)
 
+### Test Organization
+
+Tests are organized into logical groups with dedicated scripts for execution:
+
+- **Test Scripts**: Located in the `test_scripts/` directory
+  - `run_all_tests.sh`: Master script to run all test groups sequentially
+  - `run_test_group1.sh`: Audio Recorder Tests
+  - `run_test_group2.sh`: Audio Message and System Prompt Tests
+  - `run_test_group3.sh`: Claude Service Tests
+  - `run_test_group4.sh`: Life Plan Tests
+  - `run_test_group5.sh`: Chat UI Tests
+
+- **Test Results**: Located in the `test_scripts/results/` directory
+  - Individual test results for each group
+  - Summary report with pass/fail information
+
+- **Test Documentation**: Located in the `test_scripts/` directory
+  - `TEST_README.md`: Detailed information about the test organization and execution
+  - `TEST_REPORT.md`: Comprehensive test report with findings and recommendations
+
+To run all tests:
+```bash
+./test_scripts/run_all_tests.sh
+```
+
+To run a specific test group:
+```bash
+./test_scripts/run_test_group1.sh  # Replace with desired group number
+```
+
 ### Test Coverage Details
 - 97 individual test functions
 - 205 total assertions/expectations
@@ -76,6 +106,14 @@ Current test status: 97 test functions with 205 assertions (all passing)
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.24
+- Organized test scripts into dedicated directory structure
+- Created test_scripts/ directory for all test-related files
+- Added test_scripts/results/ directory for test output files
+- Updated all test scripts to use the new directory structure
+- Updated README with comprehensive test organization documentation
+- Improved project structure for better maintainability
 
 ### v1.0.23
 - Added focused system prompt tests for character identity, life planning, and formatting
