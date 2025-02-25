@@ -9925,3 +9925,27 @@ To run this test again: /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/
 [        ] Running 3 shutdown hooks
 [        ] Shutdown hooks complete
 [ +131 ms] exiting with code 1
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.
+Could not find package `test` or file `test:test`
+You need to add a dev_dependency on package:test.
+Try running `dart pub add --dev test`.

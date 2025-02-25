@@ -130,12 +130,7 @@ void main() {
       final response = await service.sendMessage('Hello');
       print('📥 Error response received: $response');
 
-      final decoded = json.decode(response);
-      print('🔍 Decoded error response: $decoded');
-
-      expect(decoded['status'], equals('error'));
-      expect(decoded['message'], contains('Unable to connect to Claude'));
-      expect(decoded['message'], contains('Network error'));
+      expect(response, contains('Unable to get a response from Claude'));
 
       print(
           '📊 Conversation history length: ${service.conversationHistory.length}');
@@ -163,13 +158,7 @@ void main() {
       final response = await service.sendMessage('Hello');
       print('📥 Error response received: $response');
 
-      final decoded = json.decode(response);
-      print('🔍 Decoded error response: $decoded');
-
-      expect(decoded['status'], equals('error'));
-      expect(
-          decoded['message'], contains('Failed to get response from Claude'));
-      expect(decoded['message'], contains('Rate limit exceeded'));
+      expect(response, equals('Rate limit exceeded. Please try again later.'));
 
       print(
           '📊 Conversation history length: ${service.conversationHistory.length}');
@@ -197,12 +186,7 @@ void main() {
       final response = await service.sendMessage('Hello');
       print('📥 Error response received: $response');
 
-      final decoded = json.decode(response);
-      print('🔍 Decoded error response: $decoded');
-
-      expect(decoded['status'], equals('error'));
-      expect(decoded['message'], contains('Unable to connect to Claude'));
-      expect(decoded['message'], contains('FormatException'));
+      expect(response, contains('Unable to get a response from Claude'));
 
       print('✓ Test completed successfully');
     });
@@ -224,12 +208,7 @@ void main() {
       final response = await service.sendMessage('Hello');
       print('📥 Error response received: $response');
 
-      final decoded = json.decode(response);
-      print('🔍 Decoded error response: $decoded');
-
-      expect(decoded['status'], equals('error'));
-      expect(decoded['message'], contains('Unable to connect to Claude'));
-      expect(decoded['message'], contains('FormatException'));
+      expect(response, contains('Unable to get a response from Claude'));
 
       print('✓ Test completed successfully');
     });
@@ -295,17 +274,15 @@ void main() {
       final response = await service.sendMessage(command);
       print('📥 Received response: $response');
 
-      final decoded = json.decode(response);
-      print('🔍 Decoded error response: $decoded');
+      expect(response, contains('Missing required parameter'));
+      expect(response, contains('MCP Error'));
 
-      expect(decoded['status'], equals('error'));
-      expect(decoded['message'], contains('MCP Error'));
       print('✓ Test completed successfully');
     });
 
     test('processes normal messages without MCP', () async {
       print('\n🧪 Testing normal message processing...');
-      final message = 'Hello';
+      const message = 'Hello';
       print('📤 Sending message: $message');
 
       when(mockClient.post(

@@ -340,6 +340,42 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Get AI response
       final response = await _claudeService.sendMessage(userMessage);
+
+      // Check if the response is an error message
+      final bool isErrorResponse = response.startsWith('Error:') ||
+          response.contains('Unable to connect') ||
+          response.contains('experiencing high demand') ||
+          response.contains('temporarily unavailable') ||
+          response.contains('rate limit') ||
+          response.contains('Authentication failed');
+
+      if (isErrorResponse) {
+        // Display error message to user
+        setState(() {
+          _messages.insert(
+            0,
+            ChatMessage(
+              text: response,
+              isUser: false,
+            ),
+          );
+          _isTyping = false;
+        });
+
+        // Show error in snackbar
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Process normal response
       final aiMessageModel = ChatMessageModel(
         text: response,
         isUser: false,
@@ -363,7 +399,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.insert(
           0,
           ChatMessage(
-            text: 'Error: Unable to send message: $e',
+            text: 'Error: Unable to send message. Please try again later.',
             isUser: false,
           ),
         );
@@ -427,6 +463,38 @@ class _ChatScreenState extends State<ChatScreen> {
       // Send transcription to Claude
       final response = await _claudeService.sendMessage(transcription);
 
+      // Check if the response is an error message
+      final bool isErrorResponse = response.startsWith('Error:') ||
+          response.contains('Unable to connect') ||
+          response.contains('experiencing high demand') ||
+          response.contains('temporarily unavailable') ||
+          response.contains('rate limit') ||
+          response.contains('Authentication failed');
+
+      if (isErrorResponse) {
+        // Display error message to user
+        final aiMessage = ChatMessage(
+          text: response,
+          isUser: false,
+        );
+
+        setState(() {
+          _messages.insert(0, aiMessage);
+        });
+
+        // Show error in snackbar
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
       // Save AI response
       await _storageService.saveMessage(
         text: response,
@@ -457,6 +525,15 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
       print('Error processing audio message: $e');
+
+      // Update the transcribing message to show the error
+      setState(() {
+        _messages[0] = ChatMessage(
+          text:
+              'Error: Unable to process audio message. Please try again later.',
+          isUser: false,
+        );
+      });
     }
   }
 

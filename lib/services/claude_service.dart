@@ -37,6 +37,52 @@ class ClaudeService {
     return _isInitialized;
   }
 
+  // Helper method to extract user-friendly error messages
+  String _getUserFriendlyErrorMessage(dynamic error) {
+    try {
+      // Check if the error is a string that contains JSON
+      if (error is String && error.contains('{') && error.contains('}')) {
+        // Try to extract the error message from the JSON
+        final errorJson = json.decode(
+            error.substring(error.indexOf('{'), error.lastIndexOf('}') + 1));
+
+        // Handle specific error types
+        if (errorJson['error'] != null && errorJson['error']['type'] != null) {
+          final errorType = errorJson['error']['type'];
+
+          switch (errorType) {
+            case 'overloaded_error':
+              return 'Claude is currently experiencing high demand. Please try again in a moment.';
+            case 'rate_limit_error':
+              return 'You\'ve reached the rate limit. Please wait a moment before sending more messages.';
+            case 'authentication_error':
+              return 'Authentication failed. Please check your API key.';
+            case 'invalid_request_error':
+              return 'There was an issue with the request. Please try again with a different message.';
+            default:
+              // If we have a message in the error, use it
+              if (errorJson['error']['message'] != null) {
+                return 'Claude error: ${errorJson['error']['message']}';
+              }
+          }
+        }
+      }
+
+      // If we couldn't parse the error or it's not a recognized type
+      if (error.toString().contains('SocketException') ||
+          error.toString().contains('Connection refused') ||
+          error.toString().contains('Network is unreachable')) {
+        return 'Unable to connect to Claude. Please check your internet connection.';
+      }
+
+      // Default error message
+      return 'Unable to get a response from Claude. Please try again later.';
+    } catch (e) {
+      // If we fail to parse the error, return a generic message
+      return 'An error occurred while communicating with Claude. Please try again.';
+    }
+  }
+
   Future<String> sendMessage(String message) async {
     try {
       await initialize();
@@ -48,23 +94,16 @@ class ClaudeService {
           final action = command['action'] as String?;
 
           if (action == null) {
-            return json.encode({
-              'status': 'error',
-              'message': 'Missing required parameter: action'
-            });
+            return 'Missing required parameter: action';
           }
 
           try {
             return await _lifePlanMCP!.processCommand(message);
           } catch (e) {
-            return json.encode({
-              'status': 'error',
-              'message': 'Missing required parameter: ${e.toString()}'
-            });
+            return 'Missing required parameter: ${e.toString()}';
           }
         } catch (e) {
-          return json
-              .encode({'status': 'error', 'message': 'Invalid command format'});
+          return 'Invalid command format';
         }
       }
 
@@ -108,14 +147,34 @@ class ClaudeService {
         });
 
         return assistantMessage;
+      } else {
+        // Handle different HTTP status codes
+        switch (response.statusCode) {
+          case 401:
+            return 'Authentication failed. Please check your API key.';
+          case 429:
+            return 'Rate limit exceeded. Please try again later.';
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            return 'Claude service is temporarily unavailable. Please try again later.';
+          default:
+            // Try to parse the error response
+            try {
+              final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+              if (errorData['error'] != null &&
+                  errorData['error']['type'] == 'overloaded_error') {
+                return 'Claude is currently experiencing high demand. Please try again in a moment.';
+              }
+              return _getUserFriendlyErrorMessage(response.body);
+            } catch (e) {
+              return 'Error: Unable to get a response from Claude (Status ${response.statusCode})';
+            }
+        }
       }
-
-      throw Exception('Failed to get response from Claude: ${response.body}');
     } catch (e) {
-      return json.encode({
-        'status': 'error',
-        'message': 'Error: Unable to connect to Claude: $e'
-      });
+      return _getUserFriendlyErrorMessage(e.toString());
     }
   }
 

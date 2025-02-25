@@ -1,0 +1,41 @@
+Test Summary
+=======================================
+Generated at: Mon Feb 24 23:54:16 -03 2025
+
+Group 1: Audio Recorder Tests
+00:01 +2: All tests passed!                                                                                                                                                                            
+00:01 +1: All tests passed!                                                                                                                                                                            
+00:01 +24: All tests passed!                                                                                                                                                                           
+00:01 +12: All tests passed!                                                                                                                                                                           
+
+Group 2: Audio Message and System Prompt Tests
+00:01 +3: All tests passed!                                                                                                                                                                            
+00:01 +1: All tests passed!                                                                                                                                                                            
+00:01 +1: All tests passed!                                                                                                                                                                            
+00:01 +1: All tests passed!                                                                                                                                                                            
+00:01 +1: All tests passed!                                                                                                                                                                            
+00:00 +1: All tests passed!                                                                                                                                                                            
+
+Group 3: Claude Service Tests
+00:01 +9: All tests passed!                                                                                                                                                                            
+00:01 +6: All tests passed!                                                                                                                                                                            
+00:01 +3: All tests passed!                                                                                                                                                                            
+00:01 +6: All tests passed!                                                                                                                                                                            
+00:01 +6: All tests passed!                                                                                                                                                                            
+00:01 +6: All tests passed!                                                                                                                                                                            
+00:00 +12: All tests passed!                                                                                                                                                                           
+
+Group 4: Life Plan Tests
+00:00 +5: All tests passed!                                                                                                                                                                            
+00:00 +9: All tests passed!                                                                                                                                                                            
+00:00 +7: All tests passed!                                                                                                                                                                            
+00:01 +3: All tests passed!                                                                                                                                                                            
+
+Group 5: Chat UI Tests
+00:01 +6: All tests passed!                                                                                                                                                                            
+00:02 +18: All tests passed!                                                                                                                                                                           
+00:01 +4: All tests passed!                                                                                                                                                                            
+00:01 +7: All tests passed!                                                                                                                                                                            
+00:02 +13: All tests passed!                                                                                                                                                                           
+00:01 +2: All tests passed!                                                                                                                                                                            
+

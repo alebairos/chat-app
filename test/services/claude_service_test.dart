@@ -110,12 +110,10 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       final response = await service.sendMessage(command);
       print('📥 Service response received: $response');
 
-      final decoded = json.decode(response);
-      print('🔍 Decoded response: $decoded');
-
-      expect(decoded['status'], equals('error'),
-          reason: 'Response status should be error for MCP failure');
-      expect(decoded['message'], contains('MCP Error'),
+      expect(response, contains('Missing required parameter'),
+          reason:
+              'Response should contain error message about missing parameter');
+      expect(response, contains('MCP Error'),
           reason: 'Response should contain MCP error message');
       print('✓ Test completed successfully');
     });
