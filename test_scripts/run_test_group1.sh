@@ -5,6 +5,9 @@ echo "========================================"
 echo "Started at: $(date)"
 echo ""
 
+# Create results directory if it doesn't exist
+mkdir -p test_scripts/results
+
 OUTPUT_FILE="test_scripts/results/test_results_group1.txt"
 
 echo "Test Group 1: Audio Recorder Tests" > $OUTPUT_FILE
@@ -28,4 +31,12 @@ echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
 # Note: audio_recorder_concurrency_test.dart is skipped as mentioned in the code
 
 echo "Completed at: $(date)" >> $OUTPUT_FILE
+
+# Check if any tests failed
+if grep -q "Some tests failed" $OUTPUT_FILE; then
+  echo "❌ Some tests failed in Group 1. See $OUTPUT_FILE for details."
+else
+  echo "✅ All tests passed in Group 1!"
+fi
+
 echo "Test Group 1 completed. Results saved to $OUTPUT_FILE" 

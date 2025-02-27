@@ -1,10 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import '../lib/services/chat_storage_service.dart';
-import '../lib/models/message_type.dart';
+import 'package:character_ai_clone/services/chat_storage_service.dart';
+import 'package:character_ai_clone/models/message_type.dart';
 import 'dart:typed_data';
 import 'dart:io';
 
@@ -79,7 +78,7 @@ void main() {
 
     test('saves and retrieves audio message', () async {
       // Create test audio file
-      final testAudioPath = 'test/assets/test_audio.m4a';
+      const testAudioPath = 'test/assets/test_audio.m4a';
       final audioFile = File(testAudioPath);
       await audioFile.create(recursive: true);
       await audioFile.writeAsBytes(Uint8List.fromList([1, 2, 3, 4]));

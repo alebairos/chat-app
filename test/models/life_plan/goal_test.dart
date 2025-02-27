@@ -55,7 +55,7 @@ void main() {
         expect(LifeDimension.physical, equals('SF'));
         expect(LifeDimension.mental, equals('SM'));
         expect(LifeDimension.relationships, equals('R'));
-        expect(LifeDimension.work, equals('T'));
+        expect(LifeDimension.work, equals('TG'));
         expect(LifeDimension.spiritual, equals('E'));
       });
     });

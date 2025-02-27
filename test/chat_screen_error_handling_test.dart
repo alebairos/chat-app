@@ -19,7 +19,7 @@ void main() {
   group('Chat Screen Error Handling', () {
     test('verifies overloaded error message format', () {
       // Test the format of the overloaded error message
-      final errorMessage =
+      const errorMessage =
           'Claude is currently experiencing high demand. Please try again in a moment.';
 
       // Verify the error message format
@@ -29,7 +29,7 @@ void main() {
 
     test('verifies network error message format', () {
       // Test the format of the network error message
-      final errorMessage =
+      const errorMessage =
           'Unable to connect to Claude. Please check your internet connection.';
 
       // Verify the error message format
@@ -39,7 +39,7 @@ void main() {
 
     test('verifies authentication error message format', () {
       // Test the format of the authentication error message
-      final errorMessage = 'Authentication failed. Please check your API key.';
+      const errorMessage = 'Authentication failed. Please check your API key.';
 
       // Verify the error message format
       expect(errorMessage, contains('Authentication failed'));
@@ -48,7 +48,7 @@ void main() {
 
     test('verifies rate limit error message format', () {
       // Test the format of the rate limit error message
-      final errorMessage =
+      const errorMessage =
           'You\'ve reached the rate limit. Please wait a moment before sending more messages.';
 
       // Verify the error message format
@@ -58,7 +58,7 @@ void main() {
 
     test('verifies server error message format', () {
       // Test the format of the server error message
-      final errorMessage =
+      const errorMessage =
           'Claude service is temporarily unavailable. Please try again later.';
 
       // Verify the error message format
@@ -68,7 +68,7 @@ void main() {
 
     test('verifies generic error message format', () {
       // Test the format of the generic error message
-      final errorMessage =
+      const errorMessage =
           'Unable to get a response from Claude. Please try again later.';
 
       // Verify the error message format

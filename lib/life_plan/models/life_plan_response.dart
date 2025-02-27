@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'life_plan_command.dart';
+import '../../models/life_plan/dimensions.dart';
 
 /// Represents a formatted response from the life plan system
 @immutable
@@ -27,10 +28,13 @@ class LifePlanResponse {
       ..writeln(
           'Salve, time wanderer! Let\'s focus on your life journey. Which dimension would you like to explore?')
       ..writeln()
-      ..writeln('**Choose a dimension:**')
-      ..writeln('- SF: Physical Health (Saúde Física)')
-      ..writeln('- SM: Mental Health (Saúde Mental)')
-      ..writeln('- R: Relationships (Relacionamentos)');
+      ..writeln('**Choose a dimension:**');
+
+    // Use the centralized dimensions model
+    for (final dimension in Dimensions.all) {
+      buffer.writeln(
+          '- ${dimension.code}: ${dimension.title} (${dimension.portugueseTitle})');
+    }
 
     return LifePlanResponse(message: buffer.toString());
   }
@@ -38,14 +42,35 @@ class LifePlanResponse {
   /// Creates a dimension exploration prompt
   factory LifePlanResponse.explore(LifePlanDimension? dimension) {
     if (dimension == null) {
+      final dimensionCodes =
+          Dimensions.all.map((d) => '${d.code} for ${d.title}').join(', ');
       return LifePlanResponse.error(
-        'Which dimension would you like to explore? Use SF for Physical, SM for Mental, or R for Relationships.',
+        'Which dimension would you like to explore? Use $dimensionCodes.',
       );
+    }
+
+    String realmName;
+    switch (dimension) {
+      case LifePlanDimension.physical:
+        realmName = 'physical realm';
+        break;
+      case LifePlanDimension.mental:
+        realmName = 'mental domain';
+        break;
+      case LifePlanDimension.relationships:
+        realmName = 'relationships kingdom';
+        break;
+      case LifePlanDimension.spirituality:
+        realmName = 'spiritual dimension';
+        break;
+      case LifePlanDimension.work:
+        realmName = 'work territory';
+        break;
     }
 
     return LifePlanResponse(
       message: '*consults ancient map* `${dimension.emoji}`\n'
-          'Ah, the ${dimension.title.toLowerCase()}! A noble choice. '
+          'Ah, the $realmName! A noble choice. '
           'Let me illuminate the paths before you...',
     );
   }
@@ -58,10 +83,10 @@ class LifePlanResponse {
       ..writeln()
       ..writeln('- /plan - Begin your life\'s quest');
 
-    for (final dimension in LifePlanDimension.values) {
-      buffer
-        ..writeln(
-            '- /explore ${dimension.code} - Venture into ${dimension.title}');
+    // Use the centralized dimensions model
+    for (final dimension in Dimensions.all) {
+      buffer.writeln(
+          '- /explore ${dimension.code} - Venture into ${dimension.title}');
     }
 
     buffer

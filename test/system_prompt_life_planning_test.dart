@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import '../lib/config/config_loader.dart';
-import '../lib/widgets/chat_message.dart';
+import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:character_ai_clone/widgets/chat_message.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
@@ -44,7 +44,7 @@ void main() {
 
     expect(
       systemPrompt.contains(
-          'Listen to their goals and silently map them to dimensions'),
+          'AUTOMATICALLY detect relevant dimensions in user messages'),
       true,
       reason:
           'System prompt should instruct to silently map goals to dimensions',
@@ -53,7 +53,7 @@ void main() {
     // Step 4: Create a chat message with life planning advice
     // This simulates what would be displayed in the UI after Claude processes a life planning query
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: Column(
             children: [

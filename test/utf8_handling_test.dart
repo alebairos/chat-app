@@ -4,7 +4,6 @@ import 'package:character_ai_clone/widgets/chat_input.dart';
 import 'package:character_ai_clone/services/chat_storage_service.dart';
 import 'package:character_ai_clone/models/message_type.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:isar/isar.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;

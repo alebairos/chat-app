@@ -206,6 +206,11 @@ class FakeClaudeService implements ClaudeService {
 
   @override
   List<Map<String, String>> get conversationHistory => [];
+
+  @override
+  void setLogging(bool enable) {
+    // No-op for testing
+  }
 }
 
 // A simplified version of ChatScreen for testing

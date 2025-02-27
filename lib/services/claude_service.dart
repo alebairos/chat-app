@@ -3,6 +3,16 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../config/config_loader.dart';
 import 'life_plan_mcp_service.dart';
+import '../models/life_plan/dimensions.dart';
+import '../utils/logger.dart';
+
+// Helper class for validation results
+class ValidationResult {
+  final bool isValid;
+  final String reason;
+
+  ValidationResult(this.isValid, this.reason);
+}
 
 class ClaudeService {
   static const String _baseUrl = 'https://api.anthropic.com/v1/messages';
@@ -10,6 +20,7 @@ class ClaudeService {
   final List<Map<String, String>> _conversationHistory = [];
   String? _systemPrompt;
   bool _isInitialized = false;
+  final _logger = Logger();
   final http.Client _client;
   final LifePlanMCPService? _lifePlanMCP;
   final ConfigLoader _configLoader;
@@ -24,13 +35,20 @@ class ClaudeService {
     _apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
   }
 
+  // Method to enable or disable logging
+  void setLogging(bool enable) {
+    _logger.setLogging(enable);
+    // Also set logging for MCP service if available
+    _lifePlanMCP?.setLogging(enable);
+  }
+
   Future<bool> initialize() async {
     if (!_isInitialized) {
       try {
         _systemPrompt = await _configLoader.loadSystemPrompt();
         _isInitialized = true;
       } catch (e) {
-        print('Error initializing Claude service: $e');
+        _logger.error('Error initializing Claude service: $e');
         return false;
       }
     }
@@ -83,6 +101,108 @@ class ClaudeService {
     }
   }
 
+  // Helper method to process MCP commands and get data
+  Future<Map<String, dynamic>> _processMCPCommand(String command) async {
+    if (_lifePlanMCP == null) {
+      return {'error': 'MCP service not available'};
+    }
+
+    try {
+      final response = _lifePlanMCP!.processCommand(command);
+      final decoded = json.decode(response);
+      return decoded;
+    } catch (e) {
+      _logger.error('Error processing MCP command: $e');
+      return {'error': e.toString()};
+    }
+  }
+
+  // Helper method to detect dimensions in user message
+  List<String> _detectDimensions(String message) {
+    // Instead of hard-coded keyword matching, we'll fetch all dimensions
+    // and let Claude's system prompt handle the detection
+    return Dimensions.codes; // Return all dimension codes
+  }
+
+  // Helper method to fetch relevant MCP data based on user message
+  Future<String> _fetchRelevantMCPData(String message) async {
+    if (_lifePlanMCP == null) {
+      return '';
+    }
+
+    final dimensions = _detectDimensions(message);
+    final buffer = StringBuffer();
+
+    // If no dimensions detected, fetch data for all dimensions
+    if (dimensions.isEmpty) {
+      dimensions.addAll(['SF', 'SM', 'R']);
+    }
+
+    // Fetch goals for each detected dimension
+    for (final dimension in dimensions) {
+      final command = json
+          .encode({'action': 'get_goals_by_dimension', 'dimension': dimension});
+
+      final result = await _processMCPCommand(command);
+      if (result['status'] == 'success' && result['data'] != null) {
+        buffer.writeln('\nMCP DATA - Goals for dimension $dimension:');
+        buffer.writeln(json.encode(result['data']));
+
+        // For each goal, try to fetch the associated track
+        for (final goal in result['data']) {
+          if (goal['trackId'] != null) {
+            final trackCommand = json.encode(
+                {'action': 'get_track_by_id', 'trackId': goal['trackId']});
+
+            final trackResult = await _processMCPCommand(trackCommand);
+            if (trackResult['status'] == 'success' &&
+                trackResult['data'] != null) {
+              buffer.writeln('\nMCP DATA - Track for goal ${goal['id']}:');
+              buffer.writeln(json.encode(trackResult['data']));
+
+              // For each challenge in the track, fetch habits
+              if (trackResult['data']['challenges'] != null) {
+                for (final challenge in trackResult['data']['challenges']) {
+                  final habitsCommand = json.encode({
+                    'action': 'get_habits_for_challenge',
+                    'trackId': goal['trackId'],
+                    'challengeCode': challenge['code']
+                  });
+
+                  final habitsResult = await _processMCPCommand(habitsCommand);
+                  if (habitsResult['status'] == 'success' &&
+                      habitsResult['data'] != null) {
+                    buffer.writeln(
+                        '\nMCP DATA - Habits for challenge ${challenge['code']}:');
+                    buffer.writeln(json.encode(habitsResult['data']));
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Fetch recommended habits for each dimension
+    for (final dimension in dimensions) {
+      final command = json.encode({
+        'action': 'get_recommended_habits',
+        'dimension': dimension,
+        'minImpact': 3
+      });
+
+      final result = await _processMCPCommand(command);
+      if (result['status'] == 'success' && result['data'] != null) {
+        buffer.writeln(
+            '\nMCP DATA - Recommended habits for dimension $dimension:');
+        buffer.writeln(json.encode(result['data']));
+      }
+    }
+
+    return buffer.toString();
+  }
+
   Future<String> sendMessage(String message) async {
     try {
       await initialize();
@@ -98,7 +218,7 @@ class ClaudeService {
           }
 
           try {
-            return await _lifePlanMCP!.processCommand(message);
+            return _lifePlanMCP!.processCommand(message);
           } catch (e) {
             return 'Missing required parameter: ${e.toString()}';
           }
@@ -113,11 +233,27 @@ class ClaudeService {
         'content': message,
       });
 
+      // Fetch relevant MCP data based on user message
+      final mcpData = await _fetchRelevantMCPData(message);
+      Map<String, dynamic>? mcpDataMap;
+
+      // Parse MCP data for validation
+      if (mcpData.isNotEmpty) {
+        mcpDataMap = _parseMCPDataForValidation(mcpData);
+      }
+
       // Prepare messages array with history
       final messages = <Map<String, String>>[];
 
       // Add conversation history
       messages.addAll(_conversationHistory);
+
+      // If we have MCP data, add it as a system message before sending to Claude
+      String systemPrompt = _systemPrompt ?? '';
+      if (mcpData.isNotEmpty) {
+        systemPrompt +=
+            '\n\nHere is the relevant data from the MCP database that you MUST use to answer the user\'s query. DO NOT make up any information not contained in this data:\n$mcpData';
+      }
 
       final response = await _client.post(
         Uri.parse(_baseUrl),
@@ -131,14 +267,25 @@ class ClaudeService {
           'model': 'claude-3-opus-20240229',
           'max_tokens': 1024,
           'messages': messages,
-          'system': _systemPrompt,
+          'system': systemPrompt,
         }),
         encoding: utf8,
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
-        final assistantMessage = data['content'][0]['text'];
+        var assistantMessage = data['content'][0]['text'];
+
+        // Validate response against MCP data if available
+        if (mcpDataMap != null && mcpDataMap.isNotEmpty) {
+          final validationResult =
+              _validateResponseAgainstMCPData(assistantMessage, mcpDataMap);
+          if (!validationResult.isValid) {
+            // Add a warning to the response
+            assistantMessage = _addValidationWarning(
+                assistantMessage, validationResult.reason);
+          }
+        }
 
         // Add assistant's response to history
         _conversationHistory.add({
@@ -176,6 +323,153 @@ class ClaudeService {
     } catch (e) {
       return _getUserFriendlyErrorMessage(e.toString());
     }
+  }
+
+  // Helper method to parse MCP data for validation
+  Map<String, dynamic> _parseMCPDataForValidation(String mcpData) {
+    final result = <String, dynamic>{};
+    final lines = mcpData.split('\n');
+    String currentSection = '';
+    StringBuffer currentData = StringBuffer();
+
+    for (final line in lines) {
+      if (line.startsWith('MCP DATA - ')) {
+        // If we were processing a section, save it
+        if (currentSection.isNotEmpty && currentData.isNotEmpty) {
+          try {
+            result[currentSection] = json.decode(currentData.toString());
+          } catch (e) {
+            _logger.error(
+                'Error parsing MCP data for section $currentSection: $e');
+          }
+        }
+
+        // Start a new section
+        currentSection = line.substring('MCP DATA - '.length);
+        currentData = StringBuffer();
+      } else if (currentSection.isNotEmpty && line.trim().isNotEmpty) {
+        currentData.writeln(line);
+      }
+    }
+
+    // Save the last section
+    if (currentSection.isNotEmpty && currentData.isNotEmpty) {
+      try {
+        result[currentSection] = json.decode(currentData.toString());
+      } catch (e) {
+        _logger.error('Error parsing MCP data for section $currentSection: $e');
+      }
+    }
+
+    return result;
+  }
+
+  // Helper method to validate Claude's response against MCP data
+  ValidationResult _validateResponseAgainstMCPData(
+      String response, Map<String, dynamic> mcpData) {
+    // This is a simplified validation that checks if the response mentions key terms from the MCP data
+    // A more sophisticated validation would parse the response and check for specific facts
+
+    final lowerResponse = response.toLowerCase();
+    final mentionedTerms = <String>[];
+    final missingTerms = <String>[];
+
+    // Extract key terms from MCP data
+    final keyTerms = _extractKeyTermsFromMCPData(mcpData);
+
+    // Check if response mentions key terms
+    for (final term in keyTerms) {
+      if (lowerResponse.contains(term.toLowerCase())) {
+        mentionedTerms.add(term);
+      } else {
+        missingTerms.add(term);
+      }
+    }
+
+    // If no key terms are mentioned, the response might not be based on MCP data
+    if (mentionedTerms.isEmpty && keyTerms.isNotEmpty) {
+      return ValidationResult(
+          false, 'Response does not mention any key terms from MCP data');
+    }
+
+    // If less than 30% of key terms are mentioned, the response might not be based on MCP data
+    if (keyTerms.isNotEmpty && mentionedTerms.length / keyTerms.length < 0.3) {
+      return ValidationResult(false,
+          'Response mentions only ${mentionedTerms.length} out of ${keyTerms.length} key terms from MCP data');
+    }
+
+    return ValidationResult(true, '');
+  }
+
+  // Helper method to extract key terms from MCP data
+  List<String> _extractKeyTermsFromMCPData(Map<String, dynamic> mcpData) {
+    final keyTerms = <String>{};
+
+    // Extract terms from goals
+    for (final entry in mcpData.entries) {
+      if (entry.key.contains('Goals for dimension')) {
+        final goals = entry.value as List<dynamic>;
+        for (final goal in goals) {
+          if (goal['description'] != null) {
+            final description = goal['description'] as String;
+            // Extract significant words (longer than 4 characters)
+            final words = description
+                .split(' ')
+                .where((word) => word.length > 4)
+                .map((word) => word.replaceAll(RegExp(r'[^\w\s]'), ''))
+                .toList();
+            keyTerms.addAll(words);
+          }
+        }
+      }
+    }
+
+    // Extract terms from tracks
+    for (final entry in mcpData.entries) {
+      if (entry.key.contains('Track for goal')) {
+        final track = entry.value as Map<String, dynamic>;
+        if (track['name'] != null) {
+          keyTerms.add(track['name'] as String);
+        }
+
+        if (track['challenges'] != null) {
+          final challenges = track['challenges'] as List<dynamic>;
+          for (final challenge in challenges) {
+            if (challenge['name'] != null) {
+              keyTerms.add(challenge['name'] as String);
+            }
+          }
+        }
+      }
+    }
+
+    // Extract terms from habits
+    for (final entry in mcpData.entries) {
+      if (entry.key.contains('Habits for challenge') ||
+          entry.key.contains('Recommended habits')) {
+        final habits = entry.value as List<dynamic>;
+        for (final habit in habits) {
+          if (habit['description'] != null) {
+            final description = habit['description'] as String;
+            // Extract significant words (longer than 4 characters)
+            final words = description
+                .split(' ')
+                .where((word) => word.length > 4)
+                .map((word) => word.replaceAll(RegExp(r'[^\w\s]'), ''))
+                .toList();
+            keyTerms.addAll(words);
+          }
+        }
+      }
+    }
+
+    return keyTerms.toList();
+  }
+
+  // Helper method to add a validation warning to the response
+  String _addValidationWarning(String response, String reason) {
+    // Add a warning at the end of the response
+    return '$response\n\n[SYSTEM WARNING: This response may not be based on specialist-created content. $reason]';
   }
 
   // Method to clear conversation history

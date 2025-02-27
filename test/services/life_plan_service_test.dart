@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/services/life_plan_service.dart';
-import 'package:character_ai_clone/models/life_plan/index.dart';
 import 'package:flutter/services.dart';
 
 void main() {
@@ -29,7 +28,7 @@ SM;ME2;Mente;ME2PC;Básico;1;SM1;5''';
 
   setUp(() async {
     // Create a mock root bundle
-    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMessageHandler(
       'flutter/assets',
       (ByteData? message) async {

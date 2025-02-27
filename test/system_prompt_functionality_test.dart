@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import '../lib/services/claude_service.dart';
-import '../lib/config/config_loader.dart';
-import '../lib/widgets/chat_message.dart';
+import 'package:character_ai_clone/services/claude_service.dart';
+import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:character_ai_clone/widgets/chat_message.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
@@ -44,7 +44,7 @@ void main() {
 
     // Create a simple UI to display a chat message
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'For mental fortitude, I recommend mindfulness practice.',

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/services/claude_service.dart';
+import 'package:character_ai_clone/services/claude_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
@@ -73,7 +73,7 @@ void main() {
     });
 
     test('formats network error message correctly', () {
-      final errorMessage =
+      const errorMessage =
           'SocketException: Failed to connect to api.anthropic.com';
 
       final result =
@@ -105,7 +105,7 @@ void main() {
     });
 
     test('handles malformed error JSON gracefully', () {
-      final errorMessage = 'This is not JSON';
+      const errorMessage = 'This is not JSON';
 
       final result =
           _callGetUserFriendlyErrorMessage(claudeService, errorMessage);

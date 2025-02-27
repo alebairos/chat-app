@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import '../lib/config/config_loader.dart';
-import '../lib/widgets/chat_message.dart';
+import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:character_ai_clone/widgets/chat_message.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
@@ -44,7 +44,7 @@ void main() {
     // Step 4: Create a chat message with character-specific formatting
     // This simulates what would be displayed in the UI after Claude processes a message
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: Column(
             children: [

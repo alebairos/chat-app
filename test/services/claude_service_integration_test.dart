@@ -212,7 +212,7 @@ void main() {
       print('🔍 Decoded error response: $decoded');
 
       expect(decoded['status'], equals('error'));
-      expect(decoded['message'], contains('Unknown command'));
+      expect(decoded['message'], contains('Unknown action: invalid_action'));
     });
 
     test('handles missing required parameters gracefully', () async {

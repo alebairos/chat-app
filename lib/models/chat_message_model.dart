@@ -1,5 +1,4 @@
 import 'package:isar/isar.dart';
-import 'dart:typed_data';
 import 'message_type.dart';
 
 part 'chat_message_model.g.dart';

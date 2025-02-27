@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/widgets/audio_recorder.dart';
+import 'package:character_ai_clone/widgets/audio_recorder.dart';
 
 class TestAudioRecorder extends StatefulWidget {
   final Function(String, Duration)? onSendAudio;
@@ -21,7 +21,7 @@ class TestAudioRecorder extends StatefulWidget {
 class _TestAudioRecorderState extends State<TestAudioRecorder> {
   bool _isRecording = false;
   bool _isPlaying = false;
-  bool _isDeleting = false;
+  final bool _isDeleting = false;
   String? _recordedFilePath;
 
   @override

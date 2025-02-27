@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/config/config_loader.dart';
+import 'package:character_ai_clone/config/config_loader.dart';
 import 'dart:convert';
 
 void main() {
@@ -52,6 +52,54 @@ void main() {
         systemPrompt.contains(element),
         true,
         reason: 'System prompt should include $element formatting instruction',
+      );
+    }
+  });
+
+  test('config file contains exploration prompts for all dimensions', () async {
+    // Initialize the config loader
+    final configLoader = ConfigLoader();
+    final explorationPrompts = await configLoader.loadExplorationPrompts();
+
+    // Verify we got a valid map
+    expect(explorationPrompts, isA<Map<String, String>>());
+    expect(explorationPrompts.isNotEmpty, true);
+
+    // Verify it contains prompts for all dimensions
+    final requiredDimensions = [
+      'physical',
+      'mental',
+      'relationships',
+      'spirituality',
+      'work'
+    ];
+
+    for (final dimension in requiredDimensions) {
+      expect(
+        explorationPrompts.containsKey(dimension),
+        true,
+        reason: 'Exploration prompts should include the $dimension dimension',
+      );
+      expect(
+        explorationPrompts[dimension]!.isNotEmpty,
+        true,
+        reason: 'Exploration prompt for $dimension should not be empty',
+      );
+    }
+
+    // Verify prompts contain required instructions
+    for (final prompt in explorationPrompts.values) {
+      expect(
+        prompt.contains(
+            'Use ONLY the goals and tracks data from the MCP database'),
+        true,
+        reason: 'Exploration prompts should instruct to use only MCP data',
+      );
+      expect(
+        prompt
+            .contains('DO NOT invent or generate any goals, tracks, or habits'),
+        true,
+        reason: 'Exploration prompts should instruct not to invent content',
       );
     }
   });

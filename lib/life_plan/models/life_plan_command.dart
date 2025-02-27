@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../models/life_plan/dimensions.dart';
 
 /// Represents the different types of life plan commands available
 enum LifePlanCommandType {
@@ -13,23 +14,31 @@ enum LifePlanCommandType {
 }
 
 /// Represents a life plan dimension
+/// @deprecated Use Dimension class from dimensions.dart instead
 enum LifePlanDimension {
-  physical('SF', '💪', 'Physical Realm',
-      'The foundation of your vitality and strength'),
-  mental('SM', '🧠', 'Mental Domain', 'The fortress of your mind and wisdom'),
-  relationships('R', '❤️', 'Relationships Kingdom',
-      'The bonds that strengthen your journey');
+  physical(Dimensions.physical),
+  mental(Dimensions.mental),
+  relationships(Dimensions.relationships),
+  spirituality(Dimensions.spirituality),
+  work(Dimensions.work);
 
-  final String code;
-  final String emoji;
-  final String title;
-  final String description;
+  final Dimension dimension;
 
-  const LifePlanDimension(this.code, this.emoji, this.title, this.description);
+  const LifePlanDimension(this.dimension);
+
+  String get code => dimension.code;
+  String get emoji => dimension.emoji;
+  String get title => dimension.title;
+  String get description => dimension.description;
 
   static LifePlanDimension? fromCode(String code) {
+    final dimension = Dimensions.fromCode(code);
+    if (dimension == null) {
+      throw ArgumentError('Invalid dimension code: $code');
+    }
+
     return LifePlanDimension.values.firstWhere(
-      (d) => d.code == code.toUpperCase(),
+      (d) => d.code == dimension.code,
       orElse: () => throw ArgumentError('Invalid dimension code: $code'),
     );
   }

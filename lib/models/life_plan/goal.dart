@@ -1,9 +1,17 @@
+import '../life_plan/dimensions.dart';
+
+/// Provides dimension code constants
+/// @deprecated Use Dimensions class instead
 class LifeDimension {
-  static const String physical = 'SF'; // Saúde Física
-  static const String mental = 'SM'; // Saúde Mental
-  static const String relationships = 'R'; // Relacionamentos
-  static const String work = 'T'; // Trabalho
-  static const String spiritual = 'E'; // Espiritualidade
+  // Private constructor to prevent instantiation
+  LifeDimension._();
+
+  // Using string literals to avoid constant expression errors
+  static const String physical = 'SF';
+  static const String mental = 'SM';
+  static const String relationships = 'R';
+  static const String spiritual = 'E';
+  static const String work = 'TG';
 }
 
 class Goal {

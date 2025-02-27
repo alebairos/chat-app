@@ -3,6 +3,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:character_ai_clone/life_plan/services/life_plan_command_handler.dart';
 import 'package:character_ai_clone/services/claude_service.dart';
+import 'package:character_ai_clone/models/life_plan/dimensions.dart';
 
 @GenerateMocks([ClaudeService])
 import 'life_plan_command_handler_test.mocks.dart';
@@ -107,12 +108,13 @@ void main() {
       });
 
       test('handles explore command with physical dimension', () async {
-        print('\n🧪 Testing /explore SF command...');
+        print('\n🧪 Testing /explore ${Dimensions.physical.code} command...');
         when(mockClaudeService.sendMessage(any)).thenAnswer(
             (_) async => 'Claude\'s response for physical dimension');
         print('✓ Mock Claude service configured');
 
-        final response = await handler.handleCommand('/explore SF');
+        final response =
+            await handler.handleCommand('/explore ${Dimensions.physical.code}');
         print('📤 Response received: $response');
 
         expect(response, contains('Claude\'s response for physical dimension'));
@@ -125,12 +127,13 @@ void main() {
       });
 
       test('handles explore command with mental dimension', () async {
-        print('\n🧪 Testing /explore SM command...');
+        print('\n🧪 Testing /explore ${Dimensions.mental.code} command...');
         when(mockClaudeService.sendMessage(any))
             .thenAnswer((_) async => 'Claude\'s response for mental dimension');
         print('✓ Mock Claude service configured');
 
-        final response = await handler.handleCommand('/explore SM');
+        final response =
+            await handler.handleCommand('/explore ${Dimensions.mental.code}');
         print('📤 Response received: $response');
 
         expect(response, contains('Claude\'s response for mental dimension'));
@@ -143,12 +146,14 @@ void main() {
       });
 
       test('handles explore command with relationships dimension', () async {
-        print('\n🧪 Testing /explore R command...');
+        print(
+            '\n🧪 Testing /explore ${Dimensions.relationships.code} command...');
         when(mockClaudeService.sendMessage(any)).thenAnswer(
             (_) async => 'Claude\'s response for relationships dimension');
         print('✓ Mock Claude service configured');
 
-        final response = await handler.handleCommand('/explore R');
+        final response = await handler
+            .handleCommand('/explore ${Dimensions.relationships.code}');
         print('📤 Response received: $response');
 
         expect(response,
@@ -187,7 +192,7 @@ void main() {
         when(mockClaudeService.sendMessage(any)).thenAnswer(
             (_) async => 'Claude\'s response for physical dimension');
 
-        final response = await handler.handleCommand('SF');
+        final response = await handler.handleCommand(Dimensions.physical.code);
         print('📤 Response received: $response');
 
         expect(response, contains('Claude\'s response for physical dimension'));
@@ -198,7 +203,7 @@ void main() {
       test('rejects dimension codes outside planning mode', () async {
         print('\n🧪 Testing dimension code handling outside planning mode...');
 
-        final response = await handler.handleCommand('SF');
+        final response = await handler.handleCommand(Dimensions.physical.code);
         print('📤 Response received: ${response.substring(0, 50)}...');
 
         expect(response, contains('*unfurls ancient scroll* `📜`'));

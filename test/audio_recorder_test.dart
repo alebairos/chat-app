@@ -4,7 +4,7 @@ import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import '../lib/widgets/audio_recorder.dart';
+import 'package:character_ai_clone/widgets/audio_recorder.dart';
 
 @GenerateMocks([Record, AudioPlayer])
 import 'audio_recorder_test.mocks.dart';
@@ -26,7 +26,7 @@ void main() {
       samplingRate: anyNamed('samplingRate'),
     )).thenAnswer((_) async => {});
     when(mockRecord.stop()).thenAnswer((_) async => '');
-    when(mockPlayer.onPlayerComplete).thenAnswer((_) => Stream.empty());
+    when(mockPlayer.onPlayerComplete).thenAnswer((_) => const Stream.empty());
   });
 
   testWidgets('AudioRecorder shows mic button initially',

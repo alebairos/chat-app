@@ -21,7 +21,7 @@ void main() {
     test('processes get_goals_by_dimension command', () async {
       print('🧪 Testing get_goals_by_dimension command...');
       final command = {'action': 'get_goals_by_dimension', 'dimension': 'SF'};
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
 
       final decodedResponse = jsonDecode(response);
       expect(decodedResponse['status'], 'success');
@@ -39,7 +39,7 @@ void main() {
     test('processes get_track_by_id command', () async {
       print('🧪 Testing get_track_by_id command...');
       final command = {'action': 'get_track_by_id', 'trackId': 'ME1'};
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
 
       final decodedResponse = jsonDecode(response);
       expect(decodedResponse['status'], 'success');
@@ -56,7 +56,7 @@ void main() {
         'trackId': 'ME1',
         'challengeCode': 'ME1PC'
       };
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
 
       final decodedResponse = jsonDecode(response);
       expect(decodedResponse['status'], 'success');
@@ -77,7 +77,7 @@ void main() {
         'dimension': 'SF',
         'minImpact': 3
       };
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
 
       final decodedResponse = jsonDecode(response);
       expect(decodedResponse['status'], 'success');
@@ -95,18 +95,18 @@ void main() {
     test('handles unknown command gracefully', () async {
       print('🧪 Testing unknown command handling...');
       final command = {'action': 'unknown_command'};
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
 
       final decodedResponse = jsonDecode(response);
       expect(decodedResponse['status'], 'error');
-      expect(decodedResponse['message'], 'Unknown command');
+      expect(decodedResponse['message'], 'Unknown action: unknown_command');
       print('✓ Unknown command handled correctly');
     });
 
     test('handles missing required parameters gracefully', () async {
       print('🧪 Testing missing parameters handling...');
       final command = {'action': 'get_goals_by_dimension'};
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
 
       final decodedResponse = jsonDecode(response);
       expect(decodedResponse['status'], 'error');
@@ -118,7 +118,7 @@ void main() {
     test('handles invalid track ID gracefully', () async {
       print('🧪 Testing invalid track ID handling...');
       final command = {'action': 'get_track_by_id', 'trackId': 'INVALID_ID'};
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
 
       final decodedResponse = jsonDecode(response);
       expect(decodedResponse['status'], 'error');

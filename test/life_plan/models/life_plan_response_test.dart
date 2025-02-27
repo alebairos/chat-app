@@ -101,8 +101,8 @@ void main() {
 
     group('Response Immutability Tests', () {
       test('response objects preserve their values', () {
-        final response =
-            const LifePlanResponse(message: 'Test', isError: false);
+        const response =
+            LifePlanResponse(message: 'Test', isError: false);
 
         expect(response.message, equals('Test'));
         expect(response.isError, isFalse);

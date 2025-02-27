@@ -37,16 +37,20 @@ void main() {
         }
 
         if (key == 'assets/data/Objetivos.csv') {
-          final String mockData = '''Dimensão;ID Objetivo;Descrição;Trilha
+          const String mockData = '''Dimensão;ID Objetivo;Descrição;Trilha
 SF;OPP1;Perder peso;ME1
+SF;OPP2;Perder peso avançado;ME2
 SF;OGM1;Ganhar massa;GM1
+SF;OGM2;Ganhar massa avançado;GM2
+SF;ODM1;Dormir melhor;DM1
+SF;ODM2;Dormir melhor : avançado;DM2
 TG;OAE1;Aprender de forma mais eficaz;AE1''';
           return ByteData.view(
               Uint8List.fromList(utf8.encode(mockData)).buffer);
         }
 
         if (key == 'assets/data/habitos.csv') {
-          final String mockData =
+          const String mockData =
               '''ID;Hábito;Intensidade;Duração;Relacionamento;Trabalho;Saúde física;Espiritualidade;Saúde mental
 SF1;Dormir 8 horas;2;30;0;1;5;0;4
 SF10;Treino de força;3;45;0;0;5;0;2
@@ -57,7 +61,7 @@ SM1;Meditar;2;15;0;0;1;3;5''';
         }
 
         if (key == 'assets/data/Trilhas.csv') {
-          final String mockData =
+          const String mockData =
               '''Dimensão;Código Trilha;Nome Trilha;Código Desafio;Nome Desafio;Nível;Hábitos;Frequencia
 SF;ER1;Energia recarregada;ER1PC;Primeiro contato;1;SF1;7
 SF;ER1;Energia recarregada;ER1PC;Primeiro contato;1;SF18;3
@@ -85,7 +89,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
 
       // Use the MCP service to get goals for a specific dimension
       final command = {'action': 'get_goals_by_dimension', 'dimension': 'SF'};
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
       final decodedResponse = jsonDecode(response);
 
       // Verify the response structure
@@ -122,7 +126,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
         'dimension': 'SF',
         'minImpact': 3
       };
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
       final decodedResponse = jsonDecode(response);
 
       // Verify the response structure
@@ -167,7 +171,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
 
       // Use the MCP service to get a specific track
       final command = {'action': 'get_track_by_id', 'trackId': 'ER1'};
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
       final decodedResponse = jsonDecode(response);
 
       // Verify the response structure
@@ -213,8 +217,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
         'action': 'get_goals_by_dimension',
         'dimension': 'SF'
       };
-      final goalResponse =
-          await mcpService.processCommand(jsonEncode(goalCommand));
+      final goalResponse = mcpService.processCommand(jsonEncode(goalCommand));
       final goalData = jsonDecode(goalResponse);
 
       expect(goalData['status'], 'success');
@@ -226,8 +229,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
 
       // Now get the track using that ID
       final trackCommand = {'action': 'get_track_by_id', 'trackId': trackId};
-      final trackResponse =
-          await mcpService.processCommand(jsonEncode(trackCommand));
+      final trackResponse = mcpService.processCommand(jsonEncode(trackCommand));
       final trackData = jsonDecode(trackResponse);
 
       expect(trackData['status'], 'success');
@@ -244,8 +246,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
         'trackId': trackId,
         'challengeCode': challengeCode
       };
-      final habitResponse =
-          await mcpService.processCommand(jsonEncode(habitCommand));
+      final habitResponse = mcpService.processCommand(jsonEncode(habitCommand));
       final habitData = jsonDecode(habitResponse);
 
       expect(habitData['status'], 'success');
@@ -278,7 +279,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
         'dimension': 'INVALID'
       };
       final invalidDimensionResponse =
-          await mcpService.processCommand(jsonEncode(invalidDimensionCommand));
+          mcpService.processCommand(jsonEncode(invalidDimensionCommand));
       final invalidDimensionData = jsonDecode(invalidDimensionResponse);
 
       expect(invalidDimensionData['status'], 'success');
@@ -290,7 +291,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
         'trackId': 'NONEXISTENT'
       };
       final invalidTrackResponse =
-          await mcpService.processCommand(jsonEncode(invalidTrackCommand));
+          mcpService.processCommand(jsonEncode(invalidTrackCommand));
       final invalidTrackData = jsonDecode(invalidTrackResponse);
 
       // The service returns 'error' status when track is not found
@@ -304,7 +305,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
         'challengeCode': 'NONEXISTENT'
       };
       final invalidChallengeResponse =
-          await mcpService.processCommand(jsonEncode(invalidChallengeCommand));
+          mcpService.processCommand(jsonEncode(invalidChallengeCommand));
       final invalidChallengeData = jsonDecode(invalidChallengeResponse);
 
       // The service returns 'success' with empty data when no habits are found
@@ -312,6 +313,90 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
       expect(invalidChallengeData['data'], isEmpty);
 
       print('✓ Invalid data handled gracefully');
+    });
+
+    test('compares goals from MCP service with direct CSV loading', () async {
+      print(
+          '🧪 Testing comparison between MCP service and direct CSV loading...');
+
+      // Step 1: Create a Claude prompt that explicitly calls an MCP function
+      final claudePrompt = '''
+      I need to see all the goals related to physical health. 
+      Please use the get_goals_by_dimension command with dimension SF to retrieve them.
+      ''';
+
+      print('📝 Claude prompt: $claudePrompt');
+      print(
+          '🔍 This prompt would trigger the MCP service to fetch goals with dimension "SF"');
+
+      // Step 2: Use the MCP service to get goals (simulating what Claude would do)
+      final mcpCommand = {
+        'action': 'get_goals_by_dimension',
+        'dimension': 'SF'
+      };
+      final mcpResponse = mcpService.processCommand(jsonEncode(mcpCommand));
+      final mcpData = jsonDecode(mcpResponse);
+      final mcpGoals = mcpData['data'] as List;
+      print('📊 Retrieved ${mcpGoals.length} goals via MCP service');
+
+      // Step 3: Directly load goals from the CSV using LifePlanService
+      final directGoals = lifePlanService.getGoalsByDimension('SF');
+      print('📊 Retrieved ${directGoals.length} goals directly from CSV');
+
+      // Step 4: Compare the results
+      expect(mcpGoals.length, equals(directGoals.length),
+          reason:
+              'MCP service and direct CSV loading should return the same number of goals');
+
+      // Step 5: Verify that the expected number of SF goals are returned
+      // According to Objetivos.csv, there should be 6 SF goals
+      expect(mcpGoals.length, equals(6),
+          reason: 'There should be 6 SF goals in the CSV file');
+
+      // Step 6: Create maps for easier comparison
+      final mcpGoalsMap = {
+        for (var goal in mcpGoals) goal['id']: goal,
+      };
+      final directGoalsMap = {
+        for (var goal in directGoals) goal.id: goal,
+      };
+
+      // Step 7: Verify specific expected goals from the CSV
+      final expectedGoals = [
+        {'id': 'OPP1', 'description': 'Perder peso', 'trackId': 'ME1'},
+        {'id': 'OPP2', 'description': 'Perder peso avançado', 'trackId': 'ME2'},
+        {'id': 'OGM1', 'description': 'Ganhar massa', 'trackId': 'GM1'},
+        {
+          'id': 'OGM2',
+          'description': 'Ganhar massa avançado',
+          'trackId': 'GM2'
+        },
+        {'id': 'ODM1', 'description': 'Dormir melhor', 'trackId': 'DM1'},
+        {
+          'id': 'ODM2',
+          'description': 'Dormir melhor : avançado',
+          'trackId': 'DM2'
+        },
+      ];
+
+      for (final expectedGoal in expectedGoals) {
+        final goalId = expectedGoal['id'];
+        expect(mcpGoalsMap.containsKey(goalId), isTrue,
+            reason: 'MCP results should contain goal $goalId');
+
+        if (mcpGoalsMap.containsKey(goalId)) {
+          expect(mcpGoalsMap[goalId]!['description'],
+              equals(expectedGoal['description']),
+              reason: 'Goal $goalId should have correct description');
+          expect(
+              mcpGoalsMap[goalId]!['trackId'], equals(expectedGoal['trackId']),
+              reason: 'Goal $goalId should have correct trackId');
+        }
+      }
+
+      print('✓ MCP service and direct CSV loading return identical goals');
+      print(
+          '✓ All expected goals from Objetivos.csv are present in the results');
     });
   });
 }

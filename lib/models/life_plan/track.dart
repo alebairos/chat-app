@@ -43,13 +43,14 @@ class Track {
   });
 
   factory Track.fromCsvRows(List<List<dynamic>> rows) {
-    if (rows.isEmpty)
+    if (rows.isEmpty) {
       return Track(
         dimension: '',
         code: '',
         name: '',
         challenges: [],
       );
+    }
 
     final firstRow = rows.first;
     final dimension = firstRow[0].toString();

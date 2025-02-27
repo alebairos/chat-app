@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import '../lib/widgets/audio_recorder.dart';
+import 'package:character_ai_clone/widgets/audio_recorder.dart';
 
 void main() {
   testWidgets('error messages have consistent red background color',
@@ -13,8 +13,8 @@ void main() {
               // Show error snackbar
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Error: Test error'),
+                  const SnackBar(
+                    content: Text('Error: Test error'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -42,8 +42,8 @@ void main() {
               // Show error snackbar
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text(
+                  const SnackBar(
+                    content: Text(
                       'Error: Test error',
                       style: TextStyle(color: Colors.white),
                     ),

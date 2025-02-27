@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.25
+Current version: v1.0.26
 
 ## Features
 
@@ -117,6 +117,13 @@ To run a specific test group:
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.26
+- Fixed system prompt life planning test by updating test expectations to match actual system prompt content
+- Added `isStartupLoggingEnabled()` method to Logger class for better encapsulation
+- Updated `_createChatMessage` method to use the new logger method for conditional logging
+- Improved test reliability with more accurate expectations
+- All tests now passing successfully
 
 ### v1.0.25
 - Added comprehensive test documentation files

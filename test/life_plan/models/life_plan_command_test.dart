@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/life_plan/models/life_plan_command.dart';
+import 'package:character_ai_clone/models/life_plan/dimensions.dart';
 
 void main() {
   group('LifePlanCommand', () {
@@ -57,21 +58,34 @@ void main() {
 
     group('LifePlanDimension Tests', () {
       test('correctly maps dimension codes', () {
-        expect(LifePlanDimension.fromCode('SF'),
+        expect(LifePlanDimension.fromCode(Dimensions.physical.code),
             equals(LifePlanDimension.physical));
-        expect(
-            LifePlanDimension.fromCode('SM'), equals(LifePlanDimension.mental));
-        expect(LifePlanDimension.fromCode('R'),
+        expect(LifePlanDimension.fromCode(Dimensions.mental.code),
+            equals(LifePlanDimension.mental));
+        expect(LifePlanDimension.fromCode(Dimensions.relationships.code),
             equals(LifePlanDimension.relationships));
+        expect(LifePlanDimension.fromCode(Dimensions.spirituality.code),
+            equals(LifePlanDimension.spirituality));
+        expect(LifePlanDimension.fromCode(Dimensions.work.code),
+            equals(LifePlanDimension.work));
       });
 
       test('handles case-insensitive dimension codes', () {
-        expect(LifePlanDimension.fromCode('sf'),
-            equals(LifePlanDimension.physical));
         expect(
-            LifePlanDimension.fromCode('sm'), equals(LifePlanDimension.mental));
-        expect(LifePlanDimension.fromCode('r'),
+            LifePlanDimension.fromCode(Dimensions.physical.code.toLowerCase()),
+            equals(LifePlanDimension.physical));
+        expect(LifePlanDimension.fromCode(Dimensions.mental.code.toLowerCase()),
+            equals(LifePlanDimension.mental));
+        expect(
+            LifePlanDimension.fromCode(
+                Dimensions.relationships.code.toLowerCase()),
             equals(LifePlanDimension.relationships));
+        expect(
+            LifePlanDimension.fromCode(
+                Dimensions.spirituality.code.toLowerCase()),
+            equals(LifePlanDimension.spirituality));
+        expect(LifePlanDimension.fromCode(Dimensions.work.code.toLowerCase()),
+            equals(LifePlanDimension.work));
       });
 
       test('throws ArgumentError for invalid dimension codes', () {
@@ -81,18 +95,34 @@ void main() {
       });
 
       test('dimensions have correct properties', () {
-        expect(LifePlanDimension.physical.code, equals('SF'));
-        expect(LifePlanDimension.physical.emoji, equals('💪'));
-        expect(LifePlanDimension.physical.title, equals('Physical Realm'));
+        expect(
+            LifePlanDimension.physical.code, equals(Dimensions.physical.code));
+        expect(LifePlanDimension.physical.emoji,
+            equals(Dimensions.physical.emoji));
+        expect(LifePlanDimension.physical.title,
+            equals(Dimensions.physical.title));
 
-        expect(LifePlanDimension.mental.code, equals('SM'));
-        expect(LifePlanDimension.mental.emoji, equals('🧠'));
-        expect(LifePlanDimension.mental.title, equals('Mental Domain'));
+        expect(LifePlanDimension.mental.code, equals(Dimensions.mental.code));
+        expect(LifePlanDimension.mental.emoji, equals(Dimensions.mental.emoji));
+        expect(LifePlanDimension.mental.title, equals(Dimensions.mental.title));
 
-        expect(LifePlanDimension.relationships.code, equals('R'));
-        expect(LifePlanDimension.relationships.emoji, equals('❤️'));
+        expect(LifePlanDimension.relationships.code,
+            equals(Dimensions.relationships.code));
+        expect(LifePlanDimension.relationships.emoji,
+            equals(Dimensions.relationships.emoji));
         expect(LifePlanDimension.relationships.title,
-            equals('Relationships Kingdom'));
+            equals(Dimensions.relationships.title));
+
+        expect(LifePlanDimension.spirituality.code,
+            equals(Dimensions.spirituality.code));
+        expect(LifePlanDimension.spirituality.emoji,
+            equals(Dimensions.spirituality.emoji));
+        expect(LifePlanDimension.spirituality.title,
+            equals(Dimensions.spirituality.title));
+
+        expect(LifePlanDimension.work.code, equals(Dimensions.work.code));
+        expect(LifePlanDimension.work.emoji, equals(Dimensions.work.emoji));
+        expect(LifePlanDimension.work.title, equals(Dimensions.work.title));
       });
     });
 

@@ -1,36 +1,43 @@
 import 'dart:convert';
 import 'life_plan_service.dart';
+import '../utils/logger.dart';
 
 class LifePlanMCPService {
   final LifePlanService _lifePlanService;
+  final _logger = Logger();
 
   LifePlanMCPService(this._lifePlanService);
 
+  // Method to enable or disable logging
+  void setLogging(bool enable) {
+    _logger.setLogging(enable);
+  }
+
   String processCommand(String command) {
-    print('🔄 Processing command: $command');
+    _logger.debug('Processing command: $command');
 
     try {
       final parsedCommand = json.decode(command);
-      print('📋 Parsed command: $parsedCommand');
+      _logger.debug('Parsed command: $parsedCommand');
 
       final action = parsedCommand['action'] as String?;
       if (action == null) {
-        print('⚠️ Missing action parameter');
+        _logger.warning('Missing action parameter');
         throw Exception('Missing required parameter: action');
       }
-      print('🎯 Action: $action');
+      _logger.debug('Action: $action');
 
       switch (action) {
         case 'get_goals_by_dimension':
           final dimension = parsedCommand['dimension'] as String?;
           if (dimension == null) {
-            print('⚠️ Missing dimension parameter');
+            _logger.warning('Missing dimension parameter');
             throw Exception('Missing required parameter: dimension');
           }
-          print('🔍 Getting goals for dimension: $dimension');
+          _logger.info('Getting goals for dimension: $dimension');
 
           final goals = _lifePlanService.getGoalsByDimension(dimension);
-          print('📊 Found ${goals.length} goals');
+          _logger.info('Found ${goals.length} goals');
 
           return json.encode({
             'status': 'success',
@@ -47,20 +54,20 @@ class LifePlanMCPService {
         case 'get_track_by_id':
           final trackId = parsedCommand['trackId'] as String?;
           if (trackId == null) {
-            print('⚠️ Missing trackId parameter');
+            _logger.warning('Missing trackId parameter');
             throw Exception('Missing required parameter: trackId');
           }
-          print('🔍 Getting track with ID: $trackId');
+          _logger.info('Getting track with ID: $trackId');
 
           final track = _lifePlanService.getTrackById(trackId);
           if (track == null) {
-            print('❌ Track not found');
+            _logger.warning('Track not found');
             return json.encode({
               'status': 'error',
               'message': 'Track not found',
             });
           }
-          print('✅ Track found: ${track.name}');
+          _logger.info('Track found: ${track.name}');
 
           return json.encode({
             'status': 'success',
@@ -89,21 +96,21 @@ class LifePlanMCPService {
           final challengeCode = parsedCommand['challengeCode'] as String?;
 
           if (trackId == null) {
-            print('⚠️ Missing trackId parameter');
+            _logger.warning('Missing trackId parameter');
             throw Exception('Missing required parameter: trackId');
           }
           if (challengeCode == null) {
-            print('⚠️ Missing challengeCode parameter');
+            _logger.warning('Missing challengeCode parameter');
             throw Exception('Missing required parameter: challengeCode');
           }
 
-          print(
-              '🔍 Getting habits for track: $trackId, challenge: $challengeCode');
+          _logger.info(
+              'Getting habits for track: $trackId, challenge: $challengeCode');
           final habits = _lifePlanService.getHabitsForChallenge(
             trackId,
             challengeCode,
           );
-          print('📊 Found ${habits.length} habits');
+          _logger.info('Found ${habits.length} habits');
 
           return json.encode({
             'status': 'success',
@@ -127,19 +134,19 @@ class LifePlanMCPService {
         case 'get_recommended_habits':
           final dimension = parsedCommand['dimension'] as String?;
           if (dimension == null) {
-            print('⚠️ Missing dimension parameter');
+            _logger.warning('Missing dimension parameter');
             throw Exception('Missing required parameter: dimension');
           }
-          print('🔍 Getting recommended habits for dimension: $dimension');
+          _logger.info('Getting recommended habits for dimension: $dimension');
 
           final minImpact = parsedCommand['minImpact'] as int? ?? 3;
-          print('📊 Minimum impact threshold: $minImpact');
+          _logger.info('Minimum impact threshold: $minImpact');
 
           final habits = _lifePlanService.getRecommendedHabits(
             dimension,
             minImpact: minImpact,
           );
-          print('📊 Found ${habits.length} recommended habits');
+          _logger.info('Found ${habits.length} recommended habits');
 
           return json.encode({
             'status': 'success',
@@ -161,14 +168,14 @@ class LifePlanMCPService {
           });
 
         default:
-          print('❌ Unknown command: $action');
+          _logger.warning('Unknown command: $action');
           return json.encode({
             'status': 'error',
-            'message': 'Unknown command',
+            'message': 'Unknown action: $action',
           });
       }
     } catch (e) {
-      print('❌ Error processing command: $e');
+      _logger.error('Error processing command: $e');
       return json.encode({
         'status': 'error',
         'message': e.toString(),

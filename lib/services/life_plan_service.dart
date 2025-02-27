@@ -1,6 +1,7 @@
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../models/life_plan/index.dart';
+import '../utils/logger.dart';
 
 class LifePlanService {
   // Singleton instance
@@ -14,11 +15,22 @@ class LifePlanService {
   Map<String, Track> _tracks = {}; // Indexed by track code
 
   bool _isInitialized = false;
+  final _logger = Logger();
 
   // Getters for the models
   List<Goal> get goals => List.unmodifiable(_goals);
   List<Habit> get habits => List.unmodifiable(_habits);
   Map<String, Track> get tracks => Map.unmodifiable(_tracks);
+
+  // Method to enable or disable logging
+  void setLogging(bool enable) {
+    _logger.setLogging(enable);
+  }
+
+  // Method to enable or disable startup logging specifically
+  void setStartupLogging(bool enable) {
+    _logger.setStartupLogging(enable);
+  }
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -33,7 +45,7 @@ class LifePlanService {
 
       _isInitialized = true;
     } catch (e) {
-      print('Failed to initialize LifePlanService: $e'); // Debug log
+      _logger.error('Failed to initialize LifePlanService: $e');
       throw Exception('Failed to initialize LifePlanService: $e');
     }
   }
@@ -41,31 +53,31 @@ class LifePlanService {
   Future<void> _loadGoals() async {
     try {
       final data = await rootBundle.loadString('assets/data/Objetivos.csv');
-      print('Goals data loaded: $data'); // Debug log
+      _logger.logStartup('Goals data loaded successfully');
 
       // Configure CSV parser
-      final parser = CsvToListConverter(
+      const parser = CsvToListConverter(
         fieldDelimiter: ';',
         eol: '\n',
         shouldParseNumbers: false,
       );
 
       final rows = parser.convert(data);
-      print('All rows: $rows'); // Debug log
+      _logger.logStartup('Parsed ${rows.length} rows from goals data');
 
       if (rows.isEmpty) {
-        print('No rows parsed from goals data'); // Debug log
+        _logger.warning('No rows parsed from goals data');
         return;
       }
 
       // Skip header row and convert remaining rows
       final dataRows = rows.skip(1).toList();
-      print('Data rows: $dataRows'); // Debug log
+      _logger.logStartup('Processing ${dataRows.length} data rows');
 
       _goals = dataRows.map((row) => Goal.fromCsv(row)).toList();
-      print('Goals created: ${_goals.length}'); // Debug log
+      _logger.logStartup('Goals created: ${_goals.length}');
     } catch (e) {
-      print('Error loading goals: $e'); // Debug log
+      _logger.error('Error loading goals: $e');
       rethrow;
     }
   }
@@ -73,31 +85,31 @@ class LifePlanService {
   Future<void> _loadHabits() async {
     try {
       final data = await rootBundle.loadString('assets/data/habitos.csv');
-      print('Habits data loaded: $data'); // Debug log
+      _logger.logStartup('Habits data loaded successfully');
 
       // Configure CSV parser
-      final parser = CsvToListConverter(
+      const parser = CsvToListConverter(
         fieldDelimiter: ';',
         eol: '\n',
         shouldParseNumbers: false,
       );
 
       final rows = parser.convert(data);
-      print('All rows: $rows'); // Debug log
+      _logger.logStartup('Parsed ${rows.length} rows from habits data');
 
       if (rows.isEmpty) {
-        print('No rows parsed from habits data'); // Debug log
+        _logger.warning('No rows parsed from habits data');
         return;
       }
 
       // Skip header row and convert remaining rows
       final dataRows = rows.skip(1).toList();
-      print('Data rows: $dataRows'); // Debug log
+      _logger.logStartup('Processing ${dataRows.length} data rows');
 
       _habits = dataRows.map((row) => Habit.fromCsv(row)).toList();
-      print('Habits created: ${_habits.length}'); // Debug log
+      _logger.logStartup('Habits created: ${_habits.length}');
     } catch (e) {
-      print('Error loading habits: $e'); // Debug log
+      _logger.error('Error loading habits: $e');
       rethrow;
     }
   }
@@ -105,26 +117,26 @@ class LifePlanService {
   Future<void> _loadTracks() async {
     try {
       final data = await rootBundle.loadString('assets/data/Trilhas.csv');
-      print('Tracks data loaded: $data'); // Debug log
+      _logger.logStartup('Tracks data loaded successfully');
 
       // Configure CSV parser
-      final parser = CsvToListConverter(
+      const parser = CsvToListConverter(
         fieldDelimiter: ';',
         eol: '\n',
         shouldParseNumbers: false,
       );
 
       final rows = parser.convert(data);
-      print('All rows: $rows'); // Debug log
+      _logger.logStartup('Parsed ${rows.length} rows from tracks data');
 
       if (rows.isEmpty) {
-        print('No rows parsed from tracks data'); // Debug log
+        _logger.warning('No rows parsed from tracks data');
         return;
       }
 
       // Skip header row and convert remaining rows
       final dataRows = rows.skip(1).toList();
-      print('Data rows: $dataRows'); // Debug log
+      _logger.logStartup('Processing ${dataRows.length} data rows');
 
       // Group rows by track code
       final trackGroups = <String, List<List<dynamic>>>{};
@@ -133,15 +145,15 @@ class LifePlanService {
             row[1].toString(); // Track code is in the second column
         trackGroups.putIfAbsent(trackCode, () => []).add(row);
       }
-      print('Track groups created: ${trackGroups.length}'); // Debug log
+      _logger.logStartup('Track groups created: ${trackGroups.length}');
 
       // Create Track objects
       _tracks = trackGroups.map((code, rows) {
         return MapEntry(code, Track.fromCsvRows(rows));
       });
-      print('Tracks created: ${_tracks.length}'); // Debug log
+      _logger.logStartup('Tracks created: ${_tracks.length}');
     } catch (e) {
-      print('Error loading tracks: $e'); // Debug log
+      _logger.error('Error loading tracks: $e');
       rethrow;
     }
   }

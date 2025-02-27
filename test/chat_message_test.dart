@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import '../lib/widgets/chat_message.dart';
-import '../lib/widgets/audio_message.dart';
+import 'package:character_ai_clone/widgets/chat_message.dart';
+import 'package:character_ai_clone/widgets/audio_message.dart';
 import 'helpers/test_messages.dart';
 import 'package:mockito/mockito.dart';
 
@@ -59,7 +58,7 @@ void main() {
     });
 
     testWidgets('renders user message correctly', (tester) async {
-      final userMessage = MaterialApp(
+      const userMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'User message',
@@ -95,13 +94,13 @@ void main() {
     });
 
     testWidgets('renders audio message correctly', (tester) async {
-      final audioMessage = MaterialApp(
+      const audioMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Audio transcription',
             isUser: true,
             audioPath: 'test_audio.m4a',
-            duration: const Duration(seconds: 30),
+            duration: Duration(seconds: 30),
             isTest: true,
           ),
         ),
@@ -148,7 +147,7 @@ void main() {
     });
 
     testWidgets('handles empty text gracefully', (tester) async {
-      final emptyMessage = MaterialApp(
+      const emptyMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: '',
@@ -170,7 +169,7 @@ void main() {
     testWidgets('applies correct text colors based on user/non-user',
         (tester) async {
       // Test user message (should be white text)
-      final userMessage = MaterialApp(
+      const userMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'User message',
@@ -191,7 +190,7 @@ void main() {
       );
 
       // Test non-user message (should be black text)
-      final nonUserMessage = MaterialApp(
+      const nonUserMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Bot message',
@@ -232,7 +231,7 @@ void main() {
     });
 
     testWidgets('supports accessibility features', (tester) async {
-      final message = MaterialApp(
+      const message = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Accessible message',
@@ -260,13 +259,13 @@ void main() {
     });
 
     testWidgets('handles invalid audio paths gracefully', (tester) async {
-      final invalidAudioMessage = MaterialApp(
+      const invalidAudioMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Invalid audio',
             isUser: true,
             audioPath: 'invalid_path.m4a',
-            duration: const Duration(seconds: 1),
+            duration: Duration(seconds: 1),
             isTest: true,
           ),
         ),
@@ -281,13 +280,13 @@ void main() {
     });
 
     testWidgets('audio player controls are responsive', (tester) async {
-      final audioMessage = MaterialApp(
+      const audioMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Test audio',
             isUser: true,
             audioPath: 'test_audio.m4a',
-            duration: const Duration(seconds: 30),
+            duration: Duration(seconds: 30),
             isTest: true,
           ),
         ),
@@ -361,7 +360,7 @@ void main() {
 
     testWidgets('shows menu button for all messages', (tester) async {
       // Test user message - should have menu
-      final userMessage = MaterialApp(
+      const userMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'User message',
@@ -377,7 +376,7 @@ void main() {
           reason: 'Menu button should be visible for user messages');
 
       // Test bot message - should have menu
-      final botMessage = MaterialApp(
+      const botMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Bot message',
@@ -394,7 +393,7 @@ void main() {
     });
 
     testWidgets('shows all menu options for user messages', (tester) async {
-      final message = MaterialApp(
+      const message = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Test message',
@@ -419,7 +418,7 @@ void main() {
     });
 
     testWidgets('shows limited menu options for bot messages', (tester) async {
-      final message = MaterialApp(
+      const message = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Bot message',
@@ -518,7 +517,7 @@ void main() {
     });
 
     testWidgets('supports message copying', (tester) async {
-      final message = MaterialApp(
+      const message = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
             text: 'Copy this text',

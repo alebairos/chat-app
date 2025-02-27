@@ -6,15 +6,15 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Row(
+      title: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             backgroundColor: Colors.deepPurple,
             child: Icon(Icons.military_tech, color: Colors.white),
           ),
-          const SizedBox(width: 8),
-          const Text('Sergeant Oracle'),
+          SizedBox(width: 8),
+          Text('Sergeant Oracle'),
         ],
       ),
       actions: [

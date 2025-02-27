@@ -8,6 +8,7 @@ import '../models/message_type.dart';
 import '../models/chat_message_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/transcription_service.dart';
+import '../utils/logger.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -37,6 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   static const int _pageSize = 10000;
   final OpenAITranscriptionService _transcriptionService =
       OpenAITranscriptionService();
+  final Logger _logger = Logger();
 
   @override
   void initState() {
@@ -147,15 +149,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _showEditDialog(String messageId, String currentText) async {
-    print('=== EDIT FLOW START ===');
-    print('1. _showEditDialog called with:');
-    print('   - Message ID: $messageId');
-    print('   - Current text: $currentText');
+    _logger.debug('=== EDIT FLOW START ===');
+    _logger.debug('1. _showEditDialog called with:');
+    _logger.debug('   - Message ID: $messageId');
+    _logger.debug('   - Current text: $currentText');
 
-    print('2. Creating edit dialog with TextField controller');
+    _logger.debug('2. Creating edit dialog with TextField controller');
     final controller = TextEditingController(text: currentText);
 
-    print('3. Building edit dialog');
+    _logger.debug('3. Building edit dialog');
     return showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -171,26 +173,26 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              print('4a. Cancel button pressed');
+              _logger.debug('4a. Cancel button pressed');
               Navigator.pop(context);
-              print('4b. Dialog dismissed via cancel');
+              _logger.debug('4b. Dialog dismissed via cancel');
             },
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
               final newText = controller.text;
-              print('5a. Save button pressed');
-              print('   - New text: $newText');
+              _logger.debug('5a. Save button pressed');
+              _logger.debug('   - New text: $newText');
 
               if (newText.trim().isEmpty) {
-                print('5b. Empty text detected - not saving');
+                _logger.debug('5b. Empty text detected - not saving');
                 return;
               }
 
-              print('5c. Closing dialog before edit');
+              _logger.debug('5c. Closing dialog before edit');
               Navigator.pop(context);
-              print('5d. Calling _editMessage');
+              _logger.debug('5d. Calling _editMessage');
               _editMessage(messageId, newText);
             },
             child: const Text('Save'),
@@ -201,13 +203,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _editMessage(String id, String newText) async {
-    print('\n=== EDIT MESSAGE START ===');
-    print('1. _editMessage called with:');
-    print('   - Message ID: $id');
-    print('   - New text: $newText');
+    _logger.debug('=== EDIT MESSAGE START ===');
+    _logger.debug('1. _editMessage called with:');
+    _logger.debug('   - Message ID: $id');
+    _logger.debug('   - New text: $newText');
 
     if (newText.trim().isEmpty) {
-      print('2a. Empty text validation failed');
+      _logger.debug('2a. Empty text validation failed');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Message cannot be empty'),
@@ -218,33 +220,33 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     try {
-      print('3. Saving edit to storage');
+      _logger.debug('3. Saving edit to storage');
       await _storageService.editMessage(int.parse(id), newText);
 
       if (!mounted) {
-        print('4a. Widget not mounted after storage save');
+        _logger.debug('4a. Widget not mounted after storage save');
         return;
       }
 
-      print('4b. Fetching updated message from storage');
+      _logger.debug('4b. Fetching updated message from storage');
       final isar = await _storageService.db;
       final updatedModel = await isar.chatMessageModels.get(int.parse(id));
 
       if (updatedModel != null) {
-        print('5a. Updated message retrieved:');
-        print('   - ID: ${updatedModel.id}');
-        print('   - Text: ${updatedModel.text}');
+        _logger.debug('5a. Updated message retrieved:');
+        _logger.debug('   - ID: ${updatedModel.id}');
+        _logger.debug('   - Text: ${updatedModel.text}');
 
         setState(() {
           final index =
               _messages.indexWhere((m) => m.key == ValueKey(int.parse(id)));
-          print('5b. Found message at index: $index');
+          _logger.debug('5b. Found message at index: $index');
 
           if (index != -1) {
             _messages[index] = _createChatMessage(updatedModel);
-            print('5c. Message updated in UI');
+            _logger.debug('5c. Message updated in UI');
           } else {
-            print('5d. ERROR: Message not found in UI list');
+            _logger.debug('5d. ERROR: Message not found in UI list');
           }
         });
 
@@ -254,16 +256,15 @@ class _ChatScreenState extends State<ChatScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        print('6. Success snackbar shown');
+        _logger.debug('6. Success snackbar shown');
       } else {
-        print('5x. ERROR: Updated message not found in storage');
+        _logger.debug('5x. ERROR: Updated message not found in storage');
       }
     } catch (e) {
-      print('ERROR in _editMessage:');
-      print(e.toString());
+      _logger.error('ERROR in _editMessage: ${e.toString()}');
 
       if (!mounted) {
-        print('Widget not mounted after error');
+        _logger.debug('Widget not mounted after error');
         return;
       }
 
@@ -274,15 +275,17 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     }
-    print('=== EDIT MESSAGE END ===\n');
+    _logger.debug('=== EDIT MESSAGE END ===');
   }
 
   ChatMessage _createChatMessage(ChatMessageModel model) {
-    print('\n=== CREATE CHAT MESSAGE ===');
-    print('Creating ChatMessage widget:');
-    print('- ID: ${model.id}');
-    print('- Text: ${model.text}');
-    print('- Is user: ${model.isUser}');
+    // Only log if startup logging is enabled
+    if (_logger.isStartupLoggingEnabled()) {
+      _logger.logStartup('Creating ChatMessage widget:');
+      _logger.logStartup('- ID: ${model.id}');
+      _logger.logStartup('- Text: ${model.text}');
+      _logger.logStartup('- Is user: ${model.isUser}');
+    }
 
     return ChatMessage(
       key: ValueKey(model.id),
@@ -293,10 +296,9 @@ class _ChatScreenState extends State<ChatScreen> {
       onDelete: () => _deleteMessage(model.id),
       onEdit: model.isUser
           ? (text) {
-              print('\n=== EDIT CALLBACK TRIGGERED ===');
-              print('Edit callback for message:');
-              print('- ID: ${model.id}');
-              print('- Current text: $text');
+              _logger.debug('Edit callback for message:');
+              _logger.debug('- ID: ${model.id}');
+              _logger.debug('- Current text: $text');
               _showEditDialog(model.id.toString(), text);
             }
           : null,
@@ -398,7 +400,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages.insert(
           0,
-          ChatMessage(
+          const ChatMessage(
             text: 'Error: Unable to send message. Please try again later.',
             isUser: false,
           ),
@@ -528,7 +530,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Update the transcribing message to show the error
       setState(() {
-        _messages[0] = ChatMessage(
+        _messages[0] = const ChatMessage(
           text:
               'Error: Unable to process audio message. Please try again later.',
           isUser: false,
@@ -556,9 +558,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     if (_isInitialLoading) {
-      return Scaffold(
-        appBar: const CustomChatAppBar(),
-        body: const Center(
+      return const Scaffold(
+        appBar: CustomChatAppBar(),
+        body: Center(
           child: CircularProgressIndicator(),
         ),
       );

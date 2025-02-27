@@ -140,7 +140,7 @@ void main() {
       final file = File('test/assets/test_audio.m4a');
       await file.writeAsString('test audio content');
 
-      final specialText = 'Test with special chars: áéíóú ñ';
+      const specialText = 'Test with special chars: áéíóú ñ';
       when(mockClient.send(any)).thenAnswer((_) async {
         return http.StreamedResponse(
           Stream.value(utf8.encode(json.encode({'text': specialText}))),

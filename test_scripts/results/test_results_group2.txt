@@ -1,11 +1,371 @@
 Test Group 2: Audio Message and System Prompt Tests
 =======================================
-Started at: Mon Feb 24 23:53:28 -03 2025
+Started at: Thu Feb 27 17:58:32 -03 2025
 
+[  +18 ms] executing: sysctl hw.optional.arm64
+[  +11 ms] Exit code 0 from: sysctl hw.optional.arm64
+[        ] hw.optional.arm64: 1
+[  +16 ms] executing: sw_vers -productName
+[   +8 ms] Exit code 0 from: sw_vers -productName
+[        ] macOS
+[        ] executing: sw_vers -productVersion
+[   +7 ms] Exit code 0 from: sw_vers -productVersion
+[        ] 14.6.1
+[        ] executing: sw_vers -buildVersion
+[   +7 ms] Exit code 0 from: sw_vers -buildVersion
+[        ] 23G93
+[        ] executing: uname -m
+[   +3 ms] Exit code 0 from: uname -m
+[        ] arm64
+[  +14 ms] Found 1 files which will be executed as Widget Tests.
+[   +6 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[   +6 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[  +27 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[  +28 ms] Skipping pub get: version match.
+[  +19 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +3 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[   +2 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[   +7 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[   +7 ms] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[  +71 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[  +21 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +2 ms] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[   +1 ms] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[   +1 ms] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +3 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +7 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[   +1 ms] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[   +1 ms] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +34 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +1 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[   +3 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[   +1 ms] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[  +19 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +5 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +2 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[   +1 ms] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +21 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[  +12 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +5 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[   +1 ms] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[   +1 ms] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +13 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[  +26 ms] executing: sysctl hw.optional.arm64
+[   +3 ms] Exit code 0 from: sysctl hw.optional.arm64
+[        ] hw.optional.arm64: 1
+[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[ +229 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[        ] Xcode 16.2
+           Build version 16C5032a
+[ +101 ms] No packages with native assets. Skipping native assets compilation.
+[   +1 ms] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
+[   +1 ms] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
+[ +142 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/audio_message_test.dart?]
+00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/audio_message_test.dart                                                                                                               [ +110 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/audio_message_test.dart
+[   +2 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
+[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_compiler.XJCE7Y/output.dill
+[        ] Listening to compiler controller...
+[   +4 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_listener.aaTNuH/listener.dart
+[  +32 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[  +32 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[  +19 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +1 ms] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[   +1 ms] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[   +2 ms] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +2 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[  +12 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[   +2 ms] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[   +1 ms] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[   +3 ms] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[   +1 ms] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +40 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_compiler.XJCE7Y/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
+[  +12 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_listener.aaTNuH/listener.dart
+[ +778 ms] <- accept
+[        ] <- reset
+[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_listener.aaTNuH/listener.dart took 950ms
+[   +1 ms] test 0: starting test device
+[  +20 ms] test 0: awaiting connection to test device
+[   +4 ms] test 0: VM Service uri is not available
+[  +20 ms] test 0: test harness socket server is running at port:53344
+[   +3 ms] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_fonts.6UjpRA
+[   +1 ms] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_listener.aaTNuH/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_fonts.6UjpRA/fonts.conf, SERVER_PORT: 53344, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
+00:01 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/audio_message_test.dart                                                                                                               [  +11 ms] test 0: Started flutter_tester process at pid 41504
+[ +398 ms] test 0: connected to test device, now awaiting test result
+[        ] test 0: Waiting for test harness or tests to finish
+00:01 +0: AudioMessage displays correct duration format                                                                                                                                                00:01 +1: AudioMessage displays correct duration format                                                                                                                                                00:01 +1: AudioMessage displays transcription text                                                                                                                                                     00:01 +2: AudioMessage displays transcription text                                                                                                                                                     00:01 +2: AudioMessage shows play button initially                                                                                                                                                     00:01 +3: AudioMessage shows play button initially                                                                                                                                                     [ +397 ms] test 0: Test harness is no longer needed by test process
+[        ] test 0: finished
+[        ] test 0: cleaning up...
+[        ] test 0: ensuring test device is terminated.
+[        ] test 0: Terminating flutter_tester process
+[        ] test 0: Shutting down DevTools server
+[        ] test 0: Test process is no longer needed by test harness
+[        ] test 0: Shutting down test harness socket server
+[   +2 ms] test 0: flutter_tester process at pid 41504 exited with code=-9
+[        ] test 0: deleting temporary directory
+[   +1 ms] test 0: finished
+00:01 +3: All tests passed!                                                                                                                                                                            
+[   +3 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_compiler.XJCE7Y...
+[        ] killing pid 41496
+[   +6 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.oEQ19a/flutter_test_fonts.6UjpRA...
+[   +1 ms] test package returned with exit code 0
+[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.951989; combined: 0:00:01.952009.
+[        ] Runtime for phase Compile: Wall-clock: 0:00:00.950470; combined: 0:00:00.950500.
+[        ] Runtime for phase Run: Wall-clock: 0:00:00.846303; combined: 0:00:00.846318.
+[        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000294; combined: 0:00:00.000295.
+[   +3 ms] "flutter test" took 2,871ms.
+[  +25 ms] Running 3 shutdown hooks
+[        ] Shutdown hooks complete
+[ +150 ms] exiting with code 0
+\n-------------------------------------------\n
+[  +10 ms] executing: sysctl hw.optional.arm64
+[   +5 ms] Exit code 0 from: sysctl hw.optional.arm64
+[        ] hw.optional.arm64: 1
+[   +7 ms] executing: sw_vers -productName
+[   +6 ms] Exit code 0 from: sw_vers -productName
+[        ] macOS
+[        ] executing: sw_vers -productVersion
+[   +6 ms] Exit code 0 from: sw_vers -productVersion
+[        ] 14.6.1
+[        ] executing: sw_vers -buildVersion
+[   +6 ms] Exit code 0 from: sw_vers -buildVersion
+[        ] 23G93
+[        ] executing: uname -m
+[   +2 ms] Exit code 0 from: uname -m
+[        ] arm64
+[   +9 ms] Found 1 files which will be executed as Widget Tests.
+[   +2 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[   +2 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[  +17 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[  +22 ms] Skipping pub get: version match.
+[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +2 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[  +21 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +9 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[   +1 ms] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +2 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +18 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[  +10 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[  +11 ms] executing: sysctl hw.optional.arm64
+[   +2 ms] Exit code 0 from: sysctl hw.optional.arm64
+[        ] hw.optional.arm64: 1
+[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[  +39 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[        ] Xcode 16.2
+           Build version 16C5032a
+[  +39 ms] No packages with native assets. Skipping native assets compilation.
+[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
+[        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
+[  +63 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_functionality_test.dart?]
+00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_functionality_test.dart                                                                                                 [  +74 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_functionality_test.dart
+[   +1 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
+[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_compiler.USfDv0/output.dill
+[        ] Listening to compiler controller...
+[   +3 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_listener.bbAt7a/listener.dart
+[   +8 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[   +9 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_compiler.USfDv0/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
+[   +5 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_listener.bbAt7a/listener.dart
+[ +482 ms] <- accept
+[        ] <- reset
+[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_listener.bbAt7a/listener.dart took 524ms
+[        ] test 0: starting test device
+[   +1 ms] test 0: awaiting connection to test device
+[        ] test 0: VM Service uri is not available
+[   +1 ms] test 0: test harness socket server is running at port:53353
+[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_fonts.DnA6n4
+[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_listener.bbAt7a/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_fonts.DnA6n4/fonts.conf, SERVER_PORT: 53353, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
+[   +3 ms] test 0: Started flutter_tester process at pid 41544
+[ +244 ms] test 0: connected to test device, now awaiting test result
+[        ] test 0: Waiting for test harness or tests to finish
+00:00 +0: system prompt prevents command exposure in UI                                                                                                                                                00:01 +0: system prompt prevents command exposure in UI                                                                                                                                                00:01 +1: system prompt prevents command exposure in UI                                                                                                                                                [ +355 ms] test 0: Test harness is no longer needed by test process
+[        ] test 0: finished
+[        ] test 0: cleaning up...
+[        ] test 0: ensuring test device is terminated.
+[        ] test 0: Terminating flutter_tester process
+[        ] test 0: Shutting down DevTools server
+[        ] test 0: Test process is no longer needed by test harness
+[        ] test 0: Shutting down test harness socket server
+[   +2 ms] test 0: flutter_tester process at pid 41544 exited with code=-9
+[        ] test 0: deleting temporary directory
+[        ] test 0: finished
+00:01 +1: All tests passed!                                                                                                                                                                            
+[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_compiler.USfDv0...
+[        ] killing pid 41541
+[   +7 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.7lN7TX/flutter_test_fonts.DnA6n4...
+[   +1 ms] test package returned with exit code 0
+[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.232576; combined: 0:00:01.232592.
+[        ] Runtime for phase Compile: Wall-clock: 0:00:00.524224; combined: 0:00:00.524240.
+[        ] Runtime for phase Run: Wall-clock: 0:00:00.606441; combined: 0:00:00.606442.
+[        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
+[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000297; combined: 0:00:00.000299.
+[   +2 ms] "flutter test" took 1,610ms.
+[  +22 ms] Running 3 shutdown hooks
+[        ] Shutdown hooks complete
+[ +153 ms] exiting with code 0
+\n-------------------------------------------\n
 [  +11 ms] executing: sysctl hw.optional.arm64
 [   +5 ms] Exit code 0 from: sysctl hw.optional.arm64
 [        ] hw.optional.arm64: 1
-[   +8 ms] executing: sw_vers -productName
+[   +7 ms] executing: sw_vers -productName
 [   +6 ms] Exit code 0 from: sw_vers -productName
 [        ] macOS
 [        ] executing: sw_vers -productVersion
@@ -52,18 +412,18 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
-[  +23 ms] Skipping pub get: version match.
-[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[   +1 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[  +21 ms] Skipping pub get: version match.
+[  +13 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +2 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
 [   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[   +1 ms] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[  +22 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[  +10 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[  +20 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +9 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +1 ms] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
 [        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[   +1 ms] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
 [   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
 [   +2 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
 [        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
@@ -74,7 +434,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
 [  +10 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
 [   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
@@ -87,7 +447,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +15 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
@@ -106,22 +466,22 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
 [   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 [  +11 ms] executing: sysctl hw.optional.arm64
-[   +1 ms] Exit code 0 from: sysctl hw.optional.arm64
+[   +2 ms] Exit code 0 from: sysctl hw.optional.arm64
 [        ] hw.optional.arm64: 1
 [        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[  +40 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[  +38 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
 [        ] Xcode 16.2
            Build version 16C5032a
-[  +46 ms] No packages with native assets. Skipping native assets compilation.
+[  +38 ms] No packages with native assets. Skipping native assets compilation.
 [        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
 [        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
-[  +63 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/audio_message_test.dart?]
-00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/audio_message_test.dart                                                                                                               [  +78 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/audio_message_test.dart
+[  +65 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_character_test.dart?]
+00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_character_test.dart                                                                                                     [  +74 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_character_test.dart
 [   +2 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
-[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_compiler.a73HKC/output.dill
+[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_compiler.rIjGqP/output.dill
 [        ] Listening to compiler controller...
-[   +4 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_listener.G5s9bA/listener.dart
-[  +17 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +3 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_listener.wOdMQn/listener.dart
+[   +8 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
@@ -138,21 +498,21 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +10 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_compiler.a73HKC/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
-[   +6 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_listener.G5s9bA/listener.dart
-[ +420 ms] <- accept
+[   +9 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_compiler.rIjGqP/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
+[   +6 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_listener.wOdMQn/listener.dart
+[ +405 ms] <- accept
 [        ] <- reset
-[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_listener.G5s9bA/listener.dart took 472ms
+[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_listener.wOdMQn/listener.dart took 447ms
 [        ] test 0: starting test device
 [   +1 ms] test 0: awaiting connection to test device
 [        ] test 0: VM Service uri is not available
-[   +1 ms] test 0: test harness socket server is running at port:51382
-[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_fonts.oPpHJb
-[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_listener.G5s9bA/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_fonts.oPpHJb/fonts.conf, SERVER_PORT: 51382, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
-[   +3 ms] test 0: Started flutter_tester process at pid 61381
-[ +305 ms] test 0: connected to test device, now awaiting test result
+[   +1 ms] test 0: test harness socket server is running at port:53365
+[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_fonts.1lgNe8
+[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_listener.wOdMQn/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_fonts.1lgNe8/fonts.conf, SERVER_PORT: 53365, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
+[   +3 ms] test 0: Started flutter_tester process at pid 41589
+[ +239 ms] test 0: connected to test device, now awaiting test result
 [        ] test 0: Waiting for test harness or tests to finish
-00:00 +0: AudioMessage displays correct duration format                                                                                                                                                00:01 +0: AudioMessage displays correct duration format                                                                                                                                                00:01 +1: AudioMessage displays correct duration format                                                                                                                                                00:01 +1: AudioMessage displays transcription text                                                                                                                                                     00:01 +2: AudioMessage displays transcription text                                                                                                                                                     00:01 +2: AudioMessage shows play button initially                                                                                                                                                     00:01 +3: AudioMessage shows play button initially                                                                                                                                                     [ +360 ms] test 0: Test harness is no longer needed by test process
+00:00 +0: system prompt character identity is reflected in UI without exposing commands                                                                                                                00:01 +0: system prompt character identity is reflected in UI without exposing commands                                                                                                                00:01 +1: system prompt character identity is reflected in UI without exposing commands                                                                                                                [ +405 ms] test 0: Test harness is no longer needed by test process
 [        ] test 0: finished
 [        ] test 0: cleaning up...
 [        ] test 0: ensuring test device is terminated.
@@ -160,33 +520,33 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] test 0: Shutting down DevTools server
 [        ] test 0: Test process is no longer needed by test harness
 [        ] test 0: Shutting down test harness socket server
-[   +2 ms] test 0: flutter_tester process at pid 61381 exited with code=-9
+[   +2 ms] test 0: flutter_tester process at pid 41589 exited with code=-9
 [        ] test 0: deleting temporary directory
 [        ] test 0: finished
-00:01 +3: All tests passed!                                                                                                                                                                            
-[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_compiler.a73HKC...
-[        ] killing pid 61374
-[   +5 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.taQibb/flutter_test_fonts.oPpHJb...
+00:01 +1: All tests passed!                                                                                                                                                                            
+[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_compiler.rIjGqP...
+[        ] killing pid 41586
+[   +5 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.nQfUDg/flutter_test_fonts.1lgNe8...
 [   +1 ms] test package returned with exit code 0
-[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.251145; combined: 0:00:01.251163.
-[        ] Runtime for phase Compile: Wall-clock: 0:00:00.472546; combined: 0:00:00.472561.
-[        ] Runtime for phase Run: Wall-clock: 0:00:00.674036; combined: 0:00:00.674038.
+[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.200075; combined: 0:00:01.200091.
+[        ] Runtime for phase Compile: Wall-clock: 0:00:00.447847; combined: 0:00:00.447862.
+[        ] Runtime for phase Run: Wall-clock: 0:00:00.651668; combined: 0:00:00.651670.
 [        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000297; combined: 0:00:00.000297.
-[   +2 ms] "flutter test" took 1,642ms.
-[  +20 ms] Running 3 shutdown hooks
+[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000309; combined: 0:00:00.000309.
+[   +2 ms] "flutter test" took 1,574ms.
+[  +22 ms] Running 3 shutdown hooks
 [        ] Shutdown hooks complete
-[ +141 ms] exiting with code 0
+[ +149 ms] exiting with code 0
 \n-------------------------------------------\n
-[  +11 ms] executing: sysctl hw.optional.arm64
+[  +10 ms] executing: sysctl hw.optional.arm64
 [   +6 ms] Exit code 0 from: sysctl hw.optional.arm64
 [        ] hw.optional.arm64: 1
-[   +8 ms] executing: sw_vers -productName
-[   +7 ms] Exit code 0 from: sw_vers -productName
+[   +7 ms] executing: sw_vers -productName
+[   +8 ms] Exit code 0 from: sw_vers -productName
 [        ] macOS
 [        ] executing: sw_vers -productVersion
 [   +6 ms] Exit code 0 from: sw_vers -productVersion
@@ -197,20 +557,20 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] executing: uname -m
 [   +2 ms] Exit code 0 from: uname -m
 [        ] arm64
-[  +10 ms] Found 1 files which will be executed as Widget Tests.
+[   +8 ms] Found 1 files which will be executed as Widget Tests.
 [   +2 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
 [        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
-[   +1 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[   +2 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
-[  +20 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[  +18 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
 [        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
@@ -232,20 +592,20 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
-[  +25 ms] Skipping pub get: version match.
-[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[   +2 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[  +23 ms] Skipping pub get: version match.
+[  +13 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +1 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
 [   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
 [  +21 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[  +10 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +9 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
 [        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[   +1 ms] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
 [        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
 [   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +3 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[   +2 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
 [        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
@@ -267,187 +627,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +15 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
-[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
-[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
-[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
-[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
-[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[   +9 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-[  +11 ms] executing: sysctl hw.optional.arm64
-[   +1 ms] Exit code 0 from: sysctl hw.optional.arm64
-[        ] hw.optional.arm64: 1
-[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[  +39 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[        ] Xcode 16.2
-           Build version 16C5032a
-[  +49 ms] No packages with native assets. Skipping native assets compilation.
-[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
-[        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
-[  +62 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_functionality_test.dart?]
-00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_functionality_test.dart                                                                                                 [  +78 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_functionality_test.dart
-[   +1 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
-[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_compiler.MnGOAc/output.dill
-[        ] Listening to compiler controller...
-[   +3 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_listener.UdqIde/listener.dart
-[  +16 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
-[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
-[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
-[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
-[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
-[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[   +9 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_compiler.MnGOAc/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
-[   +5 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_listener.UdqIde/listener.dart
-[ +507 ms] <- accept
-[        ] <- reset
-[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_listener.UdqIde/listener.dart took 557ms
-[        ] test 0: starting test device
-[   +1 ms] test 0: awaiting connection to test device
-[        ] test 0: VM Service uri is not available
-[   +1 ms] test 0: test harness socket server is running at port:51389
-[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_fonts.vxMBsh
-[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_listener.UdqIde/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_fonts.vxMBsh/fonts.conf, SERVER_PORT: 51389, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
-[   +3 ms] test 0: Started flutter_tester process at pid 61418
-[ +349 ms] test 0: connected to test device, now awaiting test result
-[        ] test 0: Waiting for test harness or tests to finish
-00:00 +0: system prompt prevents command exposure in UI                                                                                                                                                00:01 +0: system prompt prevents command exposure in UI                                                                                                                                                00:01 +1: system prompt prevents command exposure in UI                                                                                                                                                [ +392 ms] test 0: Test harness is no longer needed by test process
-[        ] test 0: finished
-[        ] test 0: cleaning up...
-[        ] test 0: ensuring test device is terminated.
-[        ] test 0: Terminating flutter_tester process
-[        ] test 0: Shutting down DevTools server
-[        ] test 0: Test process is no longer needed by test harness
-[        ] test 0: Shutting down test harness socket server
-[   +3 ms] test 0: flutter_tester process at pid 61418 exited with code=-9
-[        ] test 0: deleting temporary directory
-[   +1 ms] test 0: finished
-00:01 +1: All tests passed!                                                                                                                                                                            
-[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_compiler.MnGOAc...
-[        ] killing pid 61417
-[   +7 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.JxlU62/flutter_test_fonts.vxMBsh...
-[   +1 ms] test package returned with exit code 0
-[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.414086; combined: 0:00:01.414103.
-[        ] Runtime for phase Compile: Wall-clock: 0:00:00.557436; combined: 0:00:00.557453.
-[        ] Runtime for phase Run: Wall-clock: 0:00:00.749177; combined: 0:00:00.749178.
-[        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000399; combined: 0:00:00.000400.
-[   +3 ms] "flutter test" took 1,814ms.
-[  +19 ms] Running 3 shutdown hooks
-[        ] Shutdown hooks complete
-[ +125 ms] exiting with code 0
-\n-------------------------------------------\n
-[  +11 ms] executing: sysctl hw.optional.arm64
-[   +5 ms] Exit code 0 from: sysctl hw.optional.arm64
-[        ] hw.optional.arm64: 1
-[   +8 ms] executing: sw_vers -productName
-[   +8 ms] Exit code 0 from: sw_vers -productName
-[        ] macOS
-[        ] executing: sw_vers -productVersion
-[   +7 ms] Exit code 0 from: sw_vers -productVersion
-[        ] 14.6.1
-[        ] executing: sw_vers -buildVersion
-[   +7 ms] Exit code 0 from: sw_vers -buildVersion
-[        ] 23G93
-[        ] executing: uname -m
-[   +2 ms] Exit code 0 from: uname -m
-[        ] arm64
-[   +9 ms] Found 1 files which will be executed as Widget Tests.
-[   +2 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
-[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
-[   +1 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
-[  +19 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
-[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
-[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
-[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
-[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
-[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
-[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
-[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
-[  +24 ms] Skipping pub get: version match.
-[  +15 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[   +2 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[  +21 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[  +10 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[   +1 ms] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
-[   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +3 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
-[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
-[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
-[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
-[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +20 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[  +11 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
-[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
-[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
-[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
-[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
-[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +15 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
@@ -465,23 +645,23 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
 [   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-[  +11 ms] executing: sysctl hw.optional.arm64
-[   +1 ms] Exit code 0 from: sysctl hw.optional.arm64
+[  +13 ms] executing: sysctl hw.optional.arm64
+[   +2 ms] Exit code 0 from: sysctl hw.optional.arm64
 [        ] hw.optional.arm64: 1
 [        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[  +52 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[  +38 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
 [        ] Xcode 16.2
            Build version 16C5032a
-[  +44 ms] No packages with native assets. Skipping native assets compilation.
+[  +39 ms] No packages with native assets. Skipping native assets compilation.
 [        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
 [        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
-[  +67 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_character_test.dart?]
-00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_character_test.dart                                                                                                     [  +78 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_character_test.dart
+[  +67 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart?]
+00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart                                                                                                 [  +76 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart
 [   +1 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
-[        ] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_compiler.9PiGkG/output.dill
+[        ] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_compiler.jyfIHa/output.dill
 [        ] Listening to compiler controller...
-[   +3 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_listener.sfZK9S/listener.dart
-[  +16 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +3 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_listener.LBDHe4/listener.dart
+[   +5 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
@@ -498,21 +678,49 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +10 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_compiler.9PiGkG/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
-[   +6 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_listener.sfZK9S/listener.dart
-[ +442 ms] <- accept
+[   +9 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_compiler.jyfIHa/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
+[   +5 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_listener.LBDHe4/listener.dart
+[ +406 ms] <- accept
 [        ] <- reset
-[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_listener.sfZK9S/listener.dart took 495ms
+[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_listener.LBDHe4/listener.dart took 445ms
 [        ] test 0: starting test device
 [   +1 ms] test 0: awaiting connection to test device
 [        ] test 0: VM Service uri is not available
-[   +1 ms] test 0: test harness socket server is running at port:51399
-[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_fonts.wtAGdv
-[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_listener.sfZK9S/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_fonts.wtAGdv/fonts.conf, SERVER_PORT: 51399, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
-[   +3 ms] test 0: Started flutter_tester process at pid 61473
-[ +363 ms] test 0: connected to test device, now awaiting test result
+[   +1 ms] test 0: test harness socket server is running at port:53375
+[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_fonts.YNDPKB
+[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_listener.LBDHe4/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_fonts.YNDPKB/fonts.conf, SERVER_PORT: 53375, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
+[   +3 ms] test 0: Started flutter_tester process at pid 41626
+[ +244 ms] test 0: connected to test device, now awaiting test result
 [        ] test 0: Waiting for test harness or tests to finish
-00:00 +0: system prompt character identity is reflected in UI without exposing commands                                                                                                                00:01 +0: system prompt character identity is reflected in UI without exposing commands                                                                                                                00:01 +1: system prompt character identity is reflected in UI without exposing commands                                                                                                                [ +425 ms] test 0: Test harness is no longer needed by test process
+00:00 +0: system prompt prevents command exposure in life planning UI                                                                                                                                  00:00 +0: system prompt prevents command exposure in life planning UI                                                                                                                                  
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <true>
+  Actual: <false>
+System prompt should instruct to silently map goals to dimensions
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart:45:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart line 45
+The test description was:
+  system prompt prevents command exposure in life planning UI
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: system prompt prevents command exposure in life planning UI [E]                                                                                                                           
+  Test failed. See exception logs above.
+  The test description was: system prompt prevents command exposure in life planning UI
+  
+
+To run this test again: /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dart test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart -p vm --plain-name 'system prompt prevents command exposure in life planning UI'
+[ +179 ms] test 0: Test harness is no longer needed by test process
 [        ] test 0: finished
 [        ] test 0: cleaning up...
 [        ] test 0: ensuring test device is terminated.
@@ -520,44 +728,68 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] test 0: Shutting down DevTools server
 [        ] test 0: Test process is no longer needed by test harness
 [        ] test 0: Shutting down test harness socket server
-[   +2 ms] test 0: flutter_tester process at pid 61473 exited with code=-9
+[   +2 ms] test 0: flutter_tester process at pid 41626 exited with code=-9
 [        ] test 0: deleting temporary directory
 [        ] test 0: finished
-00:01 +1: All tests passed!                                                                                                                                                                            
-[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_compiler.9PiGkG...
-[        ] killing pid 61471
-[   +6 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.8kOHfD/flutter_test_fonts.wtAGdv...
-[   +1 ms] test package returned with exit code 0
-[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.397754; combined: 0:00:01.397771.
-[        ] Runtime for phase Compile: Wall-clock: 0:00:00.495988; combined: 0:00:00.496004.
-[        ] Runtime for phase Run: Wall-clock: 0:00:00.797356; combined: 0:00:00.797358.
+00:00 +0 -1: Some tests failed.                                                                                                                                                                        
+[   +4 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_compiler.jyfIHa...
+[        ] killing pid 41625
+[   +7 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.BT6B5R/flutter_test_fonts.YNDPKB...
+[   +1 ms] test package returned with exit code 1
+[        ] Runtime for phase TestRunner: Wall-clock: 0:00:00.980487; combined: 0:00:00.980505.
+[        ] Runtime for phase Compile: Wall-clock: 0:00:00.445960; combined: 0:00:00.445974.
+[        ] Runtime for phase Run: Wall-clock: 0:00:00.430538; combined: 0:00:00.430542.
 [        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000314; combined: 0:00:00.000314.
-[   +3 ms] "flutter test" took 1,816ms.
-[  +20 ms] Running 3 shutdown hooks
-[   +1 ms] Shutdown hooks complete
-[ +140 ms] exiting with code 0
+[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000296; combined: 0:00:00.000297.
+[   +3 ms] "flutter test" took 1,366ms.
+[  +22 ms] 
+           #0      throwToolExit (package:flutter_tools/src/base/common.dart:34:3)
+           #1      TestCommand.runCommand (package:flutter_tools/src/commands/test.dart:715:7)
+           <asynchronous suspension>
+           #2      FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1558:27)
+           <asynchronous suspension>
+           #3      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #4      CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+           <asynchronous suspension>
+           #5      FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:496:9)
+           <asynchronous suspension>
+           #6      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #7      FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:431:5)
+           <asynchronous suspension>
+           #8      run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:98:11)
+           <asynchronous suspension>
+           #9      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #10     main (package:flutter_tools/executable.dart:99:3)
+           <asynchronous suspension>
+
+
+[        ] Running 3 shutdown hooks
+[        ] Shutdown hooks complete
+[ +143 ms] exiting with code 1
 \n-------------------------------------------\n
-[  +11 ms] executing: sysctl hw.optional.arm64
+[  +10 ms] executing: sysctl hw.optional.arm64
 [   +6 ms] Exit code 0 from: sysctl hw.optional.arm64
 [        ] hw.optional.arm64: 1
-[   +8 ms] executing: sw_vers -productName
-[   +7 ms] Exit code 0 from: sw_vers -productName
+[   +7 ms] executing: sw_vers -productName
+[   +8 ms] Exit code 0 from: sw_vers -productName
 [        ] macOS
 [        ] executing: sw_vers -productVersion
 [   +7 ms] Exit code 0 from: sw_vers -productVersion
 [        ] 14.6.1
 [        ] executing: sw_vers -buildVersion
-[   +7 ms] Exit code 0 from: sw_vers -buildVersion
+[   +6 ms] Exit code 0 from: sw_vers -buildVersion
 [        ] 23G93
 [        ] executing: uname -m
 [   +2 ms] Exit code 0 from: uname -m
 [        ] arm64
-[  +10 ms] Found 1 files which will be executed as Widget Tests.
+[   +9 ms] Found 1 files which will be executed as Widget Tests.
 [   +2 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
@@ -570,7 +802,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
-[  +19 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[  +17 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
 [        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
@@ -592,16 +824,16 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
-[  +25 ms] Skipping pub get: version match.
-[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[   +2 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[  +23 ms] Skipping pub get: version match.
+[  +13 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[   +1 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
 [   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[  +21 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[   +9 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[   +1 ms] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[  +20 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[  +10 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
 [        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
 [        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
 [   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
@@ -614,7 +846,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
 [  +10 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
 [   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
@@ -627,7 +859,41 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +16 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[  +15 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[  +13 ms] executing: sysctl hw.optional.arm64
+[   +1 ms] Exit code 0 from: sysctl hw.optional.arm64
+[        ] hw.optional.arm64: 1
+[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[  +38 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[        ] Xcode 16.2
+           Build version 16C5032a
+[  +39 ms] No packages with native assets. Skipping native assets compilation.
+[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
+[        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
+[  +64 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_formatting_test.dart?]
+00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_formatting_test.dart                                                                                                    [  +81 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_formatting_test.dart
+[   +2 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
+[   +2 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_compiler.ICbmwy/output.dill
+[        ] Listening to compiler controller...
+[   +4 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_listener.yxz11k/listener.dart
+[   +5 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
@@ -644,55 +910,21 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-[  +11 ms] executing: sysctl hw.optional.arm64
-[   +1 ms] Exit code 0 from: sysctl hw.optional.arm64
-[        ] hw.optional.arm64: 1
-[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[  +41 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[        ] Xcode 16.2
-           Build version 16C5032a
-[  +44 ms] No packages with native assets. Skipping native assets compilation.
-[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
-[        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
-[  +64 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart?]
-00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart                                                                                                 [  +81 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_life_planning_test.dart
-[   +2 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
-[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_compiler.fIoRdR/output.dill
-[        ] Listening to compiler controller...
-[   +3 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_listener.9McTbd/listener.dart
-[  +16 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[   +2 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
-[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
-[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
-[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
-[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
-[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[   +9 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_compiler.fIoRdR/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
-[   +5 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_listener.9McTbd/listener.dart
-[ +451 ms] <- accept
+[  +11 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_compiler.ICbmwy/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
+[   +6 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_listener.yxz11k/listener.dart
+[ +405 ms] <- accept
 [        ] <- reset
-[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_listener.9McTbd/listener.dart took 504ms
+[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_listener.yxz11k/listener.dart took 447ms
 [        ] test 0: starting test device
 [   +1 ms] test 0: awaiting connection to test device
 [        ] test 0: VM Service uri is not available
-[   +1 ms] test 0: test harness socket server is running at port:51405
-[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_fonts.RotRaP
-[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_listener.9McTbd/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_fonts.RotRaP/fonts.conf, SERVER_PORT: 51405, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
-[   +3 ms] test 0: Started flutter_tester process at pid 61517
-[ +332 ms] test 0: connected to test device, now awaiting test result
+[   +1 ms] test 0: test harness socket server is running at port:53383
+[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_fonts.DPGBxa
+[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_listener.yxz11k/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_fonts.DPGBxa/fonts.conf, SERVER_PORT: 53383, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
+[   +3 ms] test 0: Started flutter_tester process at pid 41667
+[ +239 ms] test 0: connected to test device, now awaiting test result
 [        ] test 0: Waiting for test harness or tests to finish
-00:00 +0: system prompt prevents command exposure in life planning UI                                                                                                                                  00:01 +0: system prompt prevents command exposure in life planning UI                                                                                                                                  00:01 +1: system prompt prevents command exposure in life planning UI                                                                                                                                  [ +424 ms] test 0: Test harness is no longer needed by test process
+00:00 +0: system prompt formatting instructions are properly applied in UI                                                                                                                             00:01 +0: system prompt formatting instructions are properly applied in UI                                                                                                                             00:01 +1: system prompt formatting instructions are properly applied in UI                                                                                                                             [ +393 ms] test 0: Test harness is no longer needed by test process
 [        ] test 0: finished
 [        ] test 0: cleaning up...
 [        ] test 0: ensuring test device is terminated.
@@ -700,33 +932,33 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] test 0: Shutting down DevTools server
 [        ] test 0: Test process is no longer needed by test harness
 [        ] test 0: Shutting down test harness socket server
-[   +2 ms] test 0: flutter_tester process at pid 61517 exited with code=-9
+[   +2 ms] test 0: flutter_tester process at pid 41667 exited with code=-9
 [        ] test 0: deleting temporary directory
-[        ] test 0: finished
+[   +1 ms] test 0: finished
 00:01 +1: All tests passed!                                                                                                                                                                            
-[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_compiler.fIoRdR...
-[        ] killing pid 61514
-[   +7 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.6m9MFJ/flutter_test_fonts.RotRaP...
+[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_compiler.ICbmwy...
+[        ] killing pid 41666
+[   +5 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ErCutJ/flutter_test_fonts.DPGBxa...
 [   +1 ms] test package returned with exit code 0
-[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.379489; combined: 0:00:01.379509.
-[        ] Runtime for phase Compile: Wall-clock: 0:00:00.504908; combined: 0:00:00.504929.
-[        ] Runtime for phase Run: Wall-clock: 0:00:00.765721; combined: 0:00:00.765723.
+[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.199080; combined: 0:00:01.199097.
+[        ] Runtime for phase Compile: Wall-clock: 0:00:00.447858; combined: 0:00:00.447871.
+[        ] Runtime for phase Run: Wall-clock: 0:00:00.640486; combined: 0:00:00.640487.
 [        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000313; combined: 0:00:00.000314.
-[   +3 ms] "flutter test" took 1,781ms.
-[  +22 ms] Running 3 shutdown hooks
+[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000292; combined: 0:00:00.000293.
+[   +3 ms] "flutter test" took 1,581ms.
+[  +21 ms] Running 3 shutdown hooks
 [   +1 ms] Shutdown hooks complete
-[ +131 ms] exiting with code 0
+[ +263 ms] exiting with code 0
 \n-------------------------------------------\n
-[  +12 ms] executing: sysctl hw.optional.arm64
+[  +10 ms] executing: sysctl hw.optional.arm64
 [   +6 ms] Exit code 0 from: sysctl hw.optional.arm64
 [        ] hw.optional.arm64: 1
 [   +8 ms] executing: sw_vers -productName
-[   +6 ms] Exit code 0 from: sw_vers -productName
+[   +7 ms] Exit code 0 from: sw_vers -productName
 [        ] macOS
 [        ] executing: sw_vers -productVersion
 [   +6 ms] Exit code 0 from: sw_vers -productVersion
@@ -772,16 +1004,16 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
-[  +23 ms] Skipping pub get: version match.
-[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[  +22 ms] Skipping pub get: version match.
+[  +13 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [   +1 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
 [   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[   +1 ms] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
 [  +21 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[  +10 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[   +9 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[   +1 ms] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
 [        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
 [        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
 [   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
@@ -792,11 +1024,11 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
 [  +20 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[   +1 ms] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[  +11 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[  +10 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
 [   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
 [        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
 [        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
@@ -807,47 +1039,13 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +16 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
 [        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[   +8 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
-[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
-[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
-[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
-[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
-[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-[  +11 ms] executing: sysctl hw.optional.arm64
-[   +1 ms] Exit code 0 from: sysctl hw.optional.arm64
-[        ] hw.optional.arm64: 1
-[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[  +41 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[        ] Xcode 16.2
-           Build version 16C5032a
-[  +42 ms] No packages with native assets. Skipping native assets compilation.
-[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
-[        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
-[  +66 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_formatting_test.dart?]
-00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_formatting_test.dart                                                                                                    [  +82 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_formatting_test.dart
-[   +3 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
-[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_compiler.ihG5Hq/output.dill
-[        ] Listening to compiler controller...
-[   +7 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_listener.xBX0BC/listener.dart
-[   +6 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[   +8 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
 [   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
 [        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
 [        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
@@ -858,21 +1056,55 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[  +11 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_compiler.ihG5Hq/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
-[   +6 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_listener.xBX0BC/listener.dart
+[   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[  +12 ms] executing: sysctl hw.optional.arm64
+[   +2 ms] Exit code 0 from: sysctl hw.optional.arm64
+[        ] hw.optional.arm64: 1
+[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[  +39 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[        ] Xcode 16.2
+           Build version 16C5032a
+[  +39 ms] No packages with native assets. Skipping native assets compilation.
+[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
+[        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
+[  +64 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/system_prompt_mcp_integration_test.dart?]
+00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_mcp_integration_test.dart                                                                                               [  +89 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/system_prompt_mcp_integration_test.dart
+[   +2 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
+[   +3 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_compiler.tMobFW/output.dill
+[        ] Listening to compiler controller...
+[   +4 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_listener.cZI3Tg/listener.dart
+[   +9 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[   +1 ms] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[   +9 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +11 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_compiler.tMobFW/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
+[   +6 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_listener.cZI3Tg/listener.dart
 [ +412 ms] <- accept
 [        ] <- reset
-[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_listener.xBX0BC/listener.dart took 456ms
+[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_listener.cZI3Tg/listener.dart took 462ms
 [        ] test 0: starting test device
 [   +1 ms] test 0: awaiting connection to test device
 [        ] test 0: VM Service uri is not available
-[   +1 ms] test 0: test harness socket server is running at port:51412
-[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_fonts.6Mmut0
-[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_listener.xBX0BC/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_fonts.6Mmut0/fonts.conf, SERVER_PORT: 51412, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
-[   +3 ms] test 0: Started flutter_tester process at pid 61556
-[ +351 ms] test 0: connected to test device, now awaiting test result
+[   +1 ms] test 0: test harness socket server is running at port:53389
+[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_fonts.E7PrdE
+[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_listener.cZI3Tg/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_fonts.E7PrdE/fonts.conf, SERVER_PORT: 53389, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
+[   +3 ms] test 0: Started flutter_tester process at pid 41707
+[ +240 ms] test 0: connected to test device, now awaiting test result
 [        ] test 0: Waiting for test harness or tests to finish
-00:00 +0: system prompt formatting instructions are properly applied in UI                                                                                                                             00:01 +0: system prompt formatting instructions are properly applied in UI                                                                                                                             00:01 +1: system prompt formatting instructions are properly applied in UI                                                                                                                             [ +423 ms] test 0: Test harness is no longer needed by test process
+00:00 +0: system prompt can call MCP to retrieve goals by dimension                                                                                                                                    00:00 +1: system prompt can call MCP to retrieve goals by dimension                                                                                                                                    00:00 +1: system prompt can call MCP to retrieve track by ID                                                                                                                                           00:00 +2: system prompt can call MCP to retrieve track by ID                                                                                                                                           00:00 +2: system prompt can call MCP to retrieve recommended habits                                                                                                                                    00:00 +3: system prompt can call MCP to retrieve recommended habits                                                                                                                                    00:00 +3: MCP handles non-existent dimension gracefully                                                                                                                                                00:00 +4: MCP handles non-existent dimension gracefully                                                                                                                                                00:00 +4: MCP handles non-existent track ID gracefully                                                                                                                                                 00:00 +5: MCP handles non-existent track ID gracefully                                                                                                                                                 00:00 +5: MCP handles missing required parameter gracefully                                                                                                                                            00:00 +6: MCP handles missing required parameter gracefully                                                                                                                                            00:00 +6: MCP handles invalid action gracefully                                                                                                                                                        00:00 +7: MCP handles invalid action gracefully                                                                                                                                                        00:00 +7: MCP handles empty results gracefully                                                                                                                                                         00:00 +8: MCP handles empty results gracefully                                                                                                                                                         00:00 +8: MCP handles malformed JSON gracefully                                                                                                                                                        00:00 +9: MCP handles malformed JSON gracefully                                                                                                                                                        [ +111 ms] test 0: Test harness is no longer needed by test process
 [        ] test 0: finished
 [        ] test 0: cleaning up...
 [        ] test 0: ensuring test device is terminated.
@@ -880,57 +1112,57 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] test 0: Shutting down DevTools server
 [        ] test 0: Test process is no longer needed by test harness
 [        ] test 0: Shutting down test harness socket server
-[   +2 ms] test 0: flutter_tester process at pid 61556 exited with code=-9
+[   +2 ms] test 0: flutter_tester process at pid 41707 exited with code=-9
 [        ] test 0: deleting temporary directory
-[        ] test 0: finished
-00:01 +1: All tests passed!                                                                                                                                                                            
-[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_compiler.ihG5Hq...
-[        ] killing pid 61554
-[   +5 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.RiAfKk/flutter_test_fonts.6Mmut0...
+[   +1 ms] test 0: finished
+00:00 +9: All tests passed!                                                                                                                                                                            
+[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_compiler.tMobFW...
+[        ] killing pid 41706
+[   +5 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.wyzNoJ/flutter_test_fonts.E7PrdE...
 [   +1 ms] test package returned with exit code 0
-[        ] Runtime for phase TestRunner: Wall-clock: 0:00:01.352855; combined: 0:00:01.352870.
-[        ] Runtime for phase Compile: Wall-clock: 0:00:00.456886; combined: 0:00:00.456902.
-[        ] Runtime for phase Run: Wall-clock: 0:00:00.782902; combined: 0:00:00.782905.
+[        ] Runtime for phase TestRunner: Wall-clock: 0:00:00.939924; combined: 0:00:00.939947.
+[        ] Runtime for phase Compile: Wall-clock: 0:00:00.462941; combined: 0:00:00.462956.
+[        ] Runtime for phase Run: Wall-clock: 0:00:00.358017; combined: 0:00:00.358018.
 [        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000298; combined: 0:00:00.000300.
-[   +3 ms] "flutter test" took 1,747ms.
-[  +19 ms] Running 3 shutdown hooks
-[   +1 ms] Shutdown hooks complete
-[ +133 ms] exiting with code 0
+[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000278; combined: 0:00:00.000279.
+[   +2 ms] "flutter test" took 1,322ms.
+[  +21 ms] Running 3 shutdown hooks
+[        ] Shutdown hooks complete
+[ +258 ms] exiting with code 0
 \n-------------------------------------------\n
-[  +10 ms] executing: sysctl hw.optional.arm64
-[   +5 ms] Exit code 0 from: sysctl hw.optional.arm64
+[  +11 ms] executing: sysctl hw.optional.arm64
+[   +6 ms] Exit code 0 from: sysctl hw.optional.arm64
 [        ] hw.optional.arm64: 1
-[   +7 ms] executing: sw_vers -productName
-[   +6 ms] Exit code 0 from: sw_vers -productName
+[   +8 ms] executing: sw_vers -productName
+[   +7 ms] Exit code 0 from: sw_vers -productName
 [        ] macOS
 [        ] executing: sw_vers -productVersion
-[   +6 ms] Exit code 0 from: sw_vers -productVersion
+[   +8 ms] Exit code 0 from: sw_vers -productVersion
 [        ] 14.6.1
 [        ] executing: sw_vers -buildVersion
-[   +5 ms] Exit code 0 from: sw_vers -buildVersion
+[   +7 ms] Exit code 0 from: sw_vers -buildVersion
 [        ] 23G93
 [        ] executing: uname -m
 [   +2 ms] Exit code 0 from: uname -m
 [        ] arm64
-[  +10 ms] Found 1 files which will be executed as Widget Tests.
+[   +8 ms] Found 1 files which will be executed as Widget Tests.
 [   +2 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
 [        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
-[   +1 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[   +2 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
-[  +19 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[  +17 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
 [        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
@@ -952,7 +1184,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
 [        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
-[  +24 ms] Skipping pub get: version match.
+[  +21 ms] Skipping pub get: version match.
 [  +14 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 [   +1 ms] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 [   +1 ms] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
@@ -961,7 +1193,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
 [  +21 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
 [   +9 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[   +1 ms] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
 [        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
 [        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
 [   +1 ms] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
@@ -993,41 +1225,7 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
 [        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
 [        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[   +8 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
-[   +4 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
-[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
-[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
-[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
-[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
-[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
-[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
-[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
-[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
-[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[   +9 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-[  +12 ms] executing: sysctl hw.optional.arm64
-[   +2 ms] Exit code 0 from: sysctl hw.optional.arm64
-[        ] hw.optional.arm64: 1
-[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[  +42 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
-[        ] Xcode 16.2
-           Build version 16C5032a
-[  +43 ms] No packages with native assets. Skipping native assets compilation.
-[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
-[   +5 ms] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
-[  +65 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/config_loader_test.dart?]
-00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/config_loader_test.dart                                                                                                               [  +78 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/config_loader_test.dart
-[   +1 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
-[        ] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_compiler.YdV4va/output.dill
-[        ] Listening to compiler controller...
-[   +3 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_listener.HTpz9G/listener.dart
-[  +15 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
-[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
-[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
-[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
-[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
-[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
-[   +8 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
 [   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
 [        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
 [        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
@@ -1038,21 +1236,55 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
 [        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
 [        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
-[   +9 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_compiler.YdV4va/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
-[   +6 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_listener.HTpz9G/listener.dart
-[ +409 ms] <- accept
+[   +8 ms] Generating /Users/alebairos/Projects/mobile/chat_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[  +10 ms] executing: sysctl hw.optional.arm64
+[   +2 ms] Exit code 0 from: sysctl hw.optional.arm64
+[        ] hw.optional.arm64: 1
+[        ] executing: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[  +39 ms] Exit code 0 from: /usr/bin/arch -arm64e xcrun xcodebuild -version
+[        ] Xcode 16.2
+           Build version 16C5032a
+[  +37 ms] No packages with native assets. Skipping native assets compilation.
+[        ] Writing native assets json to file:///Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json.
+[        ] Writing /Users/alebairos/Projects/mobile/chat_app/build/native_assets/macos/native_assets.json done.
+[  +65 ms] running test package with arguments: [--no-color, --chain-stack-traces, --, file:///Users/alebairos/Projects/mobile/chat_app/test/config_loader_test.dart?]
+00:00 +0: loading /Users/alebairos/Projects/mobile/chat_app/test/config_loader_test.dart                                                                                                               [  +75 ms] test 0: starting test /Users/alebairos/Projects/mobile/chat_app/test/config_loader_test.dart
+[   +1 ms] Stopping scan for flutter_test_config.dart; found project root at /Users/alebairos/Projects/mobile/chat_app
+[   +1 ms] Compiler will use the following file as its incremental dill file: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_compiler.TWdSXh/output.dill
+[        ] Listening to compiler controller...
+[   +5 ms] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_listener.uw8DQn/listener.dart
+[   +5 ms] Found plugin audioplayers at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
+[        ] Found plugin audioplayers_android at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
+[        ] Found plugin audioplayers_darwin at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
+[        ] Found plugin audioplayers_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_linux-3.1.0/
+[        ] Found plugin audioplayers_web at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_web-4.1.0/
+[        ] Found plugin audioplayers_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/audioplayers_windows-3.1.0/
+[   +7 ms] Found plugin isar_flutter_libs at /Users/alebairos/.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/
+[   +3 ms] Found plugin path_provider at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
+[        ] Found plugin path_provider_android at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_android-2.2.15/
+[        ] Found plugin path_provider_foundation at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/
+[        ] Found plugin path_provider_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
+[        ] Found plugin path_provider_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/
+[   +1 ms] Found plugin record at /Users/alebairos/.pub-cache/hosted/pub.dev/record-4.4.4/
+[        ] Found plugin record_linux at /Users/alebairos/.pub-cache/hosted/pub.dev/record_linux-0.4.1/
+[        ] Found plugin record_macos at /Users/alebairos/.pub-cache/hosted/pub.dev/record_macos-0.2.2/
+[        ] Found plugin record_web at /Users/alebairos/.pub-cache/hosted/pub.dev/record_web-0.5.0/
+[        ] Found plugin record_windows at /Users/alebairos/.pub-cache/hosted/pub.dev/record_windows-0.7.1/
+[  +10 ms] /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/dartaotruntime /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --incremental --no-print-incremental-dependencies --target=flutter --experimental-emit-debug-metadata --output-dill /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_compiler.TWdSXh/output.dill --packages /Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --initialize-from-dill /Users/alebairos/Projects/mobile/chat_app/build/test_cache/build/cache.dill.track.dill --verbosity=error
+[   +5 ms] <- compile file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_listener.uw8DQn/listener.dart
+[ +378 ms] <- accept
 [        ] <- reset
-[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_listener.HTpz9G/listener.dart took 459ms
+[        ] Compiling file:///var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_listener.uw8DQn/listener.dart took 418ms
 [        ] test 0: starting test device
 [   +1 ms] test 0: awaiting connection to test device
 [        ] test 0: VM Service uri is not available
-[   +1 ms] test 0: test harness socket server is running at port:51418
-[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_fonts.410Yp3
-[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_listener.HTpz9G/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_fonts.410Yp3/fonts.conf, SERVER_PORT: 51418, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
-[   +3 ms] test 0: Started flutter_tester process at pid 61597
-[ +329 ms] test 0: connected to test device, now awaiting test result
+[   +1 ms] test 0: test harness socket server is running at port:53398
+[        ] Using this directory for fonts configuration: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_fonts.3hXqui
+[        ] test 0: Starting flutter_tester process with command=[/opt/homebrew/Caskroom/flutter/3.27.2/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester, --disable-vm-service, --enable-checked-mode, --verify-entry-points, --enable-software-rendering, --skia-deterministic-rendering, --enable-dart-profiling, --non-interactive, --use-test-fonts, --disable-asset-fonts, --packages=/Users/alebairos/Projects/mobile/chat_app/.dart_tool/package_config.json, --flutter-assets-dir=/Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets, /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_listener.uw8DQn/listener.dart.dill], environment={FLUTTER_TEST: true, FONTCONFIG_FILE: /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_fonts.3hXqui/fonts.conf, SERVER_PORT: 53398, APP_NAME: character_ai_clone, UNIT_TEST_ASSETS: /Users/alebairos/Projects/mobile/chat_app/build/unit_test_assets}
+[   +3 ms] test 0: Started flutter_tester process at pid 41748
+[ +241 ms] test 0: connected to test device, now awaiting test result
 [        ] test 0: Waiting for test harness or tests to finish
-00:00 +0: config file has valid structure for Claude API                                                                                                                                               00:00 +1: config file has valid structure for Claude API                                                                                                                                               [  +83 ms] test 0: Test harness is no longer needed by test process
+00:00 +0: config file has valid structure for Claude API                                                                                                                                               00:00 +1: config file has valid structure for Claude API                                                                                                                                               00:00 +1: config file contains exploration prompts for all dimensions                                                                                                                                  00:00 +2: config file contains exploration prompts for all dimensions                                                                                                                                  [  +73 ms] test 0: Test harness is no longer needed by test process
 [        ] test 0: finished
 [        ] test 0: cleaning up...
 [        ] test 0: ensuring test device is terminated.
@@ -1060,26 +1292,26 @@ Started at: Mon Feb 24 23:53:28 -03 2025
 [        ] test 0: Shutting down DevTools server
 [        ] test 0: Test process is no longer needed by test harness
 [        ] test 0: Shutting down test harness socket server
-[   +1 ms] test 0: flutter_tester process at pid 61597 exited with code=-9
+[   +1 ms] test 0: flutter_tester process at pid 41748 exited with code=-9
 [        ] test 0: deleting temporary directory
-[   +1 ms] test 0: finished
-00:00 +1: All tests passed!                                                                                                                                                                            
-[   +3 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_compiler.YdV4va...
-[        ] killing pid 61596
-[   +5 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.ABCvGo/flutter_test_fonts.410Yp3...
+[        ] test 0: finished
+00:00 +2: All tests passed!                                                                                                                                                                            
+[   +2 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_compiler.TWdSXh...
+[        ] killing pid 41744
+[   +5 ms] Deleting /var/folders/f7/rqd14g9d2rv0v4rhwj55l7v40000gn/T/flutter_tools.kDZDpr/flutter_test_fonts.3hXqui...
 [   +1 ms] test package returned with exit code 0
-[        ] Runtime for phase TestRunner: Wall-clock: 0:00:00.984160; combined: 0:00:00.984177.
-[        ] Runtime for phase Compile: Wall-clock: 0:00:00.459335; combined: 0:00:00.459350.
-[        ] Runtime for phase Run: Wall-clock: 0:00:00.421371; combined: 0:00:00.421372.
+[        ] Runtime for phase TestRunner: Wall-clock: 0:00:00.843066; combined: 0:00:00.843081.
+[        ] Runtime for phase Compile: Wall-clock: 0:00:00.418289; combined: 0:00:00.418301.
+[        ] Runtime for phase Run: Wall-clock: 0:00:00.323674; combined: 0:00:00.323675.
 [        ] Runtime for phase CoverageTotal: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageParseJson: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageAddHitmap: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
 [        ] Runtime for phase CoverageDataCollect: Wall-clock: 0:00:00.000000; combined: 0:00:00.000000.
-[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000336; combined: 0:00:00.000337.
-[   +2 ms] "flutter test" took 1,386ms.
-[  +19 ms] Running 3 shutdown hooks
+[        ] Runtime for phase WatcherFinishedTest: Wall-clock: 0:00:00.000291; combined: 0:00:00.000293.
+[   +2 ms] "flutter test" took 1,224ms.
+[  +21 ms] Running 3 shutdown hooks
 [        ] Shutdown hooks complete
-[ +130 ms] exiting with code 0
+[ +257 ms] exiting with code 0
 \n-------------------------------------------\n
-Completed at: Mon Feb 24 23:53:39 -03 2025
+Completed at: Thu Feb 27 17:58:46 -03 2025
