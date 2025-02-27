@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.26
+Current version: v1.0.26 (tag: v1.0.26)
 
 ## Features
 
