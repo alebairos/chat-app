@@ -10,6 +10,7 @@ Current version: v1.0.27 (tag: v1.0.27)
 - Real-time chat interface
 - AI-powered responses using Claude API
 - Audio messages with OpenAI Whisper transcription
+- Audio assistant replies (see [Audio Assistant Replies Documentation](docs/features/audio_assistant_replies.md))
 - Local message storage with Isar Database
 - Message deletion and search functionality
 - Infinite scroll pagination
@@ -118,6 +119,13 @@ To run a specific test group:
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.28
+- Added initial implementation of audio assistant replies feature
+- Created TTSService for text-to-speech functionality
+- Added basic tests for TTS service
+- Added comprehensive documentation for audio assistant replies feature
+- Laid foundation for future audio response capabilities
 
 ### v1.0.27
 - Added comprehensive life planning system analysis document

@@ -37,6 +37,15 @@ class MockClaudeService extends _i1.Mock implements _i2.ClaudeService {
       ) as List<Map<String, String>>);
 
   @override
+  void setLogging(bool? enable) => super.noSuchMethod(
+        Invocation.method(
+          #setLogging,
+          [enable],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i3.Future<bool> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,

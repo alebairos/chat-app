@@ -7,6 +7,7 @@ import 'dart:async' as _i3;
 import 'dart:convert' as _i4;
 import 'dart:typed_data' as _i6;
 
+import 'package:character_ai_clone/config/character_config_manager.dart' as _i8;
 import 'package:character_ai_clone/config/config_loader.dart' as _i7;
 import 'package:http/http.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
@@ -291,6 +292,27 @@ class MockConfigLoader extends _i1.Mock implements _i7.ConfigLoader {
   }
 
   @override
+  _i8.CharacterPersona get activePersona => (super.noSuchMethod(
+        Invocation.getter(#activePersona),
+        returnValue: _i8.CharacterPersona.personalDevelopmentAssistant,
+      ) as _i8.CharacterPersona);
+
+  @override
+  String get activePersonaDisplayName => (super.noSuchMethod(
+        Invocation.getter(#activePersonaDisplayName),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.getter(#activePersonaDisplayName),
+        ),
+      ) as String);
+
+  @override
+  List<Map<String, dynamic>> get availablePersonas => (super.noSuchMethod(
+        Invocation.getter(#availablePersonas),
+        returnValue: <Map<String, dynamic>>[],
+      ) as List<Map<String, dynamic>>);
+
+  @override
   _i3.Future<String> loadSystemPrompt() => (super.noSuchMethod(
         Invocation.method(
           #loadSystemPrompt,
@@ -306,11 +328,41 @@ class MockConfigLoader extends _i1.Mock implements _i7.ConfigLoader {
       ) as _i3.Future<String>);
 
   @override
+  _i3.Future<Map<String, String>> loadExplorationPrompts() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #loadExplorationPrompts,
+          [],
+        ),
+        returnValue: _i3.Future<Map<String, String>>.value(<String, String>{}),
+      ) as _i3.Future<Map<String, String>>);
+
+  @override
   void setLoadSystemPromptImpl(_i3.Future<String> Function()? impl) =>
       super.noSuchMethod(
         Invocation.method(
           #setLoadSystemPromptImpl,
           [impl],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void setLoadExplorationPromptsImpl(
+          _i3.Future<Map<String, String>> Function()? impl) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #setLoadExplorationPromptsImpl,
+          [impl],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void setActivePersona(_i8.CharacterPersona? persona) => super.noSuchMethod(
+        Invocation.method(
+          #setActivePersona,
+          [persona],
         ),
         returnValueForMissingStub: null,
       );

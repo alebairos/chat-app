@@ -292,6 +292,15 @@ class MockLifePlanMCPService extends _i1.Mock
   }
 
   @override
+  void setLogging(bool? enable) => super.noSuchMethod(
+        Invocation.method(
+          #setLogging,
+          [enable],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   String processCommand(String? command) => (super.noSuchMethod(
         Invocation.method(
           #processCommand,
