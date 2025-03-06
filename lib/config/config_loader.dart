@@ -1,11 +1,12 @@
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'character_config_manager.dart';
 
 class ConfigLoader {
   Future<String> Function() _loadSystemPromptImpl = _defaultLoadSystemPrompt;
   Future<Map<String, String>> Function() _loadExplorationPromptsImpl =
       _defaultLoadExplorationPrompts;
+
+  final CharacterConfigManager _characterManager = CharacterConfigManager();
 
   Future<String> loadSystemPrompt() async {
     return _loadSystemPromptImpl();
@@ -17,10 +18,8 @@ class ConfigLoader {
 
   static Future<String> _defaultLoadSystemPrompt() async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('lib/config/claude_config.json');
-      final Map<String, dynamic> jsonMap = json.decode(jsonString);
-      return jsonMap['system_prompt']['content'] as String;
+      final characterManager = CharacterConfigManager();
+      return await characterManager.loadSystemPrompt();
     } catch (e) {
       print('Error loading system prompt: $e');
       throw Exception('Failed to load system prompt');
@@ -29,17 +28,8 @@ class ConfigLoader {
 
   static Future<Map<String, String>> _defaultLoadExplorationPrompts() async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('lib/config/claude_config.json');
-      final Map<String, dynamic> jsonMap = json.decode(jsonString);
-
-      if (jsonMap['exploration_prompts'] == null) {
-        throw Exception('Exploration prompts not found in config');
-      }
-
-      final Map<String, dynamic> promptsMap =
-          jsonMap['exploration_prompts'] as Map<String, dynamic>;
-      return promptsMap.map((key, value) => MapEntry(key, value as String));
+      final characterManager = CharacterConfigManager();
+      return await characterManager.loadExplorationPrompts();
     } catch (e) {
       print('Error loading exploration prompts: $e');
       throw Exception('Failed to load exploration prompts');
@@ -56,4 +46,19 @@ class ConfigLoader {
       Future<Map<String, String>> Function() impl) {
     _loadExplorationPromptsImpl = impl;
   }
+
+  /// Get the currently active character persona
+  CharacterPersona get activePersona => _characterManager.activePersona;
+
+  /// Set the active character persona
+  void setActivePersona(CharacterPersona persona) {
+    _characterManager.setActivePersona(persona);
+  }
+
+  /// Get the display name for the active persona
+  String get activePersonaDisplayName => _characterManager.personaDisplayName;
+
+  /// Get a list of all available personas
+  List<Map<String, dynamic>> get availablePersonas =>
+      _characterManager.availablePersonas;
 }

@@ -61,7 +61,7 @@ void main() {
 
       final result = await transcriptionService
           .transcribeAudio('test/assets/test_audio.m4a');
-      expect(result, startsWith('Transcription failed'));
+      expect(result, 'Transcription failed: 400');
 
       await file.delete();
     });

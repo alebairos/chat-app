@@ -2,9 +2,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/services/life_plan_mcp_service.dart';
 import 'package:character_ai_clone/services/life_plan_service.dart';
-import 'package:character_ai_clone/models/life_plan/goal.dart';
-import 'package:character_ai_clone/models/life_plan/habit.dart';
-import 'package:character_ai_clone/models/life_plan/track.dart';
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
 
@@ -320,7 +317,7 @@ SF;GM1;Ganho de massa;GM1PC;Primeiro contato;1;SF10;5''';
           '🧪 Testing comparison between MCP service and direct CSV loading...');
 
       // Step 1: Create a Claude prompt that explicitly calls an MCP function
-      final claudePrompt = '''
+      const claudePrompt = '''
       I need to see all the goals related to physical health. 
       Please use the get_goals_by_dimension command with dimension SF to retrieve them.
       ''';

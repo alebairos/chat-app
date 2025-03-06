@@ -107,7 +107,7 @@ void main() {
       print('\n🧪 Testing track retrieval by ID...');
 
       // Get a valid track ID from a goal
-      final goals = await lifePlanService.getGoalsByDimension('SF');
+      final goals = lifePlanService.getGoalsByDimension('SF');
       final trackId = goals.first.trackId
           .trim(); // Trim to remove any whitespace or carriage returns
       print('🔍 Using track ID: $trackId');
@@ -119,7 +119,7 @@ void main() {
       };
       print('📤 MCP command: ${jsonEncode(command)}');
 
-      final response = await mcpService.processCommand(jsonEncode(command));
+      final response = mcpService.processCommand(jsonEncode(command));
       print('📥 Received response: $response');
 
       final Map<String, dynamic> decodedResponse = jsonDecode(response);
@@ -322,7 +322,7 @@ void main() {
         'dimension': 'SF',
       };
       final goalsResponse =
-          await mcpService.processCommand(jsonEncode(getGoalsCommand));
+          mcpService.processCommand(jsonEncode(getGoalsCommand));
       final Map<String, dynamic> goalsData = jsonDecode(goalsResponse);
       expect(goalsData['status'], 'success');
       expect(goalsData['data'], isA<List>());
@@ -340,7 +340,7 @@ void main() {
         'trackId': trackId,
       };
       final trackResponse =
-          await mcpService.processCommand(jsonEncode(getTrackCommand));
+          mcpService.processCommand(jsonEncode(getTrackCommand));
       final Map<String, dynamic> trackData = jsonDecode(trackResponse);
       expect(trackData['status'], 'success');
       expect(trackData['data'], isA<Map<String, dynamic>>());
@@ -363,7 +363,7 @@ void main() {
         'challengeCode': challengeCode,
       };
       final habitsResponse =
-          await mcpService.processCommand(jsonEncode(getHabitsCommand));
+          mcpService.processCommand(jsonEncode(getHabitsCommand));
       final Map<String, dynamic> habitsData = jsonDecode(habitsResponse);
       expect(habitsData['status'], 'success');
       expect(habitsData['data'], isA<List>());

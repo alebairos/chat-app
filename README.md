@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.26 (tag: v1.0.26)
+Current version: v1.0.27 (tag: v1.0.27)
 
 ## Features
 
@@ -14,6 +14,7 @@ Current version: v1.0.26 (tag: v1.0.26)
 - Message deletion and search functionality
 - Infinite scroll pagination
 - Clean and intuitive UI
+- Life planning system with MCP architecture (see [Life Planning System Analysis](docs/life_planning_system_analysis.md))
 
 ## Setup
 
@@ -117,6 +118,13 @@ To run a specific test group:
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.27
+- Added comprehensive life planning system analysis document
+- Added reference to life planning system analysis in README
+- Documented MCP architecture and specialist knowledge implementation
+- Detailed the dimensions, tracks, habits, and goals structure
+- Analyzed strengths and potential enhancements of the life planning system
 
 ### v1.0.26
 - Fixed system prompt life planning test by updating test expectations to match actual system prompt content

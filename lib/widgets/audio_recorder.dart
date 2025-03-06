@@ -216,6 +216,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 padding: const EdgeInsets.all(8.0),
                 minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Record audio message',
             ),
           if (_isRecording)
             IconButton(
@@ -227,6 +228,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 padding: const EdgeInsets.all(8.0),
                 minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Stop recording',
             ),
           if (_recordedFilePath != null && !_isDeleting) ...[
             IconButton(
@@ -238,6 +240,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 padding: const EdgeInsets.all(8.0),
                 minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Delete recording',
             ),
             const SizedBox(width: 8),
             IconButton(
@@ -249,6 +252,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 padding: const EdgeInsets.all(8.0),
                 minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: _isPlaying ? 'Stop playback' : 'Play recording',
             ),
             const SizedBox(width: 8),
             IconButton(
@@ -261,6 +265,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 padding: const EdgeInsets.all(8.0),
                 minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Send audio message',
             ),
           ],
         ],

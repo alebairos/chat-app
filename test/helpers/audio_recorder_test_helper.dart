@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/widgets/audio_recorder.dart';
 
 class TestAudioRecorder extends StatefulWidget {
   final Function(String, Duration)? onSendAudio;
@@ -51,7 +50,9 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.grey[200],
+                minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Record audio message',
             ),
           if (_isRecording)
             IconButton(
@@ -65,7 +66,9 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.red[100],
+                minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Stop recording',
             ),
           if (_recordedFilePath != null) ...[
             IconButton(
@@ -79,7 +82,9 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.grey[200],
+                minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Delete recording',
             ),
             const SizedBox(width: 8),
             IconButton(
@@ -92,7 +97,9 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.grey[200],
+                minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: _isPlaying ? 'Stop playback' : 'Play recording',
             ),
             const SizedBox(width: 8),
             IconButton(
@@ -107,7 +114,9 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
                 shape: const CircleBorder(),
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
+                minimumSize: const Size(48.0, 48.0),
               ),
+              tooltip: 'Send audio message',
             ),
           ],
         ],

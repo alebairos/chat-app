@@ -1,6 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'life_plan_command.dart';
-import '../../models/life_plan/dimensions.dart';
 
 /// Represents a formatted response from the life plan system
 @immutable
@@ -16,82 +14,120 @@ class LifePlanResponse {
   /// Creates an error response
   factory LifePlanResponse.error(String message) {
     return LifePlanResponse(
-      message: '*adjusts spectacles* `🧐`\n$message',
+      message: message,
       isError: true,
     );
   }
 
-  /// Creates the initial planning response
-  factory LifePlanResponse.plan() {
+  /// Creates the welcome message with options
+  factory LifePlanResponse.welcome() {
     final buffer = StringBuffer()
-      ..writeln('*adjusts chronometer* `⚔️`')
       ..writeln(
-          'Salve, time wanderer! Let\'s focus on your life journey. Which dimension would you like to explore?')
+          'Olá! Sou seu assistente pessoal de desenvolvimento e estou aqui para ajudar você a criar novos hábitos positivos e alcançar seus objetivos.')
+      ..writeln(
+          'Durante nossa conversa, você pode pedir mais informações sobre qualquer trilha, desafio ou hábito mencionado.')
+      ..writeln('Como posso ajudar você hoje?')
       ..writeln()
-      ..writeln('**Choose a dimension:**');
-
-    // Use the centralized dimensions model
-    for (final dimension in Dimensions.all) {
-      buffer.writeln(
-          '- ${dimension.code}: ${dimension.title} (${dimension.portugueseTitle})');
-    }
+      ..writeln(
+          'a. Objetivo Definido - Encontrar um desafio ideal baseado em seu objetivo específico')
+      ..writeln(
+          'b. Rotina Personalizada - Criar uma rotina personalizada do zero')
+      ..writeln('c. Explorar Catálogo - Explorar nosso catálogo de desafios')
+      ..writeln(
+          'd. Transformar Hábitos - Transformar hábitos negativos em positivos');
 
     return LifePlanResponse(message: buffer.toString());
   }
 
-  /// Creates a dimension exploration prompt
-  factory LifePlanResponse.explore(LifePlanDimension? dimension) {
-    if (dimension == null) {
-      final dimensionCodes =
-          Dimensions.all.map((d) => '${d.code} for ${d.title}').join(', ');
-      return LifePlanResponse.error(
-        'Which dimension would you like to explore? Use $dimensionCodes.',
-      );
-    }
-
-    String realmName;
-    switch (dimension) {
-      case LifePlanDimension.physical:
-        realmName = 'physical realm';
-        break;
-      case LifePlanDimension.mental:
-        realmName = 'mental domain';
-        break;
-      case LifePlanDimension.relationships:
-        realmName = 'relationships kingdom';
-        break;
-      case LifePlanDimension.spirituality:
-        realmName = 'spiritual dimension';
-        break;
-      case LifePlanDimension.work:
-        realmName = 'work territory';
-        break;
-    }
-
-    return LifePlanResponse(
-      message: '*consults ancient map* `${dimension.emoji}`\n'
-          'Ah, the $realmName! A noble choice. '
-          'Let me illuminate the paths before you...',
+  /// Creates the objective-based flow initial response
+  factory LifePlanResponse.objectiveBased() {
+    return const LifePlanResponse(
+      message: 'Qual é seu objetivo específico?',
     );
   }
 
-  /// Creates the help response
+  /// Creates the custom routine flow initial response
+  factory LifePlanResponse.customRoutine() {
+    final buffer = StringBuffer()
+      ..writeln('Quais dimensões da vida você quer priorizar?')
+      ..writeln()
+      ..writeln('Você pode escolher até 3 opções:')
+      ..writeln('- Saúde Física')
+      ..writeln('- Saúde Mental')
+      ..writeln('- Relacionamentos')
+      ..writeln('- Trabalho')
+      ..writeln('- Espiritualidade');
+
+    return LifePlanResponse(message: buffer.toString());
+  }
+
+  /// Creates the catalog exploration flow initial response
+  factory LifePlanResponse.exploreCatalog() {
+    final buffer = StringBuffer()
+      ..writeln(
+          'Nosso catálogo de desafios está organizado por dimensões da vida:')
+      ..writeln()
+      ..writeln('1. Saúde Física (SF)')
+      ..writeln('2. Saúde Mental (SM)')
+      ..writeln('3. Relacionamentos (R)')
+      ..writeln('4. Espiritualidade (E)')
+      ..writeln('5. Trabalho Gratificante (TG)')
+      ..writeln()
+      ..writeln('Qual dimensão você gostaria de explorar?');
+
+    return LifePlanResponse(message: buffer.toString());
+  }
+
+  /// Creates the habit transformation flow initial response
+  factory LifePlanResponse.transformHabits() {
+    return const LifePlanResponse(
+      message: 'Qual hábito negativo você gostaria de transformar em positivo?',
+    );
+  }
+
+  /// Creates a response for assessing experience level
+  factory LifePlanResponse.assessLevel(String dimension) {
+    return const LifePlanResponse(
+      message: 'Você já tem experiência com hábitos nesta área?\n\n'
+          '- Iniciante - Estou começando agora\n'
+          '- Intermediário - Já tenho alguns hábitos\n'
+          '- Avançado - Busco desafios maiores',
+    );
+  }
+
+  /// Creates a response for suggesting a track
+  factory LifePlanResponse.suggestTrack(
+      String trackName, String trackDescription) {
+    return LifePlanResponse(
+      message:
+          'Baseado no seu objetivo e nível de experiência, recomendo a trilha: '
+          '$trackName\n\n$trackDescription\n\n'
+          'Gostaria de seguir com este desafio ou personalizar algum aspecto?',
+    );
+  }
+
+  /// Creates a response for challenge customization options
+  factory LifePlanResponse.challengeCustomization() {
+    return const LifePlanResponse(
+      message: 'Como você gostaria de personalizar este desafio?\n\n'
+          '- Frequência dos hábitos\n'
+          '- Intensidade do desafio\n'
+          '- Adicionar/remover hábitos',
+    );
+  }
+
+  /// Creates a help response with all available options
   factory LifePlanResponse.help() {
     final buffer = StringBuffer()
-      ..writeln('*unfurls ancient scroll* `📜`')
-      ..writeln('Greetings, seeker! Here are the commands for your journey:')
+      ..writeln('Como posso ajudar você hoje?')
       ..writeln()
-      ..writeln('- /plan - Begin your life\'s quest');
-
-    // Use the centralized dimensions model
-    for (final dimension in Dimensions.all) {
-      buffer.writeln(
-          '- /explore ${dimension.code} - Venture into ${dimension.title}');
-    }
-
-    buffer
-      ..writeln()
-      ..writeln('_Per aspera ad astra_ - Through hardships to the stars!');
+      ..writeln(
+          'a. Objetivo Definido - Encontrar um desafio ideal baseado em seu objetivo específico')
+      ..writeln(
+          'b. Rotina Personalizada - Criar uma rotina personalizada do zero')
+      ..writeln('c. Explorar Catálogo - Explorar nosso catálogo de desafios')
+      ..writeln(
+          'd. Transformar Hábitos - Transformar hábitos negativos em positivos');
 
     return LifePlanResponse(message: buffer.toString());
   }
@@ -99,7 +135,7 @@ class LifePlanResponse {
   /// Creates an unknown command response
   factory LifePlanResponse.unknown() {
     return LifePlanResponse.error(
-      'I do not recognize that command, brave soul. Type /help to see the available pathways.',
+      'Não entendi sua solicitação. Por favor, escolha uma das opções disponíveis ou digite "ajuda" para ver as opções.',
     );
   }
 }

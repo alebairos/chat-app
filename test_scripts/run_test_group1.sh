@@ -28,6 +28,15 @@ echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
 flutter test test/audio_recorder_error_handling_test.dart -v >> $OUTPUT_FILE 2>&1
 echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
 
+flutter test test/audio_recorder_duration_test.dart -v >> $OUTPUT_FILE 2>&1
+echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
+
+flutter test test/audio_recorder_accessibility_test.dart -v >> $OUTPUT_FILE 2>&1
+echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
+
+flutter test test/audio_recorder_resource_test.dart -v >> $OUTPUT_FILE 2>&1
+echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
+
 # Note: audio_recorder_concurrency_test.dart is skipped as mentioned in the code
 
 echo "Completed at: $(date)" >> $OUTPUT_FILE

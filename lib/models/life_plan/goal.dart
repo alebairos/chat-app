@@ -1,5 +1,3 @@
-import '../life_plan/dimensions.dart';
-
 /// Provides dimension code constants
 /// @deprecated Use Dimensions class instead
 class LifeDimension {

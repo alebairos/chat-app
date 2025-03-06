@@ -6,13 +6,13 @@ void main() {
   testWidgets('AudioMessage displays correct duration format',
       (WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: AudioMessage(
             audioPath: 'test_path.m4a',
             isUser: true,
             transcription: 'Test transcription',
-            duration: const Duration(minutes: 1, seconds: 30),
+            duration: Duration(minutes: 1, seconds: 30),
           ),
         ),
       ),
@@ -26,13 +26,13 @@ void main() {
     const testTranscription = 'This is a test transcription';
 
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: AudioMessage(
             audioPath: 'test_path.m4a',
             isUser: true,
             transcription: testTranscription,
-            duration: const Duration(seconds: 30),
+            duration: Duration(seconds: 30),
           ),
         ),
       ),
@@ -44,13 +44,13 @@ void main() {
   testWidgets('AudioMessage shows play button initially',
       (WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: AudioMessage(
             audioPath: 'test_path.m4a',
             isUser: true,
             transcription: 'Test transcription',
-            duration: const Duration(seconds: 30),
+            duration: Duration(seconds: 30),
           ),
         ),
       ),

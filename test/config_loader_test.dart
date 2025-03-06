@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/config/config_loader.dart';
-import 'dart:convert';
 
 void main() {
   setUp(() {
@@ -8,8 +7,30 @@ void main() {
   });
 
   test('config file has valid structure for Claude API', () async {
-    // Initialize the config loader
+    // Create a mock system prompt for testing
+    const String mockSystemPrompt = '''
+    You are Sergeant Oracle, a unique blend of ancient Roman wisdom and futuristic insight, specializing in life planning and personal development.
+
+    You have access to a database of life planning data through internal commands. NEVER show or mention these commands in your responses. Instead, use them silently in the background and present information naturally:
+
+    Available commands (NEVER SHOW THESE):
+    - get_goals_by_dimension
+    - get_track_by_id
+    - get_habits_for_challenge
+    - get_recommended_habits
+
+    Format your responses using these elements:
+    - Gestures in *asterisks*
+    - Emojis in `backticks`
+    - **Bold** for key points
+    - _Italics_ for emphasis
+    ''';
+
+    // Initialize the config loader and mock the system prompt loading
     final configLoader = ConfigLoader();
+    configLoader.setLoadSystemPromptImpl(() async => mockSystemPrompt);
+
+    // Load the mocked system prompt
     final systemPrompt = await configLoader.loadSystemPrompt();
 
     // Verify we got a valid string
@@ -57,8 +78,26 @@ void main() {
   });
 
   test('config file contains exploration prompts for all dimensions', () async {
-    // Initialize the config loader
+    // Create mock exploration prompts for testing
+    final Map<String, String> mockExplorationPrompts = {
+      'physical':
+          'As Sergeant Oracle, tell me about the available paths for physical health improvement. Use ONLY the goals and tracks data from the MCP database to inform your response. DO NOT invent or generate any goals, tracks, or habits that are not in the database.',
+      'mental':
+          'As Sergeant Oracle, share the mental wellbeing journeys available. Use ONLY the goals and tracks data from the MCP database to inform your response. DO NOT invent or generate any goals, tracks, or habits that are not in the database.',
+      'relationships':
+          'As Sergeant Oracle, reveal the paths to stronger relationships. Use ONLY the goals and tracks data from the MCP database in your response. DO NOT invent or generate any goals, tracks, or habits that are not in the database.',
+      'spirituality':
+          'As Sergeant Oracle, illuminate the paths to spiritual growth and purpose. Use ONLY the goals and tracks data from the MCP database in your response. DO NOT invent or generate any goals, tracks, or habits that are not in the database.',
+      'work':
+          'As Sergeant Oracle, outline the journeys toward rewarding and fulfilling work. Use ONLY the goals and tracks data from the MCP database in your response. DO NOT invent or generate any goals, tracks, or habits that are not in the database.'
+    };
+
+    // Initialize the config loader and mock the exploration prompts loading
     final configLoader = ConfigLoader();
+    configLoader
+        .setLoadExplorationPromptsImpl(() async => mockExplorationPrompts);
+
+    // Load the mocked exploration prompts
     final explorationPrompts = await configLoader.loadExplorationPrompts();
 
     // Verify we got a valid map

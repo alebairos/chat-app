@@ -3,7 +3,6 @@ import '../models/life_plan_response.dart';
 import '../../services/claude_service.dart';
 import '../../config/config_loader.dart';
 import 'package:flutter/foundation.dart';
-import '../../models/life_plan/dimensions.dart';
 
 /// Handles life plan commands and generates appropriate responses
 class LifePlanCommandHandler {
@@ -79,9 +78,12 @@ class LifePlanCommandHandler {
         } catch (_) {
           _isInPlanningMode = false;
           return LifePlanResponse.error(
-                  'Invalid dimension code. Type /help for available commands.')
+                  '*adjusts spectacles* `🧐` Invalid dimension code. Type /help for available commands.')
               .message;
         }
+      } else if (!text.startsWith('/')) {
+        // If it's not a command and not in planning mode, treat as help request
+        command = const LifePlanCommand(type: LifePlanCommandType.help);
       } else {
         command = LifePlanCommand.fromText(text);
       }
@@ -97,13 +99,13 @@ class LifePlanCommandHandler {
         case LifePlanCommandType.plan:
           debugPrint('📝 Generating plan response');
           _isInPlanningMode = true;
-          response = LifePlanResponse.plan();
+          response = LifePlanResponse.welcome();
           break;
 
         case LifePlanCommandType.explore:
           if (command.dimension == null) {
             debugPrint('⚠️ No dimension specified for explore command');
-            response = LifePlanResponse.explore(null);
+            response = LifePlanResponse.exploreCatalog();
           } else {
             debugPrint('🔍 Exploring dimension: ${command.dimension!.title}');
             try {
@@ -117,7 +119,7 @@ class LifePlanCommandHandler {
               debugPrint('❌ Error getting response from Claude: $e');
               _isInPlanningMode = false;
               response = LifePlanResponse.error(
-                  'Error getting response from Claude: $e');
+                  '*adjusts spectacles* `🧐` Error getting response from Claude: $e');
             }
           }
           break;
@@ -131,7 +133,19 @@ class LifePlanCommandHandler {
         default:
           debugPrint('❓ Generating help response for unknown command');
           _isInPlanningMode = false;
-          response = LifePlanResponse.help();
+          final buffer = StringBuffer()
+            ..writeln(
+                '*unfurls ancient scroll* `📜` Unknown command. Here are the available commands:')
+            ..writeln()
+            ..writeln('/plan - Start life planning')
+            ..writeln('/explore SF - Explore the Physical Health dimension')
+            ..writeln('/explore SM - Explore the Mental Health dimension')
+            ..writeln('/explore R - Explore the Relationships dimension')
+            ..writeln('/explore E - Explore the Spirituality dimension')
+            ..writeln('/explore TG - Explore the Rewarding Work dimension')
+            ..writeln('/help - Show this help message');
+
+          response = LifePlanResponse(message: buffer.toString());
           break;
       }
 
@@ -140,7 +154,9 @@ class LifePlanCommandHandler {
     } catch (e) {
       debugPrint('❌ Error processing command: $e');
       _isInPlanningMode = false;
-      return LifePlanResponse.error('Error processing command: $e').message;
+      return LifePlanResponse.error(
+              '*adjusts spectacles* `🧐` Error processing command: $e')
+          .message;
     }
   }
 

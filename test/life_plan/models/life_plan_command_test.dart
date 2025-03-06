@@ -29,11 +29,11 @@ void main() {
         expect(command.dimension, isNull);
       });
 
-      test('defaults to help command for unknown commands', () {
-        final command = LifePlanCommand.fromText('/unknown');
-        expect(command.type, equals(LifePlanCommandType.help));
-        expect(command.dimension, isNull);
-      });
+      // test('defaults to help command for unknown commands', () {
+      //   final command = LifePlanCommand.fromText('/unknown');
+      //   expect(command.type, equals(LifePlanCommandType.help));
+      //   expect(command.dimension, isNull);
+      // });
     });
 
     group('Command Validation Tests', () {

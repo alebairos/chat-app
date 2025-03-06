@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:character_ai_clone/widgets/audio_recorder.dart';
 import 'helpers/audio_recorder_test_helper.dart';
 
 void main() {

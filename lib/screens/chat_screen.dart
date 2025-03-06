@@ -9,6 +9,7 @@ import '../models/chat_message_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/transcription_service.dart';
 import '../utils/logger.dart';
+import '../config/config_loader.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -39,15 +40,37 @@ class _ChatScreenState extends State<ChatScreen> {
   final OpenAITranscriptionService _transcriptionService =
       OpenAITranscriptionService();
   final Logger _logger = Logger();
+  final ConfigLoader _configLoader = ConfigLoader();
+  late String _currentPersona;
 
   @override
   void initState() {
     super.initState();
     _claudeService = widget.claudeService ?? ClaudeService();
     _storageService = widget.storageService ?? ChatStorageService();
+    _currentPersona = _configLoader.activePersonaDisplayName;
     _checkEnvironment();
     _loadMessages();
     _setupScrollListener();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if the character has changed
+    if (_currentPersona != _configLoader.activePersonaDisplayName) {
+      _currentPersona = _configLoader.activePersonaDisplayName;
+      _resetChat();
+    }
+  }
+
+  void _resetChat() {
+    setState(() {
+      _messages.clear();
+      _isInitialLoading = true;
+      _error = null;
+    });
+    _loadMessages();
   }
 
   void _setupScrollListener() {
@@ -567,10 +590,8 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Scaffold(
-      appBar: const CustomChatAppBar(),
       body: Column(
         children: [
-          const SizedBox(height: 16),
           Expanded(
             child: _messages.isEmpty
                 ? const Center(

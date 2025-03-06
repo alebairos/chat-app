@@ -77,7 +77,8 @@ class LifePlanCommand {
       case '/help':
         return const LifePlanCommand(type: LifePlanCommandType.help);
       default:
-        return const LifePlanCommand(type: LifePlanCommandType.help);
+        // Unknown commands should be treated as unknown, not help
+        return const LifePlanCommand(type: LifePlanCommandType.unknown);
     }
   }
 

@@ -7,10 +7,6 @@ import 'package:character_ai_clone/models/chat_message_model.dart';
 import 'package:character_ai_clone/models/message_type.dart';
 import 'package:character_ai_clone/services/chat_storage_service.dart';
 import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/widgets/chat_input.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
-import 'package:character_ai_clone/services/transcription_service.dart';
 
 // Simple fake implementations instead of complex mocks
 class FakeChatStorageService implements ChatStorageService {
@@ -231,7 +227,7 @@ class TestChatScreen extends StatefulWidget {
 class _TestChatScreenState extends State<TestChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<Widget> _messages = [];
-  bool _isTyping = false;
+  final bool _isTyping = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
