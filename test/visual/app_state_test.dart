@@ -33,4 +33,24 @@ void main() {
     // Verify that at least one Scaffold is created
     expect(find.byType(Scaffold), findsWidgets);
   });
+
+  testWidgets('App contains basic UI structure', (WidgetTester tester) async {
+    // Build our app and trigger a frame
+    await tester.pumpWidget(const ChatApp());
+
+    // Allow the app to build
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Verify that the app has an AppBar
+    expect(find.byType(AppBar), findsWidgets);
+
+    // Verify that the app has at least one Icon
+    expect(find.byType(Icon), findsWidgets);
+
+    // Verify that the app has at least one Text widget
+    expect(find.byType(Text), findsWidgets);
+
+    // Verify that the app has at least one Container
+    expect(find.byType(Container), findsWidgets);
+  });
 }
