@@ -23,6 +23,7 @@ dependencies:
   path: ^1.8.3
   # CSV parsing
   csv: ^5.1.1
+  flutter_tts: ^4.2.2
 
 dev_dependencies:
   flutter_test:
@@ -46,3 +47,5 @@ flutter:
     - assets/data/Trilhas.csv
     - assets/data/habit-assistant-prompt-v13.json
     - lib/config/claude_config.json
+    - assets/audio/welcome_message.mp3
+    - assets/audio/assistant_response.mp3
