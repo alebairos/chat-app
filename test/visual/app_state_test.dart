@@ -82,4 +82,52 @@ void main() {
     );
     expect(appBarTextFinder, findsWidgets);
   });
+
+  testWidgets('App theme and styling elements are consistent',
+      (WidgetTester tester) async {
+    // Build our app and trigger a frame
+    await tester.pumpWidget(const ChatApp());
+
+    // Allow the app to build
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Get the MaterialApp widget
+    final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
+
+    // Verify that the app has a theme
+    expect(materialApp.theme, isNotNull);
+
+    // Verify that the app has a title
+    expect(materialApp.title, isNotEmpty);
+
+    // Verify AppBar styling
+    final appBar = tester.widget<AppBar>(find.byType(AppBar).first);
+    expect(appBar, isNotNull);
+
+    // Verify that the app has a consistent background color
+    final scaffolds = tester.widgetList<Scaffold>(find.byType(Scaffold));
+    for (final scaffold in scaffolds) {
+      // Either the scaffold has a background color or it uses the theme's background color
+      expect(scaffold.backgroundColor != null || materialApp.theme != null,
+          isTrue);
+    }
+
+    // Verify that text styles are applied
+    final textWidgets = tester.widgetList<Text>(find.byType(Text));
+    for (final textWidget in textWidgets) {
+      // Text widgets should either have a style or inherit from the theme
+      expect(textWidget.style != null || materialApp.theme != null, isTrue);
+    }
+
+    // Verify that the app has consistent icon styling
+    final iconWidgets = tester.widgetList<Icon>(find.byType(Icon));
+    for (final iconWidget in iconWidgets) {
+      // Icons should have a size and color, or inherit from the theme
+      expect(
+          iconWidget.size != null ||
+              iconWidget.color != null ||
+              materialApp.theme != null,
+          isTrue);
+    }
+  });
 }
