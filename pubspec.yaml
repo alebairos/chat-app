@@ -47,5 +47,6 @@ flutter:
     - assets/data/Trilhas.csv
     - assets/data/habit-assistant-prompt-v13.json
     - lib/config/claude_config.json
-    - assets/audio/welcome_message.mp3
-    - assets/audio/assistant_response.mp3
+    # Audio assets
+    - assets/audio/welcome_message.aiff
+    - assets/audio/assistant_response.aiff
