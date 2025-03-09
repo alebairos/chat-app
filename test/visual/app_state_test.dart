@@ -53,4 +53,33 @@ void main() {
     // Verify that the app has at least one Container
     expect(find.byType(Container), findsWidgets);
   });
+
+  testWidgets('App has essential interactive elements',
+      (WidgetTester tester) async {
+    // Build our app and trigger a frame
+    await tester.pumpWidget(const ChatApp());
+
+    // Allow the app to build
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Verify that the app has a settings icon
+    expect(find.byIcon(Icons.settings), findsOneWidget);
+
+    // Verify that the app has at least one button
+    expect(find.byType(IconButton), findsWidgets);
+
+    // Verify that the app has some text content
+    expect(find.byType(Text), findsWidgets);
+
+    // Verify that the app has an AppBar with text
+    final appBarFinder = find.byType(AppBar);
+    expect(appBarFinder, findsWidgets);
+
+    // Find all Text widgets that are descendants of AppBar
+    final appBarTextFinder = find.descendant(
+      of: appBarFinder,
+      matching: find.byType(Text),
+    );
+    expect(appBarTextFinder, findsWidgets);
+  });
 }
