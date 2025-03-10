@@ -120,9 +120,22 @@ class AudioPlaybackController implements AudioPlayback {
         throw Exception('Audio file is empty: ${file.path}');
       }
 
-      // Set the source
+      // Determine the file extension to use the correct source method
+      final fileExtension = file.path.split('.').last.toLowerCase();
+      debugPrint('Audio file extension: $fileExtension');
+
+      // Set the source based on file type
       try {
-        await _audioPlayer.setSourceDeviceFile(file.path);
+        if (fileExtension == 'aiff') {
+          // For AIFF files, we need to use a different source method
+          debugPrint('Using device file source for AIFF file');
+          await _audioPlayer.setSourceDeviceFile(file.path);
+        } else {
+          // For other file types, use the standard method
+          debugPrint(
+              'Using device file source for ${fileExtension.toUpperCase()} file');
+          await _audioPlayer.setSourceDeviceFile(file.path);
+        }
         debugPrint('Audio source set successfully');
       } catch (e) {
         debugPrint('Error setting audio source: $e');

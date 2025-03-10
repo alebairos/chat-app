@@ -141,8 +141,17 @@ class TextToSpeechService implements AudioGeneration {
           ? 'assets/audio/assistant_response.aiff'
           : 'assets/audio/welcome_message.aiff';
 
+      // Make sure the target path has the correct extension
+      String correctedTargetPath = targetPath;
+      if (!correctedTargetPath.endsWith('.aiff')) {
+        correctedTargetPath =
+            targetPath.replaceAll(RegExp(r'\.[^.]*$'), '.aiff');
+        debugPrint(
+            'Corrected target path to use .aiff extension: $correctedTargetPath');
+      }
+
       // Copy the asset file to the target path
-      final file = File(targetPath);
+      final file = File(correctedTargetPath);
 
       // Read the asset file
       final byteData = await rootBundle.load(assetPath);
@@ -152,12 +161,14 @@ class TextToSpeechService implements AudioGeneration {
       await file.writeAsBytes(
           buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 
-      debugPrint('Copied pre-generated audio from $assetPath to $targetPath');
+      debugPrint(
+          'Copied pre-generated audio from $assetPath to $correctedTargetPath');
+      debugPrint('File size: ${await file.length()} bytes');
 
       // Verify the file exists
       final exists = await file.exists();
       debugPrint(
-          'Pre-generated file exists check: $exists for path: $targetPath');
+          'Pre-generated file exists check: $exists for path: $correctedTargetPath');
 
       if (!exists) {
         throw Exception('Failed to copy pre-generated audio file');
@@ -169,7 +180,7 @@ class TextToSpeechService implements AudioGeneration {
           : const Duration(seconds: 10);
 
       return AudioFile(
-        path: targetPath,
+        path: correctedTargetPath,
         duration: duration,
       );
     } catch (e) {

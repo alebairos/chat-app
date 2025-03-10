@@ -222,7 +222,7 @@ class _WaveformProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Calculate progress percentage
     final progress = duration.inMilliseconds > 0
-        ? position.inMilliseconds / duration.inMilliseconds
+        ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0)
         : 0.0;
 
     return CustomPaint(
@@ -260,7 +260,9 @@ class _WaveformPainter extends CustomPainter {
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
 
-    final progressX = size.width * progress;
+    // Ensure progress is clamped between 0.0 and 1.0
+    final clampedProgress = progress.clamp(0.0, 1.0);
+    final progressX = size.width * clampedProgress;
 
     // If we don't have waveform data, generate a random one for visualization
     final data = waveformData ?? _generateRandomWaveform(60);
