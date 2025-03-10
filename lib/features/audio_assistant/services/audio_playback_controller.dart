@@ -156,31 +156,37 @@ class AudioPlaybackController implements AudioPlayback {
   @override
   Future<bool> play() async {
     if (!_initialized || _currentFile == null) {
+      debugPrint('Cannot play: not initialized or no file loaded');
       return false;
     }
 
     try {
+      debugPrint('Playing audio');
       await _audioPlayer.resume();
+      _updateState(PlaybackState.playing);
+      debugPrint('Audio playback started');
       return true;
     } catch (e) {
-      print('Failed to play audio: $e');
+      debugPrint('Failed to play audio: $e');
       return false;
     }
   }
 
   @override
   Future<bool> pause() async {
-    if (!_initialized ||
-        _currentFile == null ||
-        _state != PlaybackState.playing) {
+    if (!_initialized || _currentFile == null) {
+      debugPrint('Cannot pause: not initialized or no file loaded');
       return false;
     }
 
     try {
+      debugPrint('Pausing audio playback');
       await _audioPlayer.pause();
+      _updateState(PlaybackState.paused);
+      debugPrint('Audio playback paused');
       return true;
     } catch (e) {
-      print('Failed to pause audio: $e');
+      debugPrint('Failed to pause audio: $e');
       return false;
     }
   }

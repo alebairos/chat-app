@@ -174,10 +174,13 @@ class TextToSpeechService implements AudioGeneration {
         throw Exception('Failed to copy pre-generated audio file');
       }
 
-      // Use a fixed duration based on the asset file
+      // Use actual durations for the pre-generated files
+      // These values should match the actual audio file durations
       final duration = assetPath.contains('welcome_message')
           ? const Duration(seconds: 3)
-          : const Duration(seconds: 10);
+          : const Duration(seconds: 14); // Updated to match actual duration
+
+      debugPrint('Using pre-generated audio with duration: $duration');
 
       return AudioFile(
         path: correctedTargetPath,

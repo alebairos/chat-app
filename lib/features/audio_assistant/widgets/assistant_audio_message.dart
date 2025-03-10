@@ -141,41 +141,11 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
 
               // Waveform visualization and progress
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Waveform with progress indicator
-                    SizedBox(
-                      height: 32,
-                      child: _WaveformProgressBar(
-                        duration: widget.audioFile.duration,
-                        position: _position,
-                        isPlaying: _playbackState == PlaybackState.playing,
-                        waveformData: widget.audioFile.waveformData,
-                      ),
-                    ),
-
-                    // Duration text
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _formatDuration(_position),
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          _formatDuration(widget.audioFile.duration),
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                child: _WaveformProgressBar(
+                  duration: widget.audioFile.duration,
+                  position: _position,
+                  isPlaying: _playbackState == PlaybackState.playing,
+                  waveformData: widget.audioFile.waveformData,
                 ),
               ),
             ],
@@ -220,21 +190,60 @@ class _WaveformProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate progress percentage
+    // Calculate progress percentage, clamped for display purposes
     final progress = duration.inMilliseconds > 0
         ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0)
         : 0.0;
 
-    return CustomPaint(
-      painter: _WaveformPainter(
-        waveformData: waveformData,
-        progress: progress,
-        playedColor: Colors.blue,
-        unplayedColor: Colors.grey[400]!,
-        isPlaying: isPlaying,
-      ),
-      size: const Size(double.infinity, 32),
+    // For time display, use the actual position even if it exceeds duration
+    final displayPosition = position;
+    final displayDuration = duration;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Waveform visualization
+        CustomPaint(
+          painter: _WaveformPainter(
+            waveformData: waveformData,
+            progress: progress,
+            playedColor: Colors.blue,
+            unplayedColor: Colors.grey[400]!,
+            isPlaying: isPlaying,
+          ),
+          size: const Size(double.infinity, 32),
+        ),
+
+        // Duration text
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _formatDuration(displayPosition),
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              _formatDuration(displayDuration),
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
+  }
+
+  // Format duration as MM:SS
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes);
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 }
 
