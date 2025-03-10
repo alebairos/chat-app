@@ -431,49 +431,23 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Generate audio for assistant response if audio assistant is initialized
-      String? audioPath;
-      Duration? audioDuration;
-
-      if (_audioAssistantInitialized) {
-        try {
-          final audioMessageId =
-              DateTime.now().millisecondsSinceEpoch.toString();
-          final audioFile = await _audioMessageProvider.generateAudioForMessage(
-            audioMessageId,
-            response,
-          );
-
-          if (audioFile != null) {
-            audioPath = audioFile.path;
-            audioDuration = audioFile.duration;
-          }
-        } catch (e) {
-          debugPrint('Error generating audio for assistant response: $e');
-        }
-      }
-
-      // Save assistant message to storage
+      // Save assistant message to storage as text only (no audio)
       await _storageService.saveMessage(
         text: response,
         isUser: false,
-        type: audioPath != null ? MessageType.audio : MessageType.text,
-        mediaPath: audioPath,
-        duration: audioDuration,
+        type: MessageType.text,
       );
 
       // Get the saved message ID from storage
       final messages = await _storageService.getMessages(limit: 1);
       final savedMessageId = messages.first.id;
 
-      // Add assistant message to UI
+      // Add assistant message to UI (text only)
       final assistantMessage = ChatMessage(
         key: ValueKey(savedMessageId),
         text: response,
         isUser: false,
-        audioPath: audioPath,
-        duration: audioDuration,
-        audioPlayback: audioPath != null ? _audioPlaybackController : null,
+        onDelete: () => _deleteMessage(savedMessageId),
       );
 
       setState(() {
@@ -582,7 +556,7 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Save AI response
+      // Save AI response as text only
       await _storageService.saveMessage(
         text: response,
         isUser: false,
