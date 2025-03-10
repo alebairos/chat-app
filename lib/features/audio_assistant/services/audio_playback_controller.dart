@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/audio_file.dart';
 import '../models/playback_state.dart';
 import 'audio_playback.dart';
+import 'package:flutter/foundation.dart';
 
 /// A controller that handles audio playback using the audioplayers package.
 ///
@@ -17,6 +19,9 @@ class AudioPlaybackController implements AudioPlayback {
 
   /// The current playback state.
   PlaybackState _state = PlaybackState.initial;
+
+  /// The current duration of the loaded audio in milliseconds.
+  int _duration = 0;
 
   /// Stream controller for playback state changes.
   final StreamController<PlaybackState> _stateController =
@@ -40,17 +45,46 @@ class AudioPlaybackController implements AudioPlayback {
 
   @override
   Future<bool> initialize() async {
+    if (_initialized) return true;
+
     try {
-      // Set up listeners for player events
-      _audioPlayer.onPlayerStateChanged.listen(_handlePlayerStateChange);
-      _audioPlayer.onPositionChanged.listen(_handlePositionChange);
-      _audioPlayer.onPlayerComplete
-          .listen((_) => _updateState(PlaybackState.stopped));
+      debugPrint('Initializing AudioPlaybackController');
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+
+      // Set up listeners
+      _audioPlayer.onPlayerStateChanged.listen((state) {
+        debugPrint('Player state changed: $state');
+        switch (state) {
+          case PlayerState.playing:
+            _stateController.add(PlaybackState.playing);
+            break;
+          case PlayerState.paused:
+            _stateController.add(PlaybackState.paused);
+            break;
+          case PlayerState.stopped:
+            _stateController.add(PlaybackState.stopped);
+            break;
+          case PlayerState.completed:
+            _stateController.add(PlaybackState.stopped);
+            break;
+          default:
+            break;
+        }
+      });
+
+      _audioPlayer.onPositionChanged.listen((position) {
+        _positionController.add(position.inMilliseconds);
+      });
+
+      _audioPlayer.onDurationChanged.listen((duration) {
+        _duration = duration.inMilliseconds;
+      });
 
       _initialized = true;
+      debugPrint('AudioPlaybackController initialized successfully');
       return true;
     } catch (e) {
-      print('Failed to initialize AudioPlaybackController: $e');
+      debugPrint('Failed to initialize AudioPlaybackController: $e');
       return false;
     }
   }
@@ -58,24 +92,30 @@ class AudioPlaybackController implements AudioPlayback {
   @override
   Future<bool> load(AudioFile file) async {
     if (!_initialized) {
+      debugPrint('AudioPlaybackController not initialized');
       return false;
     }
 
     try {
-      _updateState(PlaybackState.loading);
-
+      debugPrint('Loading audio file: ${file.path}');
       // Stop any current playback
-      await _audioPlayer.stop();
+      await stop();
 
-      // Load the new audio file
+      // Check if the file exists
+      final audioFile = File(file.path);
+      if (!await audioFile.exists()) {
+        debugPrint('Audio file does not exist: ${file.path}');
+        return false;
+      }
+
+      // Set the source
       await _audioPlayer.setSourceDeviceFile(file.path);
-
       _currentFile = file;
-      _updateState(PlaybackState.stopped);
+      _stateController.add(PlaybackState.paused);
+      debugPrint('Audio file loaded successfully');
       return true;
     } catch (e) {
-      print('Failed to load audio file: $e');
-      _updateState(PlaybackState.initial);
+      debugPrint('Failed to load audio file: $e');
       return false;
     }
   }

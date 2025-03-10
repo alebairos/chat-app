@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../models/audio_file.dart';
@@ -62,11 +63,17 @@ class AudioMessageProvider {
   Future<AudioFile?> generateAudioForMessage(
       String messageId, String text) async {
     if (!_initialized) {
+      debugPrint('AudioMessageProvider not initialized');
       throw Exception('AudioMessageProvider not initialized');
     }
 
+    debugPrint(
+        'Generating audio for message $messageId with text: ${text.substring(0, min(50, text.length))}...');
+
     try {
       final audioFile = await _audioGeneration.generate(text);
+      debugPrint(
+          'Audio generation successful: ${audioFile.path}, duration: ${audioFile.duration}');
       _audioFiles[messageId] = audioFile;
       return audioFile;
     } catch (e) {

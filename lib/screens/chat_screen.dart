@@ -431,22 +431,56 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Save assistant message to storage as text only (no audio)
+      // Generate audio for assistant response if audio assistant is initialized
+      String? audioPath;
+      Duration? audioDuration;
+
+      if (_audioAssistantInitialized) {
+        try {
+          final audioMessageId =
+              DateTime.now().millisecondsSinceEpoch.toString();
+          final audioFile = await _audioMessageProvider.generateAudioForMessage(
+            audioMessageId,
+            response,
+          );
+
+          if (audioFile != null) {
+            audioPath = audioFile.path;
+            audioDuration = audioFile.duration;
+            debugPrint(
+                'Generated audio file: $audioPath with duration: $audioDuration');
+          } else {
+            debugPrint('Audio file generation returned null');
+          }
+        } catch (e) {
+          debugPrint('Error generating audio for assistant response: $e');
+        }
+      } else {
+        debugPrint(
+            'Audio assistant not initialized, skipping audio generation');
+      }
+
+      // Save assistant message to storage
       await _storageService.saveMessage(
         text: response,
         isUser: false,
-        type: MessageType.text,
+        type: audioPath != null ? MessageType.audio : MessageType.text,
+        mediaPath: audioPath,
+        duration: audioDuration,
       );
 
       // Get the saved message ID from storage
       final messages = await _storageService.getMessages(limit: 1);
       final savedMessageId = messages.first.id;
 
-      // Add assistant message to UI (text only)
+      // Add assistant message to UI
       final assistantMessage = ChatMessage(
         key: ValueKey(savedMessageId),
         text: response,
         isUser: false,
+        audioPath: audioPath,
+        duration: audioDuration,
+        audioPlayback: audioPath != null ? _audioPlaybackController : null,
         onDelete: () => _deleteMessage(savedMessageId),
       );
 
@@ -556,11 +590,42 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Save AI response as text only
+      // Generate audio for assistant response if audio assistant is initialized
+      String? assistantAudioPath;
+      Duration? assistantAudioDuration;
+
+      if (_audioAssistantInitialized) {
+        try {
+          final audioMessageId =
+              DateTime.now().millisecondsSinceEpoch.toString();
+          final audioFile = await _audioMessageProvider.generateAudioForMessage(
+            audioMessageId,
+            response,
+          );
+
+          if (audioFile != null) {
+            assistantAudioPath = audioFile.path;
+            assistantAudioDuration = audioFile.duration;
+            debugPrint(
+                'Generated audio file: $assistantAudioPath with duration: $assistantAudioDuration');
+          } else {
+            debugPrint('Audio file generation returned null');
+          }
+        } catch (e) {
+          debugPrint('Error generating audio for assistant response: $e');
+        }
+      } else {
+        debugPrint(
+            'Audio assistant not initialized, skipping audio generation');
+      }
+
+      // Save AI response
       await _storageService.saveMessage(
         text: response,
         isUser: false,
-        type: MessageType.text,
+        type: assistantAudioPath != null ? MessageType.audio : MessageType.text,
+        mediaPath: assistantAudioPath,
+        duration: assistantAudioDuration,
       );
 
       // Get the saved AI message ID
@@ -571,6 +636,10 @@ class _ChatScreenState extends State<ChatScreen> {
         key: ValueKey(aiMessageId),
         text: response,
         isUser: false,
+        audioPath: assistantAudioPath,
+        duration: assistantAudioDuration,
+        audioPlayback:
+            assistantAudioPath != null ? _audioPlaybackController : null,
         onDelete: () => _deleteMessage(aiMessageId),
       );
 
