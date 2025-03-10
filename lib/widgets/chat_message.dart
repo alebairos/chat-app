@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'audio_message.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
+import 'package:character_ai_clone/features/audio_assistant/widgets/assistant_audio_message.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_playback.dart';
 
 class ChatMessage extends StatelessWidget {
   final String text;
@@ -11,6 +14,7 @@ class ChatMessage extends StatelessWidget {
   final bool isTest;
   final VoidCallback? onDelete;
   final Function(String)? onEdit;
+  final AudioPlayback? audioPlayback;
 
   const ChatMessage({
     required this.text,
@@ -20,6 +24,7 @@ class ChatMessage extends StatelessWidget {
     this.isTest = false,
     this.onDelete,
     this.onEdit,
+    this.audioPlayback,
     super.key,
   });
 
@@ -104,6 +109,7 @@ class ChatMessage extends StatelessWidget {
     bool? isTest,
     VoidCallback? onDelete,
     Function(String)? onEdit,
+    AudioPlayback? audioPlayback,
   }) {
     return ChatMessage(
       text: text ?? this.text,
@@ -113,55 +119,74 @@ class ChatMessage extends StatelessWidget {
       isTest: isTest ?? this.isTest,
       onDelete: onDelete ?? this.onDelete,
       onEdit: onEdit ?? this.onEdit,
+      audioPlayback: audioPlayback ?? this.audioPlayback,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment:
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            isTest
-                ? const SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: Placeholder(),
-                  )
-                : const CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
-                    child: Icon(Icons.military_tech, color: Colors.white),
-                  ),
+            CircleAvatar(
+              backgroundColor: Colors.deepPurple,
+              child: Icon(Icons.military_tech, color: Colors.white),
+            ),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: audioPath != null
-                ? AudioMessage(
-                    audioPath: audioPath!,
-                    isUser: isUser,
-                    transcription: text,
-                    duration: duration ?? Duration.zero,
-                  )
+                ? isUser
+                    ? AudioMessage(
+                        audioPath: audioPath!,
+                        isUser: isUser,
+                        transcription: text,
+                        duration: duration ?? Duration.zero,
+                      )
+                    : (audioPlayback != null
+                        ? AssistantAudioMessage(
+                            audioFile: AudioFile(
+                              path: audioPath!,
+                              duration: duration ?? Duration.zero,
+                            ),
+                            transcription: text,
+                            audioPlayback: audioPlayback!,
+                          )
+                        : AudioMessage(
+                            audioPath: audioPath!,
+                            isUser: isUser,
+                            transcription: text,
+                            duration: duration ?? Duration.zero,
+                          ))
                 : Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isUser ? Colors.blue : Colors.grey[200],
+                      color: isUser ? Colors.blue[100] : Colors.grey[200],
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: MarkdownBody(
-                      data: text,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(
-                          color: isUser ? Colors.white : Colors.black,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          text,
+                          style: const TextStyle(fontSize: 16),
                         ),
-                      ),
+                      ],
                     ),
                   ),
           ),
-          const SizedBox(width: 8),
+          if (isUser) ...[
+            const SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: Colors.blue[300],
+              child: const Icon(Icons.person, color: Colors.white),
+            ),
+          ],
           Container(
             decoration: BoxDecoration(
               color: isUser ? Colors.blue[700] : Colors.grey[200],

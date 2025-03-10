@@ -10,6 +10,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/transcription_service.dart';
 import '../utils/logger.dart';
 import '../config/config_loader.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_message_provider.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/text_to_speech_service.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_controller.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -43,6 +46,12 @@ class _ChatScreenState extends State<ChatScreen> {
   final ConfigLoader _configLoader = ConfigLoader();
   late String _currentPersona;
 
+  // Audio assistant services
+  late TextToSpeechService _ttsService;
+  late AudioPlaybackController _audioPlaybackController;
+  late AudioMessageProvider _audioMessageProvider;
+  bool _audioAssistantInitialized = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +61,9 @@ class _ChatScreenState extends State<ChatScreen> {
     _checkEnvironment();
     _loadMessages();
     _setupScrollListener();
+
+    // Initialize audio assistant services
+    _initializeAudioAssistant();
   }
 
   @override
@@ -336,6 +348,25 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _initializeAudioAssistant() async {
+    _ttsService = TextToSpeechService();
+    _audioPlaybackController = AudioPlaybackController();
+
+    _audioMessageProvider = AudioMessageProvider(
+      audioGeneration: _ttsService,
+      audioPlayback: _audioPlaybackController,
+    );
+
+    final initialized = await _audioMessageProvider.initialize();
+    setState(() {
+      _audioAssistantInitialized = initialized;
+    });
+
+    if (!initialized) {
+      debugPrint('Failed to initialize audio assistant');
+    }
+  }
+
   Future<void> _sendMessage() async {
     if (_messageController.text.isEmpty) return;
 
@@ -400,22 +431,53 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Process normal response
-      final aiMessageModel = ChatMessageModel(
+      // Generate audio for assistant response if audio assistant is initialized
+      String? audioPath;
+      Duration? audioDuration;
+
+      if (_audioAssistantInitialized) {
+        try {
+          final audioMessageId =
+              DateTime.now().millisecondsSinceEpoch.toString();
+          final audioFile = await _audioMessageProvider.generateAudioForMessage(
+            audioMessageId,
+            response,
+          );
+
+          if (audioFile != null) {
+            audioPath = audioFile.path;
+            audioDuration = audioFile.duration;
+          }
+        } catch (e) {
+          debugPrint('Error generating audio for assistant response: $e');
+        }
+      }
+
+      // Save assistant message to storage
+      await _storageService.saveMessage(
         text: response,
         isUser: false,
-        type: MessageType.text,
-        timestamp: DateTime.now(),
+        type: audioPath != null ? MessageType.audio : MessageType.text,
+        mediaPath: audioPath,
+        duration: audioDuration,
       );
 
-      // Save AI response and get ID
-      await isar.writeTxn(() async {
-        final aiMessageId = await isar.chatMessageModels.put(aiMessageModel);
-        aiMessageModel.id = aiMessageId;
-      });
+      // Get the saved message ID from storage
+      final messages = await _storageService.getMessages(limit: 1);
+      final savedMessageId = messages.first.id;
+
+      // Add assistant message to UI
+      final assistantMessage = ChatMessage(
+        key: ValueKey(savedMessageId),
+        text: response,
+        isUser: false,
+        audioPath: audioPath,
+        duration: audioDuration,
+        audioPlayback: audioPath != null ? _audioPlaybackController : null,
+      );
 
       setState(() {
-        _messages.insert(0, _createChatMessage(aiMessageModel));
+        _messages.insert(0, assistantMessage);
         _isTyping = false;
       });
       _scrollToBottom();
@@ -663,6 +725,10 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     _storageService.close();
+
+    // Dispose audio assistant services
+    _audioMessageProvider.dispose();
+
     super.dispose();
   }
 }
