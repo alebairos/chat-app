@@ -130,16 +130,4 @@ void main() {
           isTrue);
     }
   });
-
-  test('App responsiveness test placeholder', () {
-    // This is a placeholder for a future test that will verify the app's
-    // responsiveness across different screen sizes.
-    //
-    // TODO: Implement a proper test for responsiveness that handles overflow errors
-    // and verifies that the app adapts to different screen sizes.
-
-    // For now, we're just adding this placeholder to indicate that this is an
-    // important aspect to test in the future.
-    expect(true, isTrue);
-  });
 }
