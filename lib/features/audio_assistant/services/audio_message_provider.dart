@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../models/audio_file.dart';
@@ -96,12 +97,24 @@ class AudioMessageProvider {
   /// Returns true if playback started successfully, false otherwise.
   Future<bool> playAudioForMessage(String messageId) async {
     if (!_initialized) {
+      debugPrint('AudioMessageProvider not initialized');
       throw Exception('AudioMessageProvider not initialized');
     }
 
     final audioFile = _audioFiles[messageId];
     if (audioFile == null) {
       debugPrint('No audio file found for message $messageId');
+      return false;
+    }
+
+    // Verify file exists
+    final file = File(audioFile.path);
+    final exists = await file.exists();
+    debugPrint(
+        'File exists check for playback: $exists for path: ${audioFile.path}');
+
+    if (!exists) {
+      debugPrint('Audio file does not exist for playback: ${audioFile.path}');
       return false;
     }
 

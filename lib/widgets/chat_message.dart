@@ -5,6 +5,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
 import 'package:character_ai_clone/features/audio_assistant/widgets/assistant_audio_message.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_playback.dart';
+import 'dart:io';
 
 class ChatMessage extends StatelessWidget {
   final String text;
@@ -149,13 +150,81 @@ class ChatMessage extends StatelessWidget {
                         duration: duration ?? Duration.zero,
                       )
                     : (audioPlayback != null
-                        ? AssistantAudioMessage(
-                            audioFile: AudioFile(
-                              path: audioPath!,
-                              duration: duration ?? Duration.zero,
-                            ),
-                            transcription: text,
-                            audioPlayback: audioPlayback!,
+                        ? Builder(
+                            builder: (context) {
+                              try {
+                                // Verify file exists before creating AssistantAudioMessage
+                                final file = File(audioPath!);
+                                if (!file.existsSync()) {
+                                  debugPrint(
+                                      'Audio file not found at $audioPath, falling back to text message');
+                                  return Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          text,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Audio unavailable',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.red[400],
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                return AssistantAudioMessage(
+                                  audioFile: AudioFile(
+                                    path: audioPath!,
+                                    duration: duration ?? Duration.zero,
+                                  ),
+                                  transcription: text,
+                                  audioPlayback: audioPlayback!,
+                                );
+                              } catch (e) {
+                                debugPrint(
+                                    'Error creating AssistantAudioMessage: $e');
+                                return Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        text,
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Audio error: ${e.toString().split(":").first}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.red[400],
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
                           )
                         : AudioMessage(
                             audioPath: audioPath!,

@@ -77,6 +77,17 @@ class TextToSpeechService implements AudioGeneration {
       await _flutterTts.synthesizeToFile(text, filePath);
       debugPrint('Audio synthesis completed');
 
+      // Verify the file exists
+      final file = File(filePath);
+      final exists = await file.exists();
+      debugPrint('File exists check: $exists for path: $filePath');
+
+      if (!exists) {
+        debugPrint('WARNING: File was not created at expected path: $filePath');
+        throw Exception(
+            'Audio file was not created at expected path: $filePath');
+      }
+
       // Get the duration of the generated audio
       // Since Flutter TTS doesn't provide duration, we estimate it based on word count
       // Average speaking rate is about 150 words per minute
@@ -85,10 +96,13 @@ class TextToSpeechService implements AudioGeneration {
       debugPrint(
           'Estimated duration: ${estimatedDurationMs}ms for $wordCount words');
 
-      return AudioFile(
+      final audioFile = AudioFile(
         path: filePath,
         duration: Duration(milliseconds: estimatedDurationMs),
       );
+
+      debugPrint('Returning AudioFile with path: ${audioFile.path}');
+      return audioFile;
     } catch (e) {
       debugPrint('Failed to generate audio: $e');
       throw Exception('Failed to generate audio: $e');

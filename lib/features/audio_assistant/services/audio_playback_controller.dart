@@ -103,20 +103,40 @@ class AudioPlaybackController implements AudioPlayback {
 
       // Check if the file exists
       final audioFile = File(file.path);
-      if (!await audioFile.exists()) {
+      final exists = await audioFile.exists();
+      debugPrint('File exists check: $exists for path: ${file.path}');
+
+      if (!exists) {
         debugPrint('Audio file does not exist: ${file.path}');
-        return false;
+        throw Exception('Audio file not found at ${file.path}');
+      }
+
+      // Get file size to verify it's a valid file
+      final fileSize = await audioFile.length();
+      debugPrint('Audio file size: $fileSize bytes');
+
+      if (fileSize <= 0) {
+        debugPrint('Audio file is empty: ${file.path}');
+        throw Exception('Audio file is empty: ${file.path}');
       }
 
       // Set the source
-      await _audioPlayer.setSourceDeviceFile(file.path);
+      try {
+        await _audioPlayer.setSourceDeviceFile(file.path);
+        debugPrint('Audio source set successfully');
+      } catch (e) {
+        debugPrint('Error setting audio source: $e');
+        throw Exception('Error setting audio source: $e');
+      }
+
       _currentFile = file;
       _stateController.add(PlaybackState.paused);
       debugPrint('Audio file loaded successfully');
       return true;
     } catch (e) {
       debugPrint('Failed to load audio file: $e');
-      return false;
+      // Rethrow to allow proper error handling upstream
+      rethrow;
     }
   }
 

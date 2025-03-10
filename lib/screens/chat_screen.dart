@@ -13,6 +13,7 @@ import '../config/config_loader.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_message_provider.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/text_to_speech_service.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_controller.dart';
+import 'dart:io';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -322,12 +323,32 @@ class _ChatScreenState extends State<ChatScreen> {
       _logger.logStartup('- Is user: ${model.isUser}');
     }
 
+    // Check if this is an audio message from the assistant
+    if (model.type == MessageType.audio &&
+        !model.isUser &&
+        model.mediaPath != null) {
+      // Verify the audio file exists
+      final file = File(model.mediaPath!);
+      if (!file.existsSync()) {
+        debugPrint(
+            'Audio file not found when creating message: ${model.mediaPath}');
+      } else {
+        debugPrint(
+            'Audio file exists when creating message: ${model.mediaPath}');
+      }
+    }
+
     return ChatMessage(
       key: ValueKey(model.id),
       text: model.text,
       isUser: model.isUser,
       audioPath: model.mediaPath,
       duration: model.duration,
+      audioPlayback: (!model.isUser &&
+              model.type == MessageType.audio &&
+              model.mediaPath != null)
+          ? _audioPlaybackController
+          : null,
       onDelete: () => _deleteMessage(model.id),
       onEdit: model.isUser
           ? (text) {
