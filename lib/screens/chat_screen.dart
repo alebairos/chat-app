@@ -13,7 +13,10 @@ import '../config/config_loader.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_message_provider.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/text_to_speech_service.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_controller.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/tts_service_factory.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/eleven_labs_tts_service.dart';
 import 'dart:io';
+import 'package:character_ai_clone/features/audio_assistant/screens/tts_settings_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -370,21 +373,36 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _initializeAudioAssistant() async {
-    _ttsService = TextToSpeechService();
     _audioPlaybackController = AudioPlaybackController();
 
+    // Set ElevenLabs as the active TTS service
+    TTSServiceFactory.setActiveServiceType(TTSServiceType.elevenLabs);
+
     _audioMessageProvider = AudioMessageProvider(
-      audioGeneration: _ttsService,
       audioPlayback: _audioPlaybackController,
     );
 
     final initialized = await _audioMessageProvider.initialize();
+
+    // Explicitly disable test mode for ElevenLabs service
+    if (initialized &&
+        TTSServiceFactory.activeServiceType == TTSServiceType.elevenLabs) {
+      final audioGenService = _audioMessageProvider.getAudioGenerationService();
+      if (audioGenService is ElevenLabsTTSService) {
+        audioGenService.disableTestMode();
+        debugPrint('Explicitly disabled test mode for ElevenLabs service');
+      }
+    }
+
     setState(() {
       _audioAssistantInitialized = initialized;
     });
 
     if (!initialized) {
       debugPrint('Failed to initialize audio assistant');
+    } else {
+      debugPrint(
+          'Audio assistant initialized with service type: ${TTSServiceFactory.activeServiceType}');
     }
   }
 
@@ -458,8 +476,24 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (_audioAssistantInitialized) {
         try {
-          final audioMessageId =
-              DateTime.now().millisecondsSinceEpoch.toString();
+          // Save assistant message to storage first to get the message ID
+          await _storageService.saveMessage(
+            text: response,
+            isUser: false,
+            type: MessageType.text, // Initially save as text, will update later
+          );
+
+          // Get the saved message ID from storage
+          final messages = await _storageService.getMessages(limit: 1);
+          final savedMessageId = messages.first.id;
+
+          // Use the actual message ID for the audio file
+          // Add a timestamp to ensure uniqueness
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final audioMessageId = "${savedMessageId}_$timestamp";
+          debugPrint(
+              'Generating audio for message ID: $audioMessageId with unique timestamp');
+
           final audioFile = await _audioMessageProvider.generateAudioForMessage(
             audioMessageId,
             response,
@@ -469,9 +503,18 @@ class _ChatScreenState extends State<ChatScreen> {
             audioPath = audioFile.path;
             audioDuration = audioFile.duration;
             debugPrint(
-                'Generated audio file: $audioPath with duration: $audioDuration');
+                'Generated audio file for message $audioMessageId: $audioPath with duration: $audioDuration');
+
+            // Update the message in storage with the audio path and duration
+            await _storageService.updateMessage(
+              savedMessageId,
+              type: MessageType.audio,
+              mediaPath: audioPath,
+              duration: audioDuration,
+            );
           } else {
-            debugPrint('Audio file generation returned null');
+            debugPrint(
+                'Audio file generation returned null for message $audioMessageId');
           }
         } catch (e) {
           debugPrint('Error generating audio for assistant response: $e');
@@ -479,20 +522,20 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         debugPrint(
             'Audio assistant not initialized, skipping audio generation');
-      }
 
-      // Save assistant message to storage
-      await _storageService.saveMessage(
-        text: response,
-        isUser: false,
-        type: audioPath != null ? MessageType.audio : MessageType.text,
-        mediaPath: audioPath,
-        duration: audioDuration,
-      );
+        // Save assistant message to storage without audio
+        await _storageService.saveMessage(
+          text: response,
+          isUser: false,
+          type: MessageType.text,
+        );
+      }
 
       // Get the saved message ID from storage
       final messages = await _storageService.getMessages(limit: 1);
       final savedMessageId = messages.first.id;
+      debugPrint(
+          'Retrieved saved message ID: $savedMessageId, audioPath: $audioPath');
 
       // Add assistant message to UI
       final assistantMessage = ChatMessage(
@@ -617,8 +660,24 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (_audioAssistantInitialized) {
         try {
-          final audioMessageId =
-              DateTime.now().millisecondsSinceEpoch.toString();
+          // Save assistant message to storage first to get the message ID
+          await _storageService.saveMessage(
+            text: response,
+            isUser: false,
+            type: MessageType.text, // Initially save as text, will update later
+          );
+
+          // Get the saved message ID from storage
+          final aiMessages = await _storageService.getMessages(limit: 1);
+          final aiMessageId = aiMessages.first.id;
+
+          // Use the actual message ID for the audio file
+          // Add a timestamp to ensure uniqueness
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final audioMessageId = "${aiMessageId}_$timestamp";
+          debugPrint(
+              'Generating audio for message ID: $audioMessageId with unique timestamp');
+
           final audioFile = await _audioMessageProvider.generateAudioForMessage(
             audioMessageId,
             response,
@@ -628,9 +687,18 @@ class _ChatScreenState extends State<ChatScreen> {
             assistantAudioPath = audioFile.path;
             assistantAudioDuration = audioFile.duration;
             debugPrint(
-                'Generated audio file: $assistantAudioPath with duration: $assistantAudioDuration');
+                'Generated audio file for message $audioMessageId: $assistantAudioPath with duration: $assistantAudioDuration');
+
+            // Update the message in storage with the audio path and duration
+            await _storageService.updateMessage(
+              aiMessageId,
+              type: MessageType.audio,
+              mediaPath: assistantAudioPath,
+              duration: assistantAudioDuration,
+            );
           } else {
-            debugPrint('Audio file generation returned null');
+            debugPrint(
+                'Audio file generation returned null for message $audioMessageId');
           }
         } catch (e) {
           debugPrint('Error generating audio for assistant response: $e');
@@ -638,20 +706,20 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         debugPrint(
             'Audio assistant not initialized, skipping audio generation');
-      }
 
-      // Save AI response
-      await _storageService.saveMessage(
-        text: response,
-        isUser: false,
-        type: assistantAudioPath != null ? MessageType.audio : MessageType.text,
-        mediaPath: assistantAudioPath,
-        duration: assistantAudioDuration,
-      );
+        // Save assistant message to storage without audio
+        await _storageService.saveMessage(
+          text: response,
+          isUser: false,
+          type: MessageType.text,
+        );
+      }
 
       // Get the saved AI message ID
       final aiMessages = await _storageService.getMessages(limit: 1);
       final aiMessageId = aiMessages.first.id;
+      debugPrint(
+          'Retrieved saved message ID: $aiMessageId, audioPath: $assistantAudioPath');
 
       final aiMessage = ChatMessage(
         key: ValueKey(aiMessageId),
@@ -686,6 +754,81 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       });
     }
+  }
+
+  void _showMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Clear Conversation'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _clearConversation();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings_voice),
+                title: const Text('TTS Settings'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _openTTSSettings();
+                },
+              ),
+              // ... other menu items ...
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openTTSSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TTSSettingsScreen(
+          audioMessageProvider: _audioMessageProvider,
+        ),
+      ),
+    );
+  }
+
+  void _clearConversation() {
+    setState(() {
+      _messages.clear();
+      _addInitialMessage();
+    });
+
+    // Clear conversation history in the Claude service
+    _claudeService.clearConversation();
+
+    // Clear the audio cache to ensure fresh audio files
+    if (_audioAssistantInitialized) {
+      _audioMessageProvider.clearAudioCache();
+      debugPrint('Audio cache cleared during conversation reset');
+    }
+
+    // Show confirmation
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Conversation cleared'),
+      ),
+    );
+  }
+
+  void _addInitialMessage() {
+    _messages.add(
+      ChatMessage(
+        text: 'Hello! How can I help you today?',
+        isUser: false,
+      ),
+    );
   }
 
   @override

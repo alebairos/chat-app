@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../models/audio_file.dart';
 import 'audio_generation.dart';
 import 'audio_playback.dart';
+import 'tts_service_factory.dart';
 
 /// A provider that manages audio messages for the assistant.
 ///
@@ -27,15 +28,44 @@ class AudioMessageProvider {
   /// Creates a new [AudioMessageProvider] instance.
   ///
   /// [audioGeneration] is the service used to generate audio from text.
+  /// If not provided, it will be created using the TTSServiceFactory.
   /// [audioPlayback] is the service used to play audio files.
   AudioMessageProvider({
-    required AudioGeneration audioGeneration,
+    AudioGeneration? audioGeneration,
     required AudioPlayback audioPlayback,
-  })  : _audioGeneration = audioGeneration,
+  })  : _audioGeneration =
+            audioGeneration ?? TTSServiceFactory.createTTSService(),
         _audioPlayback = audioPlayback;
 
   /// Whether the provider has been initialized.
   bool get isInitialized => _initialized;
+
+  /// Get the current TTS service type
+  TTSServiceType get ttsServiceType => TTSServiceFactory.activeServiceType;
+
+  /// Get the current audio generation service
+  AudioGeneration getAudioGenerationService() {
+    return _audioGeneration;
+  }
+
+  /// Change the TTS service type
+  ///
+  /// This will reinitialize the provider with the new service type.
+  /// Returns true if the change was successful, false otherwise.
+  Future<bool> changeTTSServiceType(TTSServiceType serviceType) async {
+    if (serviceType == TTSServiceFactory.activeServiceType) {
+      return true; // Already using this service type
+    }
+
+    // Set the new service type
+    TTSServiceFactory.setActiveServiceType(serviceType);
+
+    // Reset initialization flag
+    _initialized = false;
+
+    // Reinitialize with the new service
+    return initialize();
+  }
 
   /// Initializes the provider.
   ///
@@ -68,17 +98,29 @@ class AudioMessageProvider {
       throw Exception('AudioMessageProvider not initialized');
     }
 
+    // Generate a unique ID for this request to track it through logs
+    final requestId =
+        DateTime.now().millisecondsSinceEpoch.toString().substring(6);
+
     debugPrint(
-        'Generating audio for message $messageId with text: ${text.substring(0, min(50, text.length))}...');
+        '[$requestId] Generating audio for message $messageId with text: "${text.substring(0, min(50, text.length))}..."');
 
     try {
       final audioFile = await _audioGeneration.generate(text);
       debugPrint(
-          'Audio generation successful: ${audioFile.path}, duration: ${audioFile.duration}');
+          '[$requestId] Audio generation successful for message $messageId: ${audioFile.path}, duration: ${audioFile.duration}');
+
+      // Store the audio file with the message ID
       _audioFiles[messageId] = audioFile;
+
+      // Log the current state of the audio files map
+      debugPrint(
+          '[$requestId] Current audio files map: ${_audioFiles.keys.join(', ')}');
+
       return audioFile;
     } catch (e) {
-      debugPrint('Failed to generate audio for message $messageId: $e');
+      debugPrint(
+          '[$requestId] Failed to generate audio for message $messageId: $e');
       return null;
     }
   }
@@ -88,7 +130,10 @@ class AudioMessageProvider {
   /// [messageId] is the unique identifier for the message.
   /// Returns the audio file, or null if no audio file is associated with the message ID.
   AudioFile? getAudioForMessage(String messageId) {
-    return _audioFiles[messageId];
+    final audioFile = _audioFiles[messageId];
+    debugPrint(
+        'Getting audio for message $messageId: ${audioFile != null ? "Found - ${audioFile.path}" : "Not found"}');
+    return audioFile;
   }
 
   /// Plays the audio file associated with the given message ID.
@@ -119,6 +164,7 @@ class AudioMessageProvider {
     }
 
     try {
+      debugPrint('Playing audio for message $messageId: ${audioFile.path}');
       await _audioPlayback.load(audioFile);
       await _audioPlayback.play();
       return true;
@@ -200,5 +246,15 @@ class AudioMessageProvider {
       _audioFiles.clear();
       _initialized = false;
     }
+  }
+
+  /// Clears the audio cache.
+  ///
+  /// This method can be called to force reloading of audio files.
+  void clearAudioCache() {
+    debugPrint(
+        'Clearing audio cache. Current cache size: ${_audioFiles.length}');
+    _audioFiles.clear();
+    debugPrint('Audio cache cleared');
   }
 }

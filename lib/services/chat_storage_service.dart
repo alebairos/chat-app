@@ -108,6 +108,33 @@ class ChatStorageService {
     });
   }
 
+  /// Updates a message with additional information such as audio path and duration.
+  ///
+  /// This is used to update a message after audio has been generated.
+  Future<void> updateMessage(
+    Id id, {
+    MessageType? type,
+    String? mediaPath,
+    Duration? duration,
+  }) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final message = await isar.chatMessageModels.get(id);
+      if (message != null) {
+        if (type != null) {
+          message.type = type;
+        }
+        if (mediaPath != null) {
+          message.mediaPath = mediaPath;
+        }
+        if (duration != null) {
+          message.duration = duration;
+        }
+        await isar.chatMessageModels.put(message);
+      }
+    });
+  }
+
   Future<void> deleteAllMessages() async {
     final isar = await db;
     await isar.writeTxn(() async {

@@ -141,7 +141,23 @@ class TextToSpeechService implements AudioGeneration {
           ? 'assets/audio/assistant_response.aiff'
           : 'assets/audio/welcome_message.aiff';
 
-      // Make sure the target path has the correct extension
+      // In simulator or test environment, return the asset path directly
+      if (Platform.environment.containsKey('FLUTTER_TEST') || _isSimulator) {
+        debugPrint(
+            'Using pre-generated audio directly from assets: $assetPath');
+
+        // Use actual durations for the pre-generated files
+        final duration = assetPath.contains('welcome_message')
+            ? const Duration(seconds: 3)
+            : const Duration(seconds: 14);
+
+        return AudioFile(
+          path: assetPath,
+          duration: duration,
+        );
+      }
+
+      // For real devices, continue with copying the asset to a file
       String correctedTargetPath = targetPath;
       if (!correctedTargetPath.endsWith('.aiff')) {
         correctedTargetPath =

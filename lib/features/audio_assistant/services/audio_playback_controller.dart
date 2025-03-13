@@ -15,13 +15,13 @@ class AudioPlaybackController implements AudioPlayback {
   final AudioPlayer _audioPlayer;
 
   /// The currently loaded audio file.
-  AudioFile? _currentFile;
+  File? _currentFile;
+
+  /// The duration of the currently loaded audio file.
+  Duration _currentDuration = Duration.zero;
 
   /// The current playback state.
-  PlaybackState _state = PlaybackState.initial;
-
-  /// The current duration of the loaded audio in milliseconds.
-  int _duration = 0;
+  PlaybackState _state = PlaybackState.stopped;
 
   /// Stream controller for playback state changes.
   final StreamController<PlaybackState> _stateController =
@@ -77,7 +77,7 @@ class AudioPlaybackController implements AudioPlayback {
       });
 
       _audioPlayer.onDurationChanged.listen((duration) {
-        _duration = duration.inMilliseconds;
+        _currentDuration = Duration(milliseconds: duration.inMilliseconds);
       });
 
       _initialized = true;
@@ -90,64 +90,124 @@ class AudioPlaybackController implements AudioPlayback {
   }
 
   @override
-  Future<bool> load(AudioFile file) async {
-    if (!_initialized) {
-      debugPrint('AudioPlaybackController not initialized');
-      return false;
-    }
+  Future<bool> load(AudioFile audioFile) async {
+    debugPrint('Loading audio file: ${audioFile.path}');
+    debugPrint('Audio file duration: ${audioFile.duration}');
+
+    // Generate a unique ID for this load operation for tracking
+    final loadId = DateTime.now().millisecondsSinceEpoch.toString();
+    debugPrint('LOAD_ID: $loadId - Starting load operation');
 
     try {
-      debugPrint('Loading audio file: ${file.path}');
-      // Stop any current playback
-      await stop();
-
-      // Check if the file exists
-      final audioFile = File(file.path);
-      final exists = await audioFile.exists();
-      debugPrint('File exists check: $exists for path: ${file.path}');
-
-      if (!exists) {
-        debugPrint('Audio file does not exist: ${file.path}');
-        throw Exception('Audio file not found at ${file.path}');
+      // Stop any currently playing audio and release resources
+      if (_currentFile != null) {
+        debugPrint(
+            'LOAD_ID: $loadId - Stopping and releasing previous audio file: ${_currentFile?.path}');
+        await _audioPlayer.stop();
+        await _audioPlayer.release();
       }
 
-      // Get file size to verify it's a valid file
-      final fileSize = await audioFile.length();
-      debugPrint('Audio file size: $fileSize bytes');
+      // Store the duration from the AudioFile
+      _currentDuration = audioFile.duration;
+      debugPrint(
+          'LOAD_ID: $loadId - Set current duration to: $_currentDuration');
 
-      if (fileSize <= 0) {
-        debugPrint('Audio file is empty: ${file.path}');
+      // Check if the file exists and is not empty
+      final path = audioFile.path;
+
+      // Add a unique cache-busting parameter to prevent caching issues
+      final uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+      debugPrint(
+          'LOAD_ID: $loadId - Using unique ID for audio load: $uniqueId');
+
+      // Check if this is an asset path
+      if (path.startsWith('assets/')) {
+        debugPrint('LOAD_ID: $loadId - Loading from asset: $path');
+        try {
+          // For asset files, use setSourceAsset
+          await _audioPlayer.setSourceAsset(path);
+          debugPrint('LOAD_ID: $loadId - Asset audio source set successfully');
+
+          _currentFile = File(path); // Create a placeholder File object
+          _stateController.add(PlaybackState.paused);
+          debugPrint('LOAD_ID: $loadId - Asset audio file loaded successfully');
+          return true;
+        } catch (e) {
+          debugPrint('LOAD_ID: $loadId - Error setting asset audio source: $e');
+          throw Exception('Error setting asset audio source: $e');
+        }
+      }
+
+      // For device files, continue with the existing logic
+      final file = File(path);
+      final exists = await file.exists();
+
+      if (!exists) {
+        debugPrint('LOAD_ID: $loadId - Audio file does not exist: $path');
+
+        // Check if this might be an asset path without the 'assets/' prefix
+        if (path.contains('.aiff') || path.contains('.mp3')) {
+          final assetPath = path.split('/').last;
+          final fullAssetPath = 'assets/audio/$assetPath';
+          debugPrint(
+              'LOAD_ID: $loadId - Attempting to load as asset: $fullAssetPath');
+
+          try {
+            await _audioPlayer.setSourceAsset(fullAssetPath);
+            debugPrint(
+                'LOAD_ID: $loadId - Fallback asset audio source set successfully');
+
+            _currentFile = File(path); // Create a placeholder File object
+            _stateController.add(PlaybackState.paused);
+            debugPrint(
+                'LOAD_ID: $loadId - Fallback asset audio file loaded successfully');
+            return true;
+          } catch (e) {
+            debugPrint(
+                'LOAD_ID: $loadId - Error setting fallback asset audio source: $e');
+            throw Exception('Audio file not found: $path');
+          }
+        } else {
+          throw Exception('Audio file not found: $path');
+        }
+      }
+
+      final fileSize = await file.length();
+      if (fileSize == 0) {
+        debugPrint('LOAD_ID: $loadId - Audio file is empty: ${file.path}');
         throw Exception('Audio file is empty: ${file.path}');
       }
 
       // Determine the file extension to use the correct source method
       final fileExtension = file.path.split('.').last.toLowerCase();
-      debugPrint('Audio file extension: $fileExtension');
+      debugPrint('LOAD_ID: $loadId - Audio file extension: $fileExtension');
 
       // Set the source based on file type
       try {
         if (fileExtension == 'aiff') {
           // For AIFF files, we need to use a different source method
-          debugPrint('Using device file source for AIFF file');
+          debugPrint(
+              'LOAD_ID: $loadId - Using device file source for AIFF file');
           await _audioPlayer.setSourceDeviceFile(file.path);
         } else {
           // For other file types, use the standard method
           debugPrint(
-              'Using device file source for ${fileExtension.toUpperCase()} file');
+              'LOAD_ID: $loadId - Using device file source for ${fileExtension.toUpperCase()} file');
           await _audioPlayer.setSourceDeviceFile(file.path);
         }
-        debugPrint('Audio source set successfully');
+        debugPrint('LOAD_ID: $loadId - Audio source set successfully');
       } catch (e) {
-        debugPrint('Error setting audio source: $e');
+        debugPrint('LOAD_ID: $loadId - Error setting audio source: $e');
         throw Exception('Error setting audio source: $e');
       }
 
       _currentFile = file;
       _stateController.add(PlaybackState.paused);
-      debugPrint('Audio file loaded successfully');
+      debugPrint(
+          'LOAD_ID: $loadId - Audio file loaded successfully: ${file.path}');
       return true;
     } catch (e) {
-      debugPrint('Failed to load audio file: $e');
+      debugPrint('LOAD_ID: $loadId - Failed to load audio file: $e');
       // Rethrow to allow proper error handling upstream
       rethrow;
     }
@@ -155,38 +215,49 @@ class AudioPlaybackController implements AudioPlayback {
 
   @override
   Future<bool> play() async {
+    final playId = DateTime.now().millisecondsSinceEpoch.toString();
+    debugPrint('PLAY_ID: $playId - Starting play operation');
+
     if (!_initialized || _currentFile == null) {
-      debugPrint('Cannot play: not initialized or no file loaded');
+      debugPrint(
+          'PLAY_ID: $playId - Cannot play: not initialized or no file loaded');
       return false;
     }
 
     try {
-      debugPrint('Playing audio');
+      debugPrint(
+          'PLAY_ID: $playId - Playing audio file: ${_currentFile?.path}');
+      debugPrint('PLAY_ID: $playId - Audio duration: $_currentDuration');
       await _audioPlayer.resume();
       _updateState(PlaybackState.playing);
-      debugPrint('Audio playback started');
+      debugPrint('PLAY_ID: $playId - Audio playback started successfully');
       return true;
     } catch (e) {
-      debugPrint('Failed to play audio: $e');
+      debugPrint('PLAY_ID: $playId - Failed to play audio: $e');
       return false;
     }
   }
 
   @override
   Future<bool> pause() async {
+    final pauseId = DateTime.now().millisecondsSinceEpoch.toString();
+    debugPrint('PAUSE_ID: $pauseId - Starting pause operation');
+
     if (!_initialized || _currentFile == null) {
-      debugPrint('Cannot pause: not initialized or no file loaded');
+      debugPrint(
+          'PAUSE_ID: $pauseId - Cannot pause: not initialized or no file loaded');
       return false;
     }
 
     try {
-      debugPrint('Pausing audio playback');
+      debugPrint(
+          'PAUSE_ID: $pauseId - Pausing audio playback for file: ${_currentFile?.path}');
       await _audioPlayer.pause();
       _updateState(PlaybackState.paused);
-      debugPrint('Audio playback paused');
+      debugPrint('PAUSE_ID: $pauseId - Audio playback paused successfully');
       return true;
     } catch (e) {
-      debugPrint('Failed to pause audio: $e');
+      debugPrint('PAUSE_ID: $pauseId - Failed to pause audio: $e');
       return false;
     }
   }
@@ -239,16 +310,20 @@ class AudioPlaybackController implements AudioPlayback {
 
   @override
   Future<int> get duration async {
-    if (!_initialized || _currentFile == null) {
+    if (!_initialized) {
+      throw Exception('AudioPlaybackController not initialized');
+    }
+
+    if (_currentFile == null) {
       return 0;
     }
 
     try {
       final duration = await _audioPlayer.getDuration();
-      return duration?.inMilliseconds ?? _currentFile!.duration.inMilliseconds;
+      return duration?.inMilliseconds ?? _currentDuration.inMilliseconds;
     } catch (e) {
       print('Failed to get duration: $e');
-      return _currentFile!.duration.inMilliseconds;
+      return _currentDuration.inMilliseconds;
     }
   }
 
