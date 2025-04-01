@@ -1,13 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import '../features/audio_assistant/models/audio_file.dart';
-import '../features/audio_assistant/models/playback_state.dart';
-import '../features/audio_assistant/services/audio_playback.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_playback.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_manager.dart';
 
 class AssistantAudioMessage extends StatefulWidget {
   final AudioFile audioFile;
   final String transcription;
-  final AudioPlayback audioPlayback;
+  final AudioPlayback audioPlayback; // Kept for backward compatibility
 
   const AssistantAudioMessage({
     Key? key,
@@ -23,10 +25,74 @@ class AssistantAudioMessage extends StatefulWidget {
 class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
   bool _isLoading = false;
   bool _isPlaying = false;
-  StreamSubscription<PlaybackState>? _playbackSubscription;
+  late final String _widgetId;
+  late final AudioPlaybackManager _playbackManager;
+  StreamSubscription<PlaybackStateUpdate>? _playbackSubscription;
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Generate a unique ID for this widget instance
+    _widgetId = 'assistant_audio_${identityHashCode(this)}';
+    _playbackManager = AudioPlaybackManager();
+
+    // Delay setup to avoid potential issues during widget initialization
+    Future.microtask(() {
+      if (!_disposed) {
+        _setupPlaybackListener();
+      }
+    });
+  }
+
+  void _setupPlaybackListener() {
+    // Cancel any existing subscription first
+    _playbackSubscription?.cancel();
+
+    // Listen for playback state updates
+    _playbackSubscription = _playbackManager.playbackStateStream.listen(
+      (update) {
+        // Only process updates if the widget is still mounted and not disposed
+        if (_disposed) return;
+
+        if (!mounted) {
+          // If not mounted anymore, just cancel the subscription
+          _playbackSubscription?.cancel();
+          _playbackSubscription = null;
+          return;
+        }
+
+        // Now it's safe to call setState
+        if (update.widgetId == _widgetId) {
+          debugPrint(
+              'AssistantAudioMessage: Received state update for $_widgetId: ${update.state}');
+          setState(() {
+            _isPlaying = update.state == PlaybackState.playing;
+          });
+        } else if (_isPlaying) {
+          // If another widget is playing and this one was playing, update our state
+          setState(() {
+            _isPlaying = false;
+          });
+        }
+      },
+      onError: (error) {
+        debugPrint('AssistantAudioMessage: Error in playback stream: $error');
+      },
+      onDone: () {
+        debugPrint('AssistantAudioMessage: Playback stream closed');
+      },
+    );
+  }
 
   void _toggleAudio() async {
-    if (_isLoading) return;
+    if (_isLoading || _disposed) return;
+
+    if (!mounted) {
+      debugPrint(
+          'AssistantAudioMessage: Widget not mounted, cannot toggle audio');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -39,66 +105,75 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
           : widget.transcription;
 
       debugPrint('=== ASSISTANT AUDIO PLAYBACK DEBUG ===');
-      debugPrint('Widget ID: ${identityHashCode(this)}');
+      debugPrint('Widget ID: $_widgetId');
       debugPrint('Transcription: $shortTranscription');
       debugPrint('Audio Path: $audioPath');
       debugPrint('Audio Duration: ${widget.audioFile.duration}');
 
+      // Verify file exists before attempting to play
+      final file = File(audioPath);
+      final exists = await file.exists();
+      if (!exists) {
+        debugPrint('Audio file does not exist: $audioPath');
+        if (mounted && !_disposed) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
       if (_isPlaying) {
         debugPrint('Action: Pausing assistant audio');
-        await widget.audioPlayback.pause();
+        await _playbackManager.pauseAudio(_widgetId);
+        if (mounted && !_disposed) {
+          setState(() {
+            _isPlaying = false;
+            _isLoading = false;
+          });
+        }
+      } else {
+        debugPrint('Action: Playing assistant audio');
+
+        // Play the audio file using the manager
+        final playResult =
+            await _playbackManager.playAudio(_widgetId, widget.audioFile);
+        debugPrint('Assistant play result: $playResult');
+
+        if (mounted && !_disposed) {
+          setState(() {
+            _isPlaying = playResult;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error toggling assistant audio: $e');
+      if (mounted && !_disposed) {
         setState(() {
           _isPlaying = false;
           _isLoading = false;
         });
-      } else {
-        debugPrint('Action: Playing assistant audio');
-
-        // Load the audio file
-        debugPrint('Loading assistant audio file: ${widget.audioFile.path}');
-        await widget.audioPlayback.load(widget.audioFile);
-
-        // Start playback
-        final playResult = await widget.audioPlayback.play();
-        debugPrint('Assistant play result: $playResult');
-
-        if (playResult) {
-          setState(() {
-            _isPlaying = true;
-          });
-
-          // Listen for playback completion
-          _playbackSubscription =
-              widget.audioPlayback.onStateChanged.listen((state) {
-            debugPrint('Assistant audio state changed: $state');
-            if (state == PlaybackState.stopped && _isPlaying) {
-              debugPrint(
-                  'Assistant audio playback completed for: $shortTranscription');
-              if (mounted) {
-                setState(() {
-                  _isPlaying = false;
-                });
-              }
-            }
-          });
-        }
-
-        setState(() {
-          _isLoading = false;
-        });
       }
-    } catch (e) {
-      debugPrint('Error toggling assistant audio: $e');
-      setState(() {
-        _isPlaying = false;
-        _isLoading = false;
-      });
     }
   }
 
   @override
   void dispose() {
-    _playbackSubscription?.cancel();
+    debugPrint('AssistantAudioMessage: Disposing widget $_widgetId');
+    _disposed = true;
+
+    // Cancel subscription first
+    if (_playbackSubscription != null) {
+      _playbackSubscription!.cancel();
+      _playbackSubscription = null;
+    }
+
+    // If this widget is playing audio when disposed, stop it
+    if (_isPlaying) {
+      _playbackManager.stopAudio();
+    }
+
     super.dispose();
   }
 

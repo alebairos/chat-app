@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'generate_audio_samples.dart';
 
 /// Main entry point for the audio sample generator tool.

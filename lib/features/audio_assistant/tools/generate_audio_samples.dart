@@ -20,7 +20,7 @@ class _GenerateAudioSamplesState extends State<GenerateAudioSamples> {
   final TextToSpeechService _ttsService = TextToSpeechService();
   bool _isGenerating = false;
   String _status = 'Ready to generate audio samples';
-  List<String> _logs = [];
+  final List<String> _logs = [];
   String? _outputDirectory;
 
   @override

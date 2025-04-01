@@ -13,6 +13,12 @@ class Logger {
   /// Whether to log startup events (data loading, initialization)
   bool _logStartupEvents = false;
 
+  /// Whether to show debug prints during startup
+  bool _showDebugPrintsOnStartup = false;
+
+  /// Whether the app is in startup mode
+  bool _inStartupMode = true;
+
   /// Enable or disable all logging
   void setLogging(bool enabled) {
     _isEnabled = enabled;
@@ -21,6 +27,24 @@ class Logger {
   /// Enable or disable logging of startup events specifically
   void setStartupLogging(bool enabled) {
     _logStartupEvents = enabled;
+  }
+
+  /// Enable or disable debug prints during startup
+  void setDebugPrintsOnStartup(bool enabled) {
+    _showDebugPrintsOnStartup = enabled;
+  }
+
+  /// Set whether the app is in startup mode
+  void setStartupMode(bool inStartup) {
+    _inStartupMode = inStartup;
+  }
+
+  /// Check if debug prints should be shown
+  /// Returns true if either:
+  /// - The app is not in startup mode
+  /// - Debug prints are enabled during startup
+  bool shouldShowDebugPrints() {
+    return !_inStartupMode || _showDebugPrintsOnStartup;
   }
 
   /// Check if startup logging is enabled
@@ -68,5 +92,12 @@ class Logger {
     if (_isEnabled && kDebugMode) {
       print('🔍 [DEBUG] $message');
     }
+  }
+}
+
+/// A wrapper for debugPrint that respects the Logger settings
+void logDebugPrint(String? message) {
+  if (Logger()._isEnabled && (Logger().shouldShowDebugPrints() || kDebugMode)) {
+    debugPrint(message);
   }
 }

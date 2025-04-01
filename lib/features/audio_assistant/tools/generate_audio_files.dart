@@ -16,7 +16,7 @@ void main() async {
 
   // Generate welcome message
   print('Generating welcome message...');
-  final welcomeMessage =
+  const welcomeMessage =
       'Welcome to the chat app! I can now respond with voice messages.';
   final welcomeFilePath = '${assetDir.path}/welcome_message.aiff';
 
@@ -38,7 +38,7 @@ void main() async {
 
   // Generate assistant response
   print('Generating assistant response...');
-  final assistantResponse = 'I\'ve analyzed your code and found a few issues. '
+  const assistantResponse = 'I\'ve analyzed your code and found a few issues. '
       'First, there\'s a missing semicolon on line 42. '
       'Second, the function on line 78 could be optimized by using a more efficient algorithm. '
       'Would you like me to fix these issues for you?';

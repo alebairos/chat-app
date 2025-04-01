@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Import the app's main file
-import '../../lib/main.dart';
+import 'package:character_ai_clone/main.dart';
 
 void main() {
   setUp(() async {

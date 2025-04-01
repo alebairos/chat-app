@@ -32,19 +32,71 @@ class TTSService {
     return true;
   }
 
+  /// Map to store language code to voice ID mappings
+  final Map<String, String> _languageToVoiceId = {
+    'en': 'EXAVITQu4vr4xnSDxMaL', // English voice (Adam)
+    'pt': 'IKne3meq5aSn9XLyUdCD', // Portuguese voice (Sergio)
+    'pt-BR': 'IKne3meq5aSn9XLyUdCD', // Portuguese (Brazil) voice (Sergio)
+    'es': 'ErXwobaYiN019PkySvjV', // Spanish voice (Antoni)
+    // Add more languages as needed
+  };
+
+  /// Detect language of text (simplified version)
+  String _detectLanguage(String text) {
+    // This is a simplified approach - in production, use a proper language detection library
+    // or rely on the language setting of the app
+
+    // Check for common Portuguese words/patterns
+    final portuguesePatterns = [
+      'não',
+      'sim',
+      'obrigado',
+      'como',
+      'está',
+      'bom dia',
+      'boa tarde',
+      'boa noite',
+      'por favor',
+      'muito',
+      'bem',
+      'que',
+      'para',
+      'com'
+    ];
+
+    final lowerText = text.toLowerCase();
+    int portugueseMatches = 0;
+
+    for (final pattern in portuguesePatterns) {
+      if (lowerText.contains(pattern)) {
+        portugueseMatches++;
+      }
+    }
+
+    // If multiple Portuguese patterns are found, assume Portuguese
+    if (portugueseMatches >= 2) {
+      return 'pt-BR';
+    }
+
+    // Default to English if no clear language is detected
+    return 'en';
+  }
+
   /// Convert text to speech and return the path to the audio file
   Future<String> generateAudio(String text) async {
     if (!isInitialized) {
-      final initialized = await initialize();
-      if (!initialized) {
-        throw Exception('TTS Service not initialized');
-      }
+      throw Exception('TTS Service not initialized');
     }
+
+    // Detect language and get appropriate voice ID
+    final language = _detectLanguage(text);
+    final voiceId = _languageToVoiceId[language] ?? _languageToVoiceId['en']!;
 
     try {
       final dir = await getApplicationDocumentsDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final audioPath = '${dir.path}/tts_$timestamp.mp3';
+      final voicePrefix = language == 'pt-BR' ? 'pt_voice' : 'en_voice';
+      final audioPath = '${dir.path}/tts_${voicePrefix}_$timestamp.mp3';
 
       // For now, we'll just create an empty file
       final file = File(audioPath);

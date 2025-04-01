@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:mockito/mockito.dart';
-import '../../../../lib/features/audio_assistant/models/audio_file.dart';
-import '../../../../lib/features/audio_assistant/models/playback_state.dart';
-import '../../../../lib/features/audio_assistant/services/audio_playback_controller.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_controller.dart';
 
 // Mock for AudioPlayer
 class MockAudioPlayer extends Mock implements AudioPlayer {
@@ -172,9 +172,9 @@ void main() {
   setUp(() {
     mockPlayer = MockAudioPlayer();
     controller = AudioPlaybackController(mockPlayer);
-    testFile = AudioFile(
+    testFile = const AudioFile(
       path: '/test/audio.mp3',
-      duration: const Duration(seconds: 5),
+      duration: Duration(seconds: 5),
     );
   });
 

@@ -17,6 +17,7 @@ dependencies:
   audioplayers: ^5.2.1
   path_provider: ^2.1.2
   flutter_markdown: ^0.6.20
+  provider: ^6.1.1
   # Isar Database
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
@@ -36,6 +37,7 @@ dev_dependencies:
   plugin_platform_interface: ^2.1.8
   path_provider_platform_interface: ^2.1.2
   mockito: ^5.4.4
+  mocktail: ^1.0.4
 
 flutter:
   uses-material-design: true

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/features/audio_assistant/tts_service.dart';
+import 'package:character_ai_clone/features/audio_assistant/tts_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -167,7 +167,7 @@ void main() {
       await ttsService.initialize();
 
       // Text with various Unicode characters (emojis, non-Latin characters)
-      final unicodeText = 'Hello 👋 你好 🌍';
+      const unicodeText = 'Hello 👋 你好 🌍';
 
       final audioPath = await ttsService.generateAudio(unicodeText);
       expect(audioPath, isNotEmpty);
@@ -179,7 +179,7 @@ void main() {
       await ttsService.initialize();
 
       // Text with only whitespace characters
-      final whitespaceText = '   \t\n\r';
+      const whitespaceText = '   \t\n\r';
 
       final audioPath = await ttsService.generateAudio(whitespaceText);
       expect(audioPath, isNotEmpty);
@@ -191,7 +191,7 @@ void main() {
       await ttsService.initialize();
 
       // Text with control characters (null, bell, backspace, etc.)
-      final controlText = 'Hello\x00\x07\x08World';
+      const controlText = 'Hello\x00\x07\x08World';
 
       final audioPath = await ttsService.generateAudio(controlText);
       expect(audioPath, isNotEmpty);
@@ -203,7 +203,7 @@ void main() {
       await ttsService.initialize();
 
       // Text with mixed line endings (CRLF, LF, CR)
-      final mixedEndingsText = 'Line 1\r\nLine 2\nLine 3\r';
+      const mixedEndingsText = 'Line 1\r\nLine 2\nLine 3\r';
 
       final audioPath = await ttsService.generateAudio(mixedEndingsText);
       expect(audioPath, isNotEmpty);
@@ -215,7 +215,7 @@ void main() {
       await ttsService.initialize();
 
       // Text with invisible Unicode characters (zero-width space, zero-width joiner, etc.)
-      final invisibleText = 'Hello\u200B\u200C\u200DWorld';
+      const invisibleText = 'Hello\u200B\u200C\u200DWorld';
 
       final audioPath = await ttsService.generateAudio(invisibleText);
       expect(audioPath, isNotEmpty);

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
-import '../../../../lib/features/audio_assistant/models/playback_state.dart';
-import '../../../../lib/features/audio_assistant/services/playback_state_manager.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/playback_state_manager.dart';
 
 // Mock implementation of PlaybackStateManager for testing
 class MockPlaybackStateManager implements PlaybackStateManager {

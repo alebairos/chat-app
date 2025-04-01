@@ -264,15 +264,19 @@ class AudioPlaybackController implements AudioPlayback {
 
   @override
   Future<bool> stop() async {
-    if (!_initialized || _currentFile == null) {
-      return false;
-    }
+    if (!_initialized) return false;
 
     try {
+      debugPrint('Stopping audio playback');
       await _audioPlayer.stop();
+
+      // Reset position to beginning
+      await _audioPlayer.seek(Duration.zero);
+
+      _updateState(PlaybackState.stopped);
       return true;
     } catch (e) {
-      print('Failed to stop audio: $e');
+      debugPrint('Error stopping audio playback: $e');
       return false;
     }
   }
@@ -338,10 +342,37 @@ class AudioPlaybackController implements AudioPlayback {
 
   @override
   Future<void> dispose() async {
+    debugPrint('Disposing AudioPlaybackController');
+
+    // Stop any ongoing playback
+    try {
+      await stop();
+    } catch (e) {
+      debugPrint('Error stopping playback during dispose: $e');
+    }
+
+    // Cancel the position timer
     _stopPositionTimer();
-    await _audioPlayer.dispose();
-    await _stateController.close();
-    await _positionController.close();
+
+    // Release the audio player resources
+    try {
+      await _audioPlayer.release();
+      await _audioPlayer.dispose();
+    } catch (e) {
+      debugPrint('Error disposing audio player: $e');
+    }
+
+    // Close stream controllers
+    try {
+      if (!_stateController.isClosed) await _stateController.close();
+      if (!_positionController.isClosed) await _positionController.close();
+    } catch (e) {
+      debugPrint('Error closing stream controllers: $e');
+    }
+
+    // Clear references
+    _currentFile = null;
+    _initialized = false;
   }
 
   /// Updates the current playback state and notifies listeners.

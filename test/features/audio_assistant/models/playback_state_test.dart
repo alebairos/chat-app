@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../../lib/features/audio_assistant/models/playback_state.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
 
 void main() {
   group('PlaybackState', () {

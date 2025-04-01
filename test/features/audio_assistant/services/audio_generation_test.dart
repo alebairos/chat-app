@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../../lib/features/audio_assistant/models/audio_file.dart';
-import '../../../../lib/features/audio_assistant/services/audio_generation.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_generation.dart';
 
 // Mock implementation of AudioGeneration for testing
 class MockAudioGeneration implements AudioGeneration {

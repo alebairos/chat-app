@@ -96,6 +96,32 @@ class FakeChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<void> updateMessage(
+    int id, {
+    MessageType? type,
+    String? mediaPath,
+    Duration? duration,
+  }) async {
+    final message = await _isar.chatMessageModels.get(id);
+    if (message != null) {
+      final updatedMessage = message.copyWith(
+        type: type ?? message.type,
+        mediaPath: mediaPath ?? message.mediaPath,
+        duration: duration ?? message.duration,
+      );
+      await _isar.chatMessageModels.put(updatedMessage);
+
+      // Also update the messages property for direct access in tests
+      if (messages.isNotEmpty) {
+        final index = messages.indexWhere((m) => m.id == id);
+        if (index >= 0) {
+          messages[index] = updatedMessage;
+        }
+      }
+    }
+  }
+
+  @override
   Future<void> deleteMessage(int id) async {
     final messages = await getMessages();
     _isar._chatMessageModels._messages =

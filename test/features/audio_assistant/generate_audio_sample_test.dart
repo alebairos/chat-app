@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:mockito/mockito.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/text_to_speech_service.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_generation.dart';
 

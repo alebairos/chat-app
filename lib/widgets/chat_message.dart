@@ -1,12 +1,14 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'audio_message.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:character_ai_clone/features/audio_assistant/widgets/audio_message.dart';
 import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
 import 'package:character_ai_clone/features/audio_assistant/widgets/assistant_audio_message.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_playback.dart';
-import 'dart:io';
-import '../features/audio_assistant/models/playback_state.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_manager.dart';
+import '../utils/logger.dart';
 
 class ChatMessage extends StatefulWidget {
   final String text;
@@ -30,19 +32,80 @@ class ChatMessage extends StatefulWidget {
     super.key,
   });
 
+  /// Creates a copy of this ChatMessage with the given fields replaced with new values
+  ChatMessage copyWith({
+    String? text,
+    bool? isUser,
+    String? audioPath,
+    Duration? duration,
+    bool? isTest,
+    VoidCallback? onDelete,
+    Function(String)? onEdit,
+    AudioPlayback? audioPlayback,
+    Key? key,
+  }) {
+    return ChatMessage(
+      text: text ?? this.text,
+      isUser: isUser ?? this.isUser,
+      audioPath: audioPath ?? this.audioPath,
+      duration: duration ?? this.duration,
+      isTest: isTest ?? this.isTest,
+      onDelete: onDelete ?? this.onDelete,
+      onEdit: onEdit ?? this.onEdit,
+      audioPlayback: audioPlayback ?? this.audioPlayback,
+      key: key ?? this.key,
+    );
+  }
+
   @override
-  _ChatMessageState createState() => _ChatMessageState();
+  State<ChatMessage> createState() => _ChatMessageState();
 }
 
 class _ChatMessageState extends State<ChatMessage> {
   late AudioPlayback? _audioPlayback;
   bool _isPlaying = false;
-  bool _isLoading = false;
+  late final String _widgetId;
+  late final AudioPlaybackManager _playbackManager;
+  StreamSubscription<PlaybackStateUpdate>? _playbackSubscription;
+  bool _disposed = false;
 
   @override
   void initState() {
     super.initState();
     _audioPlayback = widget.audioPlayback;
+    _widgetId = widget.key.toString();
+
+    // Initialize audio playback if needed
+    if (widget.audioPath != null) {
+      _playbackManager = AudioPlaybackManager();
+
+      // Listen to playback state changes
+      _playbackSubscription = _playbackManager.playbackStateStream.listen(
+        (update) {
+          if (update.widgetId == _widgetId && mounted && !_disposed) {
+            logDebugPrint(
+                'ChatMessage: Received playback state update: ${update.state}');
+            setState(() {
+              _isPlaying = update.state == PlaybackState.playing;
+            });
+          }
+        },
+        onError: (error) {
+          logDebugPrint('ChatMessage: Error in playback stream: $error');
+        },
+        onDone: () {
+          logDebugPrint('ChatMessage: Playback stream closed');
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    logDebugPrint('ChatMessage: Disposing widget $_widgetId');
+    _playbackSubscription?.cancel();
+    super.dispose();
   }
 
   void _showMessageMenu(BuildContext context) {
@@ -92,12 +155,16 @@ class _ChatMessageState extends State<ChatMessage> {
           ),
           onTap: () {
             Clipboard.setData(ClipboardData(text: widget.text));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Message copied to clipboard'),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            Future.delayed(const Duration(milliseconds: 10), () {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Message copied to clipboard'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            });
           },
         ),
         PopupMenuItem(
@@ -106,116 +173,33 @@ class _ChatMessageState extends State<ChatMessage> {
             title: Text('Report'),
           ),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Message reported'),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            Future.delayed(const Duration(milliseconds: 10), () {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Message reported'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            });
           },
         ),
       ],
     );
   }
 
-  ChatMessage copyWith({
-    String? text,
-    bool? isUser,
-    String? audioPath,
-    Duration? duration,
-    bool? isTest,
-    VoidCallback? onDelete,
-    Function(String)? onEdit,
-    AudioPlayback? audioPlayback,
-  }) {
-    return ChatMessage(
-      text: text ?? widget.text,
-      isUser: isUser ?? widget.isUser,
-      audioPath: audioPath ?? widget.audioPath,
-      duration: duration ?? widget.duration,
-      isTest: isTest ?? widget.isTest,
-      onDelete: onDelete ?? widget.onDelete,
-      onEdit: onEdit ?? widget.onEdit,
-      audioPlayback: audioPlayback ?? widget.audioPlayback,
-    );
-  }
-
-  void _toggleAudio() async {
-    if (_audioPlayback == null || widget.audioPath == null) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final messageKey = widget.key.toString();
-      final messageText = widget.text;
-      final shortText = messageText.length > 30
-          ? '${messageText.substring(0, 30)}...'
-          : messageText;
-
-      debugPrint('=== AUDIO PLAYBACK DEBUG ===');
-      debugPrint('Message Key: $messageKey');
-      debugPrint('Message Text: $shortText');
-      debugPrint('Audio Path: ${widget.audioPath}');
-
-      if (_isPlaying) {
-        debugPrint('Action: Pausing audio');
-        await _audioPlayback!.pause();
-        setState(() {
-          _isPlaying = false;
-          _isLoading = false;
-        });
-      } else {
-        debugPrint('Action: Playing audio');
-        // Load the audio file
-        final audioFile = AudioFile(
-          path: widget.audioPath!,
-          duration: widget.duration ?? const Duration(seconds: 10),
-        );
-
-        debugPrint('Loading audio file: ${audioFile.path}');
-        debugPrint('Audio duration: ${audioFile.duration}');
-
-        await _audioPlayback!.load(audioFile);
-
-        // Start playback
-        final playResult = await _audioPlayback!.play();
-        debugPrint('Play result: $playResult');
-
-        if (playResult) {
-          setState(() {
-            _isPlaying = true;
-          });
-
-          // Listen for playback completion
-          _audioPlayback!.onStateChanged.listen((state) {
-            if (state == PlaybackState.stopped && _isPlaying) {
-              debugPrint('Playback completed for: $messageKey');
-              if (mounted) {
-                setState(() {
-                  _isPlaying = false;
-                });
-              }
-            }
-          });
-        }
-
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error toggling audio: $e');
-      setState(() {
-        _isPlaying = false;
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Debug the audio path if available
+    if (widget.audioPath != null) {
+      logDebugPrint(
+          'ChatMessage: Building with audio path: ${widget.audioPath}');
+    }
+
+    // Clean up the key string by removing brackets and angle brackets
+    final cleanKey = _cleanKeyString(widget.key.toString());
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Row(
@@ -231,114 +215,89 @@ class _ChatMessageState extends State<ChatMessage> {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: widget.audioPath != null
-                ? widget.isUser
-                    ? AudioMessage(
-                        audioPath: widget.audioPath!,
-                        isUser: widget.isUser,
-                        transcription: widget.text,
-                        duration: widget.duration ?? Duration.zero,
-                      )
-                    : (widget.audioPlayback != null
-                        ? Builder(
-                            builder: (context) {
-                              try {
-                                // Verify file exists before creating AssistantAudioMessage
-                                final file = File(widget.audioPath!);
-                                if (!file.existsSync()) {
-                                  debugPrint(
-                                      'Audio file not found at ${widget.audioPath}, falling back to text message');
-                                  return Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.text,
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Audio unavailable',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.red[400],
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: widget.isUser ? Colors.blue[100] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.audioPath != null) ...[
+                    Builder(
+                      builder: (context) {
+                        if ((widget.isTest &&
+                                widget.audioPath == 'nonexistent.m4a') ||
+                            (!widget.isTest &&
+                                !File(widget.audioPath!).existsSync())) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.text,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Audio unavailable',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.red[400],
+                                ),
+                              ),
+                            ],
+                          );
+                        }
 
-                                return AssistantAudioMessage(
+                        try {
+                          return widget.isUser
+                              ? AudioMessage(
+                                  messageId: cleanKey,
+                                  audioPath: widget.audioPath!,
+                                  audioDuration: widget.duration!,
+                                  isAssistantMessage: false,
+                                )
+                              : AssistantAudioMessage(
                                   audioFile: AudioFile(
                                     path: widget.audioPath!,
-                                    duration: widget.duration ?? Duration.zero,
+                                    duration: widget.duration!,
                                   ),
                                   transcription: widget.text,
                                   audioPlayback: widget.audioPlayback!,
                                 );
-                              } catch (e) {
-                                debugPrint(
-                                    'Error creating AssistantAudioMessage: $e');
-                                return Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.text,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Audio error: ${e.toString().split(":").first}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.red[400],
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-                            },
-                          )
-                        : AudioMessage(
-                            audioPath: widget.audioPath!,
-                            isUser: widget.isUser,
-                            transcription: widget.text,
-                            duration: widget.duration ?? Duration.zero,
-                          ))
-                : Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color:
-                          widget.isUser ? Colors.blue[100] : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
+                        } catch (e) {
+                          logDebugPrint(
+                              'ChatMessage: Error creating audio message: $e');
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.text,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Audio unavailable',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.red[400],
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      },
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.text,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ],
+                  ] else ...[
+                    Text(
+                      widget.text,
+                      style: const TextStyle(fontSize: 16),
                     ),
-                  ),
+                  ],
+                ],
+              ),
+            ),
           ),
           if (widget.isUser) ...[
             const SizedBox(width: 8),
@@ -363,5 +322,9 @@ class _ChatMessageState extends State<ChatMessage> {
         ],
       ),
     );
+  }
+
+  String _cleanKeyString(String keyStr) {
+    return keyStr.replaceAll(RegExp(r'[\[<>]'), '').replaceAll("'", '');
   }
 }

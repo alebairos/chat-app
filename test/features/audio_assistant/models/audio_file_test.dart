@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../../lib/features/audio_assistant/models/audio_file.dart';
+import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
 
 void main() {
   group('AudioFile', () {
     test('should create instance with required parameters', () {
-      final audioFile = AudioFile(
+      const audioFile = AudioFile(
         path: '/path/to/audio.mp3',
         duration: const Duration(seconds: 30),
       );
@@ -15,7 +15,7 @@ void main() {
     });
 
     test('should create instance with optional parameters', () {
-      final audioFile = AudioFile(
+      const audioFile = AudioFile(
         path: '/path/to/audio.mp3',
         duration: const Duration(seconds: 30),
         waveformData: [0.1, 0.2, 0.3, 0.4, 0.5],
@@ -30,17 +30,17 @@ void main() {
     });
 
     test('should implement equality correctly', () {
-      final audioFile1 = AudioFile(
+      const audioFile1 = AudioFile(
         path: '/path/to/audio.mp3',
         duration: const Duration(seconds: 30),
       );
 
-      final audioFile2 = AudioFile(
+      const audioFile2 = AudioFile(
         path: '/path/to/audio.mp3',
         duration: const Duration(seconds: 30),
       );
 
-      final audioFile3 = AudioFile(
+      const audioFile3 = AudioFile(
         path: '/path/to/different.mp3',
         duration: const Duration(seconds: 30),
       );
@@ -52,7 +52,7 @@ void main() {
     });
 
     test('should convert to and from JSON correctly', () {
-      final audioFile = AudioFile(
+      const audioFile = AudioFile(
         path: '/path/to/audio.mp3',
         duration: const Duration(seconds: 30),
         waveformData: [0.1, 0.2, 0.3, 0.4, 0.5],
@@ -69,7 +69,7 @@ void main() {
     });
 
     test('should handle null optional parameters', () {
-      final audioFile = AudioFile(
+      const audioFile = AudioFile(
         path: '/path/to/audio.mp3',
         duration: const Duration(seconds: 30),
       );

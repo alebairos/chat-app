@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/widgets/chat_message.dart';
-import 'package:character_ai_clone/widgets/audio_message.dart';
+import 'package:character_ai_clone/features/audio_assistant/widgets/audio_message.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -112,8 +112,8 @@ void main() {
       final audioWidget =
           tester.widget<AudioMessage>(find.byType(AudioMessage));
       expect(audioWidget.audioPath, equals('test_audio.m4a'));
-      expect(audioWidget.duration, equals(const Duration(seconds: 30)));
-      expect(audioWidget.transcription, equals('Audio transcription'));
+      expect(audioWidget.audioDuration, equals(const Duration(seconds: 30)));
+      expect(audioWidget.isAssistantMessage, isFalse);
     });
 
     test('copyWith creates correct copy', () {
@@ -205,7 +205,7 @@ void main() {
       const nonUserMessage = MaterialApp(
         home: Scaffold(
           body: ChatMessage(
-            text: 'Bot message',
+            text: 'Non-user message',
             isUser: false,
             isTest: true,
           ),
@@ -215,7 +215,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find the text widget
-      final nonUserTextWidget = find.text('Bot message');
+      final nonUserTextWidget = find.text('Non-user message');
       expect(nonUserTextWidget, findsOneWidget);
 
       // Find the container that contains the text
@@ -279,6 +279,47 @@ void main() {
 
       // Clean up
       handle.dispose();
+    });
+
+    testWidgets('handles audio file not found gracefully', (tester) async {
+      const audioMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Audio transcription',
+            isUser: true,
+            audioPath: 'nonexistent.m4a',
+            duration: Duration(seconds: 30),
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(audioMessage);
+      await tester.pumpAndSettle();
+
+      // Should show the fallback message with text and "Audio unavailable"
+      expect(find.text('Audio transcription'), findsOneWidget);
+      expect(find.text('Audio unavailable'), findsOneWidget);
+    });
+
+    testWidgets('handles audio playback state changes', (tester) async {
+      const audioMessage = MaterialApp(
+        home: Scaffold(
+          body: ChatMessage(
+            text: 'Audio transcription',
+            isUser: true,
+            audioPath: 'test_audio.m4a',
+            duration: Duration(seconds: 30),
+            isTest: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(audioMessage);
+      await tester.pumpAndSettle();
+
+      // Should show AudioMessage widget
+      expect(find.byType(AudioMessage), findsOneWidget);
     });
   });
 }

@@ -34,8 +34,8 @@ class AssistantAudioMessage extends StatefulWidget {
 class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
   PlaybackState _playbackState = PlaybackState.stopped;
   Duration _position = Duration.zero;
-  late StreamSubscription<PlaybackState> _stateSubscription;
-  late StreamSubscription<int> _positionSubscription;
+  StreamSubscription<PlaybackState>? _stateSubscription;
+  StreamSubscription<int>? _positionSubscription;
   bool _isInitialized = false;
 
   @override
@@ -45,6 +45,8 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
   }
 
   Future<void> _initializeAudio() async {
+    if (!mounted) return;
+
     try {
       // Initialize audio playback if needed
       if (!await widget.audioPlayback.initialize()) {
@@ -54,6 +56,8 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
 
       // Load the audio file
       await widget.audioPlayback.load(widget.audioFile);
+
+      if (!mounted) return;
 
       // Listen for playback state changes
       _stateSubscription = widget.audioPlayback.onStateChanged.listen((state) {
@@ -74,9 +78,11 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
         }
       });
 
-      setState(() {
-        _isInitialized = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
     } catch (e) {
       debugPrint('Error initializing audio: $e');
     }
@@ -168,8 +174,13 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
 
   @override
   void dispose() {
-    _stateSubscription.cancel();
-    _positionSubscription.cancel();
+    // Cancel subscriptions safely
+    _stateSubscription?.cancel();
+    _positionSubscription?.cancel();
+
+    // Release audio resources
+    widget.audioPlayback.stop();
+
     super.dispose();
   }
 }
@@ -202,17 +213,28 @@ class _WaveformProgressBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Waveform visualization
-        CustomPaint(
-          painter: _WaveformPainter(
-            waveformData: waveformData,
-            progress: progress,
-            playedColor: Colors.blue,
-            unplayedColor: Colors.grey[400]!,
-            isPlaying: isPlaying,
+        // Waveform visualization with LayoutBuilder for responsive sizing
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return CustomPaint(
+                painter: _WaveformPainter(
+                  waveformData: waveformData,
+                  progress: progress,
+                  playedColor: Colors.blue,
+                  unplayedColor: Colors.grey[400]!,
+                  isPlaying: isPlaying,
+                  // Reduce the number of bars for shorter audio
+                  barCount: (duration.inSeconds <= 5) ? 30 : 60,
+                ),
+                size: Size(constraints.maxWidth, 28),
+              );
+            },
           ),
-          size: const Size(double.infinity, 32),
         ),
+
+        const SizedBox(height: 4),
 
         // Duration text
         Row(
@@ -254,6 +276,7 @@ class _WaveformPainter extends CustomPainter {
   final Color playedColor;
   final Color unplayedColor;
   final bool isPlaying;
+  final int barCount;
 
   _WaveformPainter({
     this.waveformData,
@@ -261,6 +284,7 @@ class _WaveformPainter extends CustomPainter {
     required this.playedColor,
     required this.unplayedColor,
     required this.isPlaying,
+    this.barCount = 60,
   });
 
   @override
@@ -273,15 +297,18 @@ class _WaveformPainter extends CustomPainter {
     final clampedProgress = progress.clamp(0.0, 1.0);
     final progressX = size.width * clampedProgress;
 
-    // If we don't have waveform data, generate a random one for visualization
-    final data = waveformData ?? _generateRandomWaveform(60);
+    // If we don't have waveform data, generate a static one for visualization
+    // Use a fixed seed for random to ensure the pattern doesn't change
+    final data = waveformData ?? _generateStaticWaveform(barCount);
 
-    final barWidth = size.width / data.length;
+    // Calculate bar width based on available space
+    final barWidth = size.width / (data.length + 4); // Add padding
+    final barSpacing = barWidth * 0.3; // Space between bars
     final centerY = size.height / 2;
 
     // Draw each bar in the waveform
     for (int i = 0; i < data.length; i++) {
-      final x = i * barWidth;
+      final x = (i * (barWidth + barSpacing)) + barWidth; // Add initial padding
       final amplitude = data[i] * size.height * 0.4;
 
       // Determine if this bar is before or after the progress point
@@ -289,13 +316,13 @@ class _WaveformPainter extends CustomPainter {
 
       // Draw the bar
       canvas.drawLine(
-        Offset(x + barWidth / 2, centerY - amplitude),
-        Offset(x + barWidth / 2, centerY + amplitude),
+        Offset(x, centerY - amplitude),
+        Offset(x, centerY + amplitude),
         paint,
       );
     }
 
-    // Draw progress indicator
+    // Draw progress indicator only when playing
     if (isPlaying) {
       final progressPaint = Paint()
         ..color = Colors.blue
@@ -315,13 +342,14 @@ class _WaveformPainter extends CustomPainter {
         oldDelegate.isPlaying != isPlaying;
   }
 
-  // Generate random waveform data for visualization
-  List<double> _generateRandomWaveform(int count) {
-    final random = Random();
+  // Generate static waveform data for visualization
+  List<double> _generateStaticWaveform(int count) {
+    // Use a fixed seed for the random generator to ensure consistency
+    final random = Random(42);
     return List.generate(count, (index) {
       // Create a smoother waveform by using a sine wave with some randomness
       final baseAmplitude = 0.3 + 0.2 * sin(index * 0.5);
-      return baseAmplitude + random.nextDouble() * 0.2;
+      return baseAmplitude + random.nextDouble() * 0.15;
     });
   }
 }

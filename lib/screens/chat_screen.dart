@@ -17,6 +17,7 @@ import 'package:character_ai_clone/features/audio_assistant/services/tts_service
 import 'package:character_ai_clone/features/audio_assistant/services/eleven_labs_tts_service.dart';
 import 'dart:io';
 import 'package:character_ai_clone/features/audio_assistant/screens/tts_settings_screen.dart';
+import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_manager.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -341,12 +342,15 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
 
+    // We no longer need to pass the AudioPlaybackController directly
+    // The ChatMessage widget will use the AudioPlaybackManager singleton
     return ChatMessage(
       key: ValueKey(model.id),
       text: model.text,
       isUser: model.isUser,
       audioPath: model.mediaPath,
       duration: model.duration,
+      // We still pass the controller for backward compatibility, but it's not used directly
       audioPlayback: (!model.isUser &&
               model.type == MessageType.audio &&
               model.mediaPath != null)
@@ -373,12 +377,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _initializeAudioAssistant() async {
-    _audioPlaybackController = AudioPlaybackController();
+    // Use the singleton AudioPlaybackManager
+    final playbackManager = AudioPlaybackManager();
+    _audioPlaybackController =
+        playbackManager.audioPlayback as AudioPlaybackController;
 
     // Set ElevenLabs as the active TTS service
     TTSServiceFactory.setActiveServiceType(TTSServiceType.elevenLabs);
 
     _audioMessageProvider = AudioMessageProvider(
+      audioGeneration: TTSServiceFactory.createTTSService(),
       audioPlayback: _audioPlaybackController,
     );
 

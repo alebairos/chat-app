@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../models/audio_file.dart';
 import 'audio_generation.dart';
+import '../../../utils/logger.dart';
 
 /// A service that converts text to speech using the device's TTS capabilities.
 ///
@@ -43,7 +44,7 @@ class TextToSpeechService implements AudioGeneration {
           Platform.isIOS && !await _flutterTts.isLanguageAvailable("en-US") ||
               Platform.environment.containsKey('FLUTTER_TEST');
 
-      debugPrint('Running in simulator: $_isSimulator');
+      logDebugPrint('Running in simulator: $_isSimulator');
 
       // Initialize the TTS engine
       await _flutterTts.setLanguage('en-US');
@@ -61,9 +62,11 @@ class TextToSpeechService implements AudioGeneration {
       }
 
       _initialized = true;
+      logDebugPrint('${runtimeType.toString()} initialized successfully');
       return true;
     } catch (e) {
-      debugPrint('Failed to initialize TextToSpeechService: $e');
+      logDebugPrint('Failed to initialize ${runtimeType.toString()}: $e');
+      _initialized = false;
       return false;
     }
   }
@@ -71,11 +74,11 @@ class TextToSpeechService implements AudioGeneration {
   @override
   Future<AudioFile> generate(String text) async {
     if (!_initialized) {
-      debugPrint('TextToSpeechService not initialized');
+      logDebugPrint('TextToSpeechService not initialized');
       throw Exception('TextToSpeechService not initialized');
     }
 
-    debugPrint(
+    logDebugPrint(
         'Generating audio for text: ${text.substring(0, min(50, text.length))}...');
 
     try {
@@ -83,26 +86,27 @@ class TextToSpeechService implements AudioGeneration {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final filename = 'tts_$timestamp.mp3';
       final filePath = path.join(_audioDirectory.path, filename);
-      debugPrint('Audio file will be saved to: $filePath');
+      logDebugPrint('Audio file will be saved to: $filePath');
 
       // If we're in a simulator, use pre-generated audio files
       if (_isSimulator) {
-        debugPrint('Using pre-generated audio file in simulator');
+        logDebugPrint('Using pre-generated audio file in simulator');
         return await _usePreGeneratedAudio(filePath, text);
       }
 
       // Save the speech to a file
       await _flutterTts.synthesizeToFile(text, filePath);
-      debugPrint('Audio synthesis completed');
+      logDebugPrint('Audio synthesis completed');
 
       // Verify the file exists
       final file = File(filePath);
       final exists = await file.exists();
-      debugPrint('File exists check: $exists for path: $filePath');
+      logDebugPrint('File exists check: $exists for path: $filePath');
 
       if (!exists) {
-        debugPrint('WARNING: File was not created at expected path: $filePath');
-        debugPrint('Falling back to pre-generated audio file');
+        logDebugPrint(
+            'WARNING: File was not created at expected path: $filePath');
+        logDebugPrint('Falling back to pre-generated audio file');
         return await _usePreGeneratedAudio(filePath, text);
       }
 
@@ -111,7 +115,7 @@ class TextToSpeechService implements AudioGeneration {
       // Average speaking rate is about 150 words per minute
       final wordCount = text.split(' ').length;
       final estimatedDurationMs = (wordCount / 150 * 60 * 1000).round();
-      debugPrint(
+      logDebugPrint(
           'Estimated duration: ${estimatedDurationMs}ms for $wordCount words');
 
       final audioFile = AudioFile(
@@ -119,11 +123,11 @@ class TextToSpeechService implements AudioGeneration {
         duration: Duration(milliseconds: estimatedDurationMs),
       );
 
-      debugPrint('Returning AudioFile with path: ${audioFile.path}');
+      logDebugPrint('Returning AudioFile with path: ${audioFile.path}');
       return audioFile;
     } catch (e) {
-      debugPrint('Failed to generate audio: $e');
-      debugPrint('Falling back to pre-generated audio file');
+      logDebugPrint('Failed to generate audio: $e');
+      logDebugPrint('Falling back to pre-generated audio file');
 
       // If any error occurs, fall back to pre-generated audio
       final filename = 'tts_${DateTime.now().millisecondsSinceEpoch}.mp3';
@@ -143,7 +147,7 @@ class TextToSpeechService implements AudioGeneration {
 
       // In simulator or test environment, return the asset path directly
       if (Platform.environment.containsKey('FLUTTER_TEST') || _isSimulator) {
-        debugPrint(
+        logDebugPrint(
             'Using pre-generated audio directly from assets: $assetPath');
 
         // Use actual durations for the pre-generated files
@@ -162,7 +166,7 @@ class TextToSpeechService implements AudioGeneration {
       if (!correctedTargetPath.endsWith('.aiff')) {
         correctedTargetPath =
             targetPath.replaceAll(RegExp(r'\.[^.]*$'), '.aiff');
-        debugPrint(
+        logDebugPrint(
             'Corrected target path to use .aiff extension: $correctedTargetPath');
       }
 
@@ -177,13 +181,13 @@ class TextToSpeechService implements AudioGeneration {
       await file.writeAsBytes(
           buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 
-      debugPrint(
+      logDebugPrint(
           'Copied pre-generated audio from $assetPath to $correctedTargetPath');
-      debugPrint('File size: ${await file.length()} bytes');
+      logDebugPrint('File size: ${await file.length()} bytes');
 
       // Verify the file exists
       final exists = await file.exists();
-      debugPrint(
+      logDebugPrint(
           'Pre-generated file exists check: $exists for path: $correctedTargetPath');
 
       if (!exists) {
@@ -196,7 +200,7 @@ class TextToSpeechService implements AudioGeneration {
           ? const Duration(seconds: 3)
           : const Duration(seconds: 14); // Updated to match actual duration
 
-      debugPrint('Using pre-generated audio with duration: $duration');
+      logDebugPrint('Using pre-generated audio with duration: $duration');
 
       return AudioFile(
         path: correctedTargetPath,
