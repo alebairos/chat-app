@@ -20,7 +20,7 @@ class TestAudioRecorder extends StatefulWidget {
 class _TestAudioRecorderState extends State<TestAudioRecorder> {
   bool _isRecording = false;
   bool _isPlaying = false;
-  final bool _isDeleting = false;
+  bool _isDeleting = false;
   String? _recordedFilePath;
 
   @override
@@ -39,7 +39,10 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!_isRecording && _recordedFilePath == null)
+          if (!_isRecording &&
+              !_isPlaying &&
+              !_isDeleting &&
+              _recordedFilePath == null)
             IconButton(
               onPressed: () {
                 setState(() {
@@ -70,7 +73,7 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
               ),
               tooltip: 'Stop recording',
             ),
-          if (_recordedFilePath != null) ...[
+          if (_recordedFilePath != null && !_isRecording && !_isDeleting) ...[
             IconButton(
               onPressed: () {
                 setState(() {
@@ -103,12 +106,15 @@ class _TestAudioRecorderState extends State<TestAudioRecorder> {
             ),
             const SizedBox(width: 8),
             IconButton(
-              onPressed: () {
-                widget.onSendAudio?.call(_recordedFilePath!, Duration.zero);
-                setState(() {
-                  _recordedFilePath = null;
-                });
-              },
+              onPressed: !_isPlaying
+                  ? () {
+                      widget.onSendAudio
+                          ?.call(_recordedFilePath!, Duration.zero);
+                      setState(() {
+                        _recordedFilePath = null;
+                      });
+                    }
+                  : null,
               icon: const Icon(Icons.send),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),

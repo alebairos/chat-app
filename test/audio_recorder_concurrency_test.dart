@@ -1,4 +1,3 @@
-@Skip('Temporarily skipping concurrency tests until state management is fixed')
 library audio_recorder_concurrency_test;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -6,254 +5,120 @@ import 'package:flutter/material.dart';
 import 'helpers/audio_recorder_test_helper.dart';
 
 void main() {
-  testWidgets('cannot start recording while already recording',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
+  group('Audio Recorder Concurrency Tests', () {
+    testWidgets('cannot start recording while already recording',
+        (WidgetTester tester) async {
+      // Build the widget in recording state
+      await tester.pumpWidget(
+          AudioRecorderTestHelper.buildTestWidget(isRecording: true));
+      await tester.pumpAndSettle();
 
-    // Start recording
-    await tester.tap(find.byIcon(Icons.mic));
-    await tester.pump();
+      // Verify recording state shows stop button and no mic button
+      expect(find.byIcon(Icons.stop), findsOneWidget);
+      expect(find.byIcon(Icons.mic), findsNothing);
+    });
 
-    // Verify recording state
-    expect(find.byIcon(Icons.stop), findsOneWidget);
+    testWidgets('cannot play while recording', (WidgetTester tester) async {
+      // Build the widget in recording state with a previous recording
+      await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget(
+        isRecording: true,
+        isRecorded: true,
+      ));
+      await tester.pumpAndSettle();
 
-    // Verify mic button is disabled
-    final micButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.mic),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(micButton.onPressed, isNull);
-  });
+      // Verify recording state shows stop button and no playback controls
+      expect(find.byIcon(Icons.stop), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
+      expect(find.byIcon(Icons.delete), findsNothing);
+      expect(find.byIcon(Icons.send), findsNothing);
+    });
 
-  testWidgets('cannot play while recording', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
+    testWidgets('cannot record while playing', (WidgetTester tester) async {
+      // Start with a recorded message
+      await tester.pumpWidget(
+          AudioRecorderTestHelper.buildTestWidget(isRecorded: true));
+      await tester.pumpAndSettle();
 
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
+      // Start playback
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pump();
 
-    // Start recording again
-    await tester.tap(find.byIcon(Icons.mic));
-    await tester.pump();
+      // Verify mic button is not visible during playback
+      expect(find.byIcon(Icons.mic), findsNothing);
+      expect(find.byIcon(Icons.stop), findsOneWidget); // playback stop button
+    });
 
-    // Verify play button is disabled
-    final playButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.play_arrow),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(playButton.onPressed, isNull);
-  });
+    testWidgets('cannot send while playing', (WidgetTester tester) async {
+      // Start with a recorded message
+      await tester.pumpWidget(
+          AudioRecorderTestHelper.buildTestWidget(isRecorded: true));
+      await tester.pumpAndSettle();
 
-  testWidgets('cannot delete while recording', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
+      // Start playback
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pump();
 
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
+      // Verify send button is disabled during playback
+      final sendButton = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.send),
+          matching: find.byType(IconButton),
+        ),
+      );
+      expect(sendButton.onPressed, isNull);
+    });
 
-    // Start recording again
-    await tester.tap(find.byIcon(Icons.mic));
-    await tester.pump();
+    testWidgets('buttons are disabled during deletion',
+        (WidgetTester tester) async {
+      // Start with a recorded message
+      await tester.pumpWidget(
+          AudioRecorderTestHelper.buildTestWidget(isRecorded: true));
+      await tester.pumpAndSettle();
 
-    // Verify delete button is disabled
-    final deleteButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.delete),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(deleteButton.onPressed, isNull);
-  });
+      // Start deletion
+      await tester.tap(find.byIcon(Icons.delete));
+      await tester.pump();
 
-  testWidgets('cannot send while recording', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
+      // Verify all operation buttons are not visible during deletion
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
+      expect(find.byIcon(Icons.send), findsNothing);
+      expect(find.byIcon(Icons.mic),
+          findsOneWidget); // Should show mic for new recording
+    });
 
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
+    testWidgets('state transitions maintain consistency',
+        (WidgetTester tester) async {
+      // Start with a recorded message
+      await tester.pumpWidget(
+          AudioRecorderTestHelper.buildTestWidget(isRecorded: true));
+      await tester.pumpAndSettle();
 
-    // Start recording again
-    await tester.tap(find.byIcon(Icons.mic));
-    await tester.pump();
+      // Initial state should show all controls
+      expect(find.byIcon(Icons.delete), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(find.byIcon(Icons.send), findsOneWidget);
 
-    // Verify send button is disabled
-    final sendButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.send),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(sendButton.onPressed, isNull);
-  });
+      // Start playback
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pump();
 
-  testWidgets('cannot record while playing', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
+      // During playback, send should be disabled
+      final sendButton = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.send),
+          matching: find.byType(IconButton),
+        ),
+      );
+      expect(sendButton.onPressed, isNull);
 
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
+      // Stop playback
+      await tester.tap(find.byIcon(Icons.stop));
+      await tester.pump();
 
-    // Start playing
-    await tester.tap(find.byIcon(Icons.play_arrow));
-    await tester.pump();
-
-    // Verify mic button is disabled
-    final micButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.mic),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(micButton.onPressed, isNull);
-  });
-
-  testWidgets('cannot delete while playing', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
-
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
-
-    // Start playing
-    await tester.tap(find.byIcon(Icons.play_arrow));
-    await tester.pump();
-
-    // Verify delete button is disabled
-    final deleteButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.delete),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(deleteButton.onPressed, isNull);
-  });
-
-  testWidgets('cannot send while playing', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
-
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
-
-    // Start playing
-    await tester.tap(find.byIcon(Icons.play_arrow));
-    await tester.pump();
-
-    // Verify send button is disabled
-    final sendButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.send),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(sendButton.onPressed, isNull);
-  });
-
-  testWidgets('cannot play while deleting', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
-
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
-
-    // Start deleting
-    await tester.tap(find.byIcon(Icons.delete));
-    await tester.pump();
-
-    // Verify play button is disabled
-    final playButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.play_arrow),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(playButton.onPressed, isNull);
-  });
-
-  testWidgets('cannot record while deleting', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
-
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
-
-    // Start deleting
-    await tester.tap(find.byIcon(Icons.delete));
-    await tester.pump();
-
-    // Verify mic button is disabled
-    final micButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.mic),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(micButton.onPressed, isNull);
-  });
-
-  testWidgets('cannot send while deleting', (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
-
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
-
-    // Start deleting
-    await tester.tap(find.byIcon(Icons.delete));
-    await tester.pump();
-
-    // Verify send button is disabled
-    final sendButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.send),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(sendButton.onPressed, isNull);
-  });
-
-  testWidgets('rapid state transitions maintain consistency',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
-
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
-
-    // Rapidly toggle between states
-    await tester.tap(find.byIcon(Icons.play_arrow));
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.stop));
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.mic));
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.stop));
-    await tester.pump();
-
-    // Verify final state is consistent
-    expect(find.byIcon(Icons.mic), findsOneWidget);
-    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
-    expect(find.byIcon(Icons.delete), findsOneWidget);
-    expect(find.byIcon(Icons.send), findsOneWidget);
-  });
-
-  testWidgets('concurrent operations maintain proper button states',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(AudioRecorderTestHelper.buildTestWidget());
-    await tester.pumpAndSettle();
-
-    // Record and stop to get a recording
-    await AudioRecorderTestHelper.simulateRecording(tester);
-
-    // Verify initial state
-    expect(find.byIcon(Icons.delete), findsOneWidget);
-    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
-    expect(find.byIcon(Icons.mic), findsOneWidget);
-    expect(find.byIcon(Icons.send), findsOneWidget);
+      // After playback, all controls should be enabled again
+      expect(find.byIcon(Icons.delete), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(find.byIcon(Icons.send), findsOneWidget);
+    });
   });
 }

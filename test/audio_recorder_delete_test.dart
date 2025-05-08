@@ -333,7 +333,7 @@ void main() {
       expect(deleteButtonAfterPlay.onPressed, isNotNull);
     });
 
-    testWidgets('send button remains enabled during playback',
+    testWidgets('send button is disabled during playback',
         (WidgetTester tester) async {
       await tester.pumpWidget(
           AudioRecorderTestHelper.buildTestWidget(isRecorded: true));
@@ -352,14 +352,14 @@ void main() {
       await tester.tap(find.byIcon(Icons.play_arrow));
       await tester.pump();
 
-      // Verify send button remains enabled
+      // Verify send button is now disabled
       final sendButtonAfterPlay = tester.widget<IconButton>(
         find.ancestor(
           of: find.byIcon(Icons.send),
           matching: find.byType(IconButton),
         ),
       );
-      expect(sendButtonAfterPlay.onPressed, isNotNull);
+      expect(sendButtonAfterPlay.onPressed, isNull);
     });
 
     testWidgets('play button stops when deleting during playback',

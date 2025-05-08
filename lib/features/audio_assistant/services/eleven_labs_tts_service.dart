@@ -46,8 +46,16 @@ class ElevenLabsTTSService implements AudioGeneration {
   /// Flag indicating whether we're running in a test environment
   bool _isTestMode = false;
 
+  /// Flag indicating whether a custom directory was provided
+  bool _hasCustomDirectory = false;
+
   /// Creates a new [ElevenLabsTTSService] instance.
-  ElevenLabsTTSService();
+  ElevenLabsTTSService([Directory? testDirectory]) {
+    if (testDirectory != null) {
+      _audioDirectory = testDirectory;
+      _hasCustomDirectory = true;
+    }
+  }
 
   @override
   bool get isInitialized => _initialized;
@@ -86,9 +94,12 @@ class ElevenLabsTTSService implements AudioGeneration {
       _voiceId = dotenv.env['ELEVEN_LABS_VOICE_ID'] ?? 'EXAVITQu4vr4xnSDxMaL';
       logDebugPrint('ElevenLabs Voice ID: $_voiceId');
 
-      // Create directory for storing audio files
-      final appDir = await getApplicationDocumentsDirectory();
-      _audioDirectory = Directory(path.join(appDir.path, 'eleven_labs_audio'));
+      // Create directory for storing audio files if not injected
+      if (!_hasCustomDirectory) {
+        final appDir = await getApplicationDocumentsDirectory();
+        _audioDirectory =
+            Directory(path.join(appDir.path, 'eleven_labs_audio'));
+      }
       logDebugPrint('Audio directory path: ${_audioDirectory.path}');
 
       if (!await _audioDirectory.exists()) {

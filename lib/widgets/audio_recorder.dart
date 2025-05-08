@@ -69,6 +69,19 @@ class _AudioRecorderState extends State<AudioRecorder> {
   Future<void> _startRecording() async {
     debugPrint('\n🎙️ Starting recording process');
     try {
+      if (_isRecording) {
+        _showErrorSnackBar('Cannot start recording while already recording');
+        return;
+      }
+      if (_isPlaying) {
+        _showErrorSnackBar('Cannot record while playing');
+        return;
+      }
+      if (_isDeleting) {
+        _showErrorSnackBar('Cannot record while deleting');
+        return;
+      }
+
       if (await _audioRecorder.hasPermission()) {
         debugPrint('✓ Recording permission granted');
 
@@ -118,84 +131,153 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   Future<void> _stopRecording() async {
     try {
+      if (!_isRecording) {
+        debugPrint('❌ Not currently recording');
+        return;
+      }
+
+      debugPrint('🛑 Stopping recording');
       _recordingTimer?.cancel();
       await _audioRecorder.stop();
-      setState(() => _isRecording = false);
+      setState(() {
+        _isRecording = false;
+        _recordDuration = Duration.zero;
+        debugPrint('✓ Recording stopped');
+      });
     } catch (e) {
-      debugPrint('Error stopping recording: $e');
+      debugPrint('❌ Error stopping recording: $e');
+      _showErrorSnackBar('Error stopping recording: $e');
     }
   }
 
   Future<void> _playRecording() async {
-    if (_isRecording) {
-      _showErrorSnackBar('Cannot play while recording');
+    debugPrint('▶️ Starting playback operation');
+    if (_recordedFilePath == null) {
+      debugPrint('❌ No recorded file to play');
       return;
     }
 
-    if (_recordedFilePath != null) {
-      try {
-        if (_isPlaying) {
-          await _audioPlayer.stop();
-          setState(() => _isPlaying = false);
-        } else {
-          final file = File(_recordedFilePath!);
-          if (!await file.exists()) {
-            throw Exception('Audio file not found');
-          }
-          await _audioPlayer.stop(); // Ensure any previous playback is stopped
-          await _audioPlayer.setSourceDeviceFile(_recordedFilePath!);
-          await _audioPlayer.resume();
-          setState(() => _isPlaying = true);
-        }
-      } catch (e) {
-        debugPrint('Error playing audio: $e');
-        _showErrorSnackBar('Playing audio: $e');
-      }
-    }
-  }
-
-  Future<void> _sendAudio() async {
     if (_isRecording) {
-      await _stopRecording();
+      debugPrint('❌ Cannot play while recording');
+      _showErrorSnackBar('Cannot play while recording');
+      return;
+    }
+    if (_isDeleting) {
+      debugPrint('❌ Cannot play while deleting');
+      _showErrorSnackBar('Cannot play while deleting');
+      return;
     }
 
-    if (_recordedFilePath != null) {
-      widget.onSendAudio?.call(_recordedFilePath!, _recordDuration);
-      setState(() {
-        _recordedFilePath = null;
-        _recordDuration = Duration.zero;
-      });
+    try {
+      if (_isPlaying) {
+        debugPrint('⏹️ Stopping current playback');
+        await _audioPlayer.stop();
+        setState(() => _isPlaying = false);
+        debugPrint('✓ Playback stopped');
+      } else {
+        final file = File(_recordedFilePath!);
+        if (!await file.exists()) {
+          debugPrint('❌ Audio file not found');
+          throw Exception('Audio file not found');
+        }
+        debugPrint('▶️ Starting new playback');
+        await _audioPlayer.stop(); // Ensure any previous playback is stopped
+        await _audioPlayer.setSourceDeviceFile(_recordedFilePath!);
+        await _audioPlayer.resume();
+        setState(() => _isPlaying = true);
+        debugPrint('✓ Playback started');
+      }
+    } catch (e) {
+      debugPrint('❌ Error playing audio: $e');
+      _showErrorSnackBar('Playing audio: $e');
+      setState(() => _isPlaying = false);
     }
   }
 
   Future<void> _deleteRecording() async {
-    if (_recordedFilePath == null) return;
+    debugPrint('🗑️ Starting delete operation');
+    if (_recordedFilePath == null) {
+      debugPrint('❌ No recorded file to delete');
+      return;
+    }
+
+    if (_isRecording) {
+      _showErrorSnackBar('Cannot delete while recording');
+      return;
+    }
+    if (_isPlaying) {
+      _showErrorSnackBar('Cannot delete while playing');
+      return;
+    }
+    if (_isDeleting) {
+      _showErrorSnackBar('Cannot delete while deleting');
+      return;
+    }
 
     try {
       setState(() => _isDeleting = true);
+      debugPrint('🗑️ Deleting file: $_recordedFilePath');
 
-      // Stop playback if playing
-      if (_isPlaying) {
-        await _audioPlayer.stop();
-        setState(() => _isPlaying = false);
-      }
-
-      // Delete file
       final file = File(_recordedFilePath!);
       if (await file.exists()) {
         await file.delete();
+        debugPrint('✓ File deleted successfully');
       }
 
-      // Reset state
+      setState(() {
+        _recordedFilePath = null;
+        _isDeleting = false;
+        _recordDuration = Duration.zero;
+      });
+      debugPrint('✓ Delete operation completed');
+    } catch (e) {
+      debugPrint('❌ Error deleting recording: $e');
+      _showErrorSnackBar('Error deleting recording: $e');
+      setState(() => _isDeleting = false);
+    }
+  }
+
+  Future<void> _sendAudio() async {
+    debugPrint('📤 Starting send operation');
+    if (_recordedFilePath == null) {
+      debugPrint('❌ No recorded file to send');
+      return;
+    }
+
+    if (_isRecording) {
+      _showErrorSnackBar('Cannot send while recording');
+      return;
+    }
+    if (_isPlaying) {
+      _showErrorSnackBar('Cannot send while playing');
+      return;
+    }
+    if (_isDeleting) {
+      _showErrorSnackBar('Cannot send while deleting');
+      return;
+    }
+
+    try {
+      final file = File(_recordedFilePath!);
+      if (!await file.exists()) {
+        throw Exception('Audio file not found');
+      }
+
+      debugPrint('📤 Sending audio file: $_recordedFilePath');
+      widget.onSendAudio?.call(_recordedFilePath!, _recordDuration);
+      debugPrint('✓ Audio sent successfully');
+
+      // Reset state for next recording, but do not delete the file here.
+      // The recipient of onSendAudio is now responsible for managing the file lifecycle.
       setState(() {
         _recordedFilePath = null;
         _recordDuration = Duration.zero;
-        _isDeleting = false;
+        // _isRecording, _isPlaying, _isDeleting should already be false here
+        // or handled by their respective actions. Ensure UI consistency.
       });
     } catch (e) {
-      debugPrint('❌ Error deleting audio: $e');
-      _showErrorSnackBar('Deleting audio: $e');
-      setState(() => _isDeleting = false);
+      debugPrint('❌ Error sending audio: $e');
+      _showErrorSnackBar('Error sending audio: $e');
     }
   }
 
@@ -208,7 +290,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
         children: [
           if (!_isRecording && _recordedFilePath == null)
             IconButton(
-              onPressed: _startRecording,
+              onPressed: !_isPlaying && !_isDeleting ? _startRecording : null,
               icon: const Icon(Icons.mic),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
@@ -230,9 +312,11 @@ class _AudioRecorderState extends State<AudioRecorder> {
               ),
               tooltip: 'Stop recording',
             ),
-          if (_recordedFilePath != null && !_isDeleting) ...[
+          if (_recordedFilePath != null) ...[
             IconButton(
-              onPressed: _deleteRecording,
+              onPressed: !_isRecording && !_isPlaying && !_isDeleting
+                  ? _deleteRecording
+                  : null,
               icon: const Icon(Icons.delete),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
@@ -244,7 +328,9 @@ class _AudioRecorderState extends State<AudioRecorder> {
             ),
             const SizedBox(width: 8),
             IconButton(
-              onPressed: _isDeleting ? null : _playRecording,
+              onPressed: !_isRecording && !_isPlaying && !_isDeleting
+                  ? _playRecording
+                  : null,
               icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
@@ -256,7 +342,9 @@ class _AudioRecorderState extends State<AudioRecorder> {
             ),
             const SizedBox(width: 8),
             IconButton(
-              onPressed: _isDeleting ? null : _sendAudio,
+              onPressed: !_isRecording && !_isPlaying && !_isDeleting
+                  ? _sendAudio
+                  : null,
               icon: const Icon(Icons.send),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),

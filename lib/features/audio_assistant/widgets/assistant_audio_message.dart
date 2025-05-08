@@ -93,6 +93,8 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage> {
       if (_playbackState == PlaybackState.playing) {
         await widget.audioPlayback.pause();
       } else {
+        // Ensure this widget's audio file is the one loaded before playing
+        await widget.audioPlayback.load(widget.audioFile);
         await widget.audioPlayback.play();
       }
     } catch (e) {

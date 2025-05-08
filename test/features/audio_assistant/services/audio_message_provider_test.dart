@@ -1,5 +1,10 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
 import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_generation.dart';
@@ -7,48 +12,69 @@ import 'package:character_ai_clone/features/audio_assistant/services/audio_playb
 import 'package:character_ai_clone/features/audio_assistant/services/audio_message_provider.dart';
 
 class MockAudioGeneration extends Mock implements AudioGeneration {}
+
 class MockAudioPlayback extends Mock implements AudioPlayback {}
 
 // Create a fake AudioFile for mocktail's registerFallbackValue
 class FakeAudioFile extends Fake implements AudioFile {}
 
+class MockPathProviderPlatform extends Mock
+    with MockPlatformInterfaceMixin
+    implements PathProviderPlatform {
+  @override
+  Future<String?> getApplicationDocumentsPath() async => 'test/mock_audio';
+}
+
 void main() {
   setUpAll(() {
     // Register fallback values for mocktail's matchers
     registerFallbackValue(FakeAudioFile());
+    PathProviderPlatform.instance = MockPathProviderPlatform();
   });
-  
+
   group('AudioMessageProvider', () {
     late MockAudioGeneration mockAudioGeneration;
     late MockAudioPlayback mockAudioPlayback;
     late AudioMessageProvider provider;
-    const testAudioPath = 'test_path.mp3';
+    late Directory mockDir;
+    const testAudioPath =
+        'test/mock_audio/eleven_labs_audio/test_message_id.mp3';
     const testDuration = Duration(seconds: 10);
 
-    setUp(() {
+    setUp(() async {
       mockAudioGeneration = MockAudioGeneration();
       mockAudioPlayback = MockAudioPlayback();
-      
+
       // Set up mock behavior
       when(() => mockAudioGeneration.isInitialized).thenReturn(true);
-      when(() => mockAudioGeneration.initialize()).thenAnswer((_) async => true);
-      when(() => mockAudioGeneration.generate(any())).thenAnswer((_) async => AudioFile(
-        path: testAudioPath,
-        duration: testDuration,
-      ));
+      when(() => mockAudioGeneration.initialize())
+          .thenAnswer((_) async => true);
+      when(() => mockAudioGeneration.generate(any()))
+          .thenAnswer((_) async => AudioFile(
+                path: testAudioPath,
+                duration: testDuration,
+              ));
       when(() => mockAudioGeneration.cleanup()).thenAnswer((_) async {});
-      
+
       when(() => mockAudioPlayback.initialize()).thenAnswer((_) async => true);
       when(() => mockAudioPlayback.load(any())).thenAnswer((_) async => true);
       when(() => mockAudioPlayback.play()).thenAnswer((_) async => true);
       when(() => mockAudioPlayback.pause()).thenAnswer((_) async => true);
       when(() => mockAudioPlayback.stop()).thenAnswer((_) async => true);
       when(() => mockAudioPlayback.dispose()).thenAnswer((_) async {});
-      
+
+      // Create mock audio directory
+      mockDir = Directory('test/mock_audio/eleven_labs_audio');
+      await mockDir.create(recursive: true);
+
       provider = AudioMessageProvider(
         audioGeneration: mockAudioGeneration,
         audioPlayback: mockAudioPlayback,
       );
+    });
+
+    tearDown(() async {
+      await mockDir.delete(recursive: true);
     });
 
     test('initializes audio generation and playback services', () async {
@@ -90,74 +116,96 @@ void main() {
       verifyNever(() => mockAudioPlayback.play());
     });
 
-    // Skipping tests that require more complex setup of file system and caching
-    test(
-      'gets audio for message',
-      () async {
-        await provider.initialize();
+    test('gets audio for message', () async {
+      // Initialize the provider
+      final result = await provider.initialize();
+      expect(result, isTrue);
 
-        const messageId = 'test_message_id';
-        const text = 'Test message';
+      const messageId = 'test_message_id';
+      const text = 'Test message';
 
-        // First generate the audio to ensure it's in the provider's cache
-        await provider.generateAudioForMessage(messageId, text);
-        
-        // Then try to retrieve it
-        final audioFile = await provider.getAudioForMessage(messageId);
+      // Create a mock audio file
+      final audioFile = File(testAudioPath);
+      await audioFile.create(recursive: true);
+      await audioFile.writeAsString('mock audio content');
 
-        expect(audioFile, isNotNull);
-        expect(audioFile!.path, equals(testAudioPath));
-        expect(audioFile.duration, equals(testDuration));
-      },
-      skip: 'This test requires proper mocking of the file system and caching behavior',
-    );
+      // First generate the audio to ensure it's in the provider's cache
+      final generatedAudio =
+          await provider.generateAudioForMessage(messageId, text);
 
-    test(
-      'plays audio for message',
-      () async {
-        await provider.initialize();
+      // Then try to retrieve it
+      final retrievedAudio = await provider.getAudioForMessage(messageId);
 
-        const messageId = 'test_message_id';
-        const text = 'Test message';
+      // Assert
+      expect(generatedAudio, isNotNull);
+      expect(generatedAudio?.path, equals(testAudioPath));
+      expect(generatedAudio?.duration, equals(testDuration));
 
-        // First generate the audio to ensure it's in the provider's cache
-        await provider.generateAudioForMessage(messageId, text);
-        
-        // Then try to play it
-        final result = await provider.playAudioForMessage(messageId);
+      expect(retrievedAudio, isNotNull);
+      expect(retrievedAudio?.path, equals(testAudioPath));
+      expect(retrievedAudio?.duration, equals(testDuration));
 
-        expect(result, isTrue);
-        verify(() => mockAudioPlayback.load(any())).called(1);
-        verify(() => mockAudioPlayback.play()).called(1);
-      },
-      skip: 'This test requires proper mocking of the file system to verify file existence',
-    );
+      verify(() => mockAudioGeneration.generate(text)).called(1);
+    });
 
-    test(
-      'loads audio from asset',
-      () async {
-        await provider.initialize();
+    test('plays audio for message', () async {
+      // Initialize the provider
+      final result = await provider.initialize();
+      expect(result, isTrue);
 
-        const messageId = 'test_message_id';
-        const assetPath = 'assets/audio/test.mp3';
-        const duration = Duration(seconds: 30);
+      const messageId = 'test_message_id';
+      const text = 'Test message';
 
-        final audioFile = await provider.loadAudioFromAsset(
-          messageId,
-          assetPath,
-          duration,
-        );
+      // Create a mock audio file
+      final audioFile = File(testAudioPath);
+      await audioFile.create(recursive: true);
+      await audioFile.writeAsString('mock audio content');
 
-        expect(audioFile, isNotNull);
-        expect(audioFile!.path, equals(assetPath));
-        expect(audioFile.duration, equals(duration));
+      // First generate the audio to ensure it's in the provider's cache
+      final generatedAudio =
+          await provider.generateAudioForMessage(messageId, text);
+      expect(generatedAudio, isNotNull);
 
-        // Verify it's stored in the provider
-        final storedFile = await provider.getAudioForMessage(messageId);
-        expect(storedFile, isNotNull);
-        expect(storedFile!.path, equals(assetPath));
-      },
-      skip: 'This test requires proper mocking of the audio file storage mechanism',
-    );
+      // Then try to play it
+      final playResult = await provider.playAudioForMessage(messageId);
+
+      // Assert
+      expect(playResult, isTrue);
+      verify(() => mockAudioPlayback.load(any())).called(1);
+      verify(() => mockAudioPlayback.play()).called(1);
+    });
+
+    test('loads audio from asset', () async {
+      // Initialize the provider
+      final result = await provider.initialize();
+      expect(result, isTrue);
+
+      const messageId = 'test_message_id';
+      const assetPath = 'test/mock_audio/eleven_labs_audio/test.mp3';
+      const duration = Duration(seconds: 30);
+
+      // Create a mock asset file
+      final assetFile = File(assetPath);
+      await assetFile.create(recursive: true);
+      await assetFile.writeAsString('mock audio content');
+
+      // Load the audio from asset
+      final audioFile = await provider.loadAudioFromAsset(
+        messageId,
+        assetPath,
+        duration,
+      );
+
+      // Assert
+      expect(audioFile, isNotNull);
+      expect(audioFile!.path, equals(assetPath));
+      expect(audioFile.duration, equals(duration));
+
+      // Verify it's stored in the provider
+      final storedFile = await provider.getAudioForMessage(messageId);
+      expect(storedFile, isNotNull);
+      expect(storedFile!.path, equals(assetPath));
+      expect(storedFile.duration, equals(duration));
+    });
   });
 }
