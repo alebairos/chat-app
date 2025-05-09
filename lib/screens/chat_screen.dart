@@ -18,6 +18,9 @@ import 'package:character_ai_clone/features/audio_assistant/services/eleven_labs
 import 'dart:io';
 import 'package:character_ai_clone/features/audio_assistant/screens/tts_settings_screen.dart';
 import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_manager.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'dart:math' as math;
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -581,11 +584,18 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _handleAudioMessage(String audioPath, Duration duration) async {
+  Future<void> _handleAudioMessage(String audioPath, Duration duration) async {
+    _logger.debug('=== HANDLE AUDIO MESSAGE START ===');
+    _logger.debug('1. Received audio: path=$audioPath, duration=$duration');
+
+    // Show transcribing message immediately with absolute path
+    final tempTranscribingId =
+        'transcribing_${DateTime.now().millisecondsSinceEpoch}';
     final transcribingMessage = ChatMessage(
+      key: ValueKey(tempTranscribingId),
       text: 'Transcribing...',
       isUser: true,
-      audioPath: audioPath,
+      audioPath: audioPath, // Absolute path for immediate UI
       duration: duration,
     );
 
@@ -593,357 +603,241 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.insert(0, transcribingMessage);
     });
     _scrollToBottom();
+    _logger.debug('2. Added temporary "Transcribing..." message to UI.');
 
     try {
+      _logger.debug('3. Starting transcription for: $audioPath');
       final transcription =
           await _transcriptionService.transcribeAudio(audioPath);
+      _logger.debug('4. Transcription result: "$transcription"');
 
-      // Save audio message first
+      // Get relative path for storage
+      final Directory documentsDir = await getApplicationDocumentsDirectory();
+      final String relativePath =
+          path.relative(audioPath, from: documentsDir.path);
+      _logger.debug('5. Calculated relative path for storage: $relativePath');
+
+      // Save audio message with RELATIVE path
       await _storageService.saveMessage(
         text: transcription,
         isUser: true,
         type: MessageType.audio,
-        mediaPath: audioPath,
+        mediaPath: relativePath, // <-- Save relative path
         duration: duration,
       );
+      _logger.debug(
+          '6. Saved transcribed message with relative audio path to storage.');
 
       // Get the saved message ID from storage
       final messages = await _storageService.getMessages(limit: 1);
       final messageId = messages.first.id;
+      _logger.debug('7. Retrieved saved message ID: $messageId');
 
-      // Update UI with transcription
+      // Update UI with final message, still passing ABSOLUTE path for the widget
       final userAudioMessage = ChatMessage(
         key: ValueKey(messageId),
         text: transcription,
         isUser: true,
-        audioPath: audioPath,
+        audioPath:
+            audioPath, // <-- Pass absolute path to widget for immediate use
         duration: duration,
         onDelete: () => _deleteMessage(messageId),
         onEdit: (text) => _showEditDialog(messageId.toString(), text),
       );
 
-      setState(() {
-        _messages[0] = userAudioMessage;
-      });
+      final transcribingIndex = _messages
+          .indexWhere((msg) => msg.key == ValueKey(tempTranscribingId));
+      if (transcribingIndex != -1) {
+        setState(() {
+          _messages[transcribingIndex] = userAudioMessage;
+        });
+        _logger.debug(
+            '8. Replaced temporary "Transcribing..." message with final audio message in UI.');
+      } else {
+        _logger.debug(
+            'Temporary transcribing message not found for replacement. Adding new message.');
+        setState(() {
+          _messages.insert(0, userAudioMessage);
+        });
+      }
       _scrollToBottom();
 
-      // Send transcription to Claude
+      _logger.debug('9. Sending transcription to Claude service.');
       final response = await _claudeService.sendMessage(transcription);
-
-      // Check if the response is an error message
-      final bool isErrorResponse = response.startsWith('Error:') ||
-          response.contains('Unable to connect') ||
-          response.contains('experiencing high demand') ||
-          response.contains('temporarily unavailable') ||
-          response.contains('rate limit') ||
-          response.contains('Authentication failed');
-
-      if (isErrorResponse) {
-        // Display error message to user
-        final aiMessage = ChatMessage(
-          text: response,
-          isUser: false,
-        );
-
-        setState(() {
-          _messages.insert(0, aiMessage);
-        });
-
-        // Show error in snackbar
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5),
-            ),
-          );
+      _logger.debug('10. Received response from Claude. Processing...');
+      await _processAssistantResponse(response);
+    } catch (e) {
+      _logger.error('Error processing audio message: ${e.toString()}');
+      if (mounted) {
+        final transcribingIndex = _messages
+            .indexWhere((msg) => msg.key == ValueKey(tempTranscribingId));
+        if (transcribingIndex != -1) {
+          setState(() {
+            _messages.removeAt(transcribingIndex);
+            _logger.debug('Removed "Transcribing..." message due to error.');
+          });
         }
-        return;
-      }
-
-      // Generate audio for assistant response if audio assistant is initialized
-      String? assistantAudioPath;
-      Duration? assistantAudioDuration;
-
-      if (_audioAssistantInitialized) {
-        try {
-          // Save assistant message to storage first to get the message ID
-          await _storageService.saveMessage(
-            text: response,
-            isUser: false,
-            type: MessageType.text, // Initially save as text, will update later
-          );
-
-          // Get the saved message ID from storage
-          final aiMessages = await _storageService.getMessages(limit: 1);
-          final aiMessageId = aiMessages.first.id;
-
-          // Use the actual message ID for the audio file
-          // Add a timestamp to ensure uniqueness
-          final timestamp = DateTime.now().millisecondsSinceEpoch;
-          final audioMessageId = "${aiMessageId}_$timestamp";
-          debugPrint(
-              'Generating audio for message ID: $audioMessageId with unique timestamp');
-
-          final audioFile = await _audioMessageProvider.generateAudioForMessage(
-            audioMessageId,
-            response,
-          );
-
-          if (audioFile != null) {
-            assistantAudioPath = audioFile.path;
-            assistantAudioDuration = audioFile.duration;
-            debugPrint(
-                'Generated audio file for message $audioMessageId: $assistantAudioPath with duration: $assistantAudioDuration');
-
-            // Update the message in storage with the audio path and duration
-            await _storageService.updateMessage(
-              aiMessageId,
-              type: MessageType.audio,
-              mediaPath: assistantAudioPath,
-              duration: assistantAudioDuration,
-            );
-          } else {
-            debugPrint(
-                'Audio file generation returned null for message $audioMessageId');
-          }
-        } catch (e) {
-          debugPrint('Error generating audio for assistant response: $e');
-        }
-      } else {
-        debugPrint(
-            'Audio assistant not initialized, skipping audio generation');
-
-        // Save assistant message to storage without audio
-        await _storageService.saveMessage(
-          text: response,
-          isUser: false,
-          type: MessageType.text,
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Error processing audio message. See console for details.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    }
+    _logger.debug('=== HANDLE AUDIO MESSAGE END ===');
+  }
 
-      // Get the saved AI message ID
-      final aiMessages = await _storageService.getMessages(limit: 1);
-      final aiMessageId = aiMessages.first.id;
-      debugPrint(
-          'Retrieved saved message ID: $aiMessageId, audioPath: $assistantAudioPath');
+  Future<void> _processAssistantResponse(String response) async {
+    _logger.debug('--- Processing Assistant Response Start ---');
+    _logger.debug(
+        'Response text: ${response.substring(0, math.min(response.length, 100))}...');
 
-      final aiMessage = ChatMessage(
-        key: ValueKey(aiMessageId),
+    String? uiAudioPath; // Absolute path for immediate UI use
+    String? relativeAudioPathForStorage; // Relative path for storage
+    Duration? audioDuration;
+
+    final bool isErrorResponse = response.startsWith('Error:') ||
+        response.contains('Unable to connect') ||
+        response.contains('experiencing high demand') ||
+        response.contains('temporarily unavailable') ||
+        response.contains('rate limit') ||
+        response.contains('Authentication failed');
+
+    if (isErrorResponse) {
+      _logger.debug('Received error response from service: $response');
+      await _storageService.saveMessage(
         text: response,
         isUser: false,
-        audioPath: assistantAudioPath,
-        duration: assistantAudioDuration,
-        audioPlayback:
-            assistantAudioPath != null ? _audioPlaybackController : null,
-        onDelete: () => _deleteMessage(aiMessageId),
+        type: MessageType.text,
       );
+      _logger.debug('Saved error response as text message to storage.');
+    } else if (_audioAssistantInitialized) {
+      _logger
+          .debug('Audio assistant initialized, attempting audio generation.');
+      try {
+        // Save assistant message with text initially to get an ID
+        // This ID will be used to name the audio file consistently
+        await _storageService.saveMessage(
+            text: response,
+            isUser: false,
+            type: MessageType.text // Save as text first
+            );
+        final savedMessages = await _storageService.getMessages(limit: 1);
+        final assistantMessageId = savedMessages.first.id;
+        _logger.debug(
+            'Saved assistant text response to get ID: $assistantMessageId');
 
-      setState(() {
-        _messages.insert(0, aiMessage);
-      });
-      _scrollToBottom();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error processing audio message: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      print('Error processing audio message: $e');
-
-      // Update the transcribing message to show the error
-      setState(() {
-        _messages[0] = const ChatMessage(
-          text:
-              'Error: Unable to process audio message. Please try again later.',
-          isUser: false,
+        final audioFile = await _audioMessageProvider.generateAudioForMessage(
+          assistantMessageId
+              .toString(), // Use actual message ID for audio generation
+          response,
         );
-      });
-    }
-  }
 
-  void _showMenu() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.delete),
-                title: const Text('Clear Conversation'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _clearConversation();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings_voice),
-                title: const Text('TTS Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _openTTSSettings();
-                },
-              ),
-              // ... other menu items ...
-            ],
-          ),
-        );
-      },
-    );
-  }
+        if (audioFile != null) {
+          uiAudioPath = audioFile.path; // Keep absolute path for UI
+          audioDuration = audioFile.duration;
+          _logger.debug(
+              'Generated audio file: $uiAudioPath, Duration: $audioDuration');
 
-  void _openTTSSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TTSSettingsScreen(
-          audioMessageProvider: _audioMessageProvider,
-        ),
-      ),
-    );
-  }
+          // Calculate relative path for storage
+          final Directory documentsDir =
+              await getApplicationDocumentsDirectory();
+          relativeAudioPathForStorage =
+              path.relative(uiAudioPath, from: documentsDir.path);
+          _logger.debug(
+              'Calculated relative path for storage: $relativeAudioPathForStorage');
 
-  void _clearConversation() {
-    setState(() {
-      _messages.clear();
-      _addInitialMessage();
-    });
-
-    // Clear conversation history in the Claude service
-    _claudeService.clearConversation();
-
-    // Clear the audio cache to ensure fresh audio files
-    if (_audioAssistantInitialized) {
-      _audioMessageProvider.clearAudioCache();
-      debugPrint('Audio cache cleared during conversation reset');
-    }
-
-    // Show confirmation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Conversation cleared'),
-      ),
-    );
-  }
-
-  void _addInitialMessage() {
-    _messages.add(
-      ChatMessage(
-        text: 'Hello! How can I help you today?',
+          // Update the message with audio details (using relative path)
+          await _storageService.updateMessage(
+            assistantMessageId,
+            type: MessageType.audio,
+            mediaPath: relativeAudioPathForStorage, // <-- Save relative path
+            duration: audioDuration,
+          );
+          _logger.debug(
+              'Updated message $assistantMessageId with relative audio path: $relativeAudioPathForStorage');
+        } else {
+          _logger.debug(
+              'Audio file generation returned null for response (ID: $assistantMessageId). Message remains text.');
+        }
+      } catch (e) {
+        _logger.error(
+            'Error generating audio for assistant response: ${e.toString()}');
+        // Message is already saved as text if audio generation failed here.
+      }
+    } else {
+      _logger
+          .debug('Audio assistant not initialized, skipping audio generation.');
+      await _storageService.saveMessage(
+        text: response,
         isUser: false,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_error != null) {
-      return Scaffold(
-        appBar: const CustomChatAppBar(),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              _error!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
+        type: MessageType.text,
       );
+      _logger.debug(
+          'Saved assistant response as text message (audio assistant not initialized).');
     }
 
-    if (_isInitialLoading) {
-      return const Scaffold(
-        appBar: CustomChatAppBar(),
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+    final messages = await _storageService.getMessages(limit: 1);
+    if (messages.isEmpty) {
+      _logger.error(
+          'Failed to retrieve last saved message from storage after processing assistant response.');
+      if (mounted) setState(() => _isTyping = false);
+      return;
     }
+    final latestMessage = messages.first;
+    final messageId = latestMessage.id;
 
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No messages yet.\nStart a conversation!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _messages.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
-                      return _messages[index];
-                    },
-                  ),
-          ),
-          if (_isTyping)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
-                    child: Icon(Icons.military_tech, color: Colors.white),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Claude is typing...'),
-                ],
-              ),
-            ),
-          ChatInput(
-            controller: _messageController,
-            onSend: _sendMessage,
-            onSendAudio: _handleAudioMessage,
-          ),
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            color: Colors.grey[100],
-            child: const Text(
-              'This is A.I. and not a real person. Treat everything it says as fiction',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
+    _logger
+        .debug('Adding/updating assistant message in UI with ID: $messageId');
+    _logger.debug(
+        '  - Text: ${latestMessage.text.substring(0, math.min(latestMessage.text.length, 100))}...');
+    _logger.debug('  - Type: ${latestMessage.type}');
+    _logger
+        .debug('  - Stored Media Path (Relative): ${latestMessage.mediaPath}');
+    _logger.debug(
+        '  - UI Audio Path (Absolute): $uiAudioPath'); // Will be null if no audio
+    _logger.debug('  - Duration: ${latestMessage.duration ?? audioDuration}');
+
+    final assistantMessage = ChatMessage(
+      key: ValueKey(messageId),
+      text: latestMessage.text, // Use text from storage
+      isUser: false,
+      audioPath: uiAudioPath, // <-- Pass ABSOLUTE path to widget if available
+      duration: latestMessage.duration ?? audioDuration,
+      audioPlayback: uiAudioPath != null ? _audioPlaybackController : null,
+      onDelete: () => _deleteMessage(messageId),
     );
-  }
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    _storageService.close();
-
-    // Dispose audio assistant services
-    _audioMessageProvider.dispose();
-
-    super.dispose();
+    if (mounted) {
+      // Check if we need to replace a placeholder or insert new
+      final existingMessageIndex =
+          _messages.indexWhere((msg) => msg.key == ValueKey(messageId));
+      if (existingMessageIndex != -1 &&
+          _messages[existingMessageIndex].text != latestMessage.text) {
+        _logger.debug(
+            'Replacing existing message in UI for ID $messageId (likely text updated to audio).');
+        setState(() {
+          _messages[existingMessageIndex] = assistantMessage;
+          _isTyping = false;
+        });
+      } else if (existingMessageIndex == -1) {
+        _logger
+            .debug('Inserting new assistant message in UI for ID $messageId.');
+        setState(() {
+          _messages.insert(0, assistantMessage);
+          _isTyping = false;
+        });
+      } else {
+        _logger.debug(
+            'Message ID $messageId already exists and matches. No UI update needed here or _isTyping already false.');
+        setState(() {
+          _isTyping = false;
+        }); // Ensure typing indicator is off
+      }
+      _scrollToBottom();
+    }
+    _logger.debug('--- Processing Assistant Response End ---');
   }
 }

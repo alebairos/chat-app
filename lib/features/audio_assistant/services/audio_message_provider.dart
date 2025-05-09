@@ -14,6 +14,7 @@ import 'audio_playback.dart';
 import 'audio_playback_controller.dart';
 import 'audio_playback_manager.dart';
 import 'tts_service_factory.dart';
+import 'package:isar/isar.dart';
 
 /// A provider that manages audio messages for the assistant.
 ///
@@ -259,230 +260,123 @@ class AudioMessageProvider extends ChangeNotifier {
     }
   }
 
-  /// Generates an audio file for the given text and associates it with the message ID.
-  ///
-  /// [messageId] is a unique identifier for the message.
-  /// [text] is the text to convert to audio.
-  /// Returns the generated audio file, or null if generation failed.
-  Future<AudioFile?> generateAudioForMessage(
-      String messageId, String text) async {
-    if (!_initialized) {
-      logDebugPrint('AudioMessageProvider not initialized');
-      throw Exception('AudioMessageProvider not initialized');
-    }
-
-    // Generate a unique ID for this request to track it through logs
-    final requestId =
-        DateTime.now().millisecondsSinceEpoch.toString().substring(6);
-
-    logDebugPrint(
-        '[$requestId] Generating audio for message $messageId with text: "${text.substring(0, min(50, text.length))}..."');
-
-    try {
-      final audioFile = await _audioGeneration.generate(text);
-      logDebugPrint(
-          '[$requestId] Audio generation successful for message $messageId: ${audioFile.path}, duration: ${audioFile.duration}');
-
-      // Store the audio file with the message ID
-      _audioFiles[messageId] = audioFile;
-
-      // Log the current state of the audio files map
-      logDebugPrint(
-          '[$requestId] Current audio files map: ${_audioFiles.keys.join(', ')}');
-
-      return audioFile;
-    } catch (e) {
-      logDebugPrint(
-          '[$requestId] Failed to generate audio for message $messageId: $e');
-      return null;
-    }
-  }
-
-  /// Gets the audio file associated with the given message ID.
+  /// Generates audio for a given message ID and text.
   ///
   /// [messageId] is the unique identifier for the message.
-  /// Returns the audio file, or null if no audio file is associated with the message ID.
-  Future<AudioFile?> getAudioForMessage(String messageId) async {
-    // Wait for initialization to complete
+  /// [messageText] is the text content of the message to be converted to speech.
+  /// Returns the [AudioFile] if generation was successful, null otherwise.
+  Future<AudioFile?> generateAudioForMessage(
+    String messageId,
+    String messageText,
+  ) async {
     if (!_initialized) {
-      await _waitForInitialization();
-    }
-
-    logDebugPrint('🔍 [AUDIO DEBUG] Getting audio for message: $messageId');
-    logDebugPrint(
-        '🔍 [AUDIO DEBUG] Current cache keys: ${_audioFiles.keys.toList()}');
-
-    // Check if we have a direct match in the cache
-    if (_audioFiles.containsKey(messageId)) {
-      final audioFile = _audioFiles[messageId];
-
-      // Verify the file still exists
-      if (audioFile != null) {
-        final file = File(audioFile.path);
-        final exists = await file.exists();
-        if (exists) {
-          logDebugPrint(
-              '🔍 [AUDIO DEBUG] Found exact match in cache for: $messageId');
-          return audioFile;
-        } else {
-          logDebugPrint(
-              '🔍 [AUDIO DEBUG] File in cache no longer exists: ${audioFile.path}');
-          _audioFiles.remove(messageId);
-        }
-      }
-    }
-
-    // Check if we have a timestamped version of this message ID
-    if (messageId.contains('_')) {
-      final parts = messageId.split('_');
-      if (parts.length >= 3) {
-        // Try to extract the base ID (without timestamp)
-        final baseId = parts.last;
-        logDebugPrint('🔍 [AUDIO DEBUG] Checking for base ID: $baseId');
-
-        if (_audioFiles.containsKey(baseId)) {
-          final audioFile = _audioFiles[baseId];
-          if (audioFile != null) {
-            final file = File(audioFile.path);
-            final exists = await file.exists();
-            if (exists) {
-              logDebugPrint(
-                  '🔍 [AUDIO DEBUG] Found match for base ID: $baseId');
-              // Also cache with the original ID for future lookups
-              _audioFiles[messageId] = audioFile;
-              return audioFile;
-            }
-          }
-        }
-      }
-    }
-
-    // Try to find a prefix match (for eleven_labs_TIMESTAMP_ID format)
-    List<String> prefixMatches = [];
-    for (final key in _audioFiles.keys) {
-      if (messageId.startsWith('eleven_labs_') &&
-          key.startsWith('eleven_labs_')) {
-        final messageParts = messageId.split('_');
-        final keyParts = key.split('_');
-
-        if (messageParts.length >= 3 && keyParts.length >= 3) {
-          // Check if the IDs match (last part)
-          if (messageParts.last == keyParts.last) {
-            prefixMatches.add(key);
-            logDebugPrint(
-                '🔍 [AUDIO DEBUG] Found prefix match: $key for $messageId');
-          }
-        }
-      }
-    }
-
-    if (prefixMatches.isNotEmpty) {
-      // Sort by timestamp (newest first) if available
-      prefixMatches.sort((a, b) {
-        final timestampA = _messageTimestamps[a] ?? 0;
-        final timestampB = _messageTimestamps[b] ?? 0;
-        return timestampB.compareTo(timestampA);
-      });
-
-      final matchKey = prefixMatches.first;
-      final audioFile = _audioFiles[matchKey];
-      if (audioFile != null) {
-        final file = File(audioFile.path);
-        final exists = await file.exists();
-        if (exists) {
-          logDebugPrint(
-              '🔍 [AUDIO DEBUG] Using newest prefix match: $matchKey');
-          // Cache with the original ID for future lookups
-          _audioFiles[messageId] = audioFile;
-          return audioFile;
-        }
-      }
-    }
-
-    // Try to find an exact pattern match (for eleven_labs_ID format)
-    if (messageId.contains('eleven_labs_')) {
-      final pattern = messageId.split('_').last;
       logDebugPrint(
-          '🔍 [AUDIO DEBUG] Looking for pattern match with ID: $pattern');
-
-      List<String> exactPatternMatches = [];
-      for (final key in _audioFiles.keys) {
-        if (key.contains('eleven_labs_')) {
-          final keyPattern = key.split('_').last;
-          if (keyPattern == pattern) {
-            exactPatternMatches.add(key);
-            logDebugPrint('🔍 [AUDIO DEBUG] Found exact pattern match: $key');
-          }
-        }
-      }
-
-      if (exactPatternMatches.isNotEmpty) {
-        // Sort by timestamp (newest first) if available
-        exactPatternMatches.sort((a, b) {
-          final timestampA = _messageTimestamps[a] ?? 0;
-          final timestampB = _messageTimestamps[b] ?? 0;
-          return timestampB.compareTo(timestampA);
-        });
-
-        final matchKey = exactPatternMatches.first;
-        final audioFile = _audioFiles[matchKey];
-        if (audioFile != null) {
-          final file = File(audioFile.path);
-          final exists = await file.exists();
-          if (exists) {
-            logDebugPrint(
-                '🔍 [AUDIO DEBUG] Using newest exact pattern match: $matchKey');
-            // Cache with the original ID for future lookups
-            _audioFiles[messageId] = audioFile;
-            return audioFile;
-          }
-        }
-      }
+          'AudioMessageProvider not initialized. Call initialize() first.');
+      return null;
     }
 
-    // Try to find a partial match
-    List<String> partialMatches = [];
-    for (final key in _audioFiles.keys) {
-      if (key.contains(messageId) || messageId.contains(key)) {
-        partialMatches.add(key);
-        logDebugPrint(
-            '🔍 [AUDIO DEBUG] Found partial match: $key for $messageId');
-      }
-    }
-
-    if (partialMatches.isNotEmpty) {
-      // Sort by timestamp (newest first) if available
-      partialMatches.sort((a, b) {
-        final timestampA = _messageTimestamps[a] ?? 0;
-        final timestampB = _messageTimestamps[b] ?? 0;
-        return timestampB.compareTo(timestampA);
-      });
-
-      final matchKey = partialMatches.first;
-      final audioFile = _audioFiles[matchKey];
-      if (audioFile != null) {
-        final file = File(audioFile.path);
-        final exists = await file.exists();
-        if (exists) {
-          logDebugPrint(
-              '🔍 [AUDIO DEBUG] Using newest partial match: $matchKey');
-          // Cache with the original ID for future lookups
-          _audioFiles[messageId] = audioFile;
-          return audioFile;
-        }
-      }
-    }
-
-    // If we still don't have a match, try to load from storage
     logDebugPrint(
-        '🔍 [AUDIO DEBUG] No match found in cache, trying to load from storage');
-    final audioFile = await _loadAudioFileFromStorage(messageId);
-    if (audioFile != null) {
-      _audioFiles[messageId] = audioFile;
-      return audioFile;
+        'Generating audio for message $messageId: "${messageText.length > 50 ? "${messageText.substring(0, 50)}..." : messageText}"');
+
+    try {
+      // The AudioGeneration service (e.g., ElevenLabsTTSService)
+      // is responsible for its own file path management.
+      final AudioFile generatedFile =
+          await _audioGeneration.generate(messageText);
+
+      // The path in generatedFile is absolute, as determined by the generation service.
+      logDebugPrint(
+          'Successfully generated audio for message $messageId at ${generatedFile.path}');
+      _audioFiles[messageId] = generatedFile; // Cache it with the absolute path
+
+      // Attempt to update this in ChatStorageService as well
+      try {
+        final ChatStorageService storage = ChatStorageService();
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+
+        // We need the relative path for storage
+        final relativePath =
+            path.relative(generatedFile.path, from: appDocDir.path);
+        logDebugPrint(
+            'Updating storage for message $messageId with relative path: $relativePath and duration ${generatedFile.duration}');
+
+        // Assuming messageId can be parsed to int for the DB ID.
+        // This might need adjustment if messageId is not purely numeric.
+        await storage.updateMessage(
+          int.parse(messageId),
+          type: MessageType.audio,
+          mediaPath: relativePath,
+          duration: generatedFile.duration,
+        );
+        logDebugPrint('Successfully updated storage for $messageId.');
+      } catch (e) {
+        logDebugPrint(
+            'Error updating message $messageId in storage after audio generation: $e. Audio file is generated but not linked in DB via this flow.');
+      }
+      return generatedFile;
+    } catch (e) {
+      logDebugPrint(
+          'Error during _audioGeneration.generate for message $messageId: $e');
+    }
+    return null;
+  }
+
+  /// Retrieves the audio file for a given message ID.
+  ///
+  /// If the audio file is not already cached, it will be loaded from storage or generated.
+  /// Returns the [AudioFile] if found or generated, null otherwise.
+  Future<AudioFile?> getAudioForMessage(
+    String messageId,
+    String messageText,
+  ) async {
+    if (!_initialized) {
+      logDebugPrint(
+          'AudioMessageProvider not initialized. Call initialize() first.');
+      return null;
     }
 
-    logDebugPrint('🔍 [AUDIO DEBUG] No audio found for message: $messageId');
+    // Check if the audio file is already cached
+    if (_audioFiles.containsKey(messageId)) {
+      // Verify file existence before returning from cache
+      final cachedFile = _audioFiles[messageId]!;
+      final file = File(cachedFile.path);
+      if (await file.exists()) {
+        logDebugPrint(
+            'Found audio file in cache for message $messageId: ${cachedFile.path}');
+        return cachedFile;
+      } else {
+        logDebugPrint(
+            'Cached audio file for message $messageId not found on disk: ${cachedFile.path}. Removing from cache.');
+        _audioFiles.remove(messageId);
+      }
+    }
+
+    // If not cached, try to load from storage (this now expects messageText)
+    final audioFileFromStorage =
+        await _loadAudioFileFromStorage(messageId, messageText);
+    if (audioFileFromStorage != null) {
+      logDebugPrint(
+          'Loaded audio file from storage for message $messageId: ${audioFileFromStorage.path}');
+      return audioFileFromStorage;
+    }
+
+    // If not in storage and not cached, generate audio (if it's an assistant message)
+    // This part might need re-evaluation: should we auto-generate here if not found?
+    // For now, assume if it's not in cache/storage, it needs generation if it's an assistant response.
+    // This logic primarily applies if we're trying to get audio for an assistant message that hasn't had audio generated yet.
+    // If ChatScreen ensures audio is generated and its path (relative) stored,
+    // then _loadAudioFileFromStorage should typically find it.
+
+    // logDebugPrint(
+    //     'Audio file not found in cache or storage for message $messageId. Considering generation.');
+    // // Potentially, one could try to generate it here if it's an assistant message
+    // // final isAssistantMessage = !messageId.startsWith('user_'); // Example check
+    // // if (isAssistantMessage) {
+    // //   return generateAudioForMessage(messageId, messageText);
+    // // }
+
+    logDebugPrint(
+        'Audio file not found for message $messageId after checking cache and storage.');
     return null;
   }
 
@@ -497,7 +391,7 @@ class AudioMessageProvider extends ChangeNotifier {
     }
 
     // Get the audio file, which now checks storage if not in cache
-    final audioFile = await getAudioForMessage(messageId);
+    final audioFile = await getAudioForMessage(messageId, '');
     if (audioFile == null) {
       logDebugPrint('No audio file found for message $messageId');
       return false;
@@ -611,130 +505,57 @@ class AudioMessageProvider extends ChangeNotifier {
     logDebugPrint('Audio cache cleared');
   }
 
-  /// Load audio file from storage based on message ID
-  Future<AudioFile?> _loadAudioFileFromStorage(String messageId) async {
+  /// Load a specific audio file from storage by message ID
+  Future<AudioFile?> _loadAudioFileFromStorage(
+      String messageId, String messageText) async {
     try {
-      logDebugPrint(
-          '🔍 [AUDIO DEBUG] Loading audio file from storage for message: $messageId');
-
-      // Try to parse the numeric ID from the message ID
-      int? numericId;
-      if (messageId.contains('_')) {
-        final parts = messageId.split('_');
-        if (parts.isNotEmpty) {
-          numericId = int.tryParse(parts.last);
-          logDebugPrint('🔍 [AUDIO DEBUG] Extracted numeric ID: $numericId');
-        }
-      } else {
-        numericId = int.tryParse(messageId);
-      }
+      final ChatStorageService chatStorage = ChatStorageService();
+      final Isar isar = await chatStorage.db;
+      final int? numericId = int.tryParse(messageId);
 
       if (numericId == null) {
-        logDebugPrint(
-            '🔍 [AUDIO DEBUG] Could not parse numeric ID from messageId: $messageId');
+        logDebugPrint('Could not parse numeric ID from messageId: $messageId');
         return null;
       }
 
-      // Try to get the message from storage
-      final chatStorage = ChatStorageService();
-      final isar = await chatStorage.db;
-      final message = await isar.chatMessageModels.get(numericId);
+      final ChatMessageModel? chatMessage =
+          await isar.chatMessageModels.get(numericId);
 
-      if (message == null) {
+      if (chatMessage != null &&
+          chatMessage.type == MessageType.audio &&
+          chatMessage.mediaPath != null) {
+        // Assume chatMessage.mediaPath is a RELATIVE path from the database
+        final String relativeMediaPath = chatMessage.mediaPath!;
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+        final String absoluteMediaPath =
+            path.join(appDocDir.path, relativeMediaPath);
+
         logDebugPrint(
-            '🔍 [AUDIO DEBUG] Message not found in storage: $numericId');
-        return null;
-      }
+            'Constructed absolute path: $absoluteMediaPath from relative: $relativeMediaPath');
 
-      // Check if the message is an audio message
-      if (message.type == MessageType.audio &&
-          message.mediaPath != null &&
-          message.duration != null) {
-        logDebugPrint(
-            '🔍 [AUDIO DEBUG] Found audio message in storage: ${message.mediaPath}');
-
-        // Check if the file exists
-        final file = File(message.mediaPath!);
-        final exists = await file.exists();
-
-        if (exists) {
+        final audioFileOnDisk = File(absoluteMediaPath);
+        if (await audioFileOnDisk.exists()) {
           logDebugPrint(
-              '🔍 [AUDIO DEBUG] Found audio file in storage: ${message.mediaPath}');
-
-          // Create an audio file
+              'Audio file exists at reconstructed path: $absoluteMediaPath');
+          // Use the message's duration if available, otherwise a default
+          final duration = chatMessage.duration ?? const Duration(seconds: 30);
           final audioFile = AudioFile(
-            path: message.mediaPath!,
-            duration: message.duration!,
+            path: absoluteMediaPath, // Use reconstructed ABSOLUTE path
+            duration: duration,
           );
-
-          // Cache for future lookups
-          _audioFiles[messageId] = audioFile;
-
-          // Also cache with the numeric ID
-          if (numericId.toString() != messageId) {
-            _audioFiles[numericId.toString()] = audioFile;
-          }
-
+          _audioFiles[messageId] =
+              audioFile; // Cache with original string messageId
           return audioFile;
         } else {
           logDebugPrint(
-              '🔍 [AUDIO DEBUG] Audio file not found at path: ${message.mediaPath}');
-
-          // Try to find the file in the audio directory
-          try {
-            final appDocDir = await getApplicationDocumentsDirectory();
-            final audioDir = Directory('${appDocDir.path}/eleven_labs_audio');
-
-            if (await audioDir.exists()) {
-              final files = await audioDir.list().toList();
-
-              // Try to find a file with the message ID in its name
-              for (final entity in files) {
-                if (entity is File &&
-                    entity.path.endsWith('.mp3') &&
-                    path.basename(entity.path).contains(numericId.toString())) {
-                  logDebugPrint(
-                      '🔍 [AUDIO DEBUG] Found matching file in audio directory: ${entity.path}');
-
-                  // Create an audio file
-                  final audioFile = AudioFile(
-                    path: entity.path,
-                    duration: message.duration!,
-                  );
-
-                  // Cache for future lookups
-                  _audioFiles[messageId] = audioFile;
-
-                  // Also cache with the numeric ID
-                  if (numericId.toString() != messageId) {
-                    _audioFiles[numericId.toString()] = audioFile;
-                  }
-
-                  return audioFile;
-                }
-              }
-
-              logDebugPrint(
-                  '🔍 [AUDIO DEBUG] Could not find matching file in audio directory');
-            } else {
-              logDebugPrint('🔍 [AUDIO DEBUG] Audio directory does not exist');
-            }
-          } catch (e) {
-            logDebugPrint(
-                '🔍 [AUDIO DEBUG] Error searching for audio file: $e');
-          }
+              'Audio file does NOT exist at reconstructed path: $absoluteMediaPath');
         }
-      } else {
-        logDebugPrint(
-            '🔍 [AUDIO DEBUG] Message is not an audio message or missing required fields');
       }
-
-      return null;
     } catch (e) {
       logDebugPrint(
-          '🔍 [AUDIO DEBUG] Error loading audio file from storage: $e');
-      return null;
+          'Error loading specific audio file for message $messageId: $e');
     }
+    return null;
   }
 
   /// Wait for initialization to complete
