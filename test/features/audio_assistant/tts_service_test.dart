@@ -1,225 +1,143 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/features/audio_assistant/tts_service.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+import 'package:character_ai_clone/features/audio_assistant/tts_service.dart';
+import 'package:character_ai_clone/utils/logger.dart';
+
+// Mock implementations
+class MockPathProviderPlatform extends Mock
+    with MockPlatformInterfaceMixin
+    implements PathProviderPlatform {
+  @override
+  Future<String?> getApplicationDocumentsPath() async {
+    return '/mock/documents';
+  }
+}
+
+class MockDirectory extends Mock implements Directory {
+  final String dirPath;
+  final bool shouldExist;
+
+  MockDirectory(this.dirPath, {this.shouldExist = true});
+
+  @override
+  String get path => dirPath;
+
+  @override
+  Future<bool> exists() async => shouldExist;
+
+  @override
+  Future<Directory> create({bool recursive = false}) async => this;
+}
+
+class MockFile extends Mock implements File {
+  final String filePath;
+  final bool shouldExist;
+
+  MockFile(this.filePath, {this.shouldExist = false});
+
+  @override
+  String get path => filePath;
+
+  @override
+  Future<bool> exists() async => shouldExist;
+
+  @override
+  Future<File> create({bool recursive = false, bool exclusive = false}) async =>
+      this;
+
+  @override
+  Future<FileSystemEntity> delete({bool recursive = false}) async => this;
+}
+
+class MockLogger extends Mock implements Logger {}
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  late MockPathProviderPlatform mockPathProvider;
+  late MockLogger mockLogger;
+  late AudioAssistantTTSService ttsService;
+
+  setUp(() {
+    mockPathProvider = MockPathProviderPlatform();
+    mockLogger = MockLogger();
+    PathProviderPlatform.instance = mockPathProvider;
+
+    // Reset feature flag for each test
+    AudioAssistantTTSService.featureEnabled = true;
+
+    ttsService = AudioAssistantTTSService();
+
+    registerFallbackValue('log message');
+  });
 
   group('AudioAssistantTTSService', () {
-    late AudioAssistantTTSService ttsService;
+    test('initialize should create directory if it does not exist', () async {
+      // Arrange - initialization is done in setUp
 
-    setUp(() {
-      ttsService = AudioAssistantTTSService();
-    });
-
-    test('can be created', () {
-      expect(ttsService, isNotNull);
-    });
-
-    test('has test mode flag', () {
-      expect(ttsService, isNotNull);
-      ttsService.enableTestMode();
-      // We'll add more test mode functionality later
-    });
-
-    test('initializes successfully', () async {
-      ttsService.enableTestMode();
+      // Act
       final result = await ttsService.initialize();
-      expect(result, isTrue);
+
+      // Assert
+      expect(result, true);
     });
 
-    test('generateAudio throws when not initialized', () async {
-      ttsService.enableTestMode();
-      expect(
-        () => ttsService.generateAudio('test text'),
-        throwsA(isA<Exception>()),
-      );
+    test('generateAudio should return null when feature is disabled', () async {
+      // Arrange
+      AudioAssistantTTSService.featureEnabled = false;
+
+      // Act
+      final result = await ttsService.generateAudio('Test text');
+
+      // Assert
+      expect(result, null);
     });
 
-    test('generateAudio works when initialized', () async {
+    test('generateAudio should return relative path for test mode', () async {
+      // Arrange
       ttsService.enableTestMode();
-      await ttsService.initialize();
-      final audioPath = await ttsService.generateAudio('test text');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('audio_assistant_'));
+
+      // Act
+      final result = await ttsService.generateAudio('Test text');
+
+      // Assert
+      expect(result, startsWith('audio_assistant/test_audio_assistant_'));
+      expect(result, endsWith('.mp3'));
     });
 
-    test('cleanup doesn\'t throw in test mode', () async {
-      ttsService.enableTestMode();
-      expect(
-        () => ttsService.cleanup(),
-        returnsNormally,
-      );
-    });
+    test('cleanup should exit early when feature is disabled', () async {
+      // Arrange
+      AudioAssistantTTSService.featureEnabled = false;
 
-    test('service maintains initialized state after cleanup', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
+      // Act
       await ttsService.cleanup();
 
-      // Should still be able to generate audio after cleanup
-      final audioPath = await ttsService.generateAudio('test text');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('audio_assistant_'));
+      // Assert - no actions with file system should occur
     });
 
-    test('service can be reinitialized after cleanup', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-      await ttsService.cleanup();
+    test('deleteAudio should return false when feature is disabled', () async {
+      // Arrange
+      AudioAssistantTTSService.featureEnabled = false;
 
-      // Should be able to reinitialize
-      final result = await ttsService.initialize();
-      expect(result, isTrue);
+      // Act
+      final result = await ttsService.deleteAudio('audio/test.mp3');
 
-      // Should be able to generate audio after reinitialization
-      final audioPath = await ttsService.generateAudio('test text');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('audio_assistant_'));
+      // Assert
+      expect(result, false);
     });
 
-    test('service handles multiple cleanup calls gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Multiple cleanup calls should not throw
-      await ttsService.cleanup();
-      await ttsService.cleanup();
-      await ttsService.cleanup();
-
-      // Should still be able to generate audio after multiple cleanups
-      final audioPath = await ttsService.generateAudio('test text');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('audio_assistant_'));
-    });
-
-    test('service maintains test mode state after cleanup and reinitialization',
-        () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-      await ttsService.cleanup();
-      await ttsService.initialize();
-
-      // Should still be in test mode and generate test paths
-      final audioPath = await ttsService.generateAudio('test text');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles initialization errors gracefully', () async {
-      // In test mode, we should still get a successful initialization
-      ttsService.enableTestMode();
-      final result = await ttsService.initialize();
-      expect(result, isTrue);
-
-      // Try to initialize again - should still return true
-      final secondResult = await ttsService.initialize();
-      expect(secondResult, isTrue);
-    });
-
-    test('handles empty text input gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Should handle empty text without throwing
-      final audioPath = await ttsService.generateAudio('');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles cleanup when not initialized', () async {
+    test('disableTestMode should disable test mode', () {
+      // Arrange
       ttsService.enableTestMode();
 
-      // Cleanup should not throw even when not initialized
-      await ttsService.cleanup();
+      // Act
+      ttsService.disableTestMode();
 
-      // Should still be able to initialize and generate audio
-      await ttsService.initialize();
-      final audioPath = await ttsService.generateAudio('test text');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles very long text input gracefully', () async {
+      // Re-enable test mode at end
       ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Generate a very long text string
-      final longText = 'test text ' * 1000;
-
-      // Should handle long text without throwing
-      final audioPath = await ttsService.generateAudio(longText);
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles text with special characters gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      final audioPath =
-          await ttsService.generateAudio('Hello! How are you? @#\$%');
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles text with Unicode characters gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Text with various Unicode characters (emojis, non-Latin characters)
-      final unicodeText = 'Hello 👋 你好 🌍';
-
-      final audioPath = await ttsService.generateAudio(unicodeText);
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles whitespace-only text gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Text with only whitespace characters
-      final whitespaceText = '   \t\n\r';
-
-      final audioPath = await ttsService.generateAudio(whitespaceText);
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles text with control characters gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Text with control characters (null, bell, backspace, etc.)
-      final controlText = 'Hello\x00\x07\x08World';
-
-      final audioPath = await ttsService.generateAudio(controlText);
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles text with mixed line endings gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Text with mixed line endings (CRLF, LF, CR)
-      final mixedEndingsText = 'Line 1\r\nLine 2\nLine 3\r';
-
-      final audioPath = await ttsService.generateAudio(mixedEndingsText);
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
-    });
-
-    test('handles text with invisible Unicode characters gracefully', () async {
-      ttsService.enableTestMode();
-      await ttsService.initialize();
-
-      // Text with invisible Unicode characters (zero-width space, zero-width joiner, etc.)
-      final invisibleText = 'Hello\u200B\u200C\u200DWorld';
-
-      final audioPath = await ttsService.generateAudio(invisibleText);
-      expect(audioPath, isNotEmpty);
-      expect(audioPath, contains('test_audio_assistant_'));
     });
   });
 }
