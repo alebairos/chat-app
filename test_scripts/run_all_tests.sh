@@ -14,6 +14,7 @@ chmod +x test_scripts/run_test_group2.sh
 chmod +x test_scripts/run_test_group3.sh
 chmod +x test_scripts/run_test_group4.sh
 chmod +x test_scripts/run_test_group5.sh
+chmod +x test_scripts/run_test_group6.sh
 
 # Run each test group
 echo "Starting Test Group 1..."
@@ -39,6 +40,11 @@ echo ""
 echo "Starting Test Group 5..."
 ./test_scripts/run_test_group5.sh
 GROUP5_STATUS=$?
+echo ""
+
+echo "Starting Test Group 6..."
+./test_scripts/run_test_group6.sh
+GROUP6_STATUS=$?
 echo ""
 
 echo "All test groups completed at: $(date)"
@@ -101,8 +107,19 @@ else
 fi
 echo "" >> test_scripts/results/test_summary.txt
 
+echo "Group 6: Path Utils and Utility Tests" >> test_scripts/results/test_summary.txt
+if [ $GROUP6_STATUS -eq 0 ] && ! grep -q "Some tests failed" test_scripts/results/test_results_group6.txt; then
+  echo "✅ All tests passed" >> test_scripts/results/test_summary.txt
+else
+  echo "❌ Some tests failed" >> test_scripts/results/test_summary.txt
+  # Extract failing test information
+  grep -A 5 "The following tests failed" test_scripts/results/test_results_group6.txt >> test_scripts/results/test_summary.txt 2>/dev/null
+fi
+echo "" >> test_scripts/results/test_summary.txt
+
 # Overall status
-if [ $GROUP1_STATUS -eq 0 ] && [ $GROUP2_STATUS -eq 0 ] && [ $GROUP3_STATUS -eq 0 ] && [ $GROUP4_STATUS -eq 0 ] && [ $GROUP5_STATUS -eq 0 ] && 
+if [ $GROUP1_STATUS -eq 0 ] && [ $GROUP2_STATUS -eq 0 ] && [ $GROUP3_STATUS -eq 0 ] && 
+   [ $GROUP4_STATUS -eq 0 ] && [ $GROUP5_STATUS -eq 0 ] && [ $GROUP6_STATUS -eq 0 ] && 
    ! grep -q "Some tests failed" test_scripts/results/test_results_group*.txt; then
   echo "✅ ALL TEST GROUPS PASSED!" >> test_scripts/results/test_summary.txt
 else
@@ -112,7 +129,8 @@ fi
 echo "Test summary saved to test_scripts/results/test_summary.txt"
 
 # Print overall status to console
-if [ $GROUP1_STATUS -eq 0 ] && [ $GROUP2_STATUS -eq 0 ] && [ $GROUP3_STATUS -eq 0 ] && [ $GROUP4_STATUS -eq 0 ] && [ $GROUP5_STATUS -eq 0 ] && 
+if [ $GROUP1_STATUS -eq 0 ] && [ $GROUP2_STATUS -eq 0 ] && [ $GROUP3_STATUS -eq 0 ] && 
+   [ $GROUP4_STATUS -eq 0 ] && [ $GROUP5_STATUS -eq 0 ] && [ $GROUP6_STATUS -eq 0 ] && 
    ! grep -q "Some tests failed" test_scripts/results/test_results_group*.txt; then
   echo "✅ ALL TEST GROUPS PASSED!"
 else

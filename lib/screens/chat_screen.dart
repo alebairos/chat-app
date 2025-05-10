@@ -50,8 +50,24 @@ class _ChatScreenState extends State<ChatScreen> {
     _storageService = widget.storageService ?? ChatStorageService();
     _currentPersona = _configLoader.activePersonaDisplayName;
     _checkEnvironment();
-    _loadMessages();
+    _initializeStorage();
     _setupScrollListener();
+  }
+
+  Future<void> _initializeStorage() async {
+    try {
+      // Migrate any existing absolute paths to relative paths
+      await _storageService.migratePathsToRelative();
+
+      // Then load messages
+      await _loadMessages();
+    } catch (e) {
+      setState(() {
+        _error = 'Error initializing storage: $e';
+        _isInitialLoading = false;
+      });
+      _logger.error('Error initializing storage: $e');
+    }
   }
 
   @override
@@ -99,7 +115,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _error = 'Error loading messages: $e';
         _isInitialLoading = false;
       });
-      debugPrint('Error loading messages: $e');
+      _logger.error('Error loading messages: $e');
     }
   }
 

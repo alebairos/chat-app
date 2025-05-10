@@ -1,0 +1,5621 @@
+--- ./lib/test/claude_test.dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/claude_service.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  late ClaudeService claudeService;
+
+  setUpAll(() async {
+    await dotenv.load(fileName: '.env');
+    claudeService = ClaudeService();
+  });
+
+  test('Claude responds with proper formatting and emoticons', () async {
+    final response = await claudeService.sendMessage('Hi');
+
+    // Check if response contains formatting elements
+    expect(response.contains('*'), isTrue,
+        reason: 'Should contain gestures in asterisks');
+    expect(
+        response.contains('🤔') ||
+            response.contains('💭') ||
+            response.contains('⚔️') ||
+            response.contains('🌟'),
+        isTrue,
+        reason: 'Should contain at least one emoticon');
+
+    print('Claude Response:\n$response');
+  });
+}
+-e \n
+--- ./lib/config/config_loader.dart
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'character_config_manager.dart';
+
+class ConfigLoader {
+  Future<String> Function() _loadSystemPromptImpl = _defaultLoadSystemPrompt;
+  Future<Map<String, String>> Function() _loadExplorationPromptsImpl =
+      _defaultLoadExplorationPrompts;
+
+  final CharacterConfigManager _characterManager = CharacterConfigManager();
+
+  Future<String> loadSystemPrompt() async {
+    return _loadSystemPromptImpl();
+  }
+
+  Future<Map<String, String>> loadExplorationPrompts() async {
+    return _loadExplorationPromptsImpl();
+  }
+
+  static Future<String> _defaultLoadSystemPrompt() async {
+    try {
+      final characterManager = CharacterConfigManager();
+      return await characterManager.loadSystemPrompt();
+    } catch (e) {
+      print('Error loading system prompt: $e');
+      throw Exception('Failed to load system prompt');
+    }
+  }
+
+  static Future<Map<String, String>> _defaultLoadExplorationPrompts() async {
+    try {
+      final characterManager = CharacterConfigManager();
+      return await characterManager.loadExplorationPrompts();
+    } catch (e) {
+      print('Error loading exploration prompts: $e');
+      throw Exception('Failed to load exploration prompts');
+    }
+  }
+
+  @visibleForTesting
+  void setLoadSystemPromptImpl(Future<String> Function() impl) {
+    _loadSystemPromptImpl = impl;
+  }
+
+  @visibleForTesting
+  void setLoadExplorationPromptsImpl(
+      Future<Map<String, String>> Function() impl) {
+    _loadExplorationPromptsImpl = impl;
+  }
+
+  /// Get the currently active character persona
+  CharacterPersona get activePersona => _characterManager.activePersona;
+
+  /// Set the active character persona
+  void setActivePersona(CharacterPersona persona) {
+    _characterManager.setActivePersona(persona);
+  }
+
+  /// Get the display name for the active persona
+  String get activePersonaDisplayName => _characterManager.personaDisplayName;
+
+  /// Get a list of all available personas
+  List<Map<String, dynamic>> get availablePersonas =>
+      _characterManager.availablePersonas;
+}
+-e \n
+--- ./lib/config/character_config_manager.dart
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
+
+/// Enum representing the available character personas
+enum CharacterPersona { personalDevelopmentAssistant, sergeantOracle, zenGuide }
+
+/// Class to manage character configurations and allow switching between personas
+class CharacterConfigManager {
+  static final CharacterConfigManager _instance =
+      CharacterConfigManager._internal();
+  factory CharacterConfigManager() => _instance;
+  CharacterConfigManager._internal();
+
+  /// The currently active character persona
+  CharacterPersona _activePersona =
+      CharacterPersona.personalDevelopmentAssistant;
+
+  /// Get the currently active character persona
+  CharacterPersona get activePersona => _activePersona;
+
+  /// Set the active character persona
+  void setActivePersona(CharacterPersona persona) {
+    _activePersona = persona;
+  }
+
+  /// Get the configuration file path for the active persona
+  String get configFilePath {
+    switch (_activePersona) {
+      case CharacterPersona.personalDevelopmentAssistant:
+        return 'lib/config/claude_config.json';
+      case CharacterPersona.sergeantOracle:
+        return 'lib/config/sergeant_oracle_config.json';
+      case CharacterPersona.zenGuide:
+        return 'lib/config/zen_guide_config.json';
+    }
+  }
+
+  /// Get the display name for the active persona
+  String get personaDisplayName {
+    switch (_activePersona) {
+      case CharacterPersona.personalDevelopmentAssistant:
+        return 'Personal Development Assistant';
+      case CharacterPersona.sergeantOracle:
+        return 'Sergeant Oracle';
+      case CharacterPersona.zenGuide:
+        return 'The Zen Guide';
+    }
+  }
+
+  /// Load the system prompt for the active persona
+  Future<String> loadSystemPrompt() async {
+    try {
+      final String jsonString = await rootBundle.loadString(configFilePath);
+      final Map<String, dynamic> jsonMap = json.decode(jsonString);
+      return jsonMap['system_prompt']['content'] as String;
+    } catch (e) {
+      print('Error loading system prompt: $e');
+      throw Exception('Failed to load system prompt for $personaDisplayName');
+    }
+  }
+
+  /// Load the exploration prompts for the active persona
+  Future<Map<String, String>> loadExplorationPrompts() async {
+    try {
+      final String jsonString = await rootBundle.loadString(configFilePath);
+      final Map<String, dynamic> jsonMap = json.decode(jsonString);
+
+      if (jsonMap['exploration_prompts'] == null) {
+        throw Exception('Exploration prompts not found in config');
+      }
+
+      final Map<String, dynamic> promptsMap =
+          jsonMap['exploration_prompts'] as Map<String, dynamic>;
+      return promptsMap.map((key, value) => MapEntry(key, value as String));
+    } catch (e) {
+      print('Error loading exploration prompts: $e');
+      throw Exception(
+          'Failed to load exploration prompts for $personaDisplayName');
+    }
+  }
+
+  /// Get a list of all available personas with their display names and descriptions
+  List<Map<String, dynamic>> get availablePersonas {
+    return [
+      {
+        'displayName': 'Personal Development Assistant',
+        'description':
+            'Empathetic and encouraging guide focused on practical solutions for achieving goals through positive habits.'
+      },
+      {
+        'displayName': 'Sergeant Oracle',
+        'description':
+            'Roman time-traveler with military precision and ancient wisdom, combining historical insights with futuristic perspective.'
+      },
+      {
+        'displayName': 'The Zen Guide',
+        'description':
+            'Calm and mindful mentor with Eastern wisdom traditions, focusing on balance, mindfulness, and inner peace.'
+      }
+    ];
+  }
+}
+-e \n
+--- ./lib/features/audio_assistant/tts_service.dart
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import '../../utils/logger.dart';
+
+/// Service responsible for converting text to speech
+class AudioAssistantTTSService {
+  final Logger _logger = Logger();
+  bool _isInitialized = false;
+  bool _isTestMode = false;
+
+  /// Initialize the TTS service
+  Future<bool> initialize() async {
+    if (!_isInitialized) {
+      try {
+        if (!_isTestMode) {
+          // For now, we'll just create a mock audio file
+          final dir = await getApplicationDocumentsDirectory();
+          final mockAudioPath = '${dir.path}/mock_audio.mp3';
+
+          // Create an empty file for testing
+          final file = File(mockAudioPath);
+          if (!await file.exists()) {
+            await file.create();
+          }
+        }
+
+        _isInitialized = true;
+        _logger.debug('Audio Assistant TTS Service initialized successfully');
+        return true;
+      } catch (e) {
+        _logger.error('Failed to initialize Audio Assistant TTS Service: $e');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Convert text to speech and return the path to the audio file
+  Future<String> generateAudio(String text) async {
+    if (!_isInitialized) {
+      if (_isTestMode) {
+        throw Exception('Audio Assistant TTS Service not initialized');
+      }
+      final initialized = await initialize();
+      if (!initialized) {
+        throw Exception('Audio Assistant TTS Service not initialized');
+      }
+    }
+
+    try {
+      if (_isTestMode) {
+        return 'test_audio_assistant_${DateTime.now().millisecondsSinceEpoch}.mp3';
+      }
+
+      final dir = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final audioPath = '${dir.path}/audio_assistant_$timestamp.mp3';
+
+      // For now, we'll just create an empty file
+      final file = File(audioPath);
+      await file.create();
+
+      _logger.debug('Generated audio assistant audio file at: $audioPath');
+      return audioPath;
+    } catch (e) {
+      _logger.error('Failed to generate audio assistant audio: $e');
+      throw Exception('Failed to generate audio assistant audio: $e');
+    }
+  }
+
+  /// Clean up any temporary audio files
+  Future<void> cleanup() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final files = dir.listSync().where((file) =>
+          file.path.endsWith('.mp3') && file.path.contains('audio_assistant_'));
+
+      for (final file in files) {
+        await file.delete();
+      }
+
+      _logger.debug('Cleaned up audio assistant temporary audio files');
+    } catch (e) {
+      _logger.error('Failed to cleanup audio assistant audio files: $e');
+    }
+  }
+
+  /// Enable test mode for testing
+  void enableTestMode() {
+    _isTestMode = true;
+  }
+}
+-e \n
+--- ./lib/utils/logger.dart
+import 'package:flutter/foundation.dart';
+
+/// A utility class for controlling logging throughout the app.
+class Logger {
+  /// Singleton instance
+  static final Logger _instance = Logger._internal();
+  factory Logger() => _instance;
+  Logger._internal();
+
+  /// Whether logging is enabled
+  bool _isEnabled = false;
+
+  /// Whether to log startup events (data loading, initialization)
+  bool _logStartupEvents = false;
+
+  /// Enable or disable all logging
+  void setLogging(bool enabled) {
+    _isEnabled = enabled;
+  }
+
+  /// Enable or disable logging of startup events specifically
+  void setStartupLogging(bool enabled) {
+    _logStartupEvents = enabled;
+  }
+
+  /// Check if startup logging is enabled
+  bool isStartupLoggingEnabled() {
+    return _isEnabled && _logStartupEvents;
+  }
+
+  /// Log a message if logging is enabled
+  void log(String message) {
+    if (_isEnabled) {
+      print(message);
+    }
+  }
+
+  /// Log a startup-related message if startup logging is enabled
+  void logStartup(String message) {
+    if (_isEnabled && _logStartupEvents) {
+      print('🚀 [STARTUP] $message');
+    }
+  }
+
+  /// Log an error message if logging is enabled
+  void error(String message) {
+    if (_isEnabled) {
+      print('❌ [ERROR] $message');
+    }
+  }
+
+  /// Log a warning message if logging is enabled
+  void warning(String message) {
+    if (_isEnabled) {
+      print('⚠️ [WARNING] $message');
+    }
+  }
+
+  /// Log an info message if logging is enabled
+  void info(String message) {
+    if (_isEnabled) {
+      print('ℹ️ [INFO] $message');
+    }
+  }
+
+  /// Log a debug message if logging is enabled and in debug mode
+  void debug(String message) {
+    if (_isEnabled && kDebugMode) {
+      print('🔍 [DEBUG] $message');
+    }
+  }
+}
+-e \n
+--- ./lib/life_plan/models/life_plan_response.dart
+import 'package:flutter/foundation.dart';
+
+/// Represents a formatted response from the life plan system
+@immutable
+class LifePlanResponse {
+  final String message;
+  final bool isError;
+
+  const LifePlanResponse({
+    required this.message,
+    this.isError = false,
+  });
+
+  /// Creates an error response
+  factory LifePlanResponse.error(String message) {
+    return LifePlanResponse(
+      message: message,
+      isError: true,
+    );
+  }
+
+  /// Creates the welcome message with options
+  factory LifePlanResponse.welcome() {
+    final buffer = StringBuffer()
+      ..writeln(
+          'Olá! Sou seu assistente pessoal de desenvolvimento e estou aqui para ajudar você a criar novos hábitos positivos e alcançar seus objetivos.')
+      ..writeln(
+          'Durante nossa conversa, você pode pedir mais informações sobre qualquer trilha, desafio ou hábito mencionado.')
+      ..writeln('Como posso ajudar você hoje?')
+      ..writeln()
+      ..writeln(
+          'a. Objetivo Definido - Encontrar um desafio ideal baseado em seu objetivo específico')
+      ..writeln(
+          'b. Rotina Personalizada - Criar uma rotina personalizada do zero')
+      ..writeln('c. Explorar Catálogo - Explorar nosso catálogo de desafios')
+      ..writeln(
+          'd. Transformar Hábitos - Transformar hábitos negativos em positivos');
+
+    return LifePlanResponse(message: buffer.toString());
+  }
+
+  /// Creates the objective-based flow initial response
+  factory LifePlanResponse.objectiveBased() {
+    return const LifePlanResponse(
+      message: 'Qual é seu objetivo específico?',
+    );
+  }
+
+  /// Creates the custom routine flow initial response
+  factory LifePlanResponse.customRoutine() {
+    final buffer = StringBuffer()
+      ..writeln('Quais dimensões da vida você quer priorizar?')
+      ..writeln()
+      ..writeln('Você pode escolher até 3 opções:')
+      ..writeln('- Saúde Física')
+      ..writeln('- Saúde Mental')
+      ..writeln('- Relacionamentos')
+      ..writeln('- Trabalho')
+      ..writeln('- Espiritualidade');
+
+    return LifePlanResponse(message: buffer.toString());
+  }
+
+  /// Creates the catalog exploration flow initial response
+  factory LifePlanResponse.exploreCatalog() {
+    final buffer = StringBuffer()
+      ..writeln(
+          'Nosso catálogo de desafios está organizado por dimensões da vida:')
+      ..writeln()
+      ..writeln('1. Saúde Física (SF)')
+      ..writeln('2. Saúde Mental (SM)')
+      ..writeln('3. Relacionamentos (R)')
+      ..writeln('4. Espiritualidade (E)')
+      ..writeln('5. Trabalho Gratificante (TG)')
+      ..writeln()
+      ..writeln('Qual dimensão você gostaria de explorar?');
+
+    return LifePlanResponse(message: buffer.toString());
+  }
+
+  /// Creates the habit transformation flow initial response
+  factory LifePlanResponse.transformHabits() {
+    return const LifePlanResponse(
+      message: 'Qual hábito negativo você gostaria de transformar em positivo?',
+    );
+  }
+
+  /// Creates a response for assessing experience level
+  factory LifePlanResponse.assessLevel(String dimension) {
+    return const LifePlanResponse(
+      message: 'Você já tem experiência com hábitos nesta área?\n\n'
+          '- Iniciante - Estou começando agora\n'
+          '- Intermediário - Já tenho alguns hábitos\n'
+          '- Avançado - Busco desafios maiores',
+    );
+  }
+
+  /// Creates a response for suggesting a track
+  factory LifePlanResponse.suggestTrack(
+      String trackName, String trackDescription) {
+    return LifePlanResponse(
+      message:
+          'Baseado no seu objetivo e nível de experiência, recomendo a trilha: '
+          '$trackName\n\n$trackDescription\n\n'
+          'Gostaria de seguir com este desafio ou personalizar algum aspecto?',
+    );
+  }
+
+  /// Creates a response for challenge customization options
+  factory LifePlanResponse.challengeCustomization() {
+    return const LifePlanResponse(
+      message: 'Como você gostaria de personalizar este desafio?\n\n'
+          '- Frequência dos hábitos\n'
+          '- Intensidade do desafio\n'
+          '- Adicionar/remover hábitos',
+    );
+  }
+
+  /// Creates a help response with all available options
+  factory LifePlanResponse.help() {
+    final buffer = StringBuffer()
+      ..writeln('Como posso ajudar você hoje?')
+      ..writeln()
+      ..writeln(
+          'a. Objetivo Definido - Encontrar um desafio ideal baseado em seu objetivo específico')
+      ..writeln(
+          'b. Rotina Personalizada - Criar uma rotina personalizada do zero')
+      ..writeln('c. Explorar Catálogo - Explorar nosso catálogo de desafios')
+      ..writeln(
+          'd. Transformar Hábitos - Transformar hábitos negativos em positivos');
+
+    return LifePlanResponse(message: buffer.toString());
+  }
+
+  /// Creates an unknown command response
+  factory LifePlanResponse.unknown() {
+    return LifePlanResponse.error(
+      'Não entendi sua solicitação. Por favor, escolha uma das opções disponíveis ou digite "ajuda" para ver as opções.',
+    );
+  }
+}
+-e \n
+--- ./lib/life_plan/models/life_plan_command.dart
+import 'package:flutter/foundation.dart';
+import '../../models/life_plan/dimensions.dart';
+
+/// Represents the different types of life plan commands available
+enum LifePlanCommandType {
+  plan,
+  explore,
+  help,
+  unknown;
+
+  String get command => '/${name.toLowerCase()}';
+
+  static final Set<String> validCommands = {'/plan', '/explore', '/help'};
+}
+
+/// Represents a life plan dimension
+/// @deprecated Use Dimension class from dimensions.dart instead
+enum LifePlanDimension {
+  physical(Dimensions.physical),
+  mental(Dimensions.mental),
+  relationships(Dimensions.relationships),
+  spirituality(Dimensions.spirituality),
+  work(Dimensions.work);
+
+  final Dimension dimension;
+
+  const LifePlanDimension(this.dimension);
+
+  String get code => dimension.code;
+  String get emoji => dimension.emoji;
+  String get title => dimension.title;
+  String get description => dimension.description;
+
+  static LifePlanDimension? fromCode(String code) {
+    final dimension = Dimensions.fromCode(code);
+    if (dimension == null) {
+      throw ArgumentError('Invalid dimension code: $code');
+    }
+
+    return LifePlanDimension.values.firstWhere(
+      (d) => d.code == dimension.code,
+      orElse: () => throw ArgumentError('Invalid dimension code: $code'),
+    );
+  }
+}
+
+/// Represents a parsed life plan command
+@immutable
+class LifePlanCommand {
+  final LifePlanCommandType type;
+  final LifePlanDimension? dimension;
+
+  const LifePlanCommand({
+    required this.type,
+    this.dimension,
+  });
+
+  /// Creates a command from raw text input
+  factory LifePlanCommand.fromText(String text) {
+    final parts = text.trim().split(' ');
+    final command = parts[0].toLowerCase();
+
+    switch (command) {
+      case '/plan':
+        return const LifePlanCommand(type: LifePlanCommandType.plan);
+      case '/explore':
+        if (parts.length < 2) {
+          return const LifePlanCommand(type: LifePlanCommandType.explore);
+        }
+        try {
+          final dimension = LifePlanDimension.fromCode(parts[1]);
+          return LifePlanCommand(
+              type: LifePlanCommandType.explore, dimension: dimension);
+        } catch (_) {
+          return const LifePlanCommand(type: LifePlanCommandType.explore);
+        }
+      case '/help':
+        return const LifePlanCommand(type: LifePlanCommandType.help);
+      default:
+        // Unknown commands should be treated as unknown, not help
+        return const LifePlanCommand(type: LifePlanCommandType.unknown);
+    }
+  }
+
+  /// Checks if the given text is a life plan command
+  static bool isCommand(String text) {
+    final command = text.trim().split(' ')[0].toLowerCase();
+    return LifePlanCommandType.validCommands.contains(command);
+  }
+}
+-e \n
+--- ./lib/life_plan/services/life_plan_command_handler.dart
+import '../models/life_plan_command.dart';
+import '../models/life_plan_response.dart';
+import '../../services/claude_service.dart';
+import '../../config/config_loader.dart';
+import 'package:flutter/foundation.dart';
+
+/// Handles life plan commands and generates appropriate responses
+class LifePlanCommandHandler {
+  final ClaudeService _claudeService;
+  final ConfigLoader _configLoader;
+  bool _isInPlanningMode = false;
+  Map<String, String>? _explorationPrompts;
+
+  LifePlanCommandHandler({
+    required ClaudeService claudeService,
+    ConfigLoader? configLoader,
+  })  : _claudeService = claudeService,
+        _configLoader = configLoader ?? ConfigLoader() {
+    debugPrint('🔧 LifePlanCommandHandler initialized');
+    _loadExplorationPrompts();
+  }
+
+  /// Loads exploration prompts from configuration
+  Future<void> _loadExplorationPrompts() async {
+    try {
+      _explorationPrompts = await _configLoader.loadExplorationPrompts();
+      debugPrint('✅ Exploration prompts loaded successfully');
+    } catch (e) {
+      debugPrint('❌ Error loading exploration prompts: $e');
+      // Set default prompts as fallback
+      _explorationPrompts = {
+        'physical': 'Tell me about physical health improvement paths.',
+        'mental': 'Share mental wellbeing journeys available.',
+        'relationships': 'Reveal paths to stronger relationships.',
+        'spirituality': 'Illuminate the paths to spiritual growth and purpose.',
+        'work':
+            'Outline the journeys toward professional excellence and work-life harmony.'
+      };
+    }
+  }
+
+  /// Checks if the given text is a life plan command or dimension code
+  bool isLifePlanCommand(String text) {
+    final isCommand = LifePlanCommand.isCommand(text);
+    if (!isCommand && _isInPlanningMode) {
+      // Check if it's a dimension code while in planning mode
+      try {
+        LifePlanDimension.fromCode(text);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+    debugPrint(
+        '🔍 Checking if text is a command: "$text" -> ${isCommand ? 'yes' : 'no'}');
+    return isCommand;
+  }
+
+  /// Handles a life plan command and returns a response
+  Future<String> handleCommand(String text) async {
+    debugPrint('\n🎮 Handling command: "$text"');
+    try {
+      // Ensure prompts are loaded
+      if (_explorationPrompts == null) {
+        await _loadExplorationPrompts();
+      }
+
+      LifePlanCommand command;
+
+      // Check if it's a dimension code while in planning mode
+      if (_isInPlanningMode && !text.startsWith('/')) {
+        try {
+          final dimension = LifePlanDimension.fromCode(text);
+          command = LifePlanCommand(
+            type: LifePlanCommandType.explore,
+            dimension: dimension,
+          );
+        } catch (_) {
+          _isInPlanningMode = false;
+          return LifePlanResponse.error(
+                  '*adjusts spectacles* `🧐` Invalid dimension code. Type /help for available commands.')
+              .message;
+        }
+      } else if (!text.startsWith('/')) {
+        // If it's not a command and not in planning mode, treat as help request
+        command = const LifePlanCommand(type: LifePlanCommandType.help);
+      } else {
+        command = LifePlanCommand.fromText(text);
+      }
+
+      debugPrint('📋 Parsed command type: ${command.type}');
+      if (command.dimension != null) {
+        debugPrint('🎯 Command dimension: ${command.dimension!.code}');
+      }
+
+      LifePlanResponse response;
+
+      switch (command.type) {
+        case LifePlanCommandType.plan:
+          debugPrint('📝 Generating plan response');
+          _isInPlanningMode = true;
+          response = LifePlanResponse.welcome();
+          break;
+
+        case LifePlanCommandType.explore:
+          if (command.dimension == null) {
+            debugPrint('⚠️ No dimension specified for explore command');
+            response = LifePlanResponse.exploreCatalog();
+          } else {
+            debugPrint('🔍 Exploring dimension: ${command.dimension!.title}');
+            try {
+              final prompt = _getExplorationPrompt(command.dimension!);
+              debugPrint('🤖 Sending exploration prompt to Claude');
+              final claudeResponse = await _claudeService.sendMessage(prompt);
+              debugPrint('✅ Received response from Claude');
+              _isInPlanningMode = false;
+              response = LifePlanResponse(message: claudeResponse);
+            } catch (e) {
+              debugPrint('❌ Error getting response from Claude: $e');
+              _isInPlanningMode = false;
+              response = LifePlanResponse.error(
+                  '*adjusts spectacles* `🧐` Error getting response from Claude: $e');
+            }
+          }
+          break;
+
+        case LifePlanCommandType.help:
+          debugPrint('❓ Generating help response');
+          _isInPlanningMode = false;
+          response = LifePlanResponse.help();
+          break;
+
+        default:
+          debugPrint('❓ Generating help response for unknown command');
+          _isInPlanningMode = false;
+          final buffer = StringBuffer()
+            ..writeln(
+                '*unfurls ancient scroll* `📜` Unknown command. Here are the available commands:')
+            ..writeln()
+            ..writeln('/plan - Start life planning')
+            ..writeln('/explore SF - Explore the Physical Health dimension')
+            ..writeln('/explore SM - Explore the Mental Health dimension')
+            ..writeln('/explore R - Explore the Relationships dimension')
+            ..writeln('/explore E - Explore the Spirituality dimension')
+            ..writeln('/explore TG - Explore the Rewarding Work dimension')
+            ..writeln('/help - Show this help message');
+
+          response = LifePlanResponse(message: buffer.toString());
+          break;
+      }
+
+      debugPrint('✅ Command handled successfully');
+      return response.message;
+    } catch (e) {
+      debugPrint('❌ Error processing command: $e');
+      _isInPlanningMode = false;
+      return LifePlanResponse.error(
+              '*adjusts spectacles* `🧐` Error processing command: $e')
+          .message;
+    }
+  }
+
+  /// Generates a prompt for exploring a specific dimension
+  String _getExplorationPrompt(LifePlanDimension dimension) {
+    debugPrint(
+        '📝 Generating exploration prompt for dimension: ${dimension.title}');
+
+    // Get prompt from configuration based on dimension
+    String? prompt;
+    switch (dimension) {
+      case LifePlanDimension.physical:
+        prompt = _explorationPrompts?['physical'];
+        break;
+      case LifePlanDimension.mental:
+        prompt = _explorationPrompts?['mental'];
+        break;
+      case LifePlanDimension.relationships:
+        prompt = _explorationPrompts?['relationships'];
+        break;
+      case LifePlanDimension.spirituality:
+        prompt = _explorationPrompts?['spirituality'];
+        break;
+      case LifePlanDimension.work:
+        prompt = _explorationPrompts?['work'];
+        break;
+    }
+
+    // If prompt is not found in configuration, use a default prompt
+    if (prompt == null || prompt.isEmpty) {
+      debugPrint(
+          '⚠️ Exploration prompt not found in configuration, using default');
+      prompt =
+          "As Sergeant Oracle, tell me about the available paths for ${dimension.title.toLowerCase()} improvement. Use only data from the MCP database.";
+    }
+
+    debugPrint(
+        '✅ Generated prompt: ${prompt.substring(0, prompt.length.clamp(0, 100))}...');
+    return prompt;
+  }
+}
+-e \n
+--- ./lib/models/message_type.dart
+enum MessageType {
+  text,
+  audio,
+  image,
+}
+-e \n
+--- ./lib/models/chat_message_model.g.dart
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'chat_message_model.dart';
+
+// **************************************************************************
+// IsarCollectionGenerator
+// **************************************************************************
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetChatMessageModelCollection on Isar {
+  IsarCollection<ChatMessageModel> get chatMessageModels => this.collection();
+}
+
+const ChatMessageModelSchema = CollectionSchema(
+  name: r'ChatMessageModel',
+  id: 3821037901158827866,
+  properties: {
+    r'durationInMillis': PropertySchema(
+      id: 0,
+      name: r'durationInMillis',
+      type: IsarType.long,
+    ),
+    r'isUser': PropertySchema(
+      id: 1,
+      name: r'isUser',
+      type: IsarType.bool,
+    ),
+    r'mediaData': PropertySchema(
+      id: 2,
+      name: r'mediaData',
+      type: IsarType.byteList,
+    ),
+    r'mediaPath': PropertySchema(
+      id: 3,
+      name: r'mediaPath',
+      type: IsarType.string,
+    ),
+    r'text': PropertySchema(
+      id: 4,
+      name: r'text',
+      type: IsarType.string,
+    ),
+    r'timestamp': PropertySchema(
+      id: 5,
+      name: r'timestamp',
+      type: IsarType.dateTime,
+    ),
+    r'type': PropertySchema(
+      id: 6,
+      name: r'type',
+      type: IsarType.byte,
+      enumMap: _ChatMessageModeltypeEnumValueMap,
+    )
+  },
+  estimateSize: _chatMessageModelEstimateSize,
+  serialize: _chatMessageModelSerialize,
+  deserialize: _chatMessageModelDeserialize,
+  deserializeProp: _chatMessageModelDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'timestamp': IndexSchema(
+      id: 1852253767416892198,
+      name: r'timestamp',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'timestamp',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'text': IndexSchema(
+      id: 5145922347574273553,
+      name: r'text',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'text',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'durationInMillis': IndexSchema(
+      id: 461214625775911549,
+      name: r'durationInMillis',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'durationInMillis',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _chatMessageModelGetId,
+  getLinks: _chatMessageModelGetLinks,
+  attach: _chatMessageModelAttach,
+  version: '3.1.0+1',
+);
+
+int _chatMessageModelEstimateSize(
+  ChatMessageModel object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  {
+    final value = object.mediaData;
+    if (value != null) {
+      bytesCount += 3 + value.length;
+    }
+  }
+  {
+    final value = object.mediaPath;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.text.length * 3;
+  return bytesCount;
+}
+
+void _chatMessageModelSerialize(
+  ChatMessageModel object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.durationInMillis);
+  writer.writeBool(offsets[1], object.isUser);
+  writer.writeByteList(offsets[2], object.mediaData);
+  writer.writeString(offsets[3], object.mediaPath);
+  writer.writeString(offsets[4], object.text);
+  writer.writeDateTime(offsets[5], object.timestamp);
+  writer.writeByte(offsets[6], object.type.index);
+}
+
+ChatMessageModel _chatMessageModelDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = ChatMessageModel(
+    isUser: reader.readBool(offsets[1]),
+    mediaData: reader.readByteList(offsets[2]),
+    mediaPath: reader.readStringOrNull(offsets[3]),
+    text: reader.readString(offsets[4]),
+    timestamp: reader.readDateTime(offsets[5]),
+    type:
+        _ChatMessageModeltypeValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+            MessageType.text,
+  );
+  object.durationInMillis = reader.readLongOrNull(offsets[0]);
+  object.id = id;
+  return object;
+}
+
+P _chatMessageModelDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLongOrNull(offset)) as P;
+    case 1:
+      return (reader.readBool(offset)) as P;
+    case 2:
+      return (reader.readByteList(offset)) as P;
+    case 3:
+      return (reader.readStringOrNull(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readDateTime(offset)) as P;
+    case 6:
+      return (_ChatMessageModeltypeValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          MessageType.text) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+const _ChatMessageModeltypeEnumValueMap = {
+  'text': 0,
+  'audio': 1,
+  'image': 2,
+};
+const _ChatMessageModeltypeValueEnumMap = {
+  0: MessageType.text,
+  1: MessageType.audio,
+  2: MessageType.image,
+};
+
+Id _chatMessageModelGetId(ChatMessageModel object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _chatMessageModelGetLinks(ChatMessageModel object) {
+  return [];
+}
+
+void _chatMessageModelAttach(
+    IsarCollection<dynamic> col, Id id, ChatMessageModel object) {
+  object.id = id;
+}
+
+extension ChatMessageModelQueryWhereSort
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QWhere> {
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhere> anyTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'timestamp'),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhere>
+      anyDurationInMillis() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'durationInMillis'),
+      );
+    });
+  }
+}
+
+extension ChatMessageModelQueryWhere
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QWhereClause> {
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause> idEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      timestampEqualTo(DateTime timestamp) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'timestamp',
+        value: [timestamp],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      timestampNotEqualTo(DateTime timestamp) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [],
+              upper: [timestamp],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [timestamp],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [timestamp],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [],
+              upper: [timestamp],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      timestampGreaterThan(
+    DateTime timestamp, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'timestamp',
+        lower: [timestamp],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      timestampLessThan(
+    DateTime timestamp, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'timestamp',
+        lower: [],
+        upper: [timestamp],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      timestampBetween(
+    DateTime lowerTimestamp,
+    DateTime upperTimestamp, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'timestamp',
+        lower: [lowerTimestamp],
+        includeLower: includeLower,
+        upper: [upperTimestamp],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      textEqualTo(String text) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'text',
+        value: [text],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      textNotEqualTo(String text) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'text',
+              lower: [],
+              upper: [text],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'text',
+              lower: [text],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'text',
+              lower: [text],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'text',
+              lower: [],
+              upper: [text],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      durationInMillisIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'durationInMillis',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      durationInMillisIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'durationInMillis',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      durationInMillisEqualTo(int? durationInMillis) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'durationInMillis',
+        value: [durationInMillis],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      durationInMillisNotEqualTo(int? durationInMillis) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'durationInMillis',
+              lower: [],
+              upper: [durationInMillis],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'durationInMillis',
+              lower: [durationInMillis],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'durationInMillis',
+              lower: [durationInMillis],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'durationInMillis',
+              lower: [],
+              upper: [durationInMillis],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      durationInMillisGreaterThan(
+    int? durationInMillis, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'durationInMillis',
+        lower: [durationInMillis],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      durationInMillisLessThan(
+    int? durationInMillis, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'durationInMillis',
+        lower: [],
+        upper: [durationInMillis],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      durationInMillisBetween(
+    int? lowerDurationInMillis,
+    int? upperDurationInMillis, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'durationInMillis',
+        lower: [lowerDurationInMillis],
+        includeLower: includeLower,
+        upper: [upperDurationInMillis],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension ChatMessageModelQueryFilter
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QFilterCondition> {
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      durationInMillisIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'durationInMillis',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      durationInMillisIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'durationInMillis',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      durationInMillisEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'durationInMillis',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      durationInMillisGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'durationInMillis',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      durationInMillisLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'durationInMillis',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      durationInMillisBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'durationInMillis',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      isUserEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isUser',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'mediaData',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'mediaData',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mediaData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mediaData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mediaData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mediaData',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mediaData',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mediaData',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mediaData',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mediaData',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mediaData',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaDataLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mediaData',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'mediaPath',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'mediaPath',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mediaPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mediaPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mediaPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mediaPath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mediaPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mediaPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mediaPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mediaPath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mediaPath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      mediaPathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mediaPath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'text',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'text',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'text',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'text',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'text',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'text',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'text',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'text',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'text',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      textIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'text',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      timestampEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'timestamp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      timestampGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'timestamp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      timestampLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'timestamp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      timestampBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'timestamp',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      typeEqualTo(MessageType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      typeGreaterThan(
+    MessageType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      typeLessThan(
+    MessageType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      typeBetween(
+    MessageType lower,
+    MessageType upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'type',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension ChatMessageModelQueryObject
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QFilterCondition> {}
+
+extension ChatMessageModelQueryLinks
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QFilterCondition> {}
+
+extension ChatMessageModelQuerySortBy
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QSortBy> {
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByDurationInMillis() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationInMillis', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByDurationInMillisDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationInMillis', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByIsUser() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isUser', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByIsUserDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isUser', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByMediaPath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaPath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByMediaPathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaPath', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy> sortByText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'text', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'text', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByTimestampDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy> sortByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+}
+
+extension ChatMessageModelQuerySortThenBy
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QSortThenBy> {
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByDurationInMillis() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationInMillis', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByDurationInMillisDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationInMillis', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByIsUser() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isUser', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByIsUserDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isUser', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByMediaPath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaPath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByMediaPathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaPath', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy> thenByText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'text', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'text', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByTimestampDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy> thenByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+}
+
+extension ChatMessageModelQueryWhereDistinct
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct> {
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct>
+      distinctByDurationInMillis() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'durationInMillis');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct>
+      distinctByIsUser() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isUser');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct>
+      distinctByMediaData() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mediaData');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct>
+      distinctByMediaPath({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mediaPath', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct> distinctByText(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'text', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct>
+      distinctByTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'timestamp');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct> distinctByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'type');
+    });
+  }
+}
+
+extension ChatMessageModelQueryProperty
+    on QueryBuilder<ChatMessageModel, ChatMessageModel, QQueryProperty> {
+  QueryBuilder<ChatMessageModel, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, int?, QQueryOperations>
+      durationInMillisProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'durationInMillis');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, bool, QQueryOperations> isUserProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isUser');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, List<int>?, QQueryOperations>
+      mediaDataProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mediaData');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, String?, QQueryOperations>
+      mediaPathProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mediaPath');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, String, QQueryOperations> textProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'text');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, DateTime, QQueryOperations>
+      timestampProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'timestamp');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, MessageType, QQueryOperations> typeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'type');
+    });
+  }
+}
+-e \n
+--- ./lib/models/life_plan/habit.dart
+class HabitImpact {
+  final int relationships;
+  final int work;
+  final int physical;
+  final int spiritual;
+  final int mental;
+
+  HabitImpact({
+    required this.relationships,
+    required this.work,
+    required this.physical,
+    required this.spiritual,
+    required this.mental,
+  });
+
+  int getImpactForDimension(String dimension) {
+    switch (dimension) {
+      case 'R':
+        return relationships;
+      case 'T':
+        return work;
+      case 'SF':
+        return physical;
+      case 'E':
+        return spiritual;
+      case 'SM':
+        return mental;
+      default:
+        return 0;
+    }
+  }
+}
+
+class Habit {
+  final String id;
+  final String description;
+  final String? intensity;
+  final String? duration;
+  final HabitImpact impact;
+
+  Habit({
+    required this.id,
+    required this.description,
+    this.intensity,
+    this.duration,
+    required this.impact,
+  });
+
+  factory Habit.fromCsv(List<dynamic> row) {
+    return Habit(
+      id: row[0].toString(),
+      description: row[1].toString(),
+      intensity: row[2].toString(),
+      duration: row[3].toString(),
+      impact: HabitImpact(
+        relationships: int.tryParse(row[4].toString()) ?? 0,
+        work: int.tryParse(row[5].toString()) ?? 0,
+        physical: int.tryParse(row[6].toString()) ?? 0,
+        spiritual: int.tryParse(row[7].toString()) ?? 0,
+        mental: int.tryParse(row[8].toString()) ?? 0,
+      ),
+    );
+  }
+
+  @override
+  String toString() => 'Habit(id: $id, description: $description)';
+
+  int getImpactForDimension(String dimension) =>
+      impact.getImpactForDimension(dimension);
+}
+-e \n
+--- ./lib/models/life_plan/index.dart
+export 'goal.dart';
+export 'habit.dart';
+export 'track.dart';
+-e \n
+--- ./lib/models/life_plan/track.dart
+class Challenge {
+  final String code;
+  final String name;
+  final int level;
+  final List<TrackHabit> habits;
+
+  Challenge({
+    required this.code,
+    required this.name,
+    required this.level,
+    required this.habits,
+  });
+
+  @override
+  String toString() =>
+      'Challenge(code: $code, name: $name, level: $level, habits: $habits)';
+}
+
+class TrackHabit {
+  final String habitId;
+  final int frequency;
+
+  TrackHabit({
+    required this.habitId,
+    required this.frequency,
+  });
+
+  @override
+  String toString() => 'TrackHabit(habitId: $habitId, frequency: $frequency)';
+}
+
+class Track {
+  final String dimension;
+  final String code;
+  final String name;
+  final List<Challenge> challenges;
+
+  Track({
+    required this.dimension,
+    required this.code,
+    required this.name,
+    required this.challenges,
+  });
+
+  factory Track.fromCsvRows(List<List<dynamic>> rows) {
+    if (rows.isEmpty) {
+      return Track(
+        dimension: '',
+        code: '',
+        name: '',
+        challenges: [],
+      );
+    }
+
+    final firstRow = rows.first;
+    final dimension = firstRow[0].toString();
+    final code = firstRow[1].toString();
+    final name = firstRow[2].toString();
+
+    // Group rows by challenge code
+    final challengeGroups = <String, List<List<dynamic>>>{};
+    for (final row in rows) {
+      final challengeCode = row[3].toString();
+      challengeGroups.putIfAbsent(challengeCode, () => []).add(row);
+    }
+
+    // Create challenges
+    final challenges = challengeGroups.entries.map((entry) {
+      final challengeRows = entry.value;
+      final firstChallengeRow = challengeRows.first;
+
+      // Create habits for this challenge
+      final habits = challengeRows.map((row) {
+        return TrackHabit(
+          habitId: row[6].toString(),
+          frequency: int.tryParse(row[7].toString()) ?? 0,
+        );
+      }).toList();
+
+      return Challenge(
+        code: firstChallengeRow[3].toString(),
+        name: firstChallengeRow[4].toString(),
+        level: int.tryParse(firstChallengeRow[5].toString()) ?? 1,
+        habits: habits,
+      );
+    }).toList();
+
+    return Track(
+      dimension: dimension,
+      code: code,
+      name: name,
+      challenges: challenges,
+    );
+  }
+
+  Challenge? getChallengeByCode(String code) {
+    try {
+      return challenges.firstWhere((c) => c.code == code);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  String toString() =>
+      'Track(dimension: $dimension, code: $code, name: $name, challenges: $challenges)';
+}
+-e \n
+--- ./lib/models/life_plan/dimensions.dart
+import 'package:flutter/material.dart';
+
+/// Represents a life dimension with all its properties
+class Dimension {
+  final String code;
+  final String emoji;
+  final String title;
+  final String englishTitle;
+  final String portugueseTitle;
+  final String description;
+  final Color color;
+
+  const Dimension({
+    required this.code,
+    required this.emoji,
+    required this.title,
+    required this.englishTitle,
+    required this.portugueseTitle,
+    required this.description,
+    required this.color,
+  });
+
+  /// Returns a dimension by its code
+  static Dimension? fromCode(String code) {
+    try {
+      return Dimensions.all.firstWhere(
+        (d) => d.code == code.toUpperCase(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+/// Central repository of all life dimensions
+class Dimensions {
+  // Private constructor to prevent instantiation
+  Dimensions._();
+
+  // Physical Health
+  static const Dimension physical = Dimension(
+    code: 'SF',
+    emoji: '💪',
+    title: 'Physical Health',
+    englishTitle: 'Physical Health',
+    portugueseTitle: 'Saúde Física',
+    description: 'The foundation of your vitality and strength',
+    color: Colors.red,
+  );
+
+  // Mental Health
+  static const Dimension mental = Dimension(
+    code: 'SM',
+    emoji: '🧠',
+    title: 'Mental Health',
+    englishTitle: 'Mental Health',
+    portugueseTitle: 'Saúde Mental',
+    description: 'The fortress of your mind and wisdom',
+    color: Colors.blue,
+  );
+
+  // Relationships
+  static const Dimension relationships = Dimension(
+    code: 'R',
+    emoji: '❤️',
+    title: 'Relationships',
+    englishTitle: 'Relationships',
+    portugueseTitle: 'Relacionamentos',
+    description: 'The bonds that strengthen your journey',
+    color: Colors.pink,
+  );
+
+  // Spirituality
+  static const Dimension spirituality = Dimension(
+    code: 'E',
+    emoji: '✨',
+    title: 'Spirituality',
+    englishTitle: 'Spirituality',
+    portugueseTitle: 'Espiritualidade',
+    description: 'The connection to purpose and meaning',
+    color: Colors.purple,
+  );
+
+  // Rewarding Work
+  static const Dimension work = Dimension(
+    code: 'TG',
+    emoji: '💼',
+    title: 'Rewarding Work',
+    englishTitle: 'Rewarding Work',
+    portugueseTitle: 'Trabalho Gratificante',
+    description: 'The pursuit of fulfilling and meaningful career',
+    color: Colors.amber,
+  );
+
+  // List of all dimensions
+  static const List<Dimension> all = [
+    physical,
+    mental,
+    relationships,
+    spirituality,
+    work,
+  ];
+
+  // Map of dimensions by code for quick lookup
+  static final Map<String, Dimension> byCode = {
+    for (var dimension in all) dimension.code: dimension,
+  };
+
+  // Get all dimension codes
+  static List<String> get codes => all.map((d) => d.code).toList();
+
+  // Get a dimension by its code
+  static Dimension? getDimension(String code) => fromCode(code);
+
+  // Shorthand for fromCode
+  static Dimension? fromCode(String code) {
+    final upperCode = code.toUpperCase();
+    return byCode[upperCode];
+  }
+}
+-e \n
+--- ./lib/models/life_plan/goal.dart
+/// Provides dimension code constants
+/// @deprecated Use Dimensions class instead
+class LifeDimension {
+  // Private constructor to prevent instantiation
+  LifeDimension._();
+
+  // Using string literals to avoid constant expression errors
+  static const String physical = 'SF';
+  static const String mental = 'SM';
+  static const String relationships = 'R';
+  static const String spiritual = 'E';
+  static const String work = 'TG';
+}
+
+class Goal {
+  final String dimension;
+  final String id;
+  final String description;
+  final String trackId;
+
+  Goal({
+    required this.dimension,
+    required this.id,
+    required this.description,
+    required this.trackId,
+  });
+
+  factory Goal.fromCsv(List<dynamic> row) {
+    return Goal(
+      dimension: row[0].toString(),
+      id: row[1].toString(),
+      description: row[2].toString(),
+      trackId: row[3].toString(),
+    );
+  }
+
+  @override
+  String toString() =>
+      'Goal(dimension: $dimension, id: $id, description: $description, trackId: $trackId)';
+
+  bool matchesDimension(String dimensionCode) => dimension == dimensionCode;
+}
+-e \n
+--- ./lib/models/chat_message_model.dart
+import 'package:isar/isar.dart';
+import 'message_type.dart';
+
+part 'chat_message_model.g.dart';
+
+@collection
+class ChatMessageModel {
+  Id id = Isar.autoIncrement;
+
+  @Index()
+  DateTime timestamp;
+
+  @Index()
+  String text;
+
+  bool isUser;
+
+  @enumerated
+  MessageType type;
+
+  List<byte>? mediaData;
+
+  String? mediaPath;
+
+  @Index()
+  int? durationInMillis;
+
+  ChatMessageModel({
+    required this.text,
+    required this.isUser,
+    required this.type,
+    required this.timestamp,
+    this.mediaData,
+    this.mediaPath,
+    Duration? duration,
+  }) : durationInMillis = duration?.inMilliseconds;
+
+  @ignore
+  Duration? get duration => durationInMillis != null
+      ? Duration(milliseconds: durationInMillis!)
+      : null;
+
+  @ignore
+  set duration(Duration? value) {
+    durationInMillis = value?.inMilliseconds;
+  }
+
+  ChatMessageModel copyWith({
+    Id? id,
+    DateTime? timestamp,
+    String? text,
+    bool? isUser,
+    MessageType? type,
+    List<byte>? mediaData,
+    String? mediaPath,
+    Duration? duration,
+  }) {
+    final model = ChatMessageModel(
+      text: text ?? this.text,
+      isUser: isUser ?? this.isUser,
+      type: type ?? this.type,
+      timestamp: timestamp ?? this.timestamp,
+      mediaData: mediaData ?? this.mediaData,
+      mediaPath: mediaPath ?? this.mediaPath,
+      duration: duration ?? this.duration,
+    );
+    model.id = id ?? this.id;
+    return model;
+  }
+}
+-e \n
+--- ./lib/screens/chat_screen.dart
+import 'package:flutter/material.dart';
+import '../widgets/chat_message.dart';
+import '../widgets/chat_input.dart';
+import '../widgets/chat_app_bar.dart';
+import '../services/claude_service.dart';
+import '../services/chat_storage_service.dart';
+import '../models/message_type.dart';
+import '../models/chat_message_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/transcription_service.dart';
+import '../utils/logger.dart';
+import '../config/config_loader.dart';
+
+class ChatScreen extends StatefulWidget {
+  final ChatStorageService? storageService;
+  final ClaudeService? claudeService;
+
+  const ChatScreen({
+    this.storageService,
+    this.claudeService,
+    super.key,
+  });
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  final List<ChatMessage> _messages = [];
+  late final ClaudeService _claudeService;
+  late final ChatStorageService _storageService;
+  bool _isTyping = false;
+  bool _isLoadingMore = false;
+  bool _isInitialLoading = true;
+  String? _error;
+  final ScrollController _scrollController = ScrollController();
+  DateTime? _lastMessageTimestamp;
+  static const int _pageSize = 10000;
+  final OpenAITranscriptionService _transcriptionService =
+      OpenAITranscriptionService();
+  final Logger _logger = Logger();
+  final ConfigLoader _configLoader = ConfigLoader();
+  late String _currentPersona;
+
+  @override
+  void initState() {
+    super.initState();
+    _claudeService = widget.claudeService ?? ClaudeService();
+    _storageService = widget.storageService ?? ChatStorageService();
+    _currentPersona = _configLoader.activePersonaDisplayName;
+    _checkEnvironment();
+    _loadMessages();
+    _setupScrollListener();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if the character has changed
+    if (_currentPersona != _configLoader.activePersonaDisplayName) {
+      _currentPersona = _configLoader.activePersonaDisplayName;
+      _resetChat();
+    }
+  }
+
+  void _resetChat() {
+    setState(() {
+      _messages.clear();
+      _isInitialLoading = true;
+      _error = null;
+    });
+    _loadMessages();
+  }
+
+  void _setupScrollListener() {
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          !_isLoadingMore) {
+        _loadMoreMessages();
+      }
+    });
+  }
+
+  Future<void> _loadMessages() async {
+    try {
+      final storedMessages =
+          await _storageService.getMessages(limit: _pageSize);
+      if (storedMessages.isNotEmpty) {
+        _lastMessageTimestamp = storedMessages.last.timestamp;
+      }
+      setState(() {
+        _messages.addAll(storedMessages.map(_createChatMessage));
+        _isInitialLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error loading messages: $e';
+        _isInitialLoading = false;
+      });
+      debugPrint('Error loading messages: $e');
+    }
+  }
+
+  Future<void> _loadMoreMessages() async {
+    if (_lastMessageTimestamp == null) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final olderMessages = await _storageService.getMessages(
+        limit: _pageSize,
+        before: _lastMessageTimestamp,
+      );
+
+      if (olderMessages.isNotEmpty) {
+        _lastMessageTimestamp = olderMessages.last.timestamp;
+        setState(() {
+          _messages.addAll(olderMessages.map(_createChatMessage));
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading more messages: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      debugPrint('Error loading more messages: $e');
+    } finally {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  Future<void> _deleteMessage(int id) async {
+    try {
+      await _storageService.deleteMessage(id);
+      if (!mounted) return;
+      setState(() {
+        _messages.removeWhere((m) => m.key == ValueKey(id));
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message deleted'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting message: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showEditDialog(String messageId, String currentText) async {
+    _logger.debug('=== EDIT FLOW START ===');
+    _logger.debug('1. _showEditDialog called with:');
+    _logger.debug('   - Message ID: $messageId');
+    _logger.debug('   - Current text: $currentText');
+
+    _logger.debug('2. Creating edit dialog with TextField controller');
+    final controller = TextEditingController(text: currentText);
+
+    _logger.debug('3. Building edit dialog');
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Message'),
+        content: TextField(
+          key: const Key('edit-message-field'),
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Enter new message"),
+          keyboardType: TextInputType.multiline,
+          maxLines: null,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _logger.debug('4a. Cancel button pressed');
+              Navigator.pop(context);
+              _logger.debug('4b. Dialog dismissed via cancel');
+            },
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final newText = controller.text;
+              _logger.debug('5a. Save button pressed');
+              _logger.debug('   - New text: $newText');
+
+              if (newText.trim().isEmpty) {
+                _logger.debug('5b. Empty text detected - not saving');
+                return;
+              }
+
+              _logger.debug('5c. Closing dialog before edit');
+              Navigator.pop(context);
+              _logger.debug('5d. Calling _editMessage');
+              _editMessage(messageId, newText);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editMessage(String id, String newText) async {
+    _logger.debug('=== EDIT MESSAGE START ===');
+    _logger.debug('1. _editMessage called with:');
+    _logger.debug('   - Message ID: $id');
+    _logger.debug('   - New text: $newText');
+
+    if (newText.trim().isEmpty) {
+      _logger.debug('2a. Empty text validation failed');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message cannot be empty'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      _logger.debug('3. Saving edit to storage');
+      await _storageService.editMessage(int.parse(id), newText);
+
+      if (!mounted) {
+        _logger.debug('4a. Widget not mounted after storage save');
+        return;
+      }
+
+      _logger.debug('4b. Fetching updated message from storage');
+      final isar = await _storageService.db;
+      final updatedModel = await isar.chatMessageModels.get(int.parse(id));
+
+      if (updatedModel != null) {
+        _logger.debug('5a. Updated message retrieved:');
+        _logger.debug('   - ID: ${updatedModel.id}');
+        _logger.debug('   - Text: ${updatedModel.text}');
+
+        setState(() {
+          final index =
+              _messages.indexWhere((m) => m.key == ValueKey(int.parse(id)));
+          _logger.debug('5b. Found message at index: $index');
+
+          if (index != -1) {
+            _messages[index] = _createChatMessage(updatedModel);
+            _logger.debug('5c. Message updated in UI');
+          } else {
+            _logger.debug('5d. ERROR: Message not found in UI list');
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message edited'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _logger.debug('6. Success snackbar shown');
+      } else {
+        _logger.debug('5x. ERROR: Updated message not found in storage');
+      }
+    } catch (e) {
+      _logger.error('ERROR in _editMessage: ${e.toString()}');
+
+      if (!mounted) {
+        _logger.debug('Widget not mounted after error');
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error editing message: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    _logger.debug('=== EDIT MESSAGE END ===');
+  }
+
+  ChatMessage _createChatMessage(ChatMessageModel model) {
+    // Only log if startup logging is enabled
+    if (_logger.isStartupLoggingEnabled()) {
+      _logger.logStartup('Creating ChatMessage widget:');
+      _logger.logStartup('- ID: ${model.id}');
+      _logger.logStartup('- Text: ${model.text}');
+      _logger.logStartup('- Is user: ${model.isUser}');
+    }
+
+    return ChatMessage(
+      key: ValueKey(model.id),
+      text: model.text,
+      isUser: model.isUser,
+      audioPath: model.mediaPath,
+      duration: model.duration,
+      onDelete: () => _deleteMessage(model.id),
+      onEdit: model.isUser
+          ? (text) {
+              _logger.debug('Edit callback for message:');
+              _logger.debug('- ID: ${model.id}');
+              _logger.debug('- Current text: $text');
+              _showEditDialog(model.id.toString(), text);
+            }
+          : null,
+    );
+  }
+
+  void _checkEnvironment() {
+    if (dotenv.env['ANTHROPIC_API_KEY']?.isEmpty ?? true) {
+      setState(() {
+        _error = 'API Key not found. Please check your .env file.';
+      });
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.isEmpty) return;
+
+    final userMessage = _messageController.text;
+    final userMessageModel = ChatMessageModel(
+      text: userMessage,
+      isUser: true,
+      type: MessageType.text,
+      timestamp: DateTime.now(),
+    );
+
+    try {
+      // Save user message and get ID
+      final isar = await _storageService.db;
+      late final int messageId;
+      await isar.writeTxn(() async {
+        messageId = await isar.chatMessageModels.put(userMessageModel);
+      });
+      userMessageModel.id = messageId;
+
+      setState(() {
+        _messages.insert(0, _createChatMessage(userMessageModel));
+        _isTyping = true;
+      });
+      _messageController.clear();
+      _scrollToBottom();
+
+      // Get AI response
+      final response = await _claudeService.sendMessage(userMessage);
+
+      // Check if the response is an error message
+      final bool isErrorResponse = response.startsWith('Error:') ||
+          response.contains('Unable to connect') ||
+          response.contains('experiencing high demand') ||
+          response.contains('temporarily unavailable') ||
+          response.contains('rate limit') ||
+          response.contains('Authentication failed');
+
+      if (isErrorResponse) {
+        // Display error message to user
+        setState(() {
+          _messages.insert(
+            0,
+            ChatMessage(
+              text: response,
+              isUser: false,
+            ),
+          );
+          _isTyping = false;
+        });
+
+        // Show error in snackbar
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Process normal response
+      final aiMessageModel = ChatMessageModel(
+        text: response,
+        isUser: false,
+        type: MessageType.text,
+        timestamp: DateTime.now(),
+      );
+
+      // Save AI response and get ID
+      await isar.writeTxn(() async {
+        final aiMessageId = await isar.chatMessageModels.put(aiMessageModel);
+        aiMessageModel.id = aiMessageId;
+      });
+
+      setState(() {
+        _messages.insert(0, _createChatMessage(aiMessageModel));
+        _isTyping = false;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      setState(() {
+        _messages.insert(
+          0,
+          const ChatMessage(
+            text: 'Error: Unable to send message. Please try again later.',
+            isUser: false,
+          ),
+        );
+        _isTyping = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _handleAudioMessage(String audioPath, Duration duration) async {
+    final transcribingMessage = ChatMessage(
+      text: 'Transcribing...',
+      isUser: true,
+      audioPath: audioPath,
+      duration: duration,
+    );
+
+    setState(() {
+      _messages.insert(0, transcribingMessage);
+    });
+    _scrollToBottom();
+
+    try {
+      final transcription =
+          await _transcriptionService.transcribeAudio(audioPath);
+
+      // Save audio message first
+      await _storageService.saveMessage(
+        text: transcription,
+        isUser: true,
+        type: MessageType.audio,
+        mediaPath: audioPath,
+        duration: duration,
+      );
+
+      // Get the saved message ID from storage
+      final messages = await _storageService.getMessages(limit: 1);
+      final messageId = messages.first.id;
+
+      // Update UI with transcription
+      final userAudioMessage = ChatMessage(
+        key: ValueKey(messageId),
+        text: transcription,
+        isUser: true,
+        audioPath: audioPath,
+        duration: duration,
+        onDelete: () => _deleteMessage(messageId),
+        onEdit: (text) => _showEditDialog(messageId.toString(), text),
+      );
+
+      setState(() {
+        _messages[0] = userAudioMessage;
+      });
+      _scrollToBottom();
+
+      // Send transcription to Claude
+      final response = await _claudeService.sendMessage(transcription);
+
+      // Check if the response is an error message
+      final bool isErrorResponse = response.startsWith('Error:') ||
+          response.contains('Unable to connect') ||
+          response.contains('experiencing high demand') ||
+          response.contains('temporarily unavailable') ||
+          response.contains('rate limit') ||
+          response.contains('Authentication failed');
+
+      if (isErrorResponse) {
+        // Display error message to user
+        final aiMessage = ChatMessage(
+          text: response,
+          isUser: false,
+        );
+
+        setState(() {
+          _messages.insert(0, aiMessage);
+        });
+
+        // Show error in snackbar
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Save AI response
+      await _storageService.saveMessage(
+        text: response,
+        isUser: false,
+        type: MessageType.text,
+      );
+
+      // Get the saved AI message ID
+      final aiMessages = await _storageService.getMessages(limit: 1);
+      final aiMessageId = aiMessages.first.id;
+
+      final aiMessage = ChatMessage(
+        key: ValueKey(aiMessageId),
+        text: response,
+        isUser: false,
+        onDelete: () => _deleteMessage(aiMessageId),
+      );
+
+      setState(() {
+        _messages.insert(0, aiMessage);
+      });
+      _scrollToBottom();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error processing audio message: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      print('Error processing audio message: $e');
+
+      // Update the transcribing message to show the error
+      setState(() {
+        _messages[0] = const ChatMessage(
+          text:
+              'Error: Unable to process audio message. Please try again later.',
+          isUser: false,
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return Scaffold(
+        appBar: const CustomChatAppBar(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              _error!,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_isInitialLoading) {
+      return const Scaffold(
+        appBar: CustomChatAppBar(),
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: _messages.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No messages yet.\nStart a conversation!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _messages.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      return _messages[index];
+                    },
+                  ),
+          ),
+          if (_isTyping)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.military_tech, color: Colors.white),
+                  ),
+                  SizedBox(width: 8),
+                  Text('Claude is typing...'),
+                ],
+              ),
+            ),
+          ChatInput(
+            controller: _messageController,
+            onSend: _sendMessage,
+            onSendAudio: _handleAudioMessage,
+          ),
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            color: Colors.grey[100],
+            child: const Text(
+              'This is A.I. and not a real person. Treat everything it says as fiction',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    _storageService.close();
+    super.dispose();
+  }
+}
+-e \n
+--- ./lib/screens/character_selection_screen.dart
+import 'package:flutter/material.dart';
+import '../config/character_config_manager.dart';
+import '../config/config_loader.dart';
+
+class CharacterSelectionScreen extends StatefulWidget {
+  final Function() onCharacterSelected;
+
+  const CharacterSelectionScreen({
+    Key? key,
+    required this.onCharacterSelected,
+  }) : super(key: key);
+
+  @override
+  _CharacterSelectionScreenState createState() =>
+      _CharacterSelectionScreenState();
+}
+
+class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
+  final ConfigLoader _configLoader = ConfigLoader();
+  late CharacterPersona _selectedPersona;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPersona = _configLoader.activePersona;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final availablePersonas = _configLoader.availablePersonas;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Choose Your Guide'),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select a character to guide your personal development journey:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: ListView.builder(
+                itemCount: availablePersonas.length,
+                itemBuilder: (context, index) {
+                  final persona = availablePersonas[index];
+                  final personaEnum = CharacterPersona.values[index];
+
+                  return Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: _selectedPersona == personaEnum
+                            ? Theme.of(context).primaryColor
+                            : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedPersona = personaEnum;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: _getAvatarColor(personaEnum),
+                                  child: Text(
+                                    persona['displayName'][0],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    persona['displayName'],
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Radio<CharacterPersona>(
+                                  value: personaEnum,
+                                  groupValue: _selectedPersona,
+                                  onChanged: (CharacterPersona? value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _selectedPersona = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              persona['description'],
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  _configLoader.setActivePersona(_selectedPersona);
+                  widget.onCharacterSelected();
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Continue',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getAvatarColor(CharacterPersona persona) {
+    switch (persona) {
+      case CharacterPersona.personalDevelopmentAssistant:
+        return Colors.blue;
+      case CharacterPersona.sergeantOracle:
+        return Colors.red;
+      case CharacterPersona.zenGuide:
+        return Colors.green;
+    }
+  }
+}
+-e \n
+--- ./lib/main.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'screens/chat_screen.dart';
+import 'screens/character_selection_screen.dart';
+import 'utils/logger.dart';
+import 'services/life_plan_service.dart';
+import 'config/config_loader.dart';
+
+Future<void> main() async {
+  // Initialize logger with appropriate settings
+  final logger = Logger();
+
+  // Enable general logging but disable startup logging by default
+  // This will prevent logging all past chat history when the app starts
+  logger.setLogging(true);
+  logger.setStartupLogging(false);
+
+  logger.info('Starting application');
+
+  await dotenv.load(fileName: '.env');
+
+  // Initialize services with logging settings
+  final lifePlanService = LifePlanService();
+  lifePlanService.setLogging(true);
+  lifePlanService.setStartupLogging(false);
+
+  runApp(const ChatApp());
+}
+
+class ChatApp extends StatelessWidget {
+  const ChatApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Character.ai Clone',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+      ),
+      home: const HomeScreen(),
+      // Add error handling for the entire app
+      builder: (context, child) {
+        return child ?? const SizedBox.shrink();
+      },
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ConfigLoader _configLoader = ConfigLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_configLoader.activePersonaDisplayName),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CharacterSelectionScreen(
+                    onCharacterSelected: () {
+                      setState(() {});
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: const ChatScreen(),
+    );
+  }
+}
+-e \n
+--- ./lib/services/chat_storage_service.dart
+import 'dart:io';
+import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
+import '../models/chat_message_model.dart';
+import '../models/message_type.dart';
+import 'dart:typed_data';
+
+class ChatStorageService {
+  late Future<Isar> db;
+
+  ChatStorageService() {
+    db = openDB();
+  }
+
+  Future<Isar> openDB() async {
+    if (Isar.instanceNames.isEmpty) {
+      final dir = await getApplicationDocumentsDirectory();
+      return await Isar.open(
+        [ChatMessageModelSchema],
+        directory: dir.path,
+      );
+    }
+
+    return Future.value(Isar.getInstance());
+  }
+
+  Future<void> saveMessage({
+    required String text,
+    required bool isUser,
+    required MessageType type,
+    Uint8List? mediaData,
+    String? mediaPath,
+    Duration? duration,
+  }) async {
+    final isar = await db;
+
+    // Verify audio file exists if it's an audio message
+    if (type == MessageType.audio && mediaPath != null) {
+      final file = File(mediaPath);
+      if (!await file.exists()) {
+        throw Exception('Audio file not found at $mediaPath');
+      }
+    }
+
+    final message = ChatMessageModel(
+      text: text,
+      isUser: isUser,
+      type: type,
+      timestamp: DateTime.now(),
+      mediaData: mediaData?.toList(),
+      mediaPath: mediaPath,
+      duration: duration,
+    );
+
+    await isar.writeTxn(() async {
+      await isar.chatMessageModels.put(message);
+    });
+  }
+
+  Future<List<ChatMessageModel>> getMessages({
+    int? limit,
+    DateTime? before,
+  }) async {
+    final isar = await db;
+    final query = isar.chatMessageModels.where();
+
+    if (before != null) {
+      return query
+          .filter()
+          .timestampLessThan(before)
+          .sortByTimestampDesc()
+          .limit(limit ?? 50)
+          .findAll();
+    }
+
+    return query.sortByTimestampDesc().limit(limit ?? 50).findAll();
+  }
+
+  Future<void> deleteMessage(Id id) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final message = await isar.chatMessageModels.get(id);
+      if (message != null && message.isUser) {
+        // Delete the audio file if it exists
+        if (message.type == MessageType.audio && message.mediaPath != null) {
+          final file = File(message.mediaPath!);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        }
+        // Delete the message from the database
+        await isar.chatMessageModels.delete(id);
+      }
+    });
+  }
+
+  Future<void> editMessage(Id id, String newText) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final message = await isar.chatMessageModels.get(id);
+      if (message != null && message.isUser) {
+        // Only allow editing user messages
+        message.text = newText;
+        message.timestamp =
+            DateTime.now(); // Update timestamp to mark as edited
+        await isar.chatMessageModels.put(message);
+      }
+    });
+  }
+
+  Future<void> deleteAllMessages() async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.chatMessageModels.clear();
+    });
+  }
+
+  Future<List<ChatMessageModel>> searchMessages(String query) async {
+    final isar = await db;
+    return await isar.chatMessageModels
+        .where()
+        .filter()
+        .textContains(query, caseSensitive: false)
+        .sortByTimestampDesc()
+        .findAll();
+  }
+
+  Future<void> close() async {
+    final isar = await db;
+    await isar.close();
+  }
+}
+-e \n
+--- ./lib/services/claude_service.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../config/config_loader.dart';
+import 'life_plan_mcp_service.dart';
+import '../models/life_plan/dimensions.dart';
+import '../utils/logger.dart';
+
+// Helper class for validation results
+class ValidationResult {
+  final bool isValid;
+  final String reason;
+
+  ValidationResult(this.isValid, this.reason);
+}
+
+class ClaudeService {
+  static const String _baseUrl = 'https://api.anthropic.com/v1/messages';
+  late final String _apiKey;
+  final List<Map<String, String>> _conversationHistory = [];
+  String? _systemPrompt;
+  bool _isInitialized = false;
+  final _logger = Logger();
+  final http.Client _client;
+  final LifePlanMCPService? _lifePlanMCP;
+  final ConfigLoader _configLoader;
+
+  ClaudeService({
+    http.Client? client,
+    LifePlanMCPService? lifePlanMCP,
+    ConfigLoader? configLoader,
+  })  : _client = client ?? http.Client(),
+        _lifePlanMCP = lifePlanMCP,
+        _configLoader = configLoader ?? ConfigLoader() {
+    _apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
+  }
+
+  // Method to enable or disable logging
+  void setLogging(bool enable) {
+    _logger.setLogging(enable);
+    // Also set logging for MCP service if available
+    _lifePlanMCP?.setLogging(enable);
+  }
+
+  Future<bool> initialize() async {
+    if (!_isInitialized) {
+      try {
+        _systemPrompt = await _configLoader.loadSystemPrompt();
+        _isInitialized = true;
+      } catch (e) {
+        _logger.error('Error initializing Claude service: $e');
+        return false;
+      }
+    }
+    return _isInitialized;
+  }
+
+  // Helper method to extract user-friendly error messages
+  String _getUserFriendlyErrorMessage(dynamic error) {
+    try {
+      // Check if the error is a string that contains JSON
+      if (error is String && error.contains('{') && error.contains('}')) {
+        // Try to extract the error message from the JSON
+        final errorJson = json.decode(
+            error.substring(error.indexOf('{'), error.lastIndexOf('}') + 1));
+
+        // Handle specific error types
+        if (errorJson['error'] != null && errorJson['error']['type'] != null) {
+          final errorType = errorJson['error']['type'];
+
+          switch (errorType) {
+            case 'overloaded_error':
+              return 'Claude is currently experiencing high demand. Please try again in a moment.';
+            case 'rate_limit_error':
+              return 'You\'ve reached the rate limit. Please wait a moment before sending more messages.';
+            case 'authentication_error':
+              return 'Authentication failed. Please check your API key.';
+            case 'invalid_request_error':
+              return 'There was an issue with the request. Please try again with a different message.';
+            default:
+              // If we have a message in the error, use it
+              if (errorJson['error']['message'] != null) {
+                return 'Claude error: ${errorJson['error']['message']}';
+              }
+          }
+        }
+      }
+
+      // If we couldn't parse the error or it's not a recognized type
+      if (error.toString().contains('SocketException') ||
+          error.toString().contains('Connection refused') ||
+          error.toString().contains('Network is unreachable')) {
+        return 'Unable to connect to Claude. Please check your internet connection.';
+      }
+
+      // Default error message
+      return 'Unable to get a response from Claude. Please try again later.';
+    } catch (e) {
+      // If we fail to parse the error, return a generic message
+      return 'An error occurred while communicating with Claude. Please try again.';
+    }
+  }
+
+  // Helper method to process MCP commands and get data
+  Future<Map<String, dynamic>> _processMCPCommand(String command) async {
+    if (_lifePlanMCP == null) {
+      return {'error': 'MCP service not available'};
+    }
+
+    try {
+      final response = _lifePlanMCP!.processCommand(command);
+      final decoded = json.decode(response);
+      return decoded;
+    } catch (e) {
+      _logger.error('Error processing MCP command: $e');
+      return {'error': e.toString()};
+    }
+  }
+
+  // Helper method to detect dimensions in user message
+  List<String> _detectDimensions(String message) {
+    // Instead of hard-coded keyword matching, we'll fetch all dimensions
+    // and let Claude's system prompt handle the detection
+    return Dimensions.codes; // Return all dimension codes
+  }
+
+  // Helper method to fetch relevant MCP data based on user message
+  Future<String> _fetchRelevantMCPData(String message) async {
+    if (_lifePlanMCP == null) {
+      return '';
+    }
+
+    final dimensions = _detectDimensions(message);
+    final buffer = StringBuffer();
+
+    // If no dimensions detected, fetch data for all dimensions
+    if (dimensions.isEmpty) {
+      dimensions.addAll(['SF', 'SM', 'R']);
+    }
+
+    // Fetch goals for each detected dimension
+    for (final dimension in dimensions) {
+      final command = json
+          .encode({'action': 'get_goals_by_dimension', 'dimension': dimension});
+
+      final result = await _processMCPCommand(command);
+      if (result['status'] == 'success' && result['data'] != null) {
+        buffer.writeln('\nMCP DATA - Goals for dimension $dimension:');
+        buffer.writeln(json.encode(result['data']));
+
+        // For each goal, try to fetch the associated track
+        for (final goal in result['data']) {
+          if (goal['trackId'] != null) {
+            final trackCommand = json.encode(
+                {'action': 'get_track_by_id', 'trackId': goal['trackId']});
+
+            final trackResult = await _processMCPCommand(trackCommand);
+            if (trackResult['status'] == 'success' &&
+                trackResult['data'] != null) {
+              buffer.writeln('\nMCP DATA - Track for goal ${goal['id']}:');
+              buffer.writeln(json.encode(trackResult['data']));
+
+              // For each challenge in the track, fetch habits
+              if (trackResult['data']['challenges'] != null) {
+                for (final challenge in trackResult['data']['challenges']) {
+                  final habitsCommand = json.encode({
+                    'action': 'get_habits_for_challenge',
+                    'trackId': goal['trackId'],
+                    'challengeCode': challenge['code']
+                  });
+
+                  final habitsResult = await _processMCPCommand(habitsCommand);
+                  if (habitsResult['status'] == 'success' &&
+                      habitsResult['data'] != null) {
+                    buffer.writeln(
+                        '\nMCP DATA - Habits for challenge ${challenge['code']}:');
+                    buffer.writeln(json.encode(habitsResult['data']));
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Fetch recommended habits for each dimension
+    for (final dimension in dimensions) {
+      final command = json.encode({
+        'action': 'get_recommended_habits',
+        'dimension': dimension,
+        'minImpact': 3
+      });
+
+      final result = await _processMCPCommand(command);
+      if (result['status'] == 'success' && result['data'] != null) {
+        buffer.writeln(
+            '\nMCP DATA - Recommended habits for dimension $dimension:');
+        buffer.writeln(json.encode(result['data']));
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  Future<String> sendMessage(String message) async {
+    try {
+      await initialize();
+
+      // Check if message contains a life plan command
+      if (_lifePlanMCP != null && message.startsWith('{')) {
+        try {
+          final Map<String, dynamic> command = json.decode(message);
+          final action = command['action'] as String?;
+
+          if (action == null) {
+            return 'Missing required parameter: action';
+          }
+
+          try {
+            return _lifePlanMCP!.processCommand(message);
+          } catch (e) {
+            return 'Missing required parameter: ${e.toString()}';
+          }
+        } catch (e) {
+          return 'Invalid command format';
+        }
+      }
+
+      // Add user message to history
+      _conversationHistory.add({
+        'role': 'user',
+        'content': message,
+      });
+
+      // Fetch relevant MCP data based on user message
+      final mcpData = await _fetchRelevantMCPData(message);
+      Map<String, dynamic>? mcpDataMap;
+
+      // Parse MCP data for validation
+      if (mcpData.isNotEmpty) {
+        mcpDataMap = _parseMCPDataForValidation(mcpData);
+      }
+
+      // Prepare messages array with history
+      final messages = <Map<String, String>>[];
+
+      // Add conversation history
+      messages.addAll(_conversationHistory);
+
+      // If we have MCP data, add it as a system message before sending to Claude
+      String systemPrompt = _systemPrompt ?? '';
+      if (mcpData.isNotEmpty) {
+        systemPrompt +=
+            '\n\nHere is the relevant data from the MCP database that you MUST use to answer the user\'s query. DO NOT make up any information not contained in this data:\n$mcpData';
+      }
+
+      final response = await _client.post(
+        Uri.parse(_baseUrl),
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json; charset=utf-8',
+          'x-api-key': _apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': 'claude-3-opus-20240229',
+          'max_tokens': 1024,
+          'messages': messages,
+          'system': systemPrompt,
+        }),
+        encoding: utf8,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        var assistantMessage = data['content'][0]['text'];
+
+        // Validate response against MCP data if available
+        if (mcpDataMap != null && mcpDataMap.isNotEmpty) {
+          final validationResult =
+              _validateResponseAgainstMCPData(assistantMessage, mcpDataMap);
+          if (!validationResult.isValid) {
+            // Add a warning to the response
+            assistantMessage = _addValidationWarning(
+                assistantMessage, validationResult.reason);
+          }
+        }
+
+        // Add assistant's response to history
+        _conversationHistory.add({
+          'role': 'assistant',
+          'content': assistantMessage,
+        });
+
+        return assistantMessage;
+      } else {
+        // Handle different HTTP status codes
+        switch (response.statusCode) {
+          case 401:
+            return 'Authentication failed. Please check your API key.';
+          case 429:
+            return 'Rate limit exceeded. Please try again later.';
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            return 'Claude service is temporarily unavailable. Please try again later.';
+          default:
+            // Try to parse the error response
+            try {
+              final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+              if (errorData['error'] != null &&
+                  errorData['error']['type'] == 'overloaded_error') {
+                return 'Claude is currently experiencing high demand. Please try again in a moment.';
+              }
+              return _getUserFriendlyErrorMessage(response.body);
+            } catch (e) {
+              return 'Error: Unable to get a response from Claude (Status ${response.statusCode})';
+            }
+        }
+      }
+    } catch (e) {
+      return _getUserFriendlyErrorMessage(e.toString());
+    }
+  }
+
+  // Helper method to parse MCP data for validation
+  Map<String, dynamic> _parseMCPDataForValidation(String mcpData) {
+    final result = <String, dynamic>{};
+    final lines = mcpData.split('\n');
+    String currentSection = '';
+    StringBuffer currentData = StringBuffer();
+
+    for (final line in lines) {
+      if (line.startsWith('MCP DATA - ')) {
+        // If we were processing a section, save it
+        if (currentSection.isNotEmpty && currentData.isNotEmpty) {
+          try {
+            result[currentSection] = json.decode(currentData.toString());
+          } catch (e) {
+            _logger.error(
+                'Error parsing MCP data for section $currentSection: $e');
+          }
+        }
+
+        // Start a new section
+        currentSection = line.substring('MCP DATA - '.length);
+        currentData = StringBuffer();
+      } else if (currentSection.isNotEmpty && line.trim().isNotEmpty) {
+        currentData.writeln(line);
+      }
+    }
+
+    // Save the last section
+    if (currentSection.isNotEmpty && currentData.isNotEmpty) {
+      try {
+        result[currentSection] = json.decode(currentData.toString());
+      } catch (e) {
+        _logger.error('Error parsing MCP data for section $currentSection: $e');
+      }
+    }
+
+    return result;
+  }
+
+  // Helper method to validate Claude's response against MCP data
+  ValidationResult _validateResponseAgainstMCPData(
+      String response, Map<String, dynamic> mcpData) {
+    // This is a simplified validation that checks if the response mentions key terms from the MCP data
+    // A more sophisticated validation would parse the response and check for specific facts
+
+    final lowerResponse = response.toLowerCase();
+    final mentionedTerms = <String>[];
+    final missingTerms = <String>[];
+
+    // Extract key terms from MCP data
+    final keyTerms = _extractKeyTermsFromMCPData(mcpData);
+
+    // Check if response mentions key terms
+    for (final term in keyTerms) {
+      if (lowerResponse.contains(term.toLowerCase())) {
+        mentionedTerms.add(term);
+      } else {
+        missingTerms.add(term);
+      }
+    }
+
+    // If no key terms are mentioned, the response might not be based on MCP data
+    if (mentionedTerms.isEmpty && keyTerms.isNotEmpty) {
+      return ValidationResult(
+          false, 'Response does not mention any key terms from MCP data');
+    }
+
+    // If less than 30% of key terms are mentioned, the response might not be based on MCP data
+    if (keyTerms.isNotEmpty && mentionedTerms.length / keyTerms.length < 0.3) {
+      return ValidationResult(false,
+          'Response mentions only ${mentionedTerms.length} out of ${keyTerms.length} key terms from MCP data');
+    }
+
+    return ValidationResult(true, '');
+  }
+
+  // Helper method to extract key terms from MCP data
+  List<String> _extractKeyTermsFromMCPData(Map<String, dynamic> mcpData) {
+    final keyTerms = <String>{};
+
+    // Extract terms from goals
+    for (final entry in mcpData.entries) {
+      if (entry.key.contains('Goals for dimension')) {
+        final goals = entry.value as List<dynamic>;
+        for (final goal in goals) {
+          if (goal['description'] != null) {
+            final description = goal['description'] as String;
+            // Extract significant words (longer than 4 characters)
+            final words = description
+                .split(' ')
+                .where((word) => word.length > 4)
+                .map((word) => word.replaceAll(RegExp(r'[^\w\s]'), ''))
+                .toList();
+            keyTerms.addAll(words);
+          }
+        }
+      }
+    }
+
+    // Extract terms from tracks
+    for (final entry in mcpData.entries) {
+      if (entry.key.contains('Track for goal')) {
+        final track = entry.value as Map<String, dynamic>;
+        if (track['name'] != null) {
+          keyTerms.add(track['name'] as String);
+        }
+
+        if (track['challenges'] != null) {
+          final challenges = track['challenges'] as List<dynamic>;
+          for (final challenge in challenges) {
+            if (challenge['name'] != null) {
+              keyTerms.add(challenge['name'] as String);
+            }
+          }
+        }
+      }
+    }
+
+    // Extract terms from habits
+    for (final entry in mcpData.entries) {
+      if (entry.key.contains('Habits for challenge') ||
+          entry.key.contains('Recommended habits')) {
+        final habits = entry.value as List<dynamic>;
+        for (final habit in habits) {
+          if (habit['description'] != null) {
+            final description = habit['description'] as String;
+            // Extract significant words (longer than 4 characters)
+            final words = description
+                .split(' ')
+                .where((word) => word.length > 4)
+                .map((word) => word.replaceAll(RegExp(r'[^\w\s]'), ''))
+                .toList();
+            keyTerms.addAll(words);
+          }
+        }
+      }
+    }
+
+    return keyTerms.toList();
+  }
+
+  // Helper method to add a validation warning to the response
+  String _addValidationWarning(String response, String reason) {
+    // Add a warning at the end of the response
+    return '$response\n\n[SYSTEM WARNING: This response may not be based on specialist-created content. $reason]';
+  }
+
+  // Method to clear conversation history
+  void clearConversation() {
+    _conversationHistory.clear();
+  }
+
+  // Getter for conversation history
+  List<Map<String, String>> get conversationHistory =>
+      List.unmodifiable(_conversationHistory);
+}
+-e \n
+--- ./lib/services/transcription_service.dart
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+
+class OpenAITranscriptionService {
+  static const String _baseUrl =
+      'https://api.openai.com/v1/audio/transcriptions';
+  final String _apiKey;
+  final http.Client _client;
+  bool _initialized = false;
+
+  OpenAITranscriptionService({http.Client? client})
+      : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '',
+        _client = client ?? http.Client() {
+    _initialized = _apiKey.isNotEmpty;
+  }
+
+  bool get isInitialized => _initialized;
+
+  Future<String> transcribeAudio(String audioPath) async {
+    if (!isInitialized) {
+      return 'Transcription unavailable: Service not initialized';
+    }
+
+    try {
+      final file = File(audioPath);
+      if (!await file.exists()) {
+        return 'Transcription unavailable';
+      }
+
+      final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
+        ..headers['Authorization'] = 'Bearer $_apiKey'
+        ..headers['Accept'] = 'application/json; charset=utf-8'
+        ..headers['Content-Type'] = 'multipart/form-data; charset=utf-8'
+        ..files.add(await http.MultipartFile.fromPath('file', audioPath))
+        ..fields['model'] = 'whisper-1';
+
+      final streamedResponse = await _client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        return jsonResponse['text'] ?? 'No transcription available';
+      }
+      return 'Transcription failed: ${response.statusCode}';
+    } catch (e) {
+      // Just return the error message without printing during tests
+      return 'Transcription unavailable';
+    }
+  }
+}
+-e \n
+--- ./lib/services/life_plan_mcp_service.dart
+import 'dart:convert';
+import 'life_plan_service.dart';
+import '../utils/logger.dart';
+
+class LifePlanMCPService {
+  final LifePlanService _lifePlanService;
+  final _logger = Logger();
+
+  LifePlanMCPService(this._lifePlanService);
+
+  // Method to enable or disable logging
+  void setLogging(bool enable) {
+    _logger.setLogging(enable);
+  }
+
+  String processCommand(String command) {
+    _logger.debug('Processing command: $command');
+
+    try {
+      final parsedCommand = json.decode(command);
+      _logger.debug('Parsed command: $parsedCommand');
+
+      final action = parsedCommand['action'] as String?;
+      if (action == null) {
+        _logger.warning('Missing action parameter');
+        throw Exception('Missing required parameter: action');
+      }
+      _logger.debug('Action: $action');
+
+      switch (action) {
+        case 'get_goals_by_dimension':
+          final dimension = parsedCommand['dimension'] as String?;
+          if (dimension == null) {
+            _logger.warning('Missing dimension parameter');
+            throw Exception('Missing required parameter: dimension');
+          }
+          _logger.info('Getting goals for dimension: $dimension');
+
+          final goals = _lifePlanService.getGoalsByDimension(dimension);
+          _logger.info('Found ${goals.length} goals');
+
+          return json.encode({
+            'status': 'success',
+            'data': goals
+                .map((g) => {
+                      'dimension': g.dimension,
+                      'id': g.id,
+                      'description': g.description,
+                      'trackId': g.trackId,
+                    })
+                .toList(),
+          });
+
+        case 'get_track_by_id':
+          final trackId = parsedCommand['trackId'] as String?;
+          if (trackId == null) {
+            _logger.warning('Missing trackId parameter');
+            throw Exception('Missing required parameter: trackId');
+          }
+          _logger.info('Getting track with ID: $trackId');
+
+          final track = _lifePlanService.getTrackById(trackId);
+          if (track == null) {
+            _logger.warning('Track not found');
+            return json.encode({
+              'status': 'error',
+              'message': 'Track not found',
+            });
+          }
+          _logger.info('Track found: ${track.name}');
+
+          return json.encode({
+            'status': 'success',
+            'data': {
+              'dimension': track.dimension,
+              'code': track.code,
+              'name': track.name,
+              'challenges': track.challenges
+                  .map((c) => {
+                        'code': c.code,
+                        'name': c.name,
+                        'level': c.level,
+                        'habits': c.habits
+                            .map((h) => {
+                                  'habitId': h.habitId,
+                                  'frequency': h.frequency,
+                                })
+                            .toList(),
+                      })
+                  .toList(),
+            },
+          });
+
+        case 'get_habits_for_challenge':
+          final trackId = parsedCommand['trackId'] as String?;
+          final challengeCode = parsedCommand['challengeCode'] as String?;
+
+          if (trackId == null) {
+            _logger.warning('Missing trackId parameter');
+            throw Exception('Missing required parameter: trackId');
+          }
+          if (challengeCode == null) {
+            _logger.warning('Missing challengeCode parameter');
+            throw Exception('Missing required parameter: challengeCode');
+          }
+
+          _logger.info(
+              'Getting habits for track: $trackId, challenge: $challengeCode');
+          final habits = _lifePlanService.getHabitsForChallenge(
+            trackId,
+            challengeCode,
+          );
+          _logger.info('Found ${habits.length} habits');
+
+          return json.encode({
+            'status': 'success',
+            'data': habits
+                .map((h) => {
+                      'id': h.id,
+                      'description': h.description,
+                      'intensity': h.intensity,
+                      'duration': h.duration,
+                      'impact': {
+                        'relationships': h.impact.relationships,
+                        'work': h.impact.work,
+                        'physical': h.impact.physical,
+                        'spiritual': h.impact.spiritual,
+                        'mental': h.impact.mental,
+                      },
+                    })
+                .toList(),
+          });
+
+        case 'get_recommended_habits':
+          final dimension = parsedCommand['dimension'] as String?;
+          if (dimension == null) {
+            _logger.warning('Missing dimension parameter');
+            throw Exception('Missing required parameter: dimension');
+          }
+          _logger.info('Getting recommended habits for dimension: $dimension');
+
+          final minImpact = parsedCommand['minImpact'] as int? ?? 3;
+          _logger.info('Minimum impact threshold: $minImpact');
+
+          final habits = _lifePlanService.getRecommendedHabits(
+            dimension,
+            minImpact: minImpact,
+          );
+          _logger.info('Found ${habits.length} recommended habits');
+
+          return json.encode({
+            'status': 'success',
+            'data': habits
+                .map((h) => {
+                      'id': h.id,
+                      'description': h.description,
+                      'intensity': h.intensity,
+                      'duration': h.duration,
+                      'impact': {
+                        'relationships': h.impact.relationships,
+                        'work': h.impact.work,
+                        'physical': h.impact.physical,
+                        'spiritual': h.impact.spiritual,
+                        'mental': h.impact.mental,
+                      },
+                    })
+                .toList(),
+          });
+
+        default:
+          _logger.warning('Unknown command: $action');
+          return json.encode({
+            'status': 'error',
+            'message': 'Unknown action: $action',
+          });
+      }
+    } catch (e) {
+      _logger.error('Error processing command: $e');
+      return json.encode({
+        'status': 'error',
+        'message': e.toString(),
+      });
+    }
+  }
+}
+-e \n
+--- ./lib/services/life_plan_service.dart
+import 'package:csv/csv.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import '../models/life_plan/index.dart';
+import '../utils/logger.dart';
+
+class LifePlanService {
+  // Singleton instance
+  static final LifePlanService _instance = LifePlanService._internal();
+  factory LifePlanService() => _instance;
+  LifePlanService._internal();
+
+  // In-memory storage
+  List<Goal> _goals = [];
+  List<Habit> _habits = [];
+  Map<String, Track> _tracks = {}; // Indexed by track code
+
+  bool _isInitialized = false;
+  final _logger = Logger();
+
+  // Getters for the models
+  List<Goal> get goals => List.unmodifiable(_goals);
+  List<Habit> get habits => List.unmodifiable(_habits);
+  Map<String, Track> get tracks => Map.unmodifiable(_tracks);
+
+  // Method to enable or disable logging
+  void setLogging(bool enable) {
+    _logger.setLogging(enable);
+  }
+
+  // Method to enable or disable startup logging specifically
+  void setStartupLogging(bool enable) {
+    _logger.setStartupLogging(enable);
+  }
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      // Load all data
+      await Future.wait([
+        _loadGoals(),
+        _loadHabits(),
+        _loadTracks(),
+      ]);
+
+      _isInitialized = true;
+    } catch (e) {
+      _logger.error('Failed to initialize LifePlanService: $e');
+      throw Exception('Failed to initialize LifePlanService: $e');
+    }
+  }
+
+  Future<void> _loadGoals() async {
+    try {
+      final data = await rootBundle.loadString('assets/data/Objetivos.csv');
+      _logger.logStartup('Goals data loaded successfully');
+
+      // Configure CSV parser
+      const parser = CsvToListConverter(
+        fieldDelimiter: ';',
+        eol: '\n',
+        shouldParseNumbers: false,
+      );
+
+      final rows = parser.convert(data);
+      _logger.logStartup('Parsed ${rows.length} rows from goals data');
+
+      if (rows.isEmpty) {
+        _logger.warning('No rows parsed from goals data');
+        return;
+      }
+
+      // Skip header row and convert remaining rows
+      final dataRows = rows.skip(1).toList();
+      _logger.logStartup('Processing ${dataRows.length} data rows');
+
+      _goals = dataRows.map((row) => Goal.fromCsv(row)).toList();
+      _logger.logStartup('Goals created: ${_goals.length}');
+    } catch (e) {
+      _logger.error('Error loading goals: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _loadHabits() async {
+    try {
+      final data = await rootBundle.loadString('assets/data/habitos.csv');
+      _logger.logStartup('Habits data loaded successfully');
+
+      // Configure CSV parser
+      const parser = CsvToListConverter(
+        fieldDelimiter: ';',
+        eol: '\n',
+        shouldParseNumbers: false,
+      );
+
+      final rows = parser.convert(data);
+      _logger.logStartup('Parsed ${rows.length} rows from habits data');
+
+      if (rows.isEmpty) {
+        _logger.warning('No rows parsed from habits data');
+        return;
+      }
+
+      // Skip header row and convert remaining rows
+      final dataRows = rows.skip(1).toList();
+      _logger.logStartup('Processing ${dataRows.length} data rows');
+
+      _habits = dataRows.map((row) => Habit.fromCsv(row)).toList();
+      _logger.logStartup('Habits created: ${_habits.length}');
+    } catch (e) {
+      _logger.error('Error loading habits: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _loadTracks() async {
+    try {
+      final data = await rootBundle.loadString('assets/data/Trilhas.csv');
+      _logger.logStartup('Tracks data loaded successfully');
+
+      // Configure CSV parser
+      const parser = CsvToListConverter(
+        fieldDelimiter: ';',
+        eol: '\n',
+        shouldParseNumbers: false,
+      );
+
+      final rows = parser.convert(data);
+      _logger.logStartup('Parsed ${rows.length} rows from tracks data');
+
+      if (rows.isEmpty) {
+        _logger.warning('No rows parsed from tracks data');
+        return;
+      }
+
+      // Skip header row and convert remaining rows
+      final dataRows = rows.skip(1).toList();
+      _logger.logStartup('Processing ${dataRows.length} data rows');
+
+      // Group rows by track code
+      final trackGroups = <String, List<List<dynamic>>>{};
+      for (final row in dataRows) {
+        final trackCode =
+            row[1].toString(); // Track code is in the second column
+        trackGroups.putIfAbsent(trackCode, () => []).add(row);
+      }
+      _logger.logStartup('Track groups created: ${trackGroups.length}');
+
+      // Create Track objects
+      _tracks = trackGroups.map((code, rows) {
+        return MapEntry(code, Track.fromCsvRows(rows));
+      });
+      _logger.logStartup('Tracks created: ${_tracks.length}');
+    } catch (e) {
+      _logger.error('Error loading tracks: $e');
+      rethrow;
+    }
+  }
+
+  // Query methods
+  List<Goal> getGoalsByDimension(String dimension) {
+    return _goals.where((goal) => goal.dimension == dimension).toList();
+  }
+
+  Habit? getHabitById(String habitId) {
+    try {
+      return _habits.firstWhere((habit) => habit.id == habitId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  String _cleanId(String id) {
+    return id.trim().replaceAll('\r', '');
+  }
+
+  Track? getTrackById(String trackId) {
+    final cleanId = _cleanId(trackId);
+    return _tracks[cleanId];
+  }
+
+  List<Habit> getHabitsByIds(List<String> habitIds) {
+    return _habits.where((habit) => habitIds.contains(habit.id)).toList();
+  }
+
+  // Get all habits for a specific track and challenge
+  List<Habit> getHabitsForChallenge(String trackId, String challengeCode) {
+    final track = _tracks[trackId];
+    if (track == null) return [];
+
+    final challenge = track.getChallengeByCode(challengeCode);
+    if (challenge == null) return [];
+
+    return getHabitsByIds(challenge.habits.map((h) => h.habitId).toList());
+  }
+
+  // Get recommended habits based on dimension and impact threshold
+  List<Habit> getRecommendedHabits(String dimension, {int minImpact = 3}) {
+    return _habits
+        .where((habit) => habit.getImpactForDimension(dimension) >= minImpact)
+        .toList();
+  }
+}
+-e \n
+--- ./lib/services/tts_service.dart
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import '../utils/logger.dart';
+
+/// Service responsible for converting text to speech
+class TTSService {
+  final Logger _logger = Logger();
+  bool isInitialized = false;
+
+  /// Initialize the TTS service
+  Future<bool> initialize() async {
+    if (!isInitialized) {
+      try {
+        // For now, we'll just create a mock audio file
+        final dir = await getApplicationDocumentsDirectory();
+        final mockAudioPath = '${dir.path}/mock_audio.mp3';
+
+        // Create an empty file for testing
+        final file = File(mockAudioPath);
+        if (!await file.exists()) {
+          await file.create();
+        }
+
+        isInitialized = true;
+        _logger.debug('TTS Service initialized successfully');
+        return true;
+      } catch (e) {
+        _logger.error('Failed to initialize TTS Service: $e');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Convert text to speech and return the path to the audio file
+  Future<String> generateAudio(String text) async {
+    if (!isInitialized) {
+      final initialized = await initialize();
+      if (!initialized) {
+        throw Exception('TTS Service not initialized');
+      }
+    }
+
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final audioPath = '${dir.path}/tts_$timestamp.mp3';
+
+      // For now, we'll just create an empty file
+      final file = File(audioPath);
+      await file.create();
+
+      _logger.debug('Generated audio file at: $audioPath');
+      return audioPath;
+    } catch (e) {
+      _logger.error('Failed to generate audio: $e');
+      throw Exception('Failed to generate audio: $e');
+    }
+  }
+
+  /// Clean up any temporary audio files
+  Future<void> cleanup() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final files = dir.listSync().where(
+          (file) => file.path.endsWith('.mp3') && file.path.contains('tts_'));
+
+      for (final file in files) {
+        await file.delete();
+      }
+
+      _logger.debug('Cleaned up temporary audio files');
+    } catch (e) {
+      _logger.error('Failed to cleanup audio files: $e');
+    }
+  }
+}
+-e \n
+--- ./lib/widgets/chat_message.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'audio_message.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+
+class ChatMessage extends StatelessWidget {
+  final String text;
+  final bool isUser;
+  final String? audioPath;
+  final Duration? duration;
+  final bool isTest;
+  final VoidCallback? onDelete;
+  final Function(String)? onEdit;
+
+  const ChatMessage({
+    required this.text,
+    required this.isUser,
+    this.audioPath,
+    this.duration,
+    this.isTest = false,
+    this.onDelete,
+    this.onEdit,
+    super.key,
+  });
+
+  void _showMessageMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final Offset offset = button.localToGlobal(Offset.zero);
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy,
+        offset.dx + button.size.width,
+        offset.dy + button.size.height,
+      ),
+      items: [
+        if (isUser) ...[
+          PopupMenuItem(
+            child: const ListTile(
+              leading: Icon(Icons.edit),
+              title: Text('Edit'),
+            ),
+            onTap: () {
+              if (onEdit != null) {
+                // Delay to allow menu to close
+                Future.delayed(const Duration(milliseconds: 10), () {
+                  onEdit!(text);
+                });
+              }
+            },
+          ),
+          PopupMenuItem(
+            child: const ListTile(
+              leading: Icon(Icons.delete),
+              title: Text('Delete'),
+            ),
+            onTap: () {
+              if (onDelete != null) {
+                onDelete!();
+              }
+            },
+          ),
+        ],
+        PopupMenuItem(
+          child: const ListTile(
+            leading: Icon(Icons.copy),
+            title: Text('Copy'),
+          ),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: text));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Message copied to clipboard'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+        PopupMenuItem(
+          child: const ListTile(
+            leading: Icon(Icons.flag),
+            title: Text('Report'),
+          ),
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Message reported'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  ChatMessage copyWith({
+    String? text,
+    bool? isUser,
+    String? audioPath,
+    Duration? duration,
+    bool? isTest,
+    VoidCallback? onDelete,
+    Function(String)? onEdit,
+  }) {
+    return ChatMessage(
+      text: text ?? this.text,
+      isUser: isUser ?? this.isUser,
+      audioPath: audioPath ?? this.audioPath,
+      duration: duration ?? this.duration,
+      isTest: isTest ?? this.isTest,
+      onDelete: onDelete ?? this.onDelete,
+      onEdit: onEdit ?? this.onEdit,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isUser) ...[
+            isTest
+                ? const SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Placeholder(),
+                  )
+                : const CircleAvatar(
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.military_tech, color: Colors.white),
+                  ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: audioPath != null
+                ? AudioMessage(
+                    audioPath: audioPath!,
+                    isUser: isUser,
+                    transcription: text,
+                    duration: duration ?? Duration.zero,
+                  )
+                : Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isUser ? Colors.blue : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: MarkdownBody(
+                      data: text,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          color: isUser ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isUser ? Colors.blue[700] : Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.more_vert, size: 20),
+              onPressed: () => _showMessageMenu(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              color: isUser ? Colors.white : Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+-e \n
+--- ./lib/widgets/audio_message.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+
+class AudioMessage extends StatefulWidget {
+  final String audioPath;
+  final bool isUser;
+  final String transcription;
+  final Duration duration;
+
+  const AudioMessage({
+    required this.audioPath,
+    required this.isUser,
+    required this.transcription,
+    required this.duration,
+    super.key,
+  });
+
+  @override
+  State<AudioMessage> createState() => _AudioMessageState();
+}
+
+class _AudioMessageState extends State<AudioMessage> {
+  final _player = AudioPlayer();
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player.onPlayerComplete.listen((_) {
+      setState(() => _isPlaying = false);
+    });
+  }
+
+  Future<void> _togglePlayback() async {
+    try {
+      if (_isPlaying) {
+        await _player.pause();
+        setState(() => _isPlaying = false);
+      } else {
+        // Check if file exists
+        final file = File(widget.audioPath);
+        if (!await file.exists()) {
+          throw Exception('Audio file not found at ${widget.audioPath}');
+        }
+
+        // Stop any currently playing audio first
+        await _player.stop();
+
+        // Set up the audio source
+        await _player.setSourceDeviceFile(widget.audioPath);
+
+        // Start playback
+        await _player.resume();
+        setState(() => _isPlaying = true);
+      }
+    } catch (e) {
+      debugPrint('Error playing audio: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error playing audio: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Audio controls in a more subtle color
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: _togglePlayback,
+                icon: Icon(
+                  _isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: Colors.grey[700],
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${widget.duration.inMinutes}:${(widget.duration.inSeconds % 60).toString().padLeft(2, '0')}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Transcription text
+          Text(
+            widget.transcription,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _player.stop();
+    _player.dispose();
+    super.dispose();
+  }
+}
+-e \n
+--- ./lib/widgets/chat_app_bar.dart
+import 'package:flutter/material.dart';
+
+class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const CustomChatAppBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.deepPurple,
+            child: Icon(Icons.military_tech, color: Colors.white),
+          ),
+          SizedBox(width: 8),
+          Text('Sergeant Oracle'),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.info_outline),
+          tooltip: 'Information',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('About Sergeant Oracle'),
+                content: const SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          'Sergeant Oracle is an AI assistant powered by Claude.'),
+                      SizedBox(height: 16),
+                      Text('You can:'),
+                      SizedBox(height: 8),
+                      Text('• Send text messages'),
+                      Text('• Record audio messages'),
+                      Text('• Long press your messages to delete them'),
+                      Text('• Scroll up to load older messages'),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+-e \n
+--- ./lib/widgets/audio_recorder.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:record/record.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:async';
+
+class AudioRecorder extends StatefulWidget {
+  final Function(String path, Duration duration)? onSendAudio;
+  final Record? testRecord;
+  final AudioPlayer? testPlayer;
+
+  const AudioRecorder({
+    this.onSendAudio,
+    this.testRecord,
+    this.testPlayer,
+    super.key,
+  });
+
+  @override
+  State<AudioRecorder> createState() => _AudioRecorderState();
+}
+
+class _AudioRecorderState extends State<AudioRecorder> {
+  late final Record _audioRecorder;
+  late final AudioPlayer _audioPlayer;
+  bool _isRecording = false;
+  bool _isPlaying = false;
+  bool _isDeleting = false;
+  String? _recordedFilePath;
+  Duration _recordDuration = Duration.zero;
+  Timer? _recordingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioRecorder = widget.testRecord ?? Record();
+    _audioPlayer = widget.testPlayer ?? AudioPlayer();
+    _audioPlayer.onPlayerComplete.listen((event) {
+      setState(() => _isPlaying = false);
+    });
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Error: $message',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14.0,
+          ),
+        ),
+        backgroundColor: Colors.red,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 14.0,
+        ),
+        elevation: 6.0,
+        width: 400.0,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  Future<void> _startRecording() async {
+    debugPrint('\n🎙️ Starting recording process');
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        debugPrint('✓ Recording permission granted');
+
+        final dir = await getApplicationDocumentsDirectory();
+        debugPrint('📂 Documents directory: ${dir.path}');
+
+        final audioDir = Directory('${dir.path}/audio');
+        if (!await audioDir.exists()) {
+          await audioDir.create(recursive: true);
+          debugPrint('📁 Created audio directory: ${audioDir.path}');
+        }
+
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath = '${audioDir.path}/audio_$timestamp.m4a';
+        debugPrint('📝 Recording to file: $filePath');
+
+        debugPrint('🎬 Starting record.start()');
+        await _audioRecorder.start(
+          path: filePath,
+          encoder: AudioEncoder.aacLc,
+          bitRate: 128000,
+          samplingRate: 44100,
+        );
+        debugPrint('✓ record.start() completed');
+
+        _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          setState(() {
+            _recordDuration += const Duration(seconds: 1);
+            debugPrint('⏱️ Recording duration: ${_recordDuration.inSeconds}s');
+          });
+        });
+
+        debugPrint('🔄 Updating recording state');
+        setState(() {
+          _isRecording = true;
+          _recordedFilePath = filePath;
+        });
+        debugPrint('✓ State updated - isRecording: $_isRecording');
+      } else {
+        debugPrint('❌ No recording permission');
+      }
+    } catch (e) {
+      debugPrint('❌ Error recording audio: $e');
+      _showErrorSnackBar('Recording audio: $e');
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      _recordingTimer?.cancel();
+      await _audioRecorder.stop();
+      setState(() => _isRecording = false);
+    } catch (e) {
+      debugPrint('Error stopping recording: $e');
+    }
+  }
+
+  Future<void> _playRecording() async {
+    if (_isRecording) {
+      _showErrorSnackBar('Cannot play while recording');
+      return;
+    }
+
+    if (_recordedFilePath != null) {
+      try {
+        if (_isPlaying) {
+          await _audioPlayer.stop();
+          setState(() => _isPlaying = false);
+        } else {
+          final file = File(_recordedFilePath!);
+          if (!await file.exists()) {
+            throw Exception('Audio file not found');
+          }
+          await _audioPlayer.stop(); // Ensure any previous playback is stopped
+          await _audioPlayer.setSourceDeviceFile(_recordedFilePath!);
+          await _audioPlayer.resume();
+          setState(() => _isPlaying = true);
+        }
+      } catch (e) {
+        debugPrint('Error playing audio: $e');
+        _showErrorSnackBar('Playing audio: $e');
+      }
+    }
+  }
+
+  Future<void> _sendAudio() async {
+    if (_isRecording) {
+      await _stopRecording();
+    }
+
+    if (_recordedFilePath != null) {
+      widget.onSendAudio?.call(_recordedFilePath!, _recordDuration);
+      setState(() {
+        _recordedFilePath = null;
+        _recordDuration = Duration.zero;
+      });
+    }
+  }
+
+  Future<void> _deleteRecording() async {
+    if (_recordedFilePath == null) return;
+
+    try {
+      setState(() => _isDeleting = true);
+
+      // Stop playback if playing
+      if (_isPlaying) {
+        await _audioPlayer.stop();
+        setState(() => _isPlaying = false);
+      }
+
+      // Delete file
+      final file = File(_recordedFilePath!);
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      // Reset state
+      setState(() {
+        _recordedFilePath = null;
+        _recordDuration = Duration.zero;
+        _isDeleting = false;
+      });
+    } catch (e) {
+      debugPrint('❌ Error deleting audio: $e');
+      _showErrorSnackBar('Deleting audio: $e');
+      setState(() => _isDeleting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!_isRecording && _recordedFilePath == null)
+            IconButton(
+              onPressed: _startRecording,
+              icon: const Icon(Icons.mic),
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(),
+                backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
+              ),
+              tooltip: 'Record audio message',
+            ),
+          if (_isRecording)
+            IconButton(
+              onPressed: _stopRecording,
+              icon: const Icon(Icons.stop, color: Colors.red),
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(),
+                backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
+              ),
+              tooltip: 'Stop recording',
+            ),
+          if (_recordedFilePath != null && !_isDeleting) ...[
+            IconButton(
+              onPressed: _deleteRecording,
+              icon: const Icon(Icons.delete),
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(),
+                backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
+              ),
+              tooltip: 'Delete recording',
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: _isDeleting ? null : _playRecording,
+              icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(),
+                backgroundColor: Colors.grey[200],
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
+              ),
+              tooltip: _isPlaying ? 'Stop playback' : 'Play recording',
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: _isDeleting ? null : _sendAudio,
+              icon: const Icon(Icons.send),
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(),
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(8.0),
+                minimumSize: const Size(48.0, 48.0),
+              ),
+              tooltip: 'Send audio message',
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _recordingTimer?.cancel();
+    _audioRecorder.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+}
+-e \n
+--- ./lib/widgets/chat_input.dart
+import 'package:flutter/material.dart';
+import 'audio_recorder.dart';
+
+class ChatInput extends StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onSend;
+  final Function(String path, Duration duration) onSendAudio;
+
+  const ChatInput({
+    super.key,
+    required this.controller,
+    required this.onSend,
+    required this.onSendAudio,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, -1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: 'Send a message...',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black,
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                if (controller.text.trim().isNotEmpty) {
+                  onSend();
+                  controller.clear();
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          AudioRecorder(
+            onSendAudio: onSendAudio,
+          ),
+        ],
+      ),
+    );
+  }
+}
+-e \n

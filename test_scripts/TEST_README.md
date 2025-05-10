@@ -1,97 +1,78 @@
 # Test Organization and Execution
 
-This directory contains scripts to run the tests for the Chat App in organized groups. The tests have been divided into 5 logical groups to make testing more manageable and to help isolate issues.
+This directory contains scripts to run tests for the Chat App in 6 organized groups.
 
 ## Test Groups
 
 ### Group 1: Audio Recorder Tests
-- `audio_recorder_test.dart`
-- `audio_recorder_button_style_test.dart`
-- `audio_recorder_delete_test.dart`
-- `audio_recorder_error_handling_test.dart`
-- Note: `audio_recorder_concurrency_test.dart` is skipped as it's marked with `@Skip` in the code
+- `audio_recorder_test.dart` - Core recorder functionality
+- `audio_recorder_button_style_test.dart` - UI and styling
+- `audio_recorder_delete_test.dart` - Audio deletion
+- `audio_recorder_error_handling_test.dart` - Error handling
 
 ### Group 2: Audio Message and System Prompt Tests
-- `audio_message_test.dart`
-- `system_prompt_functionality_test.dart`
-- `system_prompt_character_test.dart`
-- `system_prompt_life_planning_test.dart`
-- `system_prompt_formatting_test.dart`
-- `config_loader_test.dart`
+- `audio_message_test.dart` - Basic audio message tests
+- `audio_message_integration_test.dart` - Visual integration tests
+- `system_prompt_*_test.dart` files - Various system prompt tests
+- `config_loader_test.dart` - Configuration loading
 
 ### Group 3: Claude Service Tests
-- `claude_service_test.dart`
-- `claude_service_error_handling_test.dart`
-- `services/claude_service_test.dart`
-- `services/claude_service_error_handling_test.dart`
-- `services/claude_service_integration_test.dart`
-- `chat_screen_error_handling_test.dart`
-- `transcription_service_test.dart`
+- `claude_service_test.dart` - API communication
+- `claude_service_error_handling_test.dart` - Error handling
+- `services/claude_service_*.dart` - Service integration
+- `transcription_service_test.dart` - Audio transcription
 
 ### Group 4: Life Plan Tests
-- `life_plan_mcp_csv_loading_test.dart`
-- `services/life_plan_service_test.dart`
-- `services/life_plan_mcp_service_test.dart`
-- `utf8_handling_test.dart`
+- `life_plan_mcp_csv_loading_test.dart` - Data loading
+- `services/life_plan_service_test.dart` - Service functionality
+- `services/life_plan_mcp_service_test.dart` - MCP service
+- `utf8_handling_test.dart` - Character encoding
 
 ### Group 5: Chat UI Tests
-- `chat_screen_test.dart`
-- `chat_message_test.dart`
-- `chat_app_bar_test.dart`
-- `chat_input_test.dart`
-- `chat_storage_test.dart`
-- `widget_test.dart`
+- `chat_screen_test.dart` - Main screen functionality
+- `chat_message_test.dart` - Message display
+- `chat_app_bar_test.dart`, `chat_input_test.dart` - UI components
+- `chat_storage_test.dart` - Data persistence
+- `widget_test.dart` - General widget tests
 
-## Running the Tests
+### Group 6: Path Utils and Utility Tests
+- `utils/path_utils_test.dart` - Basic path operations
+- `utils/path_utils_normalization_test.dart` - Path normalization
+- `utils/path_utils_file_exists_test.dart` - File existence checks
+- `utils/path_utils_integration_test.dart` - Integration functionality
+
+## Usage
 
 ### Running All Tests
-To run all test groups sequentially:
-
 ```bash
 chmod +x run_all_tests.sh
 ./run_all_tests.sh
 ```
 
-This will execute all test groups and create a summary file `test_summary.txt` with the pass/fail status of each group.
-
-### Running Individual Test Groups
-To run a specific test group:
-
+### Running Specific Test Groups
 ```bash
-chmod +x run_test_group1.sh
-./run_test_group1.sh
+chmod +x run_test_group<N>.sh
+./run_test_group<N>.sh  # Replace <N> with 1-6
 ```
 
-Replace `1` with the group number you want to run (1-5).
-
-## Test Results
-Each test group will generate a results file:
-- `test_results_group1.txt`
-- `test_results_group2.txt`
-- `test_results_group3.txt`
-- `test_results_group4.txt`
-- `test_results_group5.txt`
-
-These files contain the detailed output of each test run, including any failures or errors.
-
-The `test_summary.txt` file provides a quick overview of which test groups passed or failed.
+## Output Files
+- Individual reports: `test_scripts/results/test_results_group<N>.txt`
+- Summary report: `test_scripts/results/test_summary.txt`
 
 ## Troubleshooting
-If you encounter issues running the scripts:
+- Make scripts executable: `chmod +x run_*.sh`
+- Check Flutter installation: `flutter doctor`
+- Install dependencies: `flutter pub get`
+- For failing tests, check the individual test results files 
 
-1. Make sure all scripts are executable:
-   ```bash
-   chmod +x run_*.sh
-   ```
+## Relationship to Main README
 
-2. Ensure Flutter is properly installed and in your PATH:
-   ```bash
-   flutter doctor
-   ```
+This document provides detailed information about test organization and execution that supplements the main README.md. While the main README offers a high-level overview of the testing framework and coverage statistics, this document serves as the technical reference for running and managing tests.
 
-3. Check that all test dependencies are installed:
-   ```bash
-   flutter pub get
-   ```
+Key connections between documents:
+1. The main README references this document for detailed test execution instructions
+2. Test statistics in the main README are derived from running these test scripts
+3. For anyone working on test maintenance or development, start here
+4. For project overview and general testing status, refer to the main README
 
-4. If specific tests are failing, check the corresponding results file for details. 
+If you modify the test organization or add new tests, please update both documents to maintain consistency. 

@@ -1,20 +1,23 @@
 Test Summary
 =======================================
-Generated at: Thu Feb 27 15:56:55 -03 2025
+Generated at: Fri May  9 22:20:34 -03 2025
 
 Group 1: Audio Recorder Tests
 ✅ All tests passed
 
 Group 2: Audio Message and System Prompt Tests
-❌ Some tests failed
+✅ All tests passed
 
 Group 3: Claude Service Tests
 ✅ All tests passed
 
 Group 4: Life Plan Tests
-❌ Some tests failed
+✅ All tests passed
 
 Group 5: Chat UI Tests
 ✅ All tests passed
 
-❌ SOME TEST GROUPS FAILED. See individual test results for details.
+Group 6: Path Utils and Utility Tests
+✅ All tests passed
+
+✅ ALL TEST GROUPS PASSED!

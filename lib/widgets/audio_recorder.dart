@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
+import '../utils/path_utils.dart';
 import 'dart:async';
 
 class AudioRecorder extends StatefulWidget {
@@ -27,6 +28,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
   bool _isRecording = false;
   bool _isPlaying = false;
   bool _isDeleting = false;
+  bool _isLoading = false;
   String? _recordedFilePath;
   Duration _recordDuration = Duration.zero;
   Timer? _recordingTimer;
@@ -82,7 +84,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
         }
 
         final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final filePath = '${audioDir.path}/audio_$timestamp.m4a';
+        final fileName = 'audio_$timestamp.m4a';
+        final filePath = '${audioDir.path}/$fileName';
         debugPrint('📝 Recording to file: $filePath');
 
         debugPrint('🎬 Starting record.start()');
@@ -138,6 +141,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
           await _audioPlayer.stop();
           setState(() => _isPlaying = false);
         } else {
+          setState(() => _isLoading = true);
+
           final file = File(_recordedFilePath!);
           if (!await file.exists()) {
             throw Exception('Audio file not found');
@@ -145,10 +150,14 @@ class _AudioRecorderState extends State<AudioRecorder> {
           await _audioPlayer.stop(); // Ensure any previous playback is stopped
           await _audioPlayer.setSourceDeviceFile(_recordedFilePath!);
           await _audioPlayer.resume();
-          setState(() => _isPlaying = true);
+          setState(() {
+            _isPlaying = true;
+            _isLoading = false;
+          });
         }
       } catch (e) {
         debugPrint('Error playing audio: $e');
+        setState(() => _isLoading = false);
         _showErrorSnackBar('Playing audio: $e');
       }
     }
@@ -160,11 +169,23 @@ class _AudioRecorderState extends State<AudioRecorder> {
     }
 
     if (_recordedFilePath != null) {
-      widget.onSendAudio?.call(_recordedFilePath!, _recordDuration);
-      setState(() {
-        _recordedFilePath = null;
-        _recordDuration = Duration.zero;
-      });
+      try {
+        // Convert absolute path to relative path for storage
+        final relativePath =
+            await PathUtils.absoluteToRelative(_recordedFilePath!);
+        if (relativePath == null) {
+          throw Exception('Failed to convert to relative path');
+        }
+
+        widget.onSendAudio?.call(_recordedFilePath!, _recordDuration);
+        setState(() {
+          _recordedFilePath = null;
+          _recordDuration = Duration.zero;
+        });
+      } catch (e) {
+        debugPrint('Error sending audio: $e');
+        _showErrorSnackBar('Sending audio: $e');
+      }
     }
   }
 
@@ -245,7 +266,16 @@ class _AudioRecorderState extends State<AudioRecorder> {
             const SizedBox(width: 8),
             IconButton(
               onPressed: _isDeleting ? null : _playRecording,
-              icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.grey,
+                      ),
+                    )
+                  : Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 backgroundColor: Colors.grey[200],

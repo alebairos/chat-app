@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/chat_message_model.dart';
 import '../models/message_type.dart';
 import 'dart:typed_data';
+import '../utils/path_utils.dart';
 
 class ChatStorageService {
   late Future<Isar> db;
@@ -34,11 +35,24 @@ class ChatStorageService {
   }) async {
     final isar = await db;
 
-    // Verify audio file exists if it's an audio message
+    // Convert absolute path to relative path if needed
+    String? relativePath;
     if (type == MessageType.audio && mediaPath != null) {
+      // Verify audio file exists
       final file = File(mediaPath);
       if (!await file.exists()) {
         throw Exception('Audio file not found at $mediaPath');
+      }
+
+      // Convert to relative path if it's an absolute path
+      if (PathUtils.isAbsolutePath(mediaPath)) {
+        relativePath = await PathUtils.absoluteToRelative(mediaPath);
+        if (relativePath == null) {
+          throw Exception('Failed to convert absolute path to relative path');
+        }
+      } else {
+        // It's already a relative path
+        relativePath = mediaPath;
       }
     }
 
@@ -48,7 +62,7 @@ class ChatStorageService {
       type: type,
       timestamp: DateTime.now(),
       mediaData: mediaData?.toList(),
-      mediaPath: mediaPath,
+      mediaPath: relativePath, // Store the relative path
       duration: duration,
     );
 
@@ -64,16 +78,19 @@ class ChatStorageService {
     final isar = await db;
     final query = isar.chatMessageModels.where();
 
+    List<ChatMessageModel> messages;
     if (before != null) {
-      return query
+      messages = await query
           .filter()
           .timestampLessThan(before)
           .sortByTimestampDesc()
           .limit(limit ?? 50)
           .findAll();
+    } else {
+      messages = await query.sortByTimestampDesc().limit(limit ?? 50).findAll();
     }
 
-    return query.sortByTimestampDesc().limit(limit ?? 50).findAll();
+    return messages;
   }
 
   Future<void> deleteMessage(Id id) async {
@@ -83,9 +100,23 @@ class ChatStorageService {
       if (message != null && message.isUser) {
         // Delete the audio file if it exists
         if (message.type == MessageType.audio && message.mediaPath != null) {
-          final file = File(message.mediaPath!);
-          if (await file.exists()) {
-            await file.delete();
+          try {
+            // Convert relative path to absolute if needed
+            String absolutePath;
+            if (PathUtils.isAbsolutePath(message.mediaPath!)) {
+              absolutePath = message.mediaPath!;
+            } else {
+              absolutePath =
+                  await PathUtils.relativeToAbsolute(message.mediaPath!);
+            }
+
+            final file = File(absolutePath);
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (e) {
+            print('Error deleting audio file: $e');
+            // Continue with message deletion even if file deletion fails
           }
         }
         // Delete the message from the database
@@ -123,6 +154,34 @@ class ChatStorageService {
         .textContains(query, caseSensitive: false)
         .sortByTimestampDesc()
         .findAll();
+  }
+
+  /// Migrate existing messages with absolute paths to relative paths
+  Future<void> migratePathsToRelative() async {
+    final isar = await db;
+    final messages = await isar.chatMessageModels
+        .where()
+        .filter()
+        .mediaPathIsNotNull()
+        .findAll();
+
+    int migratedCount = 0;
+    await isar.writeTxn(() async {
+      for (final message in messages) {
+        if (message.mediaPath != null &&
+            PathUtils.isAbsolutePath(message.mediaPath!)) {
+          final relativePath =
+              await PathUtils.absoluteToRelative(message.mediaPath!);
+          if (relativePath != null) {
+            message.mediaPath = relativePath;
+            await isar.chatMessageModels.put(message);
+            migratedCount++;
+          }
+        }
+      }
+    });
+
+    print('Migrated $migratedCount paths from absolute to relative');
   }
 
   Future<void> close() async {

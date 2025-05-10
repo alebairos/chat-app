@@ -1,21 +1,29 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../utils/logger.dart';
+import '../../utils/path_utils.dart';
 
 /// Service responsible for converting text to speech
 class AudioAssistantTTSService {
   final Logger _logger = Logger();
   bool _isInitialized = false;
   bool _isTestMode = false;
+  static const String _audioDir = 'audio_assistant';
 
   /// Initialize the TTS service
   Future<bool> initialize() async {
     if (!_isInitialized) {
       try {
         if (!_isTestMode) {
-          // For now, we'll just create a mock audio file
+          // Create the audio directory if it doesn't exist
           final dir = await getApplicationDocumentsDirectory();
-          final mockAudioPath = '${dir.path}/mock_audio.mp3';
+          final audioDir = Directory('${dir.path}/$_audioDir');
+          if (!await audioDir.exists()) {
+            await audioDir.create(recursive: true);
+          }
+
+          // For now, we'll just create a mock audio file
+          final mockAudioPath = '${audioDir.path}/mock_audio.mp3';
 
           // Create an empty file for testing
           final file = File(mockAudioPath);
@@ -49,19 +57,22 @@ class AudioAssistantTTSService {
 
     try {
       if (_isTestMode) {
-        return 'test_audio_assistant_${DateTime.now().millisecondsSinceEpoch}.mp3';
+        return '$_audioDir/test_audio_assistant_${DateTime.now().millisecondsSinceEpoch}.mp3';
       }
 
       final dir = await getApplicationDocumentsDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final audioPath = '${dir.path}/audio_assistant_$timestamp.mp3';
+      final fileName = 'audio_assistant_$timestamp.mp3';
+      final relativePath = '$_audioDir/$fileName';
+      final absolutePath = '${dir.path}/$relativePath';
 
       // For now, we'll just create an empty file
-      final file = File(audioPath);
+      final file = File(absolutePath);
       await file.create();
 
-      _logger.debug('Generated audio assistant audio file at: $audioPath');
-      return audioPath;
+      _logger.debug('Generated audio assistant audio file at: $absolutePath');
+      // Return the relative path for storage
+      return relativePath;
     } catch (e) {
       _logger.error('Failed to generate audio assistant audio: $e');
       throw Exception('Failed to generate audio assistant audio: $e');
@@ -72,11 +83,16 @@ class AudioAssistantTTSService {
   Future<void> cleanup() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final files = dir.listSync().where((file) =>
-          file.path.endsWith('.mp3') && file.path.contains('audio_assistant_'));
+      final audioDir = Directory('${dir.path}/$_audioDir');
+      if (await audioDir.exists()) {
+        final files = audioDir
+            .listSync()
+            .whereType<File>()
+            .where((file) => file.path.endsWith('.mp3'));
 
-      for (final file in files) {
-        await file.delete();
+        for (final file in files) {
+          await file.delete();
+        }
       }
 
       _logger.debug('Cleaned up audio assistant temporary audio files');

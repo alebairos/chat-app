@@ -19,6 +19,10 @@ echo "" >> $OUTPUT_FILE
 flutter test test/audio_message_test.dart -v >> $OUTPUT_FILE 2>&1
 echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
 
+# Add the new audio message integration test
+flutter test test/audio_message_integration_test.dart -v >> $OUTPUT_FILE 2>&1
+echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
+
 flutter test test/system_prompt_functionality_test.dart -v >> $OUTPUT_FILE 2>&1
 echo "\n-------------------------------------------\n" >> $OUTPUT_FILE
 
