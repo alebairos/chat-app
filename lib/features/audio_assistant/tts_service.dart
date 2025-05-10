@@ -53,7 +53,7 @@ class AudioAssistantTTSService {
   /// [text] The text to convert to speech
   /// Returns a relative path to the generated audio file
   Future<String?> generateAudio(String text) async {
-    // Return null if feature is disabled
+    // Return null if feature is disabled (but allow in test mode)
     if (!featureEnabled && !_isTestMode) {
       _logger.debug('Audio Assistant feature is disabled');
       return null;

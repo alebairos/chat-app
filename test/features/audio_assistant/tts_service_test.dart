@@ -58,26 +58,23 @@ class MockLogger extends Mock implements Logger {}
 
 void main() {
   late MockPathProviderPlatform mockPathProvider;
-  late MockLogger mockLogger;
   late AudioAssistantTTSService ttsService;
 
   setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+
     mockPathProvider = MockPathProviderPlatform();
-    mockLogger = MockLogger();
     PathProviderPlatform.instance = mockPathProvider;
 
     // Reset feature flag for each test
     AudioAssistantTTSService.featureEnabled = true;
 
     ttsService = AudioAssistantTTSService();
-
-    registerFallbackValue('log message');
+    ttsService.enableTestMode(); // Enable test mode for all tests
   });
 
   group('AudioAssistantTTSService', () {
     test('initialize should create directory if it does not exist', () async {
-      // Arrange - initialization is done in setUp
-
       // Act
       final result = await ttsService.initialize();
 
@@ -87,18 +84,25 @@ void main() {
 
     test('generateAudio should return null when feature is disabled', () async {
       // Arrange
+      await ttsService.initialize();
       AudioAssistantTTSService.featureEnabled = false;
+
+      // Temporarily disable test mode for this test
+      ttsService.disableTestMode();
 
       // Act
       final result = await ttsService.generateAudio('Test text');
 
       // Assert
       expect(result, null);
+
+      // Re-enable test mode
+      ttsService.enableTestMode();
     });
 
     test('generateAudio should return relative path for test mode', () async {
       // Arrange
-      ttsService.enableTestMode();
+      await ttsService.initialize();
 
       // Act
       final result = await ttsService.generateAudio('Test text');
@@ -110,30 +114,44 @@ void main() {
 
     test('cleanup should exit early when feature is disabled', () async {
       // Arrange
+      await ttsService.initialize();
       AudioAssistantTTSService.featureEnabled = false;
+
+      // Temporarily disable test mode for this test
+      ttsService.disableTestMode();
 
       // Act
       await ttsService.cleanup();
 
       // Assert - no actions with file system should occur
+
+      // Re-enable test mode
+      ttsService.enableTestMode();
     });
 
     test('deleteAudio should return false when feature is disabled', () async {
       // Arrange
+      await ttsService.initialize();
       AudioAssistantTTSService.featureEnabled = false;
+
+      // Temporarily disable test mode for this test
+      ttsService.disableTestMode();
 
       // Act
       final result = await ttsService.deleteAudio('audio/test.mp3');
 
       // Assert
       expect(result, false);
+
+      // Re-enable test mode
+      ttsService.enableTestMode();
     });
 
-    test('disableTestMode should disable test mode', () {
+    test('disableTestMode should disable test mode', () async {
       // Arrange
-      ttsService.enableTestMode();
+      await ttsService.initialize();
 
-      // Act
+      // Act - first disable test mode
       ttsService.disableTestMode();
 
       // Re-enable test mode at end
