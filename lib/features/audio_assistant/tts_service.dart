@@ -2,6 +2,9 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../utils/logger.dart';
 import '../../utils/path_utils.dart';
+import 'services/tts_provider.dart';
+import 'services/eleven_labs_provider.dart';
+import 'services/mock_tts_provider.dart';
 
 /// Service responsible for converting text to speech.
 ///
@@ -16,24 +19,80 @@ class AudioAssistantTTSService {
   /// Flag to enable/disable the audio assistant feature
   static bool featureEnabled = true;
 
+  /// Currently active TTS provider
+  late TTSProvider _provider;
+
+  /// List of available TTS providers
+  final Map<String, TTSProvider> _availableProviders = {};
+
+  /// Creates a new [AudioAssistantTTSService] instance.
+  AudioAssistantTTSService() {
+    // Register available providers
+    _registerProviders();
+
+    // Default to Eleven Labs if not in test mode
+    _provider = _isTestMode
+        ? _availableProviders['MockTTS']!
+        : _availableProviders['ElevenLabs']!;
+  }
+
+  /// Register available TTS providers
+  void _registerProviders() {
+    _availableProviders['ElevenLabs'] = ElevenLabsProvider();
+    _availableProviders['MockTTS'] = MockTTSProvider();
+  }
+
+  /// Get the list of available provider names
+  List<String> get availableProviders => _availableProviders.keys.toList();
+
+  /// Get the name of the current provider
+  String get currentProviderName => _provider.name;
+
+  /// Switch to a different TTS provider
+  ///
+  /// [providerName] The name of the provider to switch to
+  /// Returns true if the switch was successful, false otherwise
+  Future<bool> switchProvider(String providerName) async {
+    if (!_availableProviders.containsKey(providerName)) {
+      _logger.error('TTS provider "$providerName" not found');
+      return false;
+    }
+
+    _provider = _availableProviders[providerName]!;
+    _isInitialized = false; // Reset initialization
+
+    _logger.debug('Switched to TTS provider: $providerName');
+    return true;
+  }
+
+  /// Get the configuration of the current provider
+  Map<String, dynamic> get providerConfig => _provider.config;
+
+  /// Update the configuration of the current provider
+  ///
+  /// [newConfig] The new configuration options to apply
+  /// Returns true if the configuration was updated successfully, false otherwise
+  Future<bool> updateProviderConfig(Map<String, dynamic> newConfig) async {
+    return _provider.updateConfig(newConfig);
+  }
+
   /// Initialize the TTS service
   Future<bool> initialize() async {
     if (!_isInitialized) {
       try {
+        // Initialize the provider
+        final providerInitialized = await _provider.initialize();
+        if (!providerInitialized) {
+          _logger.error('Failed to initialize TTS provider: ${_provider.name}');
+          return false;
+        }
+
         if (!_isTestMode && featureEnabled) {
           // Create the audio directory if it doesn't exist
           final dir = await getApplicationDocumentsDirectory();
           final audioDir = Directory('${dir.path}/$_audioDir');
           if (!await audioDir.exists()) {
             await audioDir.create(recursive: true);
-          }
-
-          // For now, we'll create a placeholder file
-          // In a real implementation, we would initialize the TTS engine here
-          final mockAudioPath = '${audioDir.path}/mock_audio.mp3';
-          final file = File(mockAudioPath);
-          if (!await file.exists()) {
-            await file.create();
           }
         }
 
@@ -60,9 +119,6 @@ class AudioAssistantTTSService {
     }
 
     if (!_isInitialized) {
-      if (_isTestMode) {
-        throw Exception('Audio Assistant TTS Service not initialized');
-      }
       final initialized = await initialize();
       if (!initialized) {
         _logger
@@ -82,14 +138,14 @@ class AudioAssistantTTSService {
       final relativePath = '$_audioDir/$fileName';
       final absolutePath = '${dir.path}/$relativePath';
 
-      // In a real implementation, we would:
-      // 1. Convert the text to speech using a TTS engine
-      // 2. Save the audio to the file at absolutePath
-      // 3. Return the relative path for storage
+      // Generate the audio file using the current provider
+      final success = await _provider.generateSpeech(text, absolutePath);
 
-      // For now, we'll just create an empty file as a placeholder
-      final file = File(absolutePath);
-      await file.create();
+      if (!success) {
+        _logger
+            .error('Failed to generate audio with provider: ${_provider.name}');
+        return null;
+      }
 
       _logger.debug('Generated audio assistant audio file at: $absolutePath');
       // Return the relative path for storage
@@ -160,10 +216,19 @@ class AudioAssistantTTSService {
   /// Enable test mode for testing
   void enableTestMode() {
     _isTestMode = true;
+    switchProvider('MockTTS');
   }
 
   /// Disable test mode
   void disableTestMode() {
     _isTestMode = false;
+    switchProvider('ElevenLabs');
+  }
+
+  /// Dispose of resources used by the service
+  Future<void> dispose() async {
+    for (final provider in _availableProviders.values) {
+      await provider.dispose();
+    }
   }
 }
