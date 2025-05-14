@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import '../models/audio_file.dart';
 import '../models/playback_state.dart';
 import 'audio_playback.dart';
@@ -134,7 +133,6 @@ class AudioPlaybackController implements AudioPlayback {
 
       // Load the audio file
       await _audioPlayer.stop();
-      final source = DeviceFileSource(file.path);
       await _audioPlayer.setSourceDeviceFile(file.path);
 
       _currentFile = file;

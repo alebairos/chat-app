@@ -6,9 +6,6 @@ import '../lib/services/chat_storage_service.dart';
 // If running as a pure Dart script (not via Flutter tools) and Isar native libraries are not found,
 // you might need to uncomment and use the following:
 import 'package:isar/isar.dart'; // For Isar.initializeIsarCore
-import 'package:path_provider/path_provider.dart'; // Potentially, if ChatStorageService is modified
-import 'package:path/path.dart'
-    as path; // Potentially, if ChatStorageService is modified
 
 void main(List<String> args) async {
   if (args.isEmpty || args[0].toLowerCase() != 'clean') {

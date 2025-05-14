@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../utils/logger.dart';
-import '../utils/path_utils.dart';
 
 /// Service responsible for converting text to speech
 class TTSService {
