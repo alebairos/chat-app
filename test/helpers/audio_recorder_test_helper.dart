@@ -20,7 +20,6 @@ class TestAudioRecorder extends StatefulWidget {
 class _TestAudioRecorderState extends State<TestAudioRecorder> {
   bool _isRecording = false;
   bool _isPlaying = false;
-  final bool _isDeleting = false;
   String? _recordedFilePath;
 
   @override
