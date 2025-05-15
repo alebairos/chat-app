@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/services/life_plan_service.dart';
 import 'package:character_ai_clone/services/life_plan_mcp_service.dart';
-import 'package:character_ai_clone/models/life_plan/goal.dart';
-import 'package:character_ai_clone/models/life_plan/habit.dart';
 import 'package:character_ai_clone/models/life_plan/track.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:character_ai_clone/utils/logger.dart';
@@ -18,11 +16,6 @@ void main() {
   late LifePlanService lifePlanService;
   late LifePlanMCPService mcpService;
 
-  // Store original data for teardown
-  List<Goal>? originalGoals;
-  List<Habit>? originalHabits;
-  Map<String, Track>? originalTracks;
-
   setUpAll(() async {
     logger.info('Setting up test environment...');
     dotenv.testLoad(fileInput: '''
@@ -34,12 +27,6 @@ void main() {
     lifePlanService = LifePlanService();
     await lifePlanService.initialize();
     logger.info('Life Plan Service initialized with real CSV data');
-
-    // Store original data for teardown
-    originalGoals = List.from(lifePlanService.goals);
-    originalHabits = List.from(lifePlanService.habits);
-    originalTracks = Map.from(lifePlanService.tracks);
-    logger.info('Original data stored for teardown');
 
     // Initialize MCP service
     mcpService = LifePlanMCPService(lifePlanService);
