@@ -6,14 +6,10 @@ void main() {
   group('ChatInput Widget', () {
     late TextEditingController controller;
     late bool sendPressed;
-    late String? audioPath;
-    late Duration? audioDuration;
 
     setUp(() {
       controller = TextEditingController();
       sendPressed = false;
-      audioPath = null;
-      audioDuration = null;
     });
 
     tearDown(() {
@@ -31,8 +27,7 @@ void main() {
               }
             },
             onSendAudio: (path, duration) {
-              audioPath = path;
-              audioDuration = duration;
+              // Audio callback required by the widget but not tested
             },
           ),
         ),
