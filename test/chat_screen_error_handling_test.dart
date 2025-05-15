@@ -1,19 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/services/claude_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  late ClaudeService claudeService;
 
   setUp(() async {
     dotenv.testLoad(fileInput: '''
       ANTHROPIC_API_KEY=test_key
       OPENAI_API_KEY=test_key
     ''');
-
-    claudeService = ClaudeService();
   });
 
   group('Chat Screen Error Handling', () {
