@@ -6,10 +6,14 @@ import 'package:character_ai_clone/models/life_plan/goal.dart';
 import 'package:character_ai_clone/models/life_plan/habit.dart';
 import 'package:character_ai_clone/models/life_plan/track.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:character_ai_clone/utils/logger.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  print('\n🚀 Starting Life Plan Integration Tests');
+
+  // Use the app's Logger class
+  final logger = Logger();
+  logger.info('Starting Life Plan Integration Tests');
 
   late LifePlanService lifePlanService;
   late LifePlanMCPService mcpService;
@@ -20,7 +24,7 @@ void main() {
   Map<String, Track>? originalTracks;
 
   setUpAll(() async {
-    print('\n📝 Setting up test environment...');
+    logger.info('Setting up test environment...');
     dotenv.testLoad(fileInput: '''
       ANTHROPIC_API_KEY=test_key
       OPENAI_API_KEY=test_key
@@ -29,47 +33,47 @@ void main() {
     // Initialize services with real data
     lifePlanService = LifePlanService();
     await lifePlanService.initialize();
-    print('✓ Life Plan Service initialized with real CSV data');
+    logger.info('Life Plan Service initialized with real CSV data');
 
     // Store original data for teardown
     originalGoals = List.from(lifePlanService.goals);
     originalHabits = List.from(lifePlanService.habits);
     originalTracks = Map.from(lifePlanService.tracks);
-    print('✓ Original data stored for teardown');
+    logger.info('Original data stored for teardown');
 
     // Initialize MCP service
     mcpService = LifePlanMCPService(lifePlanService);
-    print('✓ MCP Service initialized');
+    logger.info('MCP Service initialized');
   });
 
   tearDown(() {
-    print('\n🧹 Cleaning up test case...');
+    logger.info('Cleaning up test case...');
   });
 
   tearDownAll(() {
-    print('\n🧹 Cleaning up test environment...');
+    logger.info('Cleaning up test environment...');
     // Restore original data if needed
-    print('✓ Test environment cleaned up');
+    logger.info('Test environment cleaned up');
   });
 
   group('Life Plan Integration Tests with CSV Data', () {
     test('retrieves goals by dimension through MCP service', () async {
-      print('\n🧪 Testing goal retrieval by dimension...');
+      logger.info('Testing goal retrieval by dimension...');
 
       // Step 1: Create an MCP command to fetch goals
       final mcpCommand = {
         'action': 'get_goals_by_dimension',
         'dimension': 'SF'
       };
-      print('📤 MCP command: ${json.encode(mcpCommand)}');
+      logger.info('MCP command: ${json.encode(mcpCommand)}');
 
       // Step 2: Process the command through the MCP service
       final response = mcpService.processCommand(json.encode(mcpCommand));
-      print('📥 Received response: $response');
+      logger.info('Received response: $response');
 
       // Step 3: Parse the response
       final decoded = json.decode(response);
-      print('🔍 Decoded response: $decoded');
+      logger.info('Decoded response: $decoded');
 
       // Step 4: Validate the response structure
       expect(decoded['status'], equals('success'),
@@ -81,7 +85,7 @@ void main() {
 
       // Step 5: Validate the goals data
       final goals = decoded['data'] as List;
-      print('📊 Found ${goals.length} physical health goals');
+      logger.info('Found ${goals.length} physical health goals');
 
       // Step 6: Verify all goals have the correct dimension
       for (final goal in goals) {
@@ -100,30 +104,30 @@ void main() {
           reason:
               'MCP should return the same number of goals as direct service call');
 
-      print('✅ Goal retrieval test completed successfully');
+      logger.info('Goal retrieval test completed successfully');
     });
 
     test('retrieves track by ID through MCP service', () async {
-      print('\n🧪 Testing track retrieval by ID...');
+      logger.info('Testing track retrieval by ID...');
 
       // Get a valid track ID from a goal
       final goals = lifePlanService.getGoalsByDimension('SF');
       final trackId = goals.first.trackId
           .trim(); // Trim to remove any whitespace or carriage returns
-      print('🔍 Using track ID: $trackId');
+      logger.info('Using track ID: $trackId');
 
       // Send command to get track by ID
       final command = {
         'action': 'get_track_by_id',
         'trackId': trackId,
       };
-      print('📤 MCP command: ${jsonEncode(command)}');
+      logger.info('MCP command: ${jsonEncode(command)}');
 
       final response = mcpService.processCommand(jsonEncode(command));
-      print('📥 Received response: $response');
+      logger.info('Received response: $response');
 
       final Map<String, dynamic> decodedResponse = jsonDecode(response);
-      print('🔍 Decoded response: $decodedResponse');
+      logger.info('Decoded response: $decodedResponse');
 
       // Verify response structure
       expect(decodedResponse['status'], 'success');
@@ -136,12 +140,12 @@ void main() {
       expect(trackData['name'], isNotEmpty);
       expect(trackData['challenges'], isA<List>());
 
-      print('✅ Track retrieval test completed successfully');
-      print('\n🧹 Cleaning up test case...');
+      logger.info('Track retrieval test completed successfully');
+      logger.info('Cleaning up test case...');
     });
 
     test('retrieves habits for challenge through MCP service', () async {
-      print('\n🧪 Testing habits retrieval for challenge...');
+      logger.info('Testing habits retrieval for challenge...');
 
       // Step 1: Get a valid track and challenge
       final tracks = lifePlanService.tracks.values.toList();
@@ -164,8 +168,8 @@ void main() {
           reason: 'Should have a track with challenges');
       expect(challengeCode, isNotNull, reason: 'Should have a challenge code');
 
-      print(
-          '🔍 Using track: ${trackWithChallenges!.code}, challenge: $challengeCode');
+      logger.info(
+          'Using track: ${trackWithChallenges!.code}, challenge: $challengeCode');
 
       // Step 2: Create an MCP command to fetch habits
       final mcpCommand = {
@@ -173,15 +177,15 @@ void main() {
         'trackId': trackWithChallenges.code,
         'challengeCode': challengeCode
       };
-      print('📤 MCP command: ${json.encode(mcpCommand)}');
+      logger.info('MCP command: ${json.encode(mcpCommand)}');
 
       // Step 3: Process the command through the MCP service
       final response = mcpService.processCommand(json.encode(mcpCommand));
-      print('📥 Received response: $response');
+      logger.info('Received response: $response');
 
       // Step 4: Parse the response
       final decoded = json.decode(response);
-      print('🔍 Decoded response: $decoded');
+      logger.info('Decoded response: $decoded');
 
       // Step 5: Validate the response structure
       expect(decoded['status'], equals('success'),
@@ -191,7 +195,7 @@ void main() {
 
       // Step 6: Validate habits data if any exist
       final habits = decoded['data'] as List;
-      print('📊 Found ${habits.length} habits for the challenge');
+      logger.info('Found ${habits.length} habits for the challenge');
 
       // Some challenges might not have habits, so we only validate if there are any
       if (habits.isNotEmpty) {
@@ -211,11 +215,11 @@ void main() {
           reason:
               'MCP should return same number of habits as direct service call');
 
-      print('✅ Habits retrieval test completed successfully');
+      logger.info('Habits retrieval test completed successfully');
     });
 
     test('retrieves recommended habits through MCP service', () async {
-      print('\n🧪 Testing recommended habits retrieval...');
+      logger.info('Testing recommended habits retrieval...');
 
       // Step 1: Create an MCP command to fetch recommended habits
       final mcpCommand = {
@@ -223,15 +227,15 @@ void main() {
         'dimension': 'SF',
         'minImpact': 3
       };
-      print('📤 MCP command: ${json.encode(mcpCommand)}');
+      logger.info('MCP command: ${json.encode(mcpCommand)}');
 
       // Step 2: Process the command through the MCP service
       final response = mcpService.processCommand(json.encode(mcpCommand));
-      print('📥 Received response: $response');
+      logger.info('Received response: $response');
 
       // Step 3: Parse the response
       final decoded = json.decode(response);
-      print('🔍 Decoded response: $decoded');
+      logger.info('Decoded response: $decoded');
 
       // Step 4: Validate the response structure
       expect(decoded['status'], equals('success'),
@@ -241,7 +245,7 @@ void main() {
 
       // Step 5: Validate the habits data
       final habits = decoded['data'] as List;
-      print('📊 Found ${habits.length} recommended habits');
+      logger.info('Found ${habits.length} recommended habits');
 
       // Verify we have habits and they meet the criteria
       expect(habits.isNotEmpty, isTrue,
@@ -264,11 +268,11 @@ void main() {
           reason:
               'MCP should return same number of habits as direct service call');
 
-      print('✅ Recommended habits test completed successfully');
+      logger.info('Recommended habits test completed successfully');
     });
 
     test('handles error cases gracefully', () async {
-      print('\n🧪 Testing error handling...');
+      logger.info('Testing error handling...');
 
       // Test case 1: Unknown action
       final unknownCommand = {'action': 'unknown_action'};
@@ -310,11 +314,11 @@ void main() {
       expect(invalidTrackDecoded['message'], contains('Track not found'),
           reason: 'Error message should mention track not found');
 
-      print('✅ Error handling test completed successfully');
+      logger.info('Error handling test completed successfully');
     });
 
     test('end-to-end flow from goal to track to habits', () async {
-      print('\n🧪 Testing end-to-end flow from goal to track to habits...');
+      logger.info('Testing end-to-end flow from goal to track to habits...');
 
       // Step 1: Get goals for a dimension
       final getGoalsCommand = {
@@ -377,8 +381,8 @@ void main() {
         expect(firstHabit['impact'], isA<Map<String, dynamic>>());
       }
 
-      print('✅ End-to-end flow test completed successfully');
-      print('\n🧹 Cleaning up test case...');
+      logger.info('End-to-end flow test completed successfully');
+      logger.info('Cleaning up test case...');
     });
   });
 }
