@@ -132,7 +132,6 @@ void main() {
   late TestableAudioAssistantTTSService ttsService;
   late MockPathProviderPlatform mockPathProvider;
   late List<MockFile> mockAudioFiles;
-  late MockDirectory mockAudioDir;
 
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -149,12 +148,6 @@ void main() {
       MockFile('/mock/documents/audio_assistant/audio2.mp3'),
       MockFile('/mock/documents/audio_assistant/audio3.mp3'),
     ];
-
-    // Create mock audio directory with the files
-    mockAudioDir = MockDirectory(
-      '/mock/documents/audio_assistant',
-      entities: mockAudioFiles,
-    );
 
     ttsService = TestableAudioAssistantTTSService();
     ttsService.enableTestMode(); // Enable test mode for all tests
