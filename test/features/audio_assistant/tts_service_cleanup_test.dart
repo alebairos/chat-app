@@ -75,6 +75,7 @@ class TestableAudioAssistantTTSService extends AudioAssistantTTSService {
   List<MockFile> deletedFiles = [];
   bool cleanupCalled = false;
   Exception? lastCleanupException;
+  final Logger _logger = Logger();
 
   @override
   void enableTestMode() {
@@ -122,7 +123,7 @@ class TestableAudioAssistantTTSService extends AudioAssistantTTSService {
       await cleanup();
     } catch (e) {
       // Silently handle the exception
-      print('Caught exception during safe cleanup: $e');
+      _logger.debug('Caught exception during safe cleanup: $e');
     }
   }
 }
