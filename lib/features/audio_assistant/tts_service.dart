@@ -192,12 +192,8 @@ class AudioAssistantTTSService {
 
     try {
       final absolutePath = await PathUtils.relativeToAbsolute(relativePath);
-      if (absolutePath == null) {
-        _logger.error(
-            'Failed to convert relative path to absolute path: $relativePath');
-        return false;
-      }
 
+      // No need to check if absolutePath is null since it's non-nullable
       final file = File(absolutePath);
       if (await file.exists()) {
         await file.delete();

@@ -9,7 +9,6 @@ import 'package:character_ai_clone/models/chat_message_model.dart' as model;
 import 'package:character_ai_clone/widgets/chat_message.dart';
 import 'package:isar/isar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 
 // Mocks
 class MockClaudeService extends Mock implements ClaudeService {}

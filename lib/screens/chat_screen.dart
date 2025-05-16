@@ -408,6 +408,36 @@ class _ChatScreenState extends State<ChatScreen> {
             response.contains('rate limit') ||
             response.contains('Authentication failed');
 
+        if (isErrorResponse) {
+          print("TEST DEBUG: Error response detected in test mode");
+          // Create a model for the error message
+          final errorMessageModel = ChatMessageModel(
+            text: response, // The error string from Claude
+            isUser: false,
+            type: MessageType.text, // Using MessageType.text for errors
+            timestamp: DateTime.now(),
+          );
+
+          // Save to storage
+          await isar.writeTxn(() async {
+            final errorMessageId =
+                await isar.chatMessageModels.put(errorMessageModel);
+            errorMessageModel.id = errorMessageId;
+            print(
+                "TEST DEBUG: Error message saved with ID: $errorMessageId in test mode");
+          });
+
+          // Update UI
+          setState(() {
+            _messages.insert(0, _createChatMessage(errorMessageModel));
+            _isTyping = false;
+            print(
+                "TEST DEBUG: Error message added to UI in test mode. Messages count: ${_messages.length}");
+          });
+
+          return;
+        }
+
         final aiMessageModel = ChatMessageModel(
           text: response,
           isUser: false,

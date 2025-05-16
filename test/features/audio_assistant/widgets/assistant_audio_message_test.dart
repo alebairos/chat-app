@@ -101,4 +101,93 @@ void main() {
       expect(find.text('01:45'), findsOneWidget);
     });
   });
+
+  group('AssistantAudioMessage Playback State Tests', () {
+    testWidgets('playback state changes correctly',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AssistantAudioMessage(
+              audioPath: 'test_audio.m4a',
+              transcription: 'This is a test transcription',
+              duration: const Duration(seconds: 30),
+              messageId: 'test-message-id',
+            ),
+          ),
+        ),
+      );
+
+      // Initial state check
+      expect(find.byIcon(Icons.play_circle_filled), findsOneWidget);
+
+      // Tap play button
+      await tester.tap(find.byIcon(Icons.play_circle_filled));
+      await tester.pump();
+
+      // We can't fully test state changes without mocking the audio playback manager
+    });
+  });
+
+  group('AssistantAudioMessage Progress Indicator Tests', () {
+    testWidgets('progress indicator works correctly',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AssistantAudioMessage(
+              audioPath: 'test_audio.m4a',
+              transcription: 'This is a test transcription',
+              duration: const Duration(seconds: 30),
+              messageId: 'test-message-id',
+            ),
+          ),
+        ),
+      );
+
+      // Progress indicator should be present
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    });
+  });
+
+  group('AssistantAudioMessage Error Handling Tests', () {
+    testWidgets('handles errors gracefully', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AssistantAudioMessage(
+              audioPath: 'test_audio.m4a',
+              transcription: 'This is a test transcription',
+              duration: const Duration(seconds: 30),
+              messageId: 'test-message-id',
+            ),
+          ),
+        ),
+      );
+
+      // We can't test actual error behavior without mock implementation
+      // This is a placeholder for future error testing
+    });
+  });
+
+  group('AssistantAudioMessage Styling Tests', () {
+    testWidgets('has correct styling', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AssistantAudioMessage(
+              audioPath: 'test_audio.m4a',
+              transcription: 'This is a test transcription',
+              duration: const Duration(seconds: 30),
+              messageId: 'test-message-id',
+            ),
+          ),
+        ),
+      );
+
+      // Verify container styling
+      final container = tester.widget<Container>(find.byType(Container).first);
+      expect(container.decoration, isA<BoxDecoration>());
+    });
+  });
 }

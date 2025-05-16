@@ -40,7 +40,7 @@ class MockPathProvider
   @override
   Future<String?> getTempPath() async => '.';
 
-  @override
+  // This is a method needed for compatibility but not defined in the interface
   Future<String?> getTemporaryPath() async => '.';
 }
 

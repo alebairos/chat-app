@@ -133,16 +133,14 @@ class FakeChatStorageService implements ChatStorageService {
 }
 
 class FakeIsar implements Isar {
-  final FakeIsarCollection<ChatMessageModel> _chatMessageModels =
-      FakeIsarCollection<ChatMessageModel>();
+  final FakeIsarCollection _chatMessageModels = FakeIsarCollection();
 
   void setupMessages(List<ChatMessageModel> messages) {
     _chatMessageModels.setupMessages(messages);
   }
 
   @override
-  FakeIsarCollection<ChatMessageModel> get chatMessageModels =>
-      _chatMessageModels;
+  FakeIsarCollection get chatMessageModels => _chatMessageModels;
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
@@ -150,7 +148,7 @@ class FakeIsar implements Isar {
   }
 }
 
-class FakeIsarCollection<T> implements IsarCollection<ChatMessageModel> {
+class FakeIsarCollection implements IsarCollection<ChatMessageModel> {
   List<ChatMessageModel> _messages = [];
 
   void setupMessages(List<ChatMessageModel> messages) {
@@ -232,7 +230,6 @@ class TestChatScreen extends StatefulWidget {
 class _TestChatScreenState extends State<TestChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<Widget> _messages = [];
-  final bool _isTyping = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -375,7 +372,6 @@ void main() {
 
   late FakeChatStorageService storageService;
   late FakeClaudeService claudeService;
-  late Widget chatScreen;
 
   setUp(() {
     storageService = FakeChatStorageService();
@@ -404,11 +400,6 @@ void main() {
     ];
 
     storageService.setupMessages(testMessages);
-
-    chatScreen = TestChatScreen(
-      storageService: storageService,
-      claudeService: claudeService,
-    );
   });
 
   group('Edit functionality', () {
