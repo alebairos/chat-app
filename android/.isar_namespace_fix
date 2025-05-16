@@ -1,0 +1,14 @@
+This file is a marker indicating that we've attempted to fix the isar_flutter_libs namespace issue with the following workarounds:
+
+1. Downgraded Gradle from 8.3 to 7.5
+2. Downgraded Android Gradle Plugin from 8.1.0 to 7.2.1
+3. Downgraded Kotlin Android Plugin from 1.8.22 to 1.7.10
+4. Updated gradle.properties to include compatibility settings
+5. Fixed kotlinOptions format
+
+These changes are aimed at allowing the build to complete with older plugin versions that don't require the namespace property to be explicitly set.
+
+If the issue persists, consider the following options:
+1. Update the isar_flutter_libs plugin to a newer version that supports Android Gradle Plugin 8.x
+2. Fork the isar_flutter_libs plugin and add the namespace property to its build.gradle
+3. Use a different database solution that is compatible with the latest Android build tools 

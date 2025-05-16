@@ -1,0 +1,30 @@
+# Android Build Configuration
+
+## Current Configuration (Java 21 Compatible)
+- Gradle: 8.0
+- Android Gradle Plugin: 8.0.0
+- Kotlin Android Plugin: 1.8.0
+- Java Version: OpenJDK Runtime Environment (build 21.0.4+)
+
+## Compatibility Information
+- Java 21 requires at least Gradle 8.0
+- For Gradle 8.0, we need to use Android Gradle Plugin 8.0.0
+- For namespace issues with plugins, we added compatibility settings in gradle.properties
+
+## Previous Attempts
+1. Tried downgrading to Gradle 7.5, AGP 7.2.1, Kotlin 1.7.10
+   - Issue: Incompatible with Java 21 (version 65 class files)
+   
+2. Tried using namespace settings in gradle.properties
+   - Added android.defaults.buildfeatures.buildconfig=true
+   - Added android.nonTransitiveRClass=false
+   - Added android.nonFinalResIds=false
+   
+3. Tried creating .android/settings_aar.gradle
+   - Attempted to set namespace for isar_flutter_libs plugin
+
+## Current Strategy
+- Use Java 21 compatible Gradle version (8.0+)
+- Configure namespace settings in gradle.properties
+- Let the plugin system resolve namespace requirements
+- Each plugin that needs a namespace must declare it in their build.gradle 

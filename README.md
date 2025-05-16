@@ -129,6 +129,17 @@ For more detailed information about the test groups and specific tests, see the 
 
 ## Changelog
 
+### v1.0.30
+- Fixed issues with assistant_audio_message_test.dart by creating the missing test file
+- Fixed Android build issues related to isar_flutter_libs by:
+  - Downgrading Gradle from 8.3 to 7.5
+  - Downgrading Android Gradle Plugin from 8.1.0 to 7.2.1
+  - Downgrading Kotlin Android Plugin from 1.8.22 to 1.7.10
+  - Updating gradle.properties with compatibility settings
+- Added proper test implementation for AssistantAudioMessage widget
+- Improved error handling and test structure
+- All tests now passing successfully
+
 ### v1.0.29
 - Fixed missing persona config files in pubspec.yaml assets
 - Added all persona config files (claude_config.json, sergeant_oracle_config.json, zen_guide_config.json)
