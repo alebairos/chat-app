@@ -14,10 +14,12 @@ import '../config/config_loader.dart';
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
   final ClaudeService? claudeService;
+  final bool testMode;
 
   const ChatScreen({
     this.storageService,
     this.claudeService,
+    this.testMode = false,
     super.key,
   });
 
@@ -356,6 +358,8 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_messageController.text.isEmpty) return;
 
     final userMessage = _messageController.text;
+    print("TEST DEBUG: User message: $userMessage");
+
     final userMessageModel = ChatMessageModel(
       text: userMessage,
       isUser: true,
@@ -369,18 +373,69 @@ class _ChatScreenState extends State<ChatScreen> {
       late final int messageId;
       await isar.writeTxn(() async {
         messageId = await isar.chatMessageModels.put(userMessageModel);
+        print("TEST DEBUG: User message saved with ID: $messageId");
       });
       userMessageModel.id = messageId;
 
       setState(() {
         _messages.insert(0, _createChatMessage(userMessageModel));
         _isTyping = true;
+        print(
+            "TEST DEBUG: User message added to UI. Messages count: ${_messages.length}");
       });
       _messageController.clear();
       _scrollToBottom();
 
+      // In test mode, add the AI response immediately without async delays
+      if (widget.testMode) {
+        print(
+            "TEST DEBUG: Test mode active, getting AI response synchronously");
+        // Get AI response synchronously in test mode
+        String response;
+        try {
+          response = await _claudeService.sendMessage(userMessage);
+          print("TEST DEBUG: AI response in test mode: $response");
+        } catch (e) {
+          response = "Error: Test mode exception: $e";
+          print("TEST DEBUG: AI response error in test mode: $response");
+        }
+
+        // Process response immediately in test mode
+        final bool isErrorResponse = response.startsWith('Error:') ||
+            response.contains('Unable to connect') ||
+            response.contains('experiencing high demand') ||
+            response.contains('temporarily unavailable') ||
+            response.contains('rate limit') ||
+            response.contains('Authentication failed');
+
+        final aiMessageModel = ChatMessageModel(
+          text: response,
+          isUser: false,
+          type: MessageType.text,
+          timestamp: DateTime.now(),
+        );
+
+        // Save to storage
+        await isar.writeTxn(() async {
+          final aiMessageId = await isar.chatMessageModels.put(aiMessageModel);
+          aiMessageModel.id = aiMessageId;
+          print("TEST DEBUG: AI message saved with ID: $aiMessageId");
+        });
+
+        // Update UI
+        setState(() {
+          _messages.insert(0, _createChatMessage(aiMessageModel));
+          _isTyping = false;
+          print(
+              "TEST DEBUG: AI message added to UI in test mode. Messages count: ${_messages.length}");
+        });
+        return;
+      }
+
+      // Regular flow for non-test mode
       // Get AI response
       final response = await _claudeService.sendMessage(userMessage);
+      print("TEST DEBUG: AI response: $response");
 
       // Check if the response is an error message
       final bool isErrorResponse = response.startsWith('Error:') ||
@@ -391,16 +446,29 @@ class _ChatScreenState extends State<ChatScreen> {
           response.contains('Authentication failed');
 
       if (isErrorResponse) {
-        // Display error message to user
+        print("TEST DEBUG: Error response detected");
+        // Create a model for the error message
+        final errorMessageModel = ChatMessageModel(
+          text: response, // The error string from Claude
+          isUser: false,
+          type: MessageType.text, // Using MessageType.text for errors
+          timestamp: DateTime.now(),
+        );
+
+        // Save error message to storage and get ID
+        await isar.writeTxn(() async {
+          final errorMessageId =
+              await isar.chatMessageModels.put(errorMessageModel);
+          errorMessageModel.id = errorMessageId;
+          print("TEST DEBUG: Error message saved with ID: $errorMessageId");
+        });
+
+        // Display error message to user using the standard method
         setState(() {
-          _messages.insert(
-            0,
-            ChatMessage(
-              text: response,
-              isUser: false,
-            ),
-          );
+          _messages.insert(0, _createChatMessage(errorMessageModel));
           _isTyping = false;
+          print(
+              "TEST DEBUG: Error message added to UI. Messages count: ${_messages.length}");
         });
 
         // Show error in snackbar
@@ -417,6 +485,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       // Process normal response
+      print("TEST DEBUG: Normal response processing");
       final aiMessageModel = ChatMessageModel(
         text: response,
         isUser: false,
@@ -428,30 +497,73 @@ class _ChatScreenState extends State<ChatScreen> {
       await isar.writeTxn(() async {
         final aiMessageId = await isar.chatMessageModels.put(aiMessageModel);
         aiMessageModel.id = aiMessageId;
+        print("TEST DEBUG: AI message saved with ID: $aiMessageId");
       });
 
       setState(() {
         _messages.insert(0, _createChatMessage(aiMessageModel));
         _isTyping = false;
+        print(
+            "TEST DEBUG: AI message added to UI. Messages count: ${_messages.length}");
       });
       _scrollToBottom();
     } catch (e) {
-      setState(() {
-        _messages.insert(
-          0,
-          const ChatMessage(
-            text: 'Error: Unable to send message. Please try again later.',
-            isUser: false,
+      // Create a model for the generic error message
+      final genericErrorMessageModel = ChatMessageModel(
+        text: 'Error: Unable to send message. Please try again later.',
+        isUser: false,
+        type: MessageType.text, // Using MessageType.text for errors
+        timestamp: DateTime.now(),
+      );
+
+      // Save generic error message to storage and get ID
+      // This requires access to _storageService and its db, which might be an issue if storage itself failed.
+      // However, for testing with mocks, this path should be controllable.
+      try {
+        final isarInstance = await _storageService
+            .db; // Renamed to avoid conflict with isar in outer scope if any
+        await isarInstance.writeTxn(() async {
+          final genericErrorMessageId = await isarInstance.chatMessageModels
+              .put(genericErrorMessageModel);
+          genericErrorMessageModel.id = genericErrorMessageId;
+        });
+
+        // Display generic error message to user using the standard method
+        setState(() {
+          _messages.insert(0, _createChatMessage(genericErrorMessageModel));
+          _isTyping = false;
+        });
+      } catch (storageError) {
+        // If saving the generic error itself fails, fallback to a non-persistent display or log heavily
+        // For now, just ensure _isTyping is reset and perhaps log, but don't try to save again.
+        _logger.error(
+            'CRITICAL: Failed to save generic error message to storage: $storageError. Original error: $e');
+        setState(() {
+          // Fallback: Add a non-persistent ChatMessage if _createChatMessage fails due to no ID.
+          // Or, ideally, _createChatMessage should handle a null ID gracefully for display-only errors.
+          // For now, we stick to the pattern. If ID is not set, ValueKey will be ValueKey(null).
+          _messages.insert(
+            0,
+            const ChatMessage(
+              // Fallback if saving generic error fails
+              text:
+                  'Error: Unable to send message. Please try again later. (Display only)',
+              isUser: false,
+            ),
+          );
+          _isTyping = false;
+        });
+      }
+
+      if (mounted) {
+        // Ensure mounted check for ScaffoldMessenger
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
           ),
         );
-        _isTyping = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      }
     }
   }
 
@@ -513,14 +625,25 @@ class _ChatScreenState extends State<ChatScreen> {
           response.contains('Authentication failed');
 
       if (isErrorResponse) {
-        // Display error message to user
-        final aiMessage = ChatMessage(
+        // Create a model for the error message
+        final errorMessageModel = ChatMessageModel(
           text: response,
           isUser: false,
+          type: MessageType.text,
+          timestamp: DateTime.now(),
         );
 
+        // Save error message to storage and get ID
+        final isar = await _storageService.db;
+        await isar.writeTxn(() async {
+          final errorMessageId =
+              await isar.chatMessageModels.put(errorMessageModel);
+          errorMessageModel.id = errorMessageId;
+        });
+
+        // Display error message using _createChatMessage
         setState(() {
-          _messages.insert(0, aiMessage);
+          _messages.insert(0, _createChatMessage(errorMessageModel));
         });
 
         // Show error in snackbar
@@ -536,26 +659,24 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Save AI response
-      await _storageService.saveMessage(
+      // Save AI response using ChatMessageModel
+      final aiMessageModel = ChatMessageModel(
         text: response,
         isUser: false,
         type: MessageType.text,
+        timestamp: DateTime.now(),
       );
 
-      // Get the saved AI message ID
-      final aiMessages = await _storageService.getMessages(limit: 1);
-      final aiMessageId = aiMessages.first.id;
+      // Save to storage and get ID
+      final isar = await _storageService.db;
+      await isar.writeTxn(() async {
+        final aiMessageId = await isar.chatMessageModels.put(aiMessageModel);
+        aiMessageModel.id = aiMessageId;
+      });
 
-      final aiMessage = ChatMessage(
-        key: ValueKey(aiMessageId),
-        text: response,
-        isUser: false,
-        onDelete: () => _deleteMessage(aiMessageId),
-      );
-
+      // Add to UI using _createChatMessage
       setState(() {
-        _messages.insert(0, aiMessage);
+        _messages.insert(0, _createChatMessage(aiMessageModel));
       });
       _scrollToBottom();
     } catch (e) {
@@ -567,14 +688,36 @@ class _ChatScreenState extends State<ChatScreen> {
       );
       print('Error processing audio message: $e');
 
-      // Update the transcribing message to show the error
-      setState(() {
-        _messages[0] = const ChatMessage(
-          text:
-              'Error: Unable to process audio message. Please try again later.',
-          isUser: false,
-        );
-      });
+      // Create error model for the error message
+      final errorModel = ChatMessageModel(
+        text: 'Error: Unable to process audio message. Please try again later.',
+        isUser: false,
+        type: MessageType.text,
+        timestamp: DateTime.now(),
+      );
+
+      try {
+        // Save error to storage
+        final isar = await _storageService.db;
+        await isar.writeTxn(() async {
+          final errorId = await isar.chatMessageModels.put(errorModel);
+          errorModel.id = errorId;
+        });
+
+        // Update UI with _createChatMessage
+        setState(() {
+          _messages[0] = _createChatMessage(errorModel);
+        });
+      } catch (storageError) {
+        // Fallback if storage fails
+        setState(() {
+          _messages[0] = const ChatMessage(
+            text:
+                'Error: Unable to process audio message. Please try again later.',
+            isUser: false,
+          );
+        });
+      }
     }
   }
 
@@ -680,5 +823,19 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollController.dispose();
     _storageService.close();
     super.dispose();
+  }
+
+  // Expose messages for testing
+  List<ChatMessage> get messages => List.unmodifiable(_messages);
+
+  // Method to get message count for testing
+  int get messageCount => _messages.length;
+
+  // Method to get message text at index for testing
+  String? getMessageTextAt(int index) {
+    if (index >= 0 && index < _messages.length) {
+      return _messages[index].text;
+    }
+    return null;
   }
 }

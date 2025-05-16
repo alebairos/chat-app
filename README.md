@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface.
 
 ## Version
-Current version: v1.0.28 (tag: v1.0.28)
+Current version: v1.0.29 (tag: v1.0.29)
 
 ## Features
 
@@ -128,6 +128,16 @@ For more detailed information about the test groups and specific tests, see the 
   - Accessibility label tests
 
 ## Changelog
+
+### v1.0.29
+- Fixed missing persona config files in pubspec.yaml assets
+- Added all persona config files (claude_config.json, sergeant_oracle_config.json, zen_guide_config.json)
+- Fixed ChatScreen tests for error handling
+- Improved test reliability with testMode flag
+- Simplified test assertions for better maintainability
+- Fixed "Failed to load system prompt" error in the app
+- Refactored code to remove unused variables
+- All tests passing successfully
 
 ### v1.0.28
 - Added initial implementation of audio assistant replies feature
