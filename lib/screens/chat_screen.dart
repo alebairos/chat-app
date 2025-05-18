@@ -52,9 +52,10 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _claudeService = widget.claudeService ?? ClaudeService();
-    _storageService = widget.storageService ?? ChatStorageService();
     _ttsService = AudioAssistantTTSService();
+    _claudeService = widget.claudeService ??
+        ClaudeService(ttsService: _ttsService, audioEnabled: true);
+    _storageService = widget.storageService ?? ChatStorageService();
     _currentPersona = _configLoader.activePersonaDisplayName;
     _checkEnvironment();
     _initializeServices();
@@ -66,10 +67,8 @@ class _ChatScreenState extends State<ChatScreen> {
       await _claudeService.initialize();
       await _ttsService.initialize();
 
-      // If ClaudeService doesn't already have a TTS service, provide one
-      if (_claudeService is ClaudeService &&
-          !widget.testMode &&
-          !(_claudeService as ClaudeService).audioEnabled) {
+      // Ensure audio is enabled in Claude service
+      if (_claudeService is ClaudeService && !widget.testMode) {
         (_claudeService as ClaudeService).audioEnabled = true;
       }
 
