@@ -5,6 +5,8 @@ import '../config/config_loader.dart';
 import 'life_plan_mcp_service.dart';
 import '../models/life_plan/dimensions.dart';
 import '../utils/logger.dart';
+import '../features/audio_assistant/tts_service.dart';
+import '../models/claude_audio_response.dart';
 
 // Helper class for validation results
 class ValidationResult {
@@ -25,15 +27,27 @@ class ClaudeService {
   final LifePlanMCPService? _lifePlanMCP;
   final ConfigLoader _configLoader;
 
+  // Add these fields
+  final AudioAssistantTTSService? _ttsService;
+  bool _audioEnabled = true;
+
   ClaudeService({
     http.Client? client,
     LifePlanMCPService? lifePlanMCP,
     ConfigLoader? configLoader,
+    AudioAssistantTTSService? ttsService,
+    bool audioEnabled = true,
   })  : _client = client ?? http.Client(),
         _lifePlanMCP = lifePlanMCP,
-        _configLoader = configLoader ?? ConfigLoader() {
+        _configLoader = configLoader ?? ConfigLoader(),
+        _ttsService = ttsService,
+        _audioEnabled = audioEnabled {
     _apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
   }
+
+  // Add getter and setter for audioEnabled
+  bool get audioEnabled => _audioEnabled;
+  set audioEnabled(bool value) => _audioEnabled = value;
 
   // Method to enable or disable logging
   void setLogging(bool enable) {
@@ -480,4 +494,64 @@ class ClaudeService {
   // Getter for conversation history
   List<Map<String, String>> get conversationHistory =>
       List.unmodifiable(_conversationHistory);
+
+  // Add method to send message with audio
+  Future<ClaudeAudioResponse> sendMessageWithAudio(String message) async {
+    try {
+      // First get the text response
+      final textResponse = await sendMessage(message);
+
+      // Return text-only response if TTS is disabled or unavailable
+      if (!_audioEnabled || _ttsService == null) {
+        _logger.debug('Audio is disabled or TTS service is unavailable');
+        return ClaudeAudioResponse(text: textResponse);
+      }
+
+      try {
+        // Initialize TTS service if needed
+        final ttsInitialized = await _ttsService!.initialize();
+        if (!ttsInitialized) {
+          _logger.error('Failed to initialize TTS service');
+          return ClaudeAudioResponse(text: textResponse);
+        }
+
+        // Generate audio from the text response
+        final audioPath = await _ttsService!.generateAudio(textResponse);
+
+        // If audio generation failed, return text only
+        if (audioPath == null) {
+          _logger.error('Failed to generate audio for response');
+          return ClaudeAudioResponse(text: textResponse);
+        }
+
+        _logger.debug('Generated audio at path: $audioPath');
+
+        // Return both text and audio path
+        return ClaudeAudioResponse(
+          text: textResponse,
+          audioPath: audioPath,
+          // Duration is not available here, will be set later
+        );
+      } catch (e) {
+        _logger.error('Error generating audio for response: $e');
+        return ClaudeAudioResponse(
+            text: textResponse, error: _handleTTSError(e));
+      }
+    } catch (e) {
+      final errorMessage = _getUserFriendlyErrorMessage(e.toString());
+      _logger.error('Error in sendMessageWithAudio: $e');
+      return ClaudeAudioResponse(text: errorMessage);
+    }
+  }
+
+  // Add helper method for TTS-specific error handling
+  String _handleTTSError(dynamic error) {
+    if (error.toString().contains('TTS service not initialized')) {
+      return 'Audio generation is temporarily unavailable. Please try again later.';
+    }
+    if (error.toString().contains('audio file generation failed')) {
+      return 'Failed to generate audio. Text response is still available.';
+    }
+    return 'An error occurred during audio generation.';
+  }
 }

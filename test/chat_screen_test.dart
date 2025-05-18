@@ -7,6 +7,7 @@ import 'package:character_ai_clone/models/chat_message_model.dart';
 import 'package:character_ai_clone/models/message_type.dart';
 import 'package:character_ai_clone/services/chat_storage_service.dart';
 import 'package:character_ai_clone/services/claude_service.dart';
+import 'package:character_ai_clone/models/claude_audio_response.dart';
 
 // Simple fake implementations instead of complex mocks
 class FakeChatStorageService implements ChatStorageService {
@@ -185,6 +186,7 @@ class FakeIsarCollection<T> implements IsarCollection<ChatMessageModel> {
 
 class FakeClaudeService implements ClaudeService {
   String _response = 'Mock response';
+  bool _audioEnabled = true;
 
   void setResponse(String response) {
     _response = response;
@@ -194,6 +196,17 @@ class FakeClaudeService implements ClaudeService {
   Future<String> sendMessage(String message) async {
     return _response;
   }
+
+  @override
+  Future<ClaudeAudioResponse> sendMessageWithAudio(String message) async {
+    return ClaudeAudioResponse(text: _response);
+  }
+
+  @override
+  bool get audioEnabled => _audioEnabled;
+
+  @override
+  set audioEnabled(bool value) => _audioEnabled = value;
 
   @override
   void clearConversation() {
