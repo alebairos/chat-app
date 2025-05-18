@@ -40,10 +40,21 @@ class ElevenLabsProvider implements TTSProvider {
 
     try {
       if (_configuration['useAuthFromEnv'] == true) {
-        _apiKey = dotenv.env['ELEVENLABS_API_KEY'] ?? '';
+        // Try both formats of environment variable names
+        _apiKey = dotenv.env['ELEVEN_LABS_API_KEY'] ??
+            dotenv.env['ELEVENLABS_API_KEY'] ??
+            '';
+
         if (_apiKey.isEmpty) {
           _logger.error('ElevenLabs API key not found in .env file');
           return false;
+        }
+
+        // Also check for voice ID in environment
+        final envVoiceId = dotenv.env['ELEVEN_LABS_VOICE_ID'] ??
+            dotenv.env['ELEVENLABS_VOICE_ID'];
+        if (envVoiceId != null && envVoiceId.isNotEmpty) {
+          _configuration['voiceId'] = envVoiceId;
         }
       } else {
         _apiKey = _configuration['apiKey'] ?? '';
