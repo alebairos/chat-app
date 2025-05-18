@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'audio_message.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import '../features/audio_assistant/widgets/assistant_audio_message.dart';
 
 class ChatMessage extends StatelessWidget {
   final String text;
@@ -139,12 +140,19 @@ class ChatMessage extends StatelessWidget {
           ],
           Flexible(
             child: audioPath != null
-                ? AudioMessage(
-                    audioPath: audioPath!,
-                    isUser: isUser,
-                    transcription: text,
-                    duration: duration ?? Duration.zero,
-                  )
+                ? isUser
+                    ? AudioMessage(
+                        audioPath: audioPath!,
+                        isUser: isUser,
+                        transcription: text,
+                        duration: duration ?? Duration.zero,
+                      )
+                    : AssistantAudioMessage(
+                        audioPath: audioPath!,
+                        transcription: text,
+                        duration: duration ?? Duration.zero,
+                        messageId: key.toString(),
+                      )
                 : Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(

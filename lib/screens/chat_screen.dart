@@ -10,14 +10,19 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/transcription_service.dart';
 import '../utils/logger.dart';
 import '../config/config_loader.dart';
+import '../features/audio_assistant/tts_service.dart';
+import '../models/claude_audio_response.dart';
+import '../features/audio_assistant/widgets/assistant_audio_message.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
   final ClaudeService? claudeService;
+  final bool testMode;
 
   const ChatScreen({
     this.storageService,
     this.claudeService,
+    this.testMode = false,
     super.key,
   });
 
@@ -30,6 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<ChatMessage> _messages = [];
   late final ClaudeService _claudeService;
   late final ChatStorageService _storageService;
+  late final AudioAssistantTTSService _ttsService;
   bool _isTyping = false;
   bool _isLoadingMore = false;
   bool _isInitialLoading = true;
@@ -48,14 +54,25 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _claudeService = widget.claudeService ?? ClaudeService();
     _storageService = widget.storageService ?? ChatStorageService();
+    _ttsService = AudioAssistantTTSService();
     _currentPersona = _configLoader.activePersonaDisplayName;
     _checkEnvironment();
-    _initializeStorage();
+    _initializeServices();
     _setupScrollListener();
   }
 
-  Future<void> _initializeStorage() async {
+  Future<void> _initializeServices() async {
     try {
+      await _claudeService.initialize();
+      await _ttsService.initialize();
+
+      // If ClaudeService doesn't already have a TTS service, provide one
+      if (_claudeService is ClaudeService &&
+          !widget.testMode &&
+          !(_claudeService as ClaudeService).audioEnabled) {
+        (_claudeService as ClaudeService).audioEnabled = true;
+      }
+
       // Migrate any existing absolute paths to relative paths
       await _storageService.migratePathsToRelative();
 
@@ -63,10 +80,10 @@ class _ChatScreenState extends State<ChatScreen> {
       await _loadMessages();
     } catch (e) {
       setState(() {
-        _error = 'Error initializing storage: $e';
+        _error = 'Error initializing services: $e';
         _isInitialLoading = false;
       });
-      _logger.error('Error initializing storage: $e');
+      _logger.error('Error initializing services: $e');
     }
   }
 
@@ -379,16 +396,16 @@ class _ChatScreenState extends State<ChatScreen> {
       _messageController.clear();
       _scrollToBottom();
 
-      // Get AI response
-      final response = await _claudeService.sendMessage(userMessage);
+      // Get AI response with audio
+      final response = await _claudeService.sendMessageWithAudio(userMessage);
 
-      // Check if the response is an error message
-      final bool isErrorResponse = response.startsWith('Error:') ||
-          response.contains('Unable to connect') ||
-          response.contains('experiencing high demand') ||
-          response.contains('temporarily unavailable') ||
-          response.contains('rate limit') ||
-          response.contains('Authentication failed');
+      // Check if the response contains an error message
+      final bool isErrorResponse = response.text.startsWith('Error:') ||
+          response.text.contains('Unable to connect') ||
+          response.text.contains('experiencing high demand') ||
+          response.text.contains('temporarily unavailable') ||
+          response.text.contains('rate limit') ||
+          response.text.contains('Authentication failed');
 
       if (isErrorResponse) {
         // Display error message to user
@@ -396,7 +413,7 @@ class _ChatScreenState extends State<ChatScreen> {
           _messages.insert(
             0,
             ChatMessage(
-              text: response,
+              text: response.text,
               isUser: false,
             ),
           );
@@ -407,7 +424,7 @@ class _ChatScreenState extends State<ChatScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response),
+              content: Text(response.text),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 5),
             ),
@@ -417,11 +434,16 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       // Process normal response
+      final messageType =
+          response.audioPath != null ? MessageType.audio : MessageType.text;
+
       final aiMessageModel = ChatMessageModel(
-        text: response,
+        text: response.text,
         isUser: false,
-        type: MessageType.text,
+        type: messageType,
         timestamp: DateTime.now(),
+        mediaPath: response.audioPath,
+        duration: response.audioDuration,
       );
 
       // Save AI response and get ID
