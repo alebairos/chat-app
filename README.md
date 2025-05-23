@@ -1,22 +1,30 @@
 # Chat App
 
-A Flutter-based chat application that implements an AI-powered chat interface.
+A Flutter-based chat application that implements an AI-powered chat interface with comprehensive audio assistant capabilities.
 
 ## Version
-Current version: v1.0.28 (tag: v1.0.28)
+Current version: v1.0.29 (tag: v1.0.29)
 
 ## Features
 
 - Real-time chat interface
 - AI-powered responses using Claude API
+- **Audio Assistant with Text-to-Speech (TTS)**: Comprehensive TTS system with multiple provider support
+  - ElevenLabs TTS integration with high-quality voice synthesis
+  - Mock TTS provider for testing and development
+  - Automatic audio generation for assistant responses
+  - Intelligent error handling and graceful fallbacks
+  - Provider-based architecture supporting multiple TTS services
 - Audio messages with OpenAI Whisper transcription
-- Audio assistant replies (see [Audio Assistant Replies Documentation](docs/features/audio_assistant_replies.md))
+- Audio playback controls with pause/resume functionality
 - Local message storage with Isar Database
 - Message deletion and search functionality
 - Infinite scroll pagination
 - Clean and intuitive UI
 - Life planning system with MCP architecture (see [Life Planning System Analysis](docs/life_planning_system_analysis.md))
 - Relative path storage for reliable audio file access (see [Path Storage Strategy](#path-storage-strategy))
+- Comprehensive error handling and user feedback
+- **Enhanced Test Suite**: 28 test files with 169 tests across 5 organized test groups
 
 ## Setup
 
@@ -30,6 +38,30 @@ Current version: v1.0.28 (tag: v1.0.28)
 Create a `.env` file in the root directory with the following variables:
 - `ANTHROPIC_API_KEY`: Your API key for the Claude AI service
 - `OPENAI_API_KEY`: Your API key for OpenAI Whisper transcription
+- `ELEVEN_LABS_API_KEY` or `ELEVENLABS_API_KEY`: Your API key for ElevenLabs TTS service (optional, falls back to mock TTS if not provided)
+
+## Audio Assistant Features
+
+### Text-to-Speech (TTS) Integration
+The app includes a comprehensive TTS system that automatically generates audio versions of assistant responses:
+
+- **Provider-Based Architecture**: Supports multiple TTS providers through a unified interface
+- **ElevenLabs Integration**: High-quality voice synthesis using ElevenLabs API
+- **Intelligent Fallbacks**: Automatically falls back to mock TTS if ElevenLabs is unavailable
+- **Error Recovery**: Graceful handling of TTS failures with text-only responses
+- **Audio Playback Controls**: Play, pause, resume functionality for generated audio
+- **Test Mode Support**: Mock TTS provider for testing and development
+
+### Audio Response Flow
+1. User sends a message to the chat
+2. Claude AI generates a text response
+3. TTS service automatically generates audio for the response
+4. Both text and audio are displayed in the chat interface
+5. Users can play, pause, and control audio playback
+
+### Supported TTS Providers
+- **ElevenLabs**: Professional-grade voice synthesis (requires API key)
+- **Mock TTS**: Development and testing provider (no API key required)
 
 ## Development
 
@@ -41,30 +73,23 @@ This project is built with Flutter. For help getting started with Flutter develo
 ## Test Status
 
 ### Test Statistics
-- **Test Files**: 47 Dart test files
-- **Total Lines of Test Code**: 9,520+ lines
-- **Test Functions**: 248+ test functions (150+ unit tests, 98+ widget tests)
-- **Assertions**: 780+ expect() assertions
-- **Mock Verifications**: 20+ verify/verifyNever calls
-- **Test Groups**: 50+ logical test groups
-- **Test Organization**: 6 test script groups with dedicated execution scripts
+- **Test Files**: 28 Dart test files (updated)
+- **Total Tests**: 169 individual tests (updated)
+- **Test Coverage**: All tests passing ✅
+- **Test Organization**: 5 logical test groups with dedicated execution scripts
+- **Mocking Strategy**: Migrated from `mockito` to `mocktail` for better test isolation
 
 ### Test Coverage by Component
-- Audio Recorder tests: 41 tests (see [detailed coverage analysis](docs/test_coverage_analysis.md))
-  - Concurrency tests temporarily skipped until state management is fixed
-- Audio Message tests: 
-  - Basic tests: core functionality tests
-  - Visual integration tests: UI appearance and component interactions
-- Chat Storage tests: 13 tests (CRUD operations, pagination)
-- Path Utils tests: 20+ tests covering path operations, normalization, file existence, and integration
-- Life Plan Service tests: 16 tests (MCP and core functionality)
-- Claude Service tests: 12 tests (conversation, error handling)
-- System Prompt tests: 3 tests (character identity, life planning, formatting) (see [system prompt testing strategy](docs/system_prompt_testing.md))
-- Transcription Service tests: 13 tests (API integration, error handling)
-- UTF-8 Handling tests: 3 tests (character encoding)
-- Chat Message tests: 1 test (formatting)
-- Widget tests: 2 tests (basic app functionality)
-- Integration tests: 7 tests (end-to-end functionality)
+- **Audio Assistant Tests**: Comprehensive TTS service testing, provider integration, error handling
+- **Audio Recorder Tests**: Recording functionality, concurrency handling, UI states
+- **Audio Message Tests**: Visual integration, playback controls, component interactions
+- **Claude Service Tests**: API integration, TTS integration, error handling, response processing
+- **Chat Storage Tests**: CRUD operations, pagination, path migration
+- **Path Utils Tests**: Path operations, normalization, file existence, integration
+- **Life Plan Service Tests**: MCP functionality, data processing
+- **System Prompt Tests**: Character identity, life planning integration, formatting
+- **Transcription Service Tests**: API integration, error handling
+- **Widget Tests**: UI components, user interactions, accessibility
 
 ### Test Organization
 
@@ -74,17 +99,16 @@ Tests are organized into logical groups with dedicated scripts for execution:
   - `run_all_tests.sh`: Master script to run all test groups sequentially
   - `run_test_group1.sh`: Audio Recorder Tests
   - `run_test_group2.sh`: Audio Message and System Prompt Tests
-  - `run_test_group3.sh`: Claude Service Tests
+  - `run_test_group3.sh`: Claude Service Tests (including TTS integration)
   - `run_test_group4.sh`: Life Plan Tests
   - `run_test_group5.sh`: Chat UI Tests
-  - `run_test_group6.sh`: Path Utils and Utility Tests
 
 - **Test Results**: Located in the `test_scripts/results/` directory
   - Individual test results for each group
   - Summary report with pass/fail information
 
-- **Test Documentation**: Located in the `test_scripts/` directory
-  - `TEST_README.md`: Detailed information about the test organization and execution
+- **Test Documentation**: 
+  - `TEST_README.md`: Detailed test execution information
   - `TEST_REPORT.md`: Comprehensive test report with findings and recommendations
 
 To run all tests:
@@ -94,40 +118,34 @@ To run all tests:
 
 To run a specific test group:
 ```bash
-./test_scripts/run_test_group<N>.sh  # Replace <N> with 1-6
+./test_scripts/run_test_group<N>.sh  # Replace <N> with 1-5
 ```
 
-For more detailed information about the test groups and specific tests, see the [TEST_README.md](test_scripts/TEST_README.md) file.
+For more detailed information about the test groups and specific tests, see the [TEST_README.md](TEST_README.md) file.
 
-### Test Coverage Details
-- **Line Coverage**: Approximately 87% of application code
-- **Branch Coverage**: Approximately 82% of conditional branches
-- **Component Coverage**: 100% of major components have tests
-- **API Coverage**: 100% of API endpoints and error cases tested
-- **UI Coverage**: All critical UI components and interactions tested
-- **Edge Cases**: Comprehensive testing of error conditions and edge cases
-
-### Test Coverage by Feature
-- Path utilities and relative path storage
-- System prompt functionality and character identity
-- Audio message visual rendering and interactions
-- Error message styling and behavior
-- Delete button behavior and interactions
-- Button styles and state transitions
-- Storage operations and pagination
-- Character encoding and UTF-8
-- API integration and error handling
-- State management and UI updates
-- Message formatting and display
-
-### Temporarily Disabled Tests
-- Audio Recorder:
-  - Concurrency tests (12 tests) skipped until state management is fixed
-- Chat App Bar:
-  - Layout tests for different screen sizes
-  - Accessibility label tests
+### Recent Test Improvements
+- **Import Path Standardization**: Resolved type conflicts by using consistent package imports
+- **MockTail Migration**: Migrated from `mockito` to `mocktail` for better test isolation and reliability
+- **Error Handling Enhancement**: Improved Claude service error handling for various API scenarios
+- **TTS Test Coverage**: Comprehensive testing of audio assistant functionality
+- **Configuration Testing**: Enhanced ConfigLoader tests with proper mocking
 
 ## Changelog
+
+### v1.0.29
+- **Audio Assistant Implementation Complete**: Full TTS integration with Claude service
+- **Provider-Based TTS Architecture**: Support for multiple TTS providers (ElevenLabs, Mock)
+- **Test Suite Improvements**: 
+  - Fixed ConfigLoader tests by standardizing import paths and adding proper mocking
+  - Migrated Claude service tests from mockito to mocktail for better isolation
+  - Improved Claude service error handling for various API error scenarios
+  - Enhanced TTS service integration with better error recovery
+  - Removed deprecated mock files and updated all test imports
+  - All 28 test files (169 tests total) now passing across 5 test groups
+- **Enhanced Error Handling**: Intelligent detection and handling of Claude API errors
+- **Audio Integration**: Seamless integration of TTS with chat interface
+- **Documentation Updates**: Comprehensive test documentation and reporting
+- **Environment Variable Support**: Added ElevenLabs API key configuration
 
 ### v1.0.28
 - Added initial implementation of audio assistant replies feature
