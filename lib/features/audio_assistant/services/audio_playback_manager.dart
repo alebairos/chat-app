@@ -64,11 +64,12 @@ class AudioPlaybackManager {
               );
             }
 
-            // Reset active widget when playback stops
+            // Only reset active widget when playback actually completes
+            // Don't reset on programmatic stops (like pause)
             if (state == PlaybackState.stopped) {
               _logger.debug(
-                  'AudioPlaybackManager: Playback stopped, resetting active widget');
-              _activeWidgetId = null;
+                  'AudioPlaybackManager: Playback stopped, but keeping active widget for possible resume');
+              // Don't reset _activeWidgetId here - let explicit stop methods handle it
             }
           }
         } catch (e) {
@@ -271,11 +272,22 @@ class AudioPlaybackManager {
     try {
       _logger
           .debug('AudioPlaybackManager: Requested pause for widget $widgetId');
+      _logger.debug(
+          'AudioPlaybackManager: Current active widget: $_activeWidgetId');
 
       if (_activeWidgetId != widgetId) {
         _logger.debug(
             'AudioPlaybackManager: Cannot pause - widget $widgetId is not active (active widget: $_activeWidgetId)');
-        return false;
+
+        // If the widget thinks it's playing but manager doesn't know about it,
+        // let's set it as active and try to pause
+        if (_audioPlayback.state == PlaybackState.playing) {
+          _logger.debug(
+              'AudioPlaybackManager: Audio is playing, setting widget as active and proceeding with pause');
+          _activeWidgetId = widgetId;
+        } else {
+          return false;
+        }
       }
 
       _logger.debug('AudioPlaybackManager: Pausing audio for widget $widgetId');
@@ -375,13 +387,20 @@ class AudioPlaybackManager {
   }
 
   /// Stop the currently playing audio
-  Future<bool> stopAudio() async {
+  Future<bool> stopAudio({String? widgetId}) async {
     if (!_initialized) {
       _logger.error('AudioPlaybackManager: Not initialized, cannot stop');
       return false;
     }
 
     try {
+      // If widgetId is provided, only stop if it matches the active widget
+      if (widgetId != null && _activeWidgetId != widgetId) {
+        _logger.debug(
+            'AudioPlaybackManager: Cannot stop - widget $widgetId is not active (active widget: $_activeWidgetId)');
+        return false;
+      }
+
       if (_activeWidgetId == null) {
         return false;
       }
@@ -390,7 +409,7 @@ class AudioPlaybackManager {
       _logger.debug(
           'AudioPlaybackManager: Stopping audio for widget $_activeWidgetId');
 
-      // Reset active widget before stopping to prevent race conditions
+      // Reset active widget when explicitly stopping
       _activeWidgetId = null;
 
       final result = await _audioPlayback.stop();
@@ -424,6 +443,14 @@ class AudioPlaybackManager {
       return false;
     }
   }
+
+  /// Check if a specific widget is the currently active widget
+  bool isActiveWidget(String widgetId) {
+    return _activeWidgetId == widgetId;
+  }
+
+  /// Get the current active widget ID (for debugging)
+  String? get currentActiveWidget => _activeWidgetId;
 
   /// Dispose the manager and release resources
   Future<void> dispose() async {
