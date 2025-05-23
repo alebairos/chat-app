@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../utils/logger.dart';
 import '../../utils/path_utils.dart';
+import '../../config/config_loader.dart';
 import 'services/tts_provider.dart';
 import 'services/eleven_labs_provider.dart';
 import 'services/mock_tts_provider.dart';
+import 'services/character_voice_config.dart';
 
 /// Service responsible for converting text to speech.
 ///
@@ -12,6 +14,7 @@ import 'services/mock_tts_provider.dart';
 /// allowing it to generate audio responses that can be played back to the user.
 class AudioAssistantTTSService {
   final Logger _logger = Logger();
+  final ConfigLoader _configLoader = ConfigLoader();
   bool _isInitialized = false;
   bool _isTestMode = false;
   static const String _audioDir = 'audio_assistant';
@@ -74,6 +77,36 @@ class AudioAssistantTTSService {
   /// Returns true if the configuration was updated successfully, false otherwise
   Future<bool> updateProviderConfig(Map<String, dynamic> newConfig) async {
     return _provider.updateConfig(newConfig);
+  }
+
+  /// Apply character-specific voice configuration
+  ///
+  /// Uses the current active character from ConfigLoader to apply appropriate voice settings
+  Future<bool> applyCharacterVoice() async {
+    try {
+      final characterName = _configLoader.activePersonaDisplayName;
+      final characterConfig =
+          CharacterVoiceConfig.getVoiceConfig(characterName);
+
+      _logger.debug('Applying character voice for: $characterName');
+      _logger.debug('Voice config: $characterConfig');
+
+      // Apply the character-specific configuration to the current provider
+      final success = await updateProviderConfig(characterConfig);
+
+      if (success) {
+        _logger.debug(
+            'Successfully applied character voice configuration for: $characterName');
+      } else {
+        _logger.error(
+            'Failed to apply character voice configuration for: $characterName');
+      }
+
+      return success;
+    } catch (e) {
+      _logger.error('Error applying character voice configuration: $e');
+      return false;
+    }
   }
 
   /// Ensure the audio directory exists
@@ -154,6 +187,11 @@ class AudioAssistantTTSService {
     }
 
     try {
+      // Apply character-specific voice configuration before generating audio
+      if (!_isTestMode) {
+        await applyCharacterVoice();
+      }
+
       if (_isTestMode) {
         return '$_audioDir/test_audio_assistant_${DateTime.now().millisecondsSinceEpoch}.mp3';
       }
