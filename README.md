@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface with comprehensive audio assistant capabilities.
 
 ## Version
-Current version: v1.0.30 (tag: v1.0.30)
+Current version: v1.0.31 (tag: v1.0.31)
 
 ## Features
 
@@ -15,9 +15,9 @@ Current version: v1.0.30 (tag: v1.0.30)
   - Automatic audio generation for assistant responses
   - Intelligent error handling and graceful fallbacks
   - Provider-based architecture supporting multiple TTS services
-  - **Proper pause/resume functionality**: Audio maintains position when paused and resumes from exact same point
+  - **Proper pause/resume functionality**: Audio maintains position when paused and resumes from exact same point without losing state
 - Audio messages with OpenAI Whisper transcription
-- Audio playback controls with pause/resume functionality
+- **Audio playback controls with reliable pause/resume**: Fixed pause button to properly pause audio instead of stopping it
 - Local message storage with Isar Database
 - Message deletion and search functionality
 - Infinite scroll pagination
@@ -133,7 +133,22 @@ For more detailed information about the test groups and specific tests, see the 
 
 ## Changelog
 
-### v1.0.29
+### v1.0.31
+- **Fixed Audio Pause Functionality**: Resolved critical bug where pause button was forcing audio to stop instead of properly pausing
+  - **Root Cause**: ActiveWidgetId was being reset inappropriately during pause operations, breaking resume functionality
+  - **Solution**: Modified pause logic to maintain widget ID consistency and prevent fallback to stop behavior
+  - **Recovery Logic**: Added intelligent recovery when widget ID mismatch occurs during pause operations
+  - **State Management**: Improved synchronization between audio playback manager and UI widgets
+  - **User Experience**: Pause button now properly pauses audio and maintains position for seamless resume
+- **Defensive Test Suite**: Added comprehensive test coverage to prevent regression
+  - 8 defensive tests protecting pause/resume state logic
+  - Tests validate widget ID consistency during pause operations
+  - Protection against pause/stop behavior confusion
+  - Coverage for recovery logic and error scenarios
+  - Rapid pause/resume cycle testing for stability
+  - All tests pass and provide future regression protection
+
+### v1.0.30
 - **Audio Assistant Implementation Complete**: Full TTS integration with Claude service
 - **Provider-Based TTS Architecture**: Support for multiple TTS providers (ElevenLabs, Mock)
 - **Test Suite Improvements**: 
@@ -148,7 +163,7 @@ For more detailed information about the test groups and specific tests, see the 
 - **Documentation Updates**: Comprehensive test documentation and reporting
 - **Environment Variable Support**: Added ElevenLabs API key configuration
 
-### v1.0.28
+### v1.0.29
 - Added initial implementation of audio assistant replies feature
 - Created TTSService for text-to-speech functionality
 - Added comprehensive path utilities tests (basic, normalization, file operations, integration)
@@ -158,28 +173,28 @@ For more detailed information about the test groups and specific tests, see the 
 - Updated test documentation for better clarity
 - All tests passing successfully
 
-### v1.0.27
+### v1.0.28
 - Added comprehensive life planning system analysis document
 - Added reference to life planning system analysis in README
 - Documented MCP architecture and specialist knowledge implementation
 - Detailed the dimensions, tracks, habits, and goals structure
 - Analyzed strengths and potential enhancements of the life planning system
 
-### v1.0.26
+### v1.0.27
 - Fixed system prompt life planning test by updating test expectations to match actual system prompt content
 - Added `isStartupLoggingEnabled()` method to Logger class for better encapsulation
 - Updated `_createChatMessage` method to use the new logger method for conditional logging
 - Improved test reliability with more accurate expectations
 - All tests now passing successfully
 
-### v1.0.25
+### v1.0.26
 - Added comprehensive test documentation files
 - Added TEST_README.md with detailed test execution instructions
 - Added TEST_REPORT.md with test results and findings
 - Updated README with latest test information
 - Improved project documentation for better maintainability
 
-### v1.0.24
+### v1.0.25
 - Organized test scripts into dedicated directory structure
 - Created test_scripts/ directory for all test-related files
 - Added test_scripts/results/ directory for test output files
@@ -187,46 +202,46 @@ For more detailed information about the test groups and specific tests, see the 
 - Updated README with comprehensive test organization documentation
 - Improved project structure for better maintainability
 
-### v1.0.23
+### v1.0.24
 - Added focused system prompt tests for character identity, life planning, and formatting
 - Implemented test suite to verify system prompt prevents command exposure in UI
 - Ensured proper formatting instructions are applied in the UI
 - Added verification for life planning functionality without exposing commands
 - All tests passing successfully with 97 test functions and 205 assertions
 
-### v1.0.22
+### v1.0.23
 - Improved error handling tests with focused assertions
 - Enhanced error message styling consistency tests
 - Added comprehensive snackbar behavior tests
 - Simplified test structure for better maintainability
 - All tests passing successfully
 
-### v1.0.21
+### v1.0.22
 - Fixed SSH key configuration for deployment
 - Updated documentation for SSH key setup
 - Ensured proper authentication for git operations
 
-### v1.0.20
+### v1.0.21
 - Fixed @Skip annotation placement in audio recorder concurrency tests
 - Temporarily disabled concurrency tests until state management is fixed
 - Updated test documentation and coverage analysis
 - All remaining tests passing successfully
 
-### v1.0.19
+### v1.0.20
 - Added comprehensive test suite for error message styling and behavior
 - Added tests for MaterialBanner implementation
 - Added tests for error message dismissal behavior
 - Improved error message UI consistency
 - All tests passing successfully
 
-### v1.0.18
+### v1.0.19
 - Simplified avatar consistency test to focus on UI styling
 - Removed unnecessary mocks from UI tests
 - Improved test maintainability and readability
 - Fixed typing indicator test
 - All tests passing successfully
 
-### v1.0.17
+### v1.0.18
 - Added comprehensive test suite for audio recorder delete functionality
 - Added focused tests for delete button behavior and interactions
 - Added tests for button styles and state transitions
@@ -238,7 +253,7 @@ For more detailed information about the test groups and specific tests, see the 
 - Improved UI consistency with proper spacing and layout
 - Added comprehensive documentation for test cases
 
-### v1.0.16
+### v1.0.17
 - Fixed audio playback during recording issue
 - Added proper error handling for audio playback
 - Improved ConfigLoader with mock support for testing
@@ -247,26 +262,26 @@ For more detailed information about the test groups and specific tests, see the 
 - Added comprehensive tests for audio recording functionality
 - All tests passing successfully
 
-### v1.0.15
+### v1.0.16
 - Improved test stability by temporarily disabling failing tests
 - Updated test documentation
 - Fixed test environment configuration
 - Current test status: 64 passing tests
 
-### v1.0.14
+### v1.0.15
 - Fixed character encoding in transcription service
 - Added comprehensive test coverage for transcription service
 - Improved error handling in transcription tests
 - Updated avatar styling to use Material Icons
 
-### v1.0.13
+### v1.0.14
 - Fixed avatar styling and consistency across the app
 - Improved message editing functionality
 - Fixed message menu actions (copy, edit, delete)
 - Enhanced scroll behavior for new messages
 - All tests passing successfully
 
-### v1.0.12
+### v1.0.13
 - Added message editing functionality
 - Added message menu with copy, edit, delete, and report options
 - Fixed pagination and message ordering issues
@@ -274,7 +289,7 @@ For more detailed information about the test groups and specific tests, see the 
 - Fixed message deletion tests
 - Improved error handling in storage service
 
-### v1.0.11
+### v1.0.12
 - Added loading states and visual feedback
 - Improved error handling with user-friendly messages
 - Added infinite scroll pagination UI
@@ -284,7 +299,7 @@ For more detailed information about the test groups and specific tests, see the 
 - Added comprehensive UI tests
 - Fixed avatar image issues
 
-### v1.0.10
+### v1.0.11
 - Added local storage implementation with Isar Database
 - Implemented message persistence
 - Added support for storing audio messages with binary data
@@ -292,17 +307,17 @@ For more detailed information about the test groups and specific tests, see the 
 - Added message search functionality
 - Added message deletion capabilities
 
-### v1.0.9
+### v1.0.10
 - Improved documentation clarity
 - Consolidated test coverage changelog entries
 - Removed redundant version information
 
-### v1.0.8
+### v1.0.9
 - Fixed accessibility test implementation
 - Improved test cleanup with proper semantics handling
 - All tests passing successfully
 
-### v1.0.7
+### v1.0.8
 - Added comprehensive test coverage for ChatMessage widget:
   - Text color tests for user/non-user messages
   - Long message wrapping tests
@@ -313,34 +328,34 @@ For more detailed information about the test groups and specific tests, see the 
   - Tests for user messages, audio messages, and layout
   - Tests for copyWith functionality and edge cases
 
-### v1.0.5
+### v1.0.7
 - Fixed auto-stop recording when sending audio message
 - Added OpenAI API key to environment variables
 - Improved error handling in audio recording
 
-### v1.0.4
+### v1.0.6
 - Improved audio message UI with duration display
 - Switched from Vosk to OpenAI Whisper for transcription
 - Unified message styling with grey background
 - Enhanced audio controls UI
 - Fixed UTF-8 encoding in responses
 
-### v1.0.3
+### v1.0.5
 - Audio Message implementation
 - Added volume control functionality
 - Known issue: Default volume is too low
 
-### v1.0.2
+### v1.0.4
 - Basic audio notes implementation
 - Added initial voice recording functionality
 - Known limitations in audio processing
 
-### v1.0.1
+### v1.0.3
 - Updated environment configuration
 - Improved documentation
 - Security enhancements
 
-### v1.0.0
+### v1.0.2
 - Initial release
 - Implemented chat interface
 - Added Claude AI integration
