@@ -10,7 +10,7 @@ import 'tts_provider.dart';
 class MockTTSProvider implements TTSProvider {
   final Logger _logger = Logger();
   bool _isInitialized = false;
-  Map<String, dynamic> _configuration = {
+  final Map<String, dynamic> _configuration = {
     'simulateDelay': true,
     'delayMilliseconds': 500,
     'simulateRandomFailures': false,
@@ -117,9 +117,9 @@ class MockTTSProvider implements TTSProvider {
     final duration = max(1, min(textLength ~/ 10, 30)); // 1 to 30 seconds
 
     // Simple WAV header (44 bytes) + sample data
-    final sampleRate = 8000;
-    final numChannels = 1;
-    final bitsPerSample = 8;
+    const sampleRate = 8000;
+    const numChannels = 1;
+    const bitsPerSample = 8;
     final dataSize = duration * sampleRate * numChannels * (bitsPerSample ~/ 8);
     final fileSize = 36 + dataSize;
 
@@ -206,8 +206,8 @@ class MockTTSProvider implements TTSProvider {
     for (int i = 0; i < dataSize; i++) {
       // Generate a simple sine wave
       final time = i / sampleRate;
-      final amplitude = 127;
-      final frequency = 440; // A4 note
+      const amplitude = 127;
+      const frequency = 440; // A4 note
       sampleData[i] =
           (amplitude * sin(2 * pi * frequency * time) + 128).toInt() & 0xFF;
     }

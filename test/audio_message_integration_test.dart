@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/widgets/audio_message.dart';
 
 // Custom AudioMessage for testing to avoid plugin issues
 class TestableAudioMessage extends StatelessWidget {

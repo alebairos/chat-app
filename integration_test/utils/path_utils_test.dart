@@ -16,8 +16,8 @@ void main() {
       final docPath = docDir.path;
 
       // Create a test file path
-      final testDir = 'test_audio_dir';
-      final testFileName = 'test_audio_file.mp3';
+      const testDir = 'test_audio_dir';
+      const testFileName = 'test_audio_file.mp3';
       final relativePath = p.join(testDir, testFileName);
       final absolutePath = p.join(docPath, relativePath);
 
@@ -38,7 +38,7 @@ void main() {
       expect(convertedAbsolutePath, absolutePath);
 
       // Test absoluteToRelative with path outside documents directory
-      final outsidePath = '/tmp/outside_path.mp3';
+      const outsidePath = '/tmp/outside_path.mp3';
       final outsideRelativePath =
           await PathUtils.absoluteToRelative(outsidePath);
       expect(outsideRelativePath, isNull);
@@ -55,8 +55,8 @@ void main() {
       final docPath = docDir.path;
 
       // Create a test file
-      final testDir = 'test_files_dir';
-      final testFileName = 'test_file.txt';
+      const testDir = 'test_files_dir';
+      const testFileName = 'test_file.txt';
       final relativePath = p.join(testDir, testFileName);
       final absolutePath = p.join(docPath, relativePath);
 
@@ -79,7 +79,8 @@ void main() {
       expect(exists, isTrue);
 
       // Test fileExists with non-existent file
-      exists = await PathUtils.fileExists('non_existent_file.txt');
+      const nonExistentFile = 'non_existent_file.txt';
+      exists = await PathUtils.fileExists(nonExistentFile);
       expect(exists, isFalse);
 
       // Clean up
@@ -96,23 +97,27 @@ void main() {
 
       // Test directory path
       final testDirPath = p.join(docPath, 'test_ensure_dir');
+      final testDir = Directory(testDirPath);
 
       // Ensure it doesn't exist at first
-      final initialDir = Directory(testDirPath);
-      if (await initialDir.exists()) {
-        await initialDir.delete(recursive: true);
+      if (await testDir.exists()) {
+        await testDir.delete(recursive: true);
       }
 
       // Test ensureDirectoryExists
-      final createdDir = await PathUtils.ensureDirectoryExists(testDirPath);
-      expect(await createdDir.exists(), isTrue);
+      bool success = await PathUtils.ensureDirectoryExists(testDirPath);
+      expect(success, isTrue);
+      expect(await testDir.exists(), isTrue);
 
       // Test that calling it again works fine
-      final existingDir = await PathUtils.ensureDirectoryExists(testDirPath);
-      expect(await existingDir.exists(), isTrue);
+      success = await PathUtils.ensureDirectoryExists(testDirPath);
+      expect(success, isTrue);
+      expect(await testDir.exists(), isTrue);
 
       // Clean up
-      await createdDir.delete(recursive: true);
+      if (await testDir.exists()) {
+        await testDir.delete(recursive: true);
+      }
     });
   });
 }

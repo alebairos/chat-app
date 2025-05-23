@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../lib/services/claude_service.dart';
-import '../../lib/models/claude_audio_response.dart';
+import 'package:character_ai_clone/services/claude_service.dart';
+import 'package:character_ai_clone/models/claude_audio_response.dart';
 import '../mocks/mock_audio_assistant_tts_service.dart';
 import '../mocks/mock_client.dart';
 import '../mocks/mock_config_loader.dart';
@@ -115,7 +115,8 @@ void main() {
       expect(response.text, 'Claude response');
       expect(response.audioPath, isNull);
       expect(response.audioDuration, isNull);
-      expect(response.error, isNull);
+      expect(response.error,
+          'Audio generation is temporarily unavailable. Please try again later.');
     });
 
     test('sendMessageWithAudio returns error when audio generation fails',
@@ -137,7 +138,8 @@ void main() {
       expect(response.text, 'Claude response');
       expect(response.audioPath, isNull);
       expect(response.audioDuration, isNull);
-      expect(response.error, isNull);
+      expect(response.error,
+          'Failed to generate audio. Text response is still available.');
     });
 
     test('sendMessageWithAudio handles Claude API errors gracefully', () async {

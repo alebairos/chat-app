@@ -9,7 +9,7 @@ void main() {
         (WidgetTester tester) async {
       // Build a minimal test app with a regular text message
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ChatMessage(
               text: 'Hello, world!',

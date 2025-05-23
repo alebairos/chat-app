@@ -33,7 +33,7 @@ class MockClient extends Mock implements http.Client {
     final key = message ?? body.toString();
 
     // Return the mocked response if we have one for this key
-    if (key is String && _responses.containsKey(key)) {
+    if (_responses.containsKey(key)) {
       final responseData = _responses[key]!;
 
       // Format successful responses like Claude's API

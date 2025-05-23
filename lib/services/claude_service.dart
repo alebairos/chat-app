@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../config/config_loader.dart';
+import 'package:character_ai_clone/config/config_loader.dart';
 import 'life_plan_mcp_service.dart';
 import '../models/life_plan/dimensions.dart';
 import '../utils/logger.dart';
@@ -507,12 +507,28 @@ class ClaudeService {
         return ClaudeAudioResponse(text: textResponse);
       }
 
+      // Check if the response is an error message from Claude
+      // If it is, don't try to generate audio and don't add TTS error
+      // Convert to lowercase for case-insensitive comparison
+      final lowerResponse = textResponse.toLowerCase();
+      if (lowerResponse.contains('rate limit') ||
+          lowerResponse.contains('unable to') ||
+          lowerResponse.contains('authentication failed') ||
+          lowerResponse.contains('claude error') ||
+          lowerResponse.contains('claude service is temporarily unavailable')) {
+        _logger.debug('Claude error detected, returning text-only response');
+        return ClaudeAudioResponse(text: textResponse);
+      }
+
       try {
         // Initialize TTS service if needed
         final ttsInitialized = await _ttsService!.initialize();
         if (!ttsInitialized) {
           _logger.error('Failed to initialize TTS service');
-          return ClaudeAudioResponse(text: textResponse);
+          return ClaudeAudioResponse(
+              text: textResponse,
+              error:
+                  'Audio generation is temporarily unavailable. Please try again later.');
         }
 
         // Generate audio from the text response
@@ -521,7 +537,10 @@ class ClaudeService {
         // If audio generation failed, return text only
         if (audioPath == null) {
           _logger.error('Failed to generate audio for response');
-          return ClaudeAudioResponse(text: textResponse);
+          return ClaudeAudioResponse(
+              text: textResponse,
+              error:
+                  'Failed to generate audio. Text response is still available.');
         }
 
         _logger.debug('Generated audio at path: $audioPath');

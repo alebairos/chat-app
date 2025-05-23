@@ -143,7 +143,7 @@ void main() {
       await ttsService.initialize();
       AudioAssistantTTSService.featureEnabled = false;
       ttsService.disableTestMode(); // Disable test mode to test feature flag
-      final relativePath = 'audio_assistant/test.mp3';
+      const relativePath = 'audio_assistant/test.mp3';
 
       // Act
       final result = await ttsService.deleteAudio(relativePath);
@@ -161,7 +161,7 @@ void main() {
     test('should successfully delete an existing audio file', () async {
       // Arrange
       await ttsService.initialize();
-      final relativePath = 'audio_assistant/test.mp3';
+      const relativePath = 'audio_assistant/test.mp3';
 
       // Act
       final result = await ttsService.deleteAudio(relativePath);
@@ -179,7 +179,7 @@ void main() {
         () async {
       // Arrange
       await ttsService.initialize();
-      final relativePath = 'audio_assistant/nonexistent.mp3';
+      const relativePath = 'audio_assistant/nonexistent.mp3';
 
       // Set flag to simulate non-existent file
       ttsService.useNonExistentFile = true;
@@ -198,7 +198,7 @@ void main() {
     test('should handle exceptions during file deletion', () async {
       // Arrange
       await ttsService.initialize();
-      final relativePath = 'audio_assistant/error.mp3';
+      const relativePath = 'audio_assistant/error.mp3';
       ttsService.forceDeleteFailure = true;
 
       // Act
@@ -211,7 +211,7 @@ void main() {
     test('should return false when path conversion fails', () async {
       // Arrange
       await ttsService.initialize();
-      final relativePath = 'audio_assistant/invalid.mp3';
+      const relativePath = 'audio_assistant/invalid.mp3';
       ttsService.forcePathConversionFailure = true;
 
       // Act

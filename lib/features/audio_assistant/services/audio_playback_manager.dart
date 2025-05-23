@@ -6,11 +6,14 @@ import '../models/playback_state.dart';
 import 'audio_playback.dart';
 import 'audio_playback_controller.dart';
 import '../../../utils/logger.dart';
+import '../../../utils/path_utils.dart';
 
 /// Manages audio playback to ensure only one audio file plays at a time
 class AudioPlaybackManager {
   static final AudioPlaybackManager _instance =
       AudioPlaybackManager._internal();
+
+  final Logger _logger = Logger();
 
   factory AudioPlaybackManager() {
     return _instance;
@@ -63,33 +66,33 @@ class AudioPlaybackManager {
 
             // Reset active widget when playback stops
             if (state == PlaybackState.stopped) {
-              Logger().debug(
+              _logger.debug(
                   'AudioPlaybackManager: Playback stopped, resetting active widget');
               _activeWidgetId = null;
             }
           }
         } catch (e) {
-          Logger()
+          _logger
               .error('AudioPlaybackManager: Error handling state change: $e');
         }
       }, onError: (error) {
-        Logger().error(
+        _logger.error(
             'AudioPlaybackManager: Error in audio playback state stream: $error');
       });
 
       _initialized = true;
-      Logger().debug('AudioPlaybackManager initialized');
+      _logger.debug('AudioPlaybackManager initialized');
     } catch (e) {
-      Logger().error('AudioPlaybackManager: Error during initialization: $e');
+      _logger.error('AudioPlaybackManager: Error during initialization: $e');
       // Try to recover by creating a new controller
       try {
         _audioPlayback = AudioPlaybackController();
         await _audioPlayback.initialize();
         _initialized = true;
-        Logger()
+        _logger
             .debug('AudioPlaybackManager: Recovered from initialization error');
       } catch (e) {
-        Logger().error(
+        _logger.error(
             'AudioPlaybackManager: Failed to recover from initialization error: $e');
       }
     }
@@ -131,29 +134,52 @@ class AudioPlaybackManager {
   /// Play audio for a specific widget
   Future<bool> playAudio(String widgetId, AudioFile audioFile) async {
     if (!_initialized) {
-      Logger().debug('AudioPlaybackManager: Not initialized, initializing now');
+      _logger.debug('AudioPlaybackManager: Not initialized, initializing now');
       await _initialize();
     }
 
-    Logger().debug(
+    _logger.debug(
         'AudioPlaybackManager: Request to play audio for widget $widgetId');
-    Logger().debug('AudioPlaybackManager: Audio file path: ${audioFile.path}');
+    _logger.debug('AudioPlaybackManager: Audio file path: ${audioFile.path}');
 
     try {
+      // Get absolute path if it's a relative path
+      String absolutePath = audioFile.path;
+      if (!PathUtils.isAbsolutePath(absolutePath)) {
+        _logger
+            .debug('Converting relative path to absolute: ${audioFile.path}');
+        absolutePath = await PathUtils.relativeToAbsolute(absolutePath);
+      }
+
       // Verify file exists before attempting to play
-      final file = File(audioFile.path);
-      final exists = await file.exists();
+      _logger.debug('Checking if file exists at: $absolutePath');
+      final exists = await PathUtils.fileExists(absolutePath);
       if (!exists) {
-        Logger().error(
-            'AudioPlaybackManager: Audio file does not exist: ${audioFile.path}');
+        _logger.error(
+            'AudioPlaybackManager: Audio file does not exist: $absolutePath');
+
+        // Try to ensure directory exists
+        final directory = Directory(PathUtils.getDirName(absolutePath));
+        _logger.debug('Directory path: ${directory.path}');
+        if (!await directory.exists()) {
+          _logger.debug('Creating directory: ${directory.path}');
+          await directory.create(recursive: true);
+        }
+
         return false;
       }
+
+      // Update the audio file path to use the absolute path
+      final audioFileWithAbsolutePath = AudioFile(
+        path: absolutePath,
+        duration: audioFile.duration,
+      );
 
       // If this widget is already active and playing, pause it
       if (_activeWidgetId == widgetId) {
         final currentState = _audioPlayback.state;
         if (currentState == PlaybackState.playing) {
-          Logger().debug(
+          _logger.debug(
               'AudioPlaybackManager: Pausing current audio for widget $widgetId');
           await _audioPlayback.pause();
 
@@ -167,14 +193,14 @@ class AudioPlaybackManager {
             );
           }
 
-          // Reset active widget
-          _activeWidgetId = null;
+          // Don't reset active widget when pausing - only when stopping
+          // This allows us to resume playback later
           return false;
         }
       }
       // If another widget is active, stop it first
       else if (_activeWidgetId != null && _activeWidgetId != widgetId) {
-        Logger().debug(
+        _logger.debug(
             'AudioPlaybackManager: Stopping audio for previous widget $_activeWidgetId');
 
         // Notify the previous widget that it's no longer playing
@@ -194,12 +220,11 @@ class AudioPlaybackManager {
       _activeWidgetId = widgetId;
 
       // Load and play the audio file
-      Logger()
-          .debug('AudioPlaybackManager: Loading audio for widget $widgetId');
+      _logger.debug('AudioPlaybackManager: Loading audio for widget $widgetId');
       try {
-        await _audioPlayback.load(audioFile);
+        await _audioPlayback.load(audioFileWithAbsolutePath);
         final result = await _audioPlayback.play();
-        Logger().debug(
+        _logger.debug(
             'AudioPlaybackManager: Play result for widget $widgetId: $result');
 
         // Notify all widgets about the state change
@@ -214,7 +239,7 @@ class AudioPlaybackManager {
 
         return result;
       } catch (e) {
-        Logger().error(
+        _logger.error(
             'AudioPlaybackManager: Error playing audio for widget $widgetId: $e');
         _activeWidgetId = null;
 
@@ -231,7 +256,7 @@ class AudioPlaybackManager {
         return false;
       }
     } catch (e) {
-      Logger().error('AudioPlaybackManager: Error in playAudio: $e');
+      _logger.error('AudioPlaybackManager: Error in playAudio: $e');
       return false;
     }
   }
@@ -239,34 +264,73 @@ class AudioPlaybackManager {
   /// Pause the currently playing audio
   Future<bool> pauseAudio(String widgetId) async {
     if (!_initialized) {
-      Logger().error('AudioPlaybackManager: Not initialized, cannot pause');
+      _logger.error('AudioPlaybackManager: Not initialized, cannot pause');
       return false;
     }
 
     try {
+      _logger
+          .debug('AudioPlaybackManager: Requested pause for widget $widgetId');
+
       if (_activeWidgetId != widgetId) {
-        Logger().debug(
-            'AudioPlaybackManager: Cannot pause - widget $widgetId is not active');
+        _logger.debug(
+            'AudioPlaybackManager: Cannot pause - widget $widgetId is not active (active widget: $_activeWidgetId)');
         return false;
       }
 
-      Logger()
-          .debug('AudioPlaybackManager: Pausing audio for widget $widgetId');
+      _logger.debug('AudioPlaybackManager: Pausing audio for widget $widgetId');
+
+      // First check current state
+      final currentState = _audioPlayback.state;
+      _logger.debug(
+          'AudioPlaybackManager: Current state before pause: $currentState');
+
+      if (currentState != PlaybackState.playing) {
+        _logger.debug('AudioPlaybackManager: Already paused or stopped');
+        return false;
+      }
+
+      // Try to pause
       final result = await _audioPlayback.pause();
+      _logger.debug('AudioPlaybackManager: Pause result: $result');
+
+      // Double-check if pause was successful
+      final newState = _audioPlayback.state;
+      _logger.debug('AudioPlaybackManager: State after pause: $newState');
+
+      // If pause failed (still playing), try force stop as a last resort
+      if (newState == PlaybackState.playing) {
+        _logger.debug('AudioPlaybackManager: Pause failed, trying force stop');
+        final forceResult = await _audioPlayback.forceStop();
+        _logger.debug('AudioPlaybackManager: Force stop result: $forceResult');
+
+        // Notify widgets about the state change
+        if (!_playbackStateController.isClosed) {
+          _playbackStateController.add(
+            PlaybackStateUpdate(
+              widgetId: widgetId,
+              state: PlaybackState.stopped,
+            ),
+          );
+        }
+
+        // Keep the active widget ID so we can resume later if needed
+        return forceResult;
+      }
 
       // Notify all widgets about the state change
       if (!_playbackStateController.isClosed) {
         _playbackStateController.add(
           PlaybackStateUpdate(
             widgetId: widgetId,
-            state: PlaybackState.paused,
+            state: newState,
           ),
         );
       }
 
       return result;
     } catch (e) {
-      Logger().error('AudioPlaybackManager: Error pausing audio: $e');
+      _logger.error('AudioPlaybackManager: Error pausing audio: $e');
       return false;
     }
   }
@@ -274,7 +338,7 @@ class AudioPlaybackManager {
   /// Stop the currently playing audio
   Future<bool> stopAudio() async {
     if (!_initialized) {
-      Logger().error('AudioPlaybackManager: Not initialized, cannot stop');
+      _logger.error('AudioPlaybackManager: Not initialized, cannot stop');
       return false;
     }
 
@@ -284,7 +348,7 @@ class AudioPlaybackManager {
       }
 
       final currentWidgetId = _activeWidgetId;
-      Logger().debug(
+      _logger.debug(
           'AudioPlaybackManager: Stopping audio for widget $_activeWidgetId');
 
       // Reset active widget before stopping to prevent race conditions
@@ -304,7 +368,7 @@ class AudioPlaybackManager {
 
       return result;
     } catch (e) {
-      Logger().error('AudioPlaybackManager: Error stopping audio: $e');
+      _logger.error('AudioPlaybackManager: Error stopping audio: $e');
       return false;
     }
   }
@@ -317,7 +381,7 @@ class AudioPlaybackManager {
       return _activeWidgetId == widgetId &&
           _audioPlayback.state == PlaybackState.playing;
     } catch (e) {
-      Logger().error('AudioPlaybackManager: Error checking if playing: $e');
+      _logger.error('AudioPlaybackManager: Error checking if playing: $e');
       return false;
     }
   }
@@ -334,9 +398,9 @@ class AudioPlaybackManager {
       }
 
       _initialized = false;
-      Logger().debug('AudioPlaybackManager disposed');
+      _logger.debug('AudioPlaybackManager disposed');
     } catch (e) {
-      Logger().error('AudioPlaybackManager: Error during dispose: $e');
+      _logger.error('AudioPlaybackManager: Error during dispose: $e');
     }
   }
 }

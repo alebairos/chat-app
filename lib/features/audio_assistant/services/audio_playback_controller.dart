@@ -88,10 +88,15 @@ class AudioPlaybackController implements AudioPlayback {
   void _startPositionUpdates() {
     _positionUpdateTimer?.cancel();
     _positionUpdateTimer =
-        Timer.periodic(const Duration(milliseconds: 200), (_) async {
+        Timer.periodic(const Duration(milliseconds: 100), (_) async {
       if (_state == PlaybackState.playing && !_positionController.isClosed) {
-        final position = await this.position;
-        _positionController.add(position);
+        try {
+          final position = await this.position;
+          _positionController.add(position);
+          _logger.debug('Position update: $position ms');
+        } catch (e) {
+          _logger.error('Error getting position: $e');
+        }
       }
     });
   }
@@ -152,8 +157,33 @@ class AudioPlaybackController implements AudioPlayback {
     if (!_isInitialized || _currentFile == null) return false;
 
     try {
+      _logger.debug('AudioPlaybackController: Attempting to play/resume audio');
+
+      // If we're in stopped state, we need to reload
+      if (_state == PlaybackState.stopped && _currentFile != null) {
+        _logger
+            .debug('AudioPlaybackController: In stopped state, reloading file');
+        await load(_currentFile!);
+      }
+
+      // Then play
       await _audioPlayer.resume();
-      return true;
+
+      // Verify play was successful
+      final playerState = _audioPlayer.state;
+      _logger.debug(
+          'AudioPlaybackController: Player state after play: $playerState');
+
+      if (playerState == PlayerState.playing) {
+        _updateState(PlaybackState.playing);
+        _startPositionUpdates();
+        _logger.debug('AudioPlaybackController: Successfully playing audio');
+        return true;
+      } else {
+        _logger.error(
+            'AudioPlaybackController: Failed to play audio, player in state: $playerState');
+        return false;
+      }
     } catch (e) {
       _logger.error('AudioPlaybackController: Error playing audio: $e');
       return false;
@@ -162,11 +192,31 @@ class AudioPlaybackController implements AudioPlayback {
 
   @override
   Future<bool> pause() async {
-    if (!_isInitialized || _state != PlaybackState.playing) return false;
+    if (!_isInitialized) return false;
 
     try {
+      _logger.debug('AudioPlaybackController: Attempting to pause audio');
       await _audioPlayer.pause();
-      return true;
+
+      // Verify the pause was successful by checking player state
+      final playerState = _audioPlayer.state;
+      _logger.debug(
+          'AudioPlaybackController: Player state after pause: $playerState');
+
+      if (playerState == PlayerState.paused) {
+        _updateState(PlaybackState.paused);
+        _stopPositionUpdates();
+        _logger.debug('AudioPlaybackController: Successfully paused audio');
+        return true;
+      } else {
+        // Force stop if pause didn't work
+        _logger
+            .debug('AudioPlaybackController: Pause didn\'t work, forcing stop');
+        await _audioPlayer.stop();
+        _updateState(PlaybackState.stopped);
+        _stopPositionUpdates();
+        return true;
+      }
     } catch (e) {
       _logger.error('AudioPlaybackController: Error pausing audio: $e');
       return false;
@@ -175,27 +225,75 @@ class AudioPlaybackController implements AudioPlayback {
 
   @override
   Future<bool> stop() async {
-    if (!_isInitialized ||
-        (_state != PlaybackState.playing && _state != PlaybackState.paused)) {
-      return false;
-    }
+    if (!_isInitialized) return false;
 
     try {
+      _logger.debug('AudioPlaybackController: Attempting to stop audio');
+
+      // First check current state
+      final currentPlayerState = _audioPlayer.state;
+      _logger.debug(
+          'AudioPlaybackController: Current player state before stop: $currentPlayerState');
+
+      // Stop the audio
       await _audioPlayer.stop();
+
+      // Verify stop was successful
+      final newPlayerState = _audioPlayer.state;
+      _logger.debug(
+          'AudioPlaybackController: Player state after stop: $newPlayerState');
+
+      // Force release resources
+      await _audioPlayer.release();
+
+      // Update state regardless of player response
+      _updateState(PlaybackState.stopped);
+      _stopPositionUpdates();
+      _logger.debug('AudioPlaybackController: Successfully stopped audio');
+
       return true;
     } catch (e) {
       _logger.error('AudioPlaybackController: Error stopping audio: $e');
+      // Try to update state anyway
+      _updateState(PlaybackState.stopped);
+      _stopPositionUpdates();
       return false;
     }
   }
 
   @override
   Future<bool> seekTo(int position) async {
-    if (!_isInitialized || _currentFile == null) return false;
+    if (!_isInitialized || _currentFile == null) {
+      _logger.error(
+          'AudioPlaybackController: Cannot seek, not initialized or no file loaded');
+      return false;
+    }
 
     try {
+      _logger
+          .debug('AudioPlaybackController: Seeking to position $position ms');
+
+      // First check if we have valid duration to prevent seeking beyond the end
+      final audioDuration = await duration;
+      if (position > audioDuration) {
+        _logger.debug(
+            'AudioPlaybackController: Position $position exceeds duration $audioDuration, clamping');
+        position = audioDuration;
+      }
+
+      // Seek to position
       await _audioPlayer.seek(Duration(milliseconds: position));
-      return true;
+
+      // Verify seek was successful
+      final newPosition = await this.position;
+      _logger.debug(
+          'AudioPlaybackController: Position after seek: $newPosition ms');
+
+      // Position updates aren't immediate, but we should be within a reasonable range
+      final bool seekSuccessful =
+          (newPosition - position).abs() < 500; // Within 500ms
+
+      return seekSuccessful;
     } catch (e) {
       _logger.error('AudioPlaybackController: Error seeking: $e');
       return false;
@@ -251,6 +349,47 @@ class AudioPlaybackController implements AudioPlayback {
       _isInitialized = false;
     } catch (e) {
       _logger.error('AudioPlaybackController: Error disposing: $e');
+    }
+  }
+
+  /// Force stop the audio playback completely, recreating the player if needed
+  @override
+  Future<bool> forceStop() async {
+    _logger.debug('AudioPlaybackController: Force stopping audio');
+
+    try {
+      // Try normal stop first
+      await _audioPlayer.stop();
+
+      // Release resources
+      await _audioPlayer.release();
+
+      // Recreate player to ensure clean state
+      _audioPlayer = AudioPlayer();
+      _setupEventListeners();
+
+      // Update state
+      _updateState(PlaybackState.stopped);
+      _stopPositionUpdates();
+
+      _logger
+          .debug('AudioPlaybackController: Successfully force stopped audio');
+      return true;
+    } catch (e) {
+      _logger.error('AudioPlaybackController: Error force stopping audio: $e');
+
+      // Try to recreate player anyway to recover
+      try {
+        _audioPlayer = AudioPlayer();
+        _setupEventListeners();
+        _updateState(PlaybackState.stopped);
+        _stopPositionUpdates();
+      } catch (innerE) {
+        _logger.error(
+            'AudioPlaybackController: Failed to recreate player: $innerE');
+      }
+
+      return false;
     }
   }
 }

@@ -5,7 +5,7 @@ import 'package:character_ai_clone/features/audio_assistant/models/playback_stat
 void main() {
   group('AudioFile Model', () {
     test('should create AudioFile with required parameters', () {
-      final audioFile = AudioFile(
+      const audioFile = AudioFile(
         path: 'audio/test.mp3',
         duration: const Duration(seconds: 30),
       );
@@ -32,7 +32,7 @@ void main() {
     });
 
     test('should create a copy with updated values', () {
-      final audioFile = AudioFile(
+      const audioFile = AudioFile(
         path: 'audio/test.mp3',
         duration: const Duration(seconds: 30),
       );
@@ -69,7 +69,7 @@ void main() {
     });
 
     test('should correctly encode and decode', () {
-      final original = AudioFile(
+      const original = AudioFile(
         path: 'audio/test.mp3',
         duration: const Duration(seconds: 30),
         transcription: 'Test transcription',
@@ -84,21 +84,21 @@ void main() {
     });
 
     test('equality should work correctly', () {
-      final file1 = AudioFile(
+      const file1 = AudioFile(
         path: 'audio/test.mp3',
         duration: const Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],
         transcription: 'Test',
       );
 
-      final file2 = AudioFile(
+      const file2 = AudioFile(
         path: 'audio/test.mp3',
         duration: const Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],
         transcription: 'Test',
       );
 
-      final file3 = AudioFile(
+      const file3 = AudioFile(
         path: 'audio/different.mp3',
         duration: const Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],
@@ -110,7 +110,7 @@ void main() {
     });
 
     test('toString should include path, duration and data length', () {
-      final file = AudioFile(
+      const file = AudioFile(
         path: 'audio/test.mp3',
         duration: const Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],

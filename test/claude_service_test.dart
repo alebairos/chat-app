@@ -1,20 +1,22 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:character_ai_clone/services/claude_service.dart';
 import 'package:character_ai_clone/services/life_plan_mcp_service.dart';
 import 'package:character_ai_clone/config/config_loader.dart';
-import 'claude_service_test.mocks.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-@GenerateMocks([http.Client, LifePlanMCPService])
+// Replace Mockito mocks with Mocktail mocks
+class MockHttpClient extends Mock implements http.Client {}
+
+class MockLifePlanMCPService extends Mock implements LifePlanMCPService {}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   print('\n🚀 Starting Claude Service Tests');
 
-  late MockClient mockClient;
+  late MockHttpClient mockClient;
   late MockLifePlanMCPService mockMCP;
   late ClaudeService service;
 
@@ -32,11 +34,17 @@ void main() {
       ANTHROPIC_API_KEY=test_key
     ''');
     print('✓ Environment variables loaded');
+
+    // Register fallback values for Mocktail
+    registerFallbackValue(Uri.parse('https://example.com'));
+    registerFallbackValue(<String, String>{});
+    registerFallbackValue('');
+    registerFallbackValue(utf8);
   });
 
   setUp(() {
     print('\n🔄 Setting up test case...');
-    mockClient = MockClient();
+    mockClient = MockHttpClient();
     mockMCP = MockLifePlanMCPService();
     print('✓ Mock client and MCP initialized');
 
@@ -56,12 +64,12 @@ void main() {
     test('maintains conversation history', () async {
       print('\n🧪 Testing conversation history maintenance...');
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenAnswer((_) async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenAnswer((_) async {
         print('📡 Mock Claude API called');
         return http.Response(
           jsonEncode({
@@ -87,12 +95,12 @@ void main() {
     test('clears conversation history', () async {
       print('\n🧪 Testing conversation history clearing...');
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenAnswer((_) async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenAnswer((_) async {
         print('📡 Mock Claude API called');
         return http.Response(
           jsonEncode({
@@ -119,12 +127,12 @@ void main() {
     test('handles network errors gracefully', () async {
       print('\n🧪 Testing network error handling...');
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenThrow(Exception('Network error'));
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenThrow(Exception('Network error'));
       print('✓ Mock network error configured');
 
       final response = await service.sendMessage('Hello');
@@ -141,12 +149,12 @@ void main() {
     test('handles API errors gracefully', () async {
       print('\n🧪 Testing API error handling...');
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenAnswer((_) async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenAnswer((_) async {
         print('📡 Mock API error response');
         return http.Response(
           'Rate limit exceeded',
@@ -169,12 +177,12 @@ void main() {
     test('handles malformed JSON response gracefully', () async {
       print('\n🧪 Testing malformed JSON handling...');
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenAnswer((_) async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenAnswer((_) async {
         print('📡 Mock malformed JSON response');
         return http.Response(
           '{malformed json',
@@ -194,12 +202,12 @@ void main() {
     test('handles empty response gracefully', () async {
       print('\n🧪 Testing empty response handling...');
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenAnswer((_) async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenAnswer((_) async {
         print('📡 Mock empty response');
         return http.Response('', 200);
       });
@@ -221,7 +229,7 @@ void main() {
           json.encode({'action': 'get_goals_by_dimension', 'dimension': 'SF'});
       print('📤 Sending command: $command');
 
-      when(mockMCP.processCommand(command)).thenReturn(json.encode({
+      when(() => mockMCP.processCommand(command)).thenReturn(json.encode({
         'status': 'success',
         'data': [
           {
@@ -241,7 +249,7 @@ void main() {
       print('🔍 Decoded response: $decoded');
 
       expect(decoded['status'], equals('success'));
-      verify(mockMCP.processCommand(command)).called(1);
+      verify(() => mockMCP.processCommand(command)).called(1);
       print('✓ Test completed successfully');
     });
 
@@ -250,15 +258,16 @@ void main() {
       final command = json.encode({'action': 'invalid_command'});
       print('📤 Sending invalid command: $command');
 
-      when(mockMCP.processCommand(command)).thenThrow(Exception('MCP Error'));
+      when(() => mockMCP.processCommand(command))
+          .thenThrow(Exception('MCP Error'));
       print('✓ Mock MCP error configured');
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenAnswer((_) async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenAnswer((_) async {
         print('📡 Mock Claude API called');
         return http.Response(
           json.encode({
@@ -289,24 +298,24 @@ void main() {
       // Add stubs for all dimension codes
       for (final dimension in ['SF', 'SM', 'R', 'E', 'TG']) {
         // Stub for get_goals_by_dimension
-        when(mockMCP.processCommand(json.encode(
+        when(() => mockMCP.processCommand(json.encode(
                 {'action': 'get_goals_by_dimension', 'dimension': dimension})))
             .thenReturn(json.encode({'status': 'success', 'data': []}));
 
         // Stub for get_recommended_habits
-        when(mockMCP.processCommand(json.encode({
-          'action': 'get_recommended_habits',
-          'dimension': dimension,
-          'minImpact': 3
-        }))).thenReturn(json.encode({'status': 'success', 'data': []}));
+        when(() => mockMCP.processCommand(json.encode({
+              'action': 'get_recommended_habits',
+              'dimension': dimension,
+              'minImpact': 3
+            }))).thenReturn(json.encode({'status': 'success', 'data': []}));
       }
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-        encoding: anyNamed('encoding'),
-      )).thenAnswer((_) async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            encoding: any(named: 'encoding'),
+          )).thenAnswer((_) async {
         print('📡 Mock Claude API called');
         final response = http.Response(
           json.encode({

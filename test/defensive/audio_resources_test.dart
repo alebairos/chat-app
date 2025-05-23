@@ -95,6 +95,8 @@ void main() {
 
 // Stateful counter widget for testing UI responsiveness
 class CounterWithAudioPage extends StatefulWidget {
+  const CounterWithAudioPage({super.key});
+
   @override
   _CounterWithAudioPageState createState() => _CounterWithAudioPageState();
 }

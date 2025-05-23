@@ -76,6 +76,32 @@ class AudioAssistantTTSService {
     return _provider.updateConfig(newConfig);
   }
 
+  /// Ensure the audio directory exists
+  Future<bool> _ensureAudioDirectoryExists() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final audioDir = Directory('${dir.path}/$_audioDir');
+
+      if (!await audioDir.exists()) {
+        _logger.debug('Creating audio directory at: ${audioDir.path}');
+        await audioDir.create(recursive: true);
+      }
+
+      // Verify the directory exists
+      final exists = await audioDir.exists();
+      if (!exists) {
+        _logger.error('Failed to create audio directory at: ${audioDir.path}');
+        return false;
+      }
+
+      _logger.debug('Audio directory exists at: ${audioDir.path}');
+      return true;
+    } catch (e) {
+      _logger.error('Error ensuring audio directory exists: $e');
+      return false;
+    }
+  }
+
   /// Initialize the TTS service
   Future<bool> initialize() async {
     if (!_isInitialized) {
@@ -89,10 +115,10 @@ class AudioAssistantTTSService {
 
         if (!_isTestMode && featureEnabled) {
           // Create the audio directory if it doesn't exist
-          final dir = await getApplicationDocumentsDirectory();
-          final audioDir = Directory('${dir.path}/$_audioDir');
-          if (!await audioDir.exists()) {
-            await audioDir.create(recursive: true);
+          final directoryCreated = await _ensureAudioDirectoryExists();
+          if (!directoryCreated) {
+            _logger.error('Failed to create audio directory');
+            return false;
           }
         }
 
@@ -130,6 +156,14 @@ class AudioAssistantTTSService {
     try {
       if (_isTestMode) {
         return '$_audioDir/test_audio_assistant_${DateTime.now().millisecondsSinceEpoch}.mp3';
+      }
+
+      // Ensure audio directory exists before generating audio
+      final directoryExists = await _ensureAudioDirectoryExists();
+      if (!directoryExists) {
+        _logger
+            .error('Audio directory does not exist and could not be created');
+        return null;
       }
 
       final dir = await getApplicationDocumentsDirectory();
@@ -192,11 +226,6 @@ class AudioAssistantTTSService {
 
     try {
       final absolutePath = await PathUtils.relativeToAbsolute(relativePath);
-      if (absolutePath == null) {
-        _logger.error(
-            'Failed to convert relative path to absolute path: $relativePath');
-        return false;
-      }
 
       final file = File(absolutePath);
       if (await file.exists()) {

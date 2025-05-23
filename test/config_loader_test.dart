@@ -1,13 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:character_ai_clone/config/character_config_manager.dart';
+
+// Create a mock of the CharacterConfigManager
+class MockCharacterConfigManager extends Mock
+    implements CharacterConfigManager {}
 
 void main() {
+  late ConfigLoader configLoader;
+  late MockCharacterConfigManager mockCharacterManager;
+
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
+    mockCharacterManager = MockCharacterConfigManager();
+    configLoader = ConfigLoader();
   });
 
   test('config file has valid structure for Claude API', () async {
-    // Create a mock system prompt for testing
+    // Define mock system prompt
     const String mockSystemPrompt = '''
     You are Sergeant Oracle, a unique blend of ancient Roman wisdom and futuristic insight, specializing in life planning and personal development.
 
@@ -26,8 +37,7 @@ void main() {
     - _Italics_ for emphasis
     ''';
 
-    // Initialize the config loader and mock the system prompt loading
-    final configLoader = ConfigLoader();
+    // Setup the mock
     configLoader.setLoadSystemPromptImpl(() async => mockSystemPrompt);
 
     // Load the mocked system prompt
@@ -92,8 +102,7 @@ void main() {
           'As Sergeant Oracle, outline the journeys toward rewarding and fulfilling work. Use ONLY the goals and tracks data from the MCP database in your response. DO NOT invent or generate any goals, tracks, or habits that are not in the database.'
     };
 
-    // Initialize the config loader and mock the exploration prompts loading
-    final configLoader = ConfigLoader();
+    // Setup the mock
     configLoader
         .setLoadExplorationPromptsImpl(() async => mockExplorationPrompts);
 

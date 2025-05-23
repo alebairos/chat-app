@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:io';
-import '../../lib/services/tts_service.dart';
+import 'package:character_ai_clone/services/tts_service.dart';
 
 class TestTTSService extends TTSService {
   @override

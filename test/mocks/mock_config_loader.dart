@@ -1,5 +1,5 @@
 import 'package:mocktail/mocktail.dart';
-import '../../lib/config/config_loader.dart';
+import 'package:character_ai_clone/config/config_loader.dart';
 
 class MockConfigLoader extends Mock implements ConfigLoader {
   String _systemPrompt = 'This is a test system prompt.';

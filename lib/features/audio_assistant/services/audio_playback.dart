@@ -48,6 +48,11 @@ abstract class AudioPlayback {
   /// Returns true if playback was stopped successfully, false otherwise
   Future<bool> stop();
 
+  /// Forces playback to stop completely, recreating the player if necessary
+  ///
+  /// Returns true if the force stop was successful, false otherwise
+  Future<bool> forceStop();
+
   /// Seeks to a specific position in the audio file
   ///
   /// [position] The position to seek to in milliseconds

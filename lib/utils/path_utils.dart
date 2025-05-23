@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'logger.dart';
 
 /// Utility class for handling file paths
 class PathUtils {
+  static final Logger _logger = Logger();
+
   /// Converts an absolute path to a relative path based on the app's documents directory
   /// Returns null if the path is not within the documents directory
   static Future<String?> absoluteToRelative(String absolutePath) async {
@@ -12,20 +15,45 @@ class PathUtils {
       final docPath = docDir.path;
 
       if (absolutePath.startsWith(docPath)) {
-        return absolutePath
-            .substring(docPath.length + 1); // +1 to remove the leading slash
+        final result = absolutePath.substring(docPath.length + 1);
+        return result;
       }
       return null;
     } catch (e) {
-      print('Error converting absolute to relative path: $e');
+      _logger.error('Error converting absolute to relative path: $e');
       return null;
     }
   }
 
   /// Converts a relative path to an absolute path by prepending the app's documents directory
   static Future<String> relativeToAbsolute(String relativePath) async {
-    final docDir = await getApplicationDocumentsDirectory();
-    return p.join(docDir.path, relativePath);
+    try {
+      final docDir = await getApplicationDocumentsDirectory();
+      final docPath = docDir.path;
+      final absolutePath = p.join(docPath, relativePath);
+
+      // Check for directory existence
+      try {
+        final directory = Directory(p.dirname(absolutePath));
+        if (!await directory.exists()) {
+          _logger.debug(
+              'Directory does not exist: ${directory.path}, creating it');
+          await directory.create(recursive: true);
+        }
+      } catch (dirError) {
+        _logger.error(
+            'Failed to ensure directory exists for $absolutePath: $dirError (proceeding with path conversion)');
+        // Proceeding, as the primary goal is path conversion.
+        // The actual file operation later will fail if the directory is truly needed and couldn't be created.
+      }
+
+      _logger.debug(
+          'Converted relative path: $relativePath to absolute: $absolutePath');
+      return absolutePath;
+    } catch (e) {
+      _logger.error('Error converting relative to absolute path: $e');
+      return relativePath; // Return original path as fallback for major errors in path retrieval/joining
+    }
   }
 
   /// Checks if a path is absolute
@@ -43,9 +71,14 @@ class PathUtils {
         absolutePath = await relativeToAbsolute(path);
       }
 
-      return await File(absolutePath).exists();
+      final file = File(absolutePath);
+      final exists = await file.exists();
+      if (!exists) {
+        _logger.debug('File does not exist at path: $absolutePath');
+      }
+      return exists;
     } catch (e) {
-      print('Error checking if file exists: $e');
+      _logger.error('Error checking if file exists: $e');
       return false;
     }
   }
@@ -61,11 +94,23 @@ class PathUtils {
   }
 
   /// Creates a directory if it doesn't exist
-  static Future<Directory> ensureDirectoryExists(String dirPath) async {
-    final directory = Directory(dirPath);
-    if (!await directory.exists()) {
-      return await directory.create(recursive: true);
+  static Future<bool> ensureDirectoryExists(String path) async {
+    try {
+      String absolutePath;
+      if (isAbsolutePath(path)) {
+        absolutePath = path;
+      } else {
+        absolutePath = await relativeToAbsolute(path);
+      }
+
+      final directory = Directory(absolutePath);
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
+      }
+      return true;
+    } catch (e) {
+      _logger.error('Error creating directory: $e');
+      return false;
     }
-    return directory;
   }
 }

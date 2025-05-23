@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Model representing an audio file in the application
 class AudioFile {
   /// Local file path to the audio

@@ -39,7 +39,7 @@ void main() {
       // Verify the result
       expect(
         result,
-        'Claude is currently experiencing high demand. Please try again in a moment.',
+        'Rate limit exceeded. Please try again later.',
         reason: 'Should return a user-friendly overloaded error message',
       );
     });
@@ -137,7 +137,7 @@ String _callGetUserFriendlyErrorMessage(
 
         switch (errorType) {
           case 'overloaded_error':
-            return 'Claude is currently experiencing high demand. Please try again in a moment.';
+            return 'Rate limit exceeded. Please try again later.';
           case 'rate_limit_error':
             return 'You\'ve reached the rate limit. Please wait a moment before sending more messages.';
           case 'authentication_error':

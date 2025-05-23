@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../lib/services/chat_storage_service.dart';
+import 'package:character_ai_clone/services/chat_storage_service.dart';
 
 void main() async {
   // Initialize Flutter binding so we can use Flutter plugins like path_provider

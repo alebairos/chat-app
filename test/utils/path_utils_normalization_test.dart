@@ -5,7 +5,7 @@ import 'package:character_ai_clone/utils/path_utils.dart';
 void main() {
   group('PathUtils path normalization', () {
     test('normalizes paths with redundant separators', () {
-      final path = '/path//to///file.txt';
+      const path = '/path//to///file.txt';
 
       // The path package should normalize multiple separators
       final dirname = PathUtils.getDirName(path);
@@ -17,24 +17,24 @@ void main() {
 
     test('handles paths with dot components', () {
       // Current directory
-      final currentPath = './file.txt';
+      const currentPath = './file.txt';
       expect(PathUtils.getFileName(currentPath), equals('file.txt'));
       expect(PathUtils.getDirName(currentPath), equals('.'));
 
       // Parent directory
-      final parentPath = '../file.txt';
+      const parentPath = '../file.txt';
       expect(PathUtils.getFileName(parentPath), equals('file.txt'));
       expect(PathUtils.getDirName(parentPath), equals('..'));
 
       // Mixed dot components
-      final mixedPath = './dir/../file.txt';
+      const mixedPath = './dir/../file.txt';
       // Note: path.dirname doesn't normalize paths, it just splits and joins
       expect(PathUtils.getDirName(mixedPath), equals('./dir/..'));
       expect(PathUtils.getFileName(mixedPath), equals('file.txt'));
     });
 
     test('handles paths with trailing separators', () {
-      final path = '/path/to/dir/';
+      const path = '/path/to/dir/';
 
       // With trailing separator, the basename is the last directory name
       // This is how the path package behaves on most platforms
@@ -43,7 +43,7 @@ void main() {
     });
 
     test('handles paths with special characters', () {
-      final path = '/path/to/file with spaces and #special! chars.txt';
+      const path = '/path/to/file with spaces and #special! chars.txt';
 
       expect(PathUtils.getFileName(path),
           equals('file with spaces and #special! chars.txt'));
@@ -51,7 +51,7 @@ void main() {
     });
 
     test('handles paths with Unicode characters', () {
-      final path = '/path/to/文件.txt';
+      const path = '/path/to/文件.txt';
 
       expect(PathUtils.getFileName(path), equals('文件.txt'));
       expect(PathUtils.getDirName(path), equals('/path/to'));
