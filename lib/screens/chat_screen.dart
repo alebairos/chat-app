@@ -522,33 +522,34 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _scrollToBottom();
 
-      // Send transcription to Claude
-      final response = await _claudeService.sendMessage(transcription);
+      // Send transcription to Claude WITH AUDIO
+      final response = await _claudeService.sendMessageWithAudio(transcription);
 
-      // Check if the response is an error message
-      final bool isErrorResponse = response.startsWith('Error:') ||
-          response.contains('Unable to connect') ||
-          response.contains('experiencing high demand') ||
-          response.contains('temporarily unavailable') ||
-          response.contains('rate limit') ||
-          response.contains('Authentication failed');
+      // Check if the response contains an error message
+      final bool isErrorResponse = response.text.startsWith('Error:') ||
+          response.text.contains('Unable to connect') ||
+          response.text.contains('experiencing high demand') ||
+          response.text.contains('temporarily unavailable') ||
+          response.text.contains('rate limit') ||
+          response.text.contains('Authentication failed');
 
       if (isErrorResponse) {
         // Display error message to user
-        final aiMessage = ChatMessage(
-          text: response,
-          isUser: false,
-        );
-
         setState(() {
-          _messages.insert(0, aiMessage);
+          _messages.insert(
+            0,
+            ChatMessage(
+              text: response.text,
+              isUser: false,
+            ),
+          );
         });
 
         // Show error in snackbar
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response),
+              content: Text(response.text),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 5),
             ),
@@ -557,26 +558,28 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Save AI response
-      await _storageService.saveMessage(
-        text: response,
+      // Process normal response
+      final messageType =
+          response.audioPath != null ? MessageType.audio : MessageType.text;
+
+      final aiMessageModel = ChatMessageModel(
+        text: response.text,
         isUser: false,
-        type: MessageType.text,
+        type: messageType,
+        timestamp: DateTime.now(),
+        mediaPath: response.audioPath,
+        duration: response.audioDuration,
       );
 
-      // Get the saved AI message ID
-      final aiMessages = await _storageService.getMessages(limit: 1);
-      final aiMessageId = aiMessages.first.id;
-
-      final aiMessage = ChatMessage(
-        key: ValueKey(aiMessageId),
-        text: response,
-        isUser: false,
-        onDelete: () => _deleteMessage(aiMessageId),
-      );
+      // Save AI response and get ID
+      final isar = await _storageService.db;
+      await isar.writeTxn(() async {
+        final aiMessageId = await isar.chatMessageModels.put(aiMessageModel);
+        aiMessageModel.id = aiMessageId;
+      });
 
       setState(() {
-        _messages.insert(0, aiMessage);
+        _messages.insert(0, _createChatMessage(aiMessageModel));
       });
       _scrollToBottom();
     } catch (e) {
