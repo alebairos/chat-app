@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface with comprehensive audio assistant capabilities.
 
 ## Version
-Current version: v1.0.29 (tag: v1.0.29)
+Current version: v1.0.30 (tag: v1.0.30)
 
 ## Features
 
@@ -15,6 +15,7 @@ Current version: v1.0.29 (tag: v1.0.29)
   - Automatic audio generation for assistant responses
   - Intelligent error handling and graceful fallbacks
   - Provider-based architecture supporting multiple TTS services
+  - **Proper pause/resume functionality**: Audio maintains position when paused and resumes from exact same point
 - Audio messages with OpenAI Whisper transcription
 - Audio playback controls with pause/resume functionality
 - Local message storage with Isar Database
