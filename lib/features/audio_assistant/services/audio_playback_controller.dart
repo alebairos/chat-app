@@ -158,6 +158,7 @@ class AudioPlaybackController implements AudioPlayback {
 
     try {
       _logger.debug('AudioPlaybackController: Attempting to play/resume audio');
+      _logger.debug('AudioPlaybackController: Current state: $_state');
 
       // If we're in stopped state, we need to reload
       if (_state == PlaybackState.stopped && _currentFile != null) {
@@ -166,8 +167,11 @@ class AudioPlaybackController implements AudioPlayback {
         await load(_currentFile!);
       }
 
-      // Then play
+      // Then play/resume
       await _audioPlayer.resume();
+
+      // Give the player a moment to update its state
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Verify play was successful
       final playerState = _audioPlayer.state;
@@ -182,7 +186,23 @@ class AudioPlaybackController implements AudioPlayback {
       } else {
         _logger.error(
             'AudioPlaybackController: Failed to play audio, player in state: $playerState');
-        return false;
+        // If resume didn't work, try a full reload and play
+        _logger.debug('AudioPlaybackController: Trying full reload and play');
+        await load(_currentFile!);
+        await _audioPlayer.resume();
+
+        final retryState = _audioPlayer.state;
+        if (retryState == PlayerState.playing) {
+          _updateState(PlaybackState.playing);
+          _startPositionUpdates();
+          _logger.debug(
+              'AudioPlaybackController: Successfully playing audio after retry');
+          return true;
+        } else {
+          _logger.error(
+              'AudioPlaybackController: Failed to play audio even after retry');
+          return false;
+        }
       }
     } catch (e) {
       _logger.error('AudioPlaybackController: Error playing audio: $e');
@@ -198,6 +218,9 @@ class AudioPlaybackController implements AudioPlayback {
       _logger.debug('AudioPlaybackController: Attempting to pause audio');
       await _audioPlayer.pause();
 
+      // Give the player a moment to update its state
+      await Future.delayed(const Duration(milliseconds: 50));
+
       // Verify the pause was successful by checking player state
       final playerState = _audioPlayer.state;
       _logger.debug(
@@ -208,18 +231,27 @@ class AudioPlaybackController implements AudioPlayback {
         _stopPositionUpdates();
         _logger.debug('AudioPlaybackController: Successfully paused audio');
         return true;
+      } else if (playerState == PlayerState.stopped) {
+        // If the player stopped instead of paused, that's still acceptable
+        _updateState(PlaybackState.paused);
+        _stopPositionUpdates();
+        _logger.debug(
+            'AudioPlaybackController: Audio stopped, treating as paused');
+        return true;
       } else {
-        // Force stop if pause didn't work
-        _logger
-            .debug('AudioPlaybackController: Pause didn\'t work, forcing stop');
-        await _audioPlayer.stop();
-        _updateState(PlaybackState.stopped);
+        _logger.debug(
+            'AudioPlaybackController: Pause may not have worked as expected, player state: $playerState');
+        // Don't force stop here - just update state and let the UI handle it
+        _updateState(PlaybackState.paused);
         _stopPositionUpdates();
         return true;
       }
     } catch (e) {
       _logger.error('AudioPlaybackController: Error pausing audio: $e');
-      return false;
+      // Even if there's an error, treat it as paused
+      _updateState(PlaybackState.paused);
+      _stopPositionUpdates();
+      return true;
     }
   }
 

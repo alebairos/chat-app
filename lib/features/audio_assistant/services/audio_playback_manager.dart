@@ -294,29 +294,12 @@ class AudioPlaybackManager {
       final result = await _audioPlayback.pause();
       _logger.debug('AudioPlaybackManager: Pause result: $result');
 
-      // Double-check if pause was successful
+      // Verify pause was successful by checking state
       final newState = _audioPlayback.state;
       _logger.debug('AudioPlaybackManager: State after pause: $newState');
 
-      // If pause failed (still playing), try force stop as a last resort
-      if (newState == PlaybackState.playing) {
-        _logger.debug('AudioPlaybackManager: Pause failed, trying force stop');
-        final forceResult = await _audioPlayback.forceStop();
-        _logger.debug('AudioPlaybackManager: Force stop result: $forceResult');
-
-        // Notify widgets about the state change
-        if (!_playbackStateController.isClosed) {
-          _playbackStateController.add(
-            PlaybackStateUpdate(
-              widgetId: widgetId,
-              state: PlaybackState.stopped,
-            ),
-          );
-        }
-
-        // Keep the active widget ID so we can resume later if needed
-        return forceResult;
-      }
+      // Don't fall back to force stop - just accept the pause result
+      // Keep the active widget ID so we can resume later
 
       // Notify all widgets about the state change
       if (!_playbackStateController.isClosed) {
@@ -331,6 +314,62 @@ class AudioPlaybackManager {
       return result;
     } catch (e) {
       _logger.error('AudioPlaybackManager: Error pausing audio: $e');
+      return false;
+    }
+  }
+
+  /// Resume the currently paused audio
+  Future<bool> resumeAudio(String widgetId) async {
+    if (!_initialized) {
+      _logger.error('AudioPlaybackManager: Not initialized, cannot resume');
+      return false;
+    }
+
+    try {
+      _logger
+          .debug('AudioPlaybackManager: Requested resume for widget $widgetId');
+
+      if (_activeWidgetId != widgetId) {
+        _logger.debug(
+            'AudioPlaybackManager: Cannot resume - widget $widgetId is not active (active widget: $_activeWidgetId)');
+        return false;
+      }
+
+      _logger
+          .debug('AudioPlaybackManager: Resuming audio for widget $widgetId');
+
+      // First check current state
+      final currentState = _audioPlayback.state;
+      _logger.debug(
+          'AudioPlaybackManager: Current state before resume: $currentState');
+
+      if (currentState != PlaybackState.paused) {
+        _logger
+            .debug('AudioPlaybackManager: Cannot resume - not in paused state');
+        return false;
+      }
+
+      // Try to resume
+      final result = await _audioPlayback.play();
+      _logger.debug('AudioPlaybackManager: Resume result: $result');
+
+      // Verify resume was successful
+      final newState = _audioPlayback.state;
+      _logger.debug('AudioPlaybackManager: State after resume: $newState');
+
+      // Notify all widgets about the state change
+      if (!_playbackStateController.isClosed) {
+        _playbackStateController.add(
+          PlaybackStateUpdate(
+            widgetId: widgetId,
+            state: newState,
+          ),
+        );
+      }
+
+      return result;
+    } catch (e) {
+      _logger.error('AudioPlaybackManager: Error resuming audio: $e');
       return false;
     }
   }

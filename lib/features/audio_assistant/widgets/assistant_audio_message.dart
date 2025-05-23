@@ -185,48 +185,32 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage>
       bool result = false;
 
       if (_playbackState == PlaybackState.playing) {
-        // Currently playing, so store position first before stopping
-        try {
-          _lastPosition = await _playbackManager.audioPlayback.position;
-          _logger.debug('Saved position before pausing: $_lastPosition ms');
-        } catch (e) {
-          _logger.error('Error getting position: $e');
-          _lastPosition = 0;
-        }
-
-        // Now stop playback (more reliable than pause with audioplayers)
-        _logger.debug('Currently playing, stopping: $resolvedPath');
+        // Currently playing, so pause properly using the manager
+        _logger.debug('Currently playing, pausing: $resolvedPath');
         _animationController.stop();
 
-        // Force stop the audio
-        result = await _playbackManager.audioPlayback.forceStop();
-        _logger.debug('Force stop result: $result');
+        // Use the manager's pause method instead of forceStop
+        result = await _playbackManager.pauseAudio(widget.messageId);
+        _logger.debug('Pause result: $result');
 
-        // Update state manually
+        // The state will be updated through the stream listener
+        // but we can update the animation immediately
         if (result) {
           setState(() {
-            _playbackState = PlaybackState.paused;
             _errorMessage = null;
           });
         }
-      } else if (_playbackState == PlaybackState.paused && _lastPosition > 0) {
-        // We're paused with a known position, so resume from there
-        _logger.debug('Resuming playback from position: $_lastPosition ms');
+      } else if (_playbackState == PlaybackState.paused) {
+        // We're paused, so resume playback
+        _logger.debug('Resuming playback: $resolvedPath');
 
-        // Notify the manager we're starting playback
-        _playbackManager.startPlayback(widget.messageId);
+        // Use the manager's resume method
+        result = await _playbackManager.resumeAudio(widget.messageId);
+        _logger.debug('Resume result: $result');
 
-        // Play from last position
-        result = await _playbackManager.playAudio(widget.messageId, audioFile);
         if (result) {
-          // Seek to the saved position
-          _logger.debug('Seeking to position: $_lastPosition ms');
-          await _playbackManager.audioPlayback.seekTo(_lastPosition);
           _animationController.forward();
-
-          setState(() {
-            _playbackState = PlaybackState.playing;
-          });
+          // State will be updated through stream listener
         }
       } else {
         // First play or stopped state, start from beginning
@@ -240,9 +224,7 @@ class _AssistantAudioMessageState extends State<AssistantAudioMessage>
 
         if (result) {
           _animationController.forward();
-          setState(() {
-            _playbackState = PlaybackState.playing;
-          });
+          // State will be updated through stream listener
         } else {
           // Only show error for serious failures
           _logger.error('Failed to play audio: $resolvedPath');
