@@ -3,12 +3,16 @@
 A Flutter-based chat application that implements an AI-powered chat interface with comprehensive audio assistant capabilities.
 
 ## Version
-Current version: v1.0.31 (tag: v1.0.31)
+Current version: v1.0.32 (tag: v1.0.32)
 
 ## Features
 
 - Real-time chat interface
 - AI-powered responses using Claude API
+- **Character Guides**: Multiple AI character personalities with unique voices and expertise
+  - **Sergeant Oracle**: Roman military time-traveler with wisdom across ages
+  - **The Zen Master**: Enlightened guide inspired by Lao Tzu and Buddhist zen traditions
+  - **Personal Development Assistant**: Empathetic guide focused on achieving goals
 - **Audio Assistant with Text-to-Speech (TTS)**: Comprehensive TTS system with multiple provider support
   - ElevenLabs TTS integration with high-quality voice synthesis
   - Mock TTS provider for testing and development
@@ -25,7 +29,7 @@ Current version: v1.0.31 (tag: v1.0.31)
 - Life planning system with MCP architecture (see [Life Planning System Analysis](docs/life_planning_system_analysis.md))
 - Relative path storage for reliable audio file access (see [Path Storage Strategy](#path-storage-strategy))
 - Comprehensive error handling and user feedback
-- **Enhanced Test Suite**: 28 test files with 169 tests across 5 organized test groups
+- **Enhanced Test Suite**: 480 tests across comprehensive test categories
 
 ## Setup
 
@@ -64,6 +68,28 @@ The app includes a comprehensive TTS system that automatically generates audio v
 - **ElevenLabs**: Professional-grade voice synthesis (requires API key)
 - **Mock TTS**: Development and testing provider (no API key required)
 
+## Character Guides
+
+The application features multiple AI character guides, each with unique personalities, voices, and expertise:
+
+### Sergeant Oracle
+- Roman time-traveler with military precision and ancient wisdom
+- Combines historical insights with futuristic perspective
+- Features authoritative military voice with Latin phrases
+- General-purpose assistant with Roman military personality
+
+### The Zen Master
+- Enlightened sage embodying Lao Tzu's wisdom and Buddhist zen tradition
+- Offers profound insights through simple, contemplative language
+- Uses nature metaphors and paradox to guide conversations
+- Features serene, calm voice with Eastern wisdom quotes
+
+### Personal Development Assistant
+- Empathetic and encouraging guide focused on practical solutions
+- Helps achieve goals through positive habits and mindful approaches
+- Balances empathy with actionable advice
+- Features friendly, supportive voice
+
 ## Development
 
 This project is built with Flutter. For help getting started with Flutter development:
@@ -74,8 +100,8 @@ This project is built with Flutter. For help getting started with Flutter develo
 ## Test Status
 
 ### Test Statistics
-- **Test Files**: 28 Dart test files (updated)
-- **Total Tests**: 169 individual tests (updated)
+- **Test Files**: 28 Dart test files
+- **Total Tests**: 480 individual tests
 - **Test Coverage**: All tests passing ✅
 - **Test Organization**: 5 logical test groups with dedicated execution scripts
 - **Mocking Strategy**: Migrated from `mockito` to `mocktail` for better test isolation
@@ -91,6 +117,7 @@ This project is built with Flutter. For help getting started with Flutter develo
 - **System Prompt Tests**: Character identity, life planning integration, formatting
 - **Transcription Service Tests**: API integration, error handling
 - **Widget Tests**: UI components, user interactions, accessibility
+- **Character Guide Tests**: Voice configuration, personality traits, UI integration
 
 ### Test Organization
 
@@ -111,6 +138,7 @@ Tests are organized into logical groups with dedicated scripts for execution:
 - **Test Documentation**: 
   - `TEST_README.md`: Detailed test execution information
   - `TEST_REPORT.md`: Comprehensive test report with findings and recommendations
+  - `test_count_analysis.md`: Analysis of test count discrepancies and organization
 
 To run all tests:
 ```bash
@@ -130,8 +158,26 @@ For more detailed information about the test groups and specific tests, see the 
 - **Error Handling Enhancement**: Improved Claude service error handling for various API scenarios
 - **TTS Test Coverage**: Comprehensive testing of audio assistant functionality
 - **Configuration Testing**: Enhanced ConfigLoader tests with proper mocking
+- **Character Guide Testing**: Added comprehensive voice configuration tests
 
 ## Changelog
+
+### v1.0.32
+- **Enhanced Character Guide System**: 
+  - Transformed Sergeant Oracle from a habit specialist to a general-purpose AI assistant with Roman military personality
+  - Converted "The Zen Guide" to "The Zen Master" with Lao Tzu and Buddhist zen tradition inspiration
+  - Updated character voice configurations with personality-appropriate settings
+  - Created specific voice configuration for The Zen Master with serene, contemplative settings
+  - Redesigned prompt systems to be more versatile and less specialized
+- **Test Suite Expansion**: 
+  - Added complete test coverage for character voice configurations
+  - Updated character config manager tests for the new guide implementations
+  - Updated test count analysis with accurate metrics (480 total tests)
+  - Documented test count discrepancies between reporting methods
+- **Documentation Improvements**:
+  - Added comprehensive test count analysis document
+  - Updated README with character guide information
+  - Documented new general-purpose AI assistant capabilities
 
 ### v1.0.31
 - **Fixed Audio Pause Functionality**: Resolved critical bug where pause button was forcing audio to stop instead of properly pausing
