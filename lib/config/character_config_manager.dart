@@ -43,7 +43,7 @@ class CharacterConfigManager {
       case CharacterPersona.sergeantOracle:
         return 'Sergeant Oracle';
       case CharacterPersona.zenGuide:
-        return 'The Zen Guide';
+        return 'The Zen Master';
     }
   }
 
@@ -93,9 +93,9 @@ class CharacterConfigManager {
             'Roman time-traveler with military precision and ancient wisdom, combining historical insights with futuristic perspective.'
       },
       {
-        'displayName': 'The Zen Guide',
+        'displayName': 'The Zen Master',
         'description':
-            'Calm and mindful mentor with Eastern wisdom traditions, focusing on balance, mindfulness, and inner peace.'
+            'Enlightened sage embodying Lao Tzu\'s wisdom and Buddhist zen tradition, offering profound insights and gentle guidance for any question or challenge.'
       }
     ];
   }

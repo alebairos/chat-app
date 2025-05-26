@@ -19,6 +19,21 @@ void main() {
       expect(config['description'], contains('commanding'));
     });
 
+    test('should return correct voice config for The Zen Master', () {
+      // Act
+      final config = CharacterVoiceConfig.getVoiceConfig('The Zen Master');
+
+      // Assert - Zen master voice characteristics
+      expect(config['stability'], 0.85); // Very stable for serene presence
+      expect(config['similarityBoost'], 0.75); // Gentle but present
+      expect(config['style'], 0.0); // Neutral, peaceful tone
+      expect(config['speakerBoost'], true);
+      expect(config['modelId'], 'eleven_multilingual_v1');
+      expect(config['description'], contains('zen master'));
+      expect(config['description'], contains('Serene'));
+      expect(config['description'], contains('peaceful'));
+    });
+
     test('should return default config for unknown character', () {
       // Act
       final config = CharacterVoiceConfig.getVoiceConfig('Unknown Character');
@@ -36,6 +51,7 @@ void main() {
 
       // Assert
       expect(characters, contains('Guide Sergeant Oracle'));
+      expect(characters, contains('The Zen Master'));
       expect(
           characters, isNot(contains('default'))); // Should not include default
     });

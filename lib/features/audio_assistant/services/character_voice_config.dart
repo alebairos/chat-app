@@ -17,6 +17,16 @@ class CharacterVoiceConfig {
       'description':
           'Authoritative military sergeant voice - disciplined, motivational, commanding',
     },
+    'The Zen Master': {
+      'voiceId': 'pNInz6obpgDQGcFmaJgB', // Calm, contemplative voice
+      'modelId': 'eleven_multilingual_v1',
+      'stability': 0.85, // Very stable for serene presence
+      'similarityBoost': 0.75, // Gentle but present
+      'style': 0.0, // Neutral, peaceful tone
+      'speakerBoost': true,
+      'description':
+          'Serene zen master voice - calm, wise, contemplative, peaceful',
+    },
     'default': {
       'voiceId': 'pNInz6obpgDQGcFmaJgB',
       'modelId': 'eleven_multilingual_v1',

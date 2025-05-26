@@ -39,7 +39,7 @@ void main() {
       expect(personas.length, 3);
       expect(personas[0]['displayName'], 'Personal Development Assistant');
       expect(personas[1]['displayName'], 'Sergeant Oracle');
-      expect(personas[2]['displayName'], 'The Zen Guide');
+      expect(personas[2]['displayName'], 'The Zen Master');
     });
   });
 }
