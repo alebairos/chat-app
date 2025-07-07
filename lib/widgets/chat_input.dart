@@ -16,7 +16,7 @@ class ChatInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -42,10 +42,11 @@ class ChatInput extends StatelessWidget {
                   hintText: 'Send a message...',
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                    horizontal: 20,
+                    vertical: 16,
                   ),
                 ),
+                style: const TextStyle(fontSize: 16),
               ),
             ),
           ),

@@ -120,7 +120,7 @@ class ChatMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 12.0),
       child: Row(
         mainAxisAlignment:
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -154,16 +154,19 @@ class ChatMessage extends StatelessWidget {
                         messageId: key.toString(),
                       )
                 : Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: isUser ? Colors.blue : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: MarkdownBody(
                       data: text,
                       styleSheet: MarkdownStyleSheet(
                         p: TextStyle(
                           color: isUser ? Colors.white : Colors.black,
+                          fontSize: 16,
+                          height: 1.4,
                         ),
                       ),
                     ),

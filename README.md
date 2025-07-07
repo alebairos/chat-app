@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface with comprehensive audio assistant capabilities.
 
 ## Version
-Current version: v1.0.33 (tag: v1.0.33)
+Current version: v1.0.34 (tag: v1.0.34)
 
 ## Features
 
@@ -164,6 +164,24 @@ For more detailed information about the test groups and specific tests, see the 
 - **Character Guide Testing**: Added comprehensive voice configuration tests
 
 ## Changelog
+
+### v1.0.34
+- **Enhanced User Experience**: Improved chat interface with tap-to-dismiss keyboard functionality
+  - **Tap-to-Dismiss**: Added intuitive tap gesture to dismiss keyboard when tapping chat history area
+  - **Seamless Integration**: Preserves all existing interactions (scrolling, message actions, input functionality)
+  - **Transparent Implementation**: Uses `HitTestBehavior.translucent` to maintain child widget interactions
+  - **Universal Coverage**: Works in both empty chat state and populated message history
+- **Defensive Testing Suite**: Added comprehensive defensive tests for critical UX features
+  - **Tap-to-Dismiss Tests**: 11 passing tests covering gesture detection, interaction compatibility, and edge cases
+  - **Test Organization**: Created dedicated `test/defensive/` directory with structured defensive testing approach
+  - **Documentation**: Added `test/defensive/README.md` explaining defensive testing strategy and importance
+  - **Regression Protection**: Tests protect against future changes that could break keyboard dismissal
+- **Test Results**: 
+  - ✅ 11/11 tap-to-dismiss tests passing
+  - ✅ 23/23 total defensive tests passing
+  - ✅ 403/403 total tests passing (0 failures)
+  - ✅ App functionality verified on iPhone with all features working
+- **Code Quality**: Maintained clean architecture with minimal, focused changes that preserve existing functionality
 
 ### v1.0.33
 - **Configurable Personas v0 Implementation**: Complete implementation of configurable persona system

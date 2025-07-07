@@ -630,70 +630,82 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No messages yet.\nStart a conversation!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _messages.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Center(
-                            child: CircularProgressIndicator(),
+      appBar: const CustomChatAppBar(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  // Dismiss keyboard when tapping on chat area
+                  FocusScope.of(context).unfocus();
+                },
+                behavior: HitTestBehavior.translucent,
+                child: _messages.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No messages yet.\nStart a conversation!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
                           ),
-                        );
-                      }
-                      return _messages[index];
-                    },
-                  ),
-          ),
-          if (_isTyping)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
-                    child: Icon(Icons.military_tech, color: Colors.white),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Claude is typing...'),
-                ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == _messages.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+                          return _messages[index];
+                        },
+                      ),
               ),
             ),
-          ChatInput(
-            controller: _messageController,
-            onSend: _sendMessage,
-            onSendAudio: _handleAudioMessage,
-          ),
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            color: Colors.grey[100],
-            child: const Text(
-              'This is A.I. and not a real person. Treat everything it says as fiction',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
+            if (_isTyping)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: const Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.deepPurple,
+                      child: Icon(Icons.military_tech, color: Colors.white),
+                    ),
+                    SizedBox(width: 8),
+                    Text('Claude is typing...'),
+                  ],
+                ),
+              ),
+            ChatInput(
+              controller: _messageController,
+              onSend: _sendMessage,
+              onSendAudio: _handleAudioMessage,
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+              color: Colors.grey[100],
+              child: const Text(
+                'This is A.I. and not a real person. Treat everything it says as fiction',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 11,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
