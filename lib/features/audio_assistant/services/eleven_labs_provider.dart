@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../../utils/logger.dart';
 import 'tts_provider.dart';
+import 'tts_text_processor.dart';
+import 'emotional_tone_mapper.dart';
 
 /// Implementation of [TTSProvider] using Eleven Labs Text-to-Speech API.
 class ElevenLabsProvider implements TTSProvider {
@@ -96,18 +98,42 @@ class ElevenLabsProvider implements TTSProvider {
     }
 
     try {
+      // Extract emotional context before processing text
+      final emotionalTone = EmotionalToneMapper.extractEmotionalTone(text);
+
+      // Preprocess text to remove narrative elements and formatting
+      final processedText = TTSTextProcessor.processForTTS(text);
+
+      // Log the processing for debugging (only if text was changed)
+      if (TTSTextProcessor.containsFormattingElements(text)) {
+        _logger.debug(
+            'TTS Text Processing - Original length: ${text.length}, Processed length: ${processedText.length}');
+        _logger.debug(
+            'TTS Text Processing - Removed formatting elements from text');
+      }
+
+      // Log emotional tone adjustments
+      if (EmotionalToneMapper.hasEmotionalContext(text)) {
+        _logger.debug(
+            'TTS Emotional Tone - ${EmotionalToneMapper.getEmotionalDescription(text)}');
+        _logger.debug('TTS Emotional Tone - Voice adjustments: $emotionalTone');
+      }
+
       final voiceId = _configuration['voiceId'];
       final modelId = _configuration['modelId'];
 
+      // Apply emotional tone adjustments to voice settings
       final voiceSettings = {
-        'stability': _configuration['stability'],
-        'similarity_boost': _configuration['similarityBoost'],
-        'style': _configuration['style'],
-        'speaker_boost': _configuration['speakerBoost'],
+        'stability': emotionalTone['stability'] ?? _configuration['stability'],
+        'similarity_boost': emotionalTone['similarity_boost'] ??
+            _configuration['similarityBoost'],
+        'style': emotionalTone['style'] ?? _configuration['style'],
+        'speaker_boost':
+            emotionalTone['speaker_boost'] ?? _configuration['speakerBoost'],
       };
 
       final requestBody = {
-        'text': text,
+        'text': processedText, // Use processed text instead of original
         'model_id': modelId,
         'voice_settings': voiceSettings,
       };

@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface with comprehensive audio assistant capabilities.
 
 ## Version
-Current version: v1.0.35 (tag: v1.0.35)
+Current version: v1.0.36 (tag: v1.0.36)
 
 ## Features
 
@@ -23,6 +23,12 @@ Current version: v1.0.35 (tag: v1.0.35)
   - Intelligent error handling and graceful fallbacks
   - Provider-based architecture supporting multiple TTS services
   - **Proper pause/resume functionality**: Audio maintains position when paused and resumes from exact same point without losing state
+  - **🎭 Emotional TTS Preprocessing**: Advanced text processing with emotional voice modulation
+    - Smart action description removal (`*chuckles*`, `*pensativamente*`) 
+    - Emotional context extraction from actions for dynamic voice parameter adjustment
+    - Multi-language support (Portuguese & English) with intelligent pattern detection
+    - Real-time voice adaptation based on detected emotions (thoughtful, warm, playful, serious, confident)
+    - Formatting preservation for emphasis while removing narrative elements
 - Audio messages with OpenAI Whisper transcription
 - **Audio playback controls with reliable pause/resume**: Fixed pause button to properly pause audio instead of stopping it
 - Local message storage with Isar Database
@@ -71,6 +77,41 @@ The app includes a comprehensive TTS system that automatically generates audio v
 ### Supported TTS Providers
 - **ElevenLabs**: Professional-grade voice synthesis (requires API key)
 - **Mock TTS**: Development and testing provider (no API key required)
+
+### Emotional TTS Preprocessing
+
+The app features an advanced emotional preprocessing system that enhances voice synthesis with intelligent text analysis:
+
+#### Key Features
+- **Smart Action Removal**: Automatically removes narrative action descriptions (`*chuckles warmly*`, `*cruza os braços pensativamente*`) from spoken text while preserving their emotional context
+- **Emotional Voice Modulation**: Dynamically adjusts ElevenLabs voice parameters based on detected emotions:
+  - **Thoughtful**: More contemplative, deliberate tone (stability ↓20%, style +0.1)
+  - **Warm**: Friendlier, more approachable voice (similarity_boost +0.1, style +0.2)
+  - **Playful**: More dynamic, expressive delivery (stability ↓30%, style +0.3)
+  - **Serious**: More authoritative, stable tone (stability +0.2, style -0.1)
+  - **Confident**: More assertive, clear voice (similarity_boost +0.15)
+
+#### Multi-Language Support
+- **Portuguese Patterns**: `pensativamente`, `cruza os braços`, `inclina a cabeça`, `esperando`
+- **English Patterns**: `thoughtfully`, `chuckles warmly`, `leans in with a smirk`, `strokes chin`
+- **Intelligent Detection**: Context-aware pattern matching that distinguishes actions from emphasis
+
+#### Processing Pipeline
+1. **Emotional Extraction**: Analyze original text for emotional context from action descriptions
+2. **Text Cleaning**: Remove narrative elements while preserving important emphasized content
+3. **Voice Parameter Calculation**: Map detected emotions to ElevenLabs voice adjustments
+4. **Synthesis**: Generate speech with emotionally-appropriate voice parameters
+
+#### Example Transformations
+```
+Input:  "*cruza os braços pensativamente* Como um legionário romano, **O conhecimento não tem fronteiras!**"
+Output: "Como um legionário romano, O conhecimento não tem fronteiras!" (spoken with thoughtful tone)
+
+Input:  "*chuckles warmly* That's absolutely fantastic news!"
+Output: "That's absolutely fantastic news!" (spoken with warm, friendly tone)
+```
+
+For technical details, see [TTS Emotional Preprocessing Documentation](docs/features/tts_emotional_preprocessing.md).
 
 ## App Icon System
 
@@ -134,14 +175,14 @@ This project is built with Flutter. For help getting started with Flutter develo
 ## Test Status
 
 ### Test Statistics
-- **Test Files**: 28 Dart test files
-- **Total Tests**: 480 individual tests
+- **Test Files**: 30 Dart test files
+- **Total Tests**: 516 individual tests
 - **Test Coverage**: All tests passing ✅
 - **Test Organization**: 5 logical test groups with dedicated execution scripts
 - **Mocking Strategy**: Migrated from `mockito` to `mocktail` for better test isolation
 
 ### Test Coverage by Component
-- **Audio Assistant Tests**: Comprehensive TTS service testing, provider integration, error handling
+- **Audio Assistant Tests**: Comprehensive TTS service testing, provider integration, error handling, emotional preprocessing
 - **Audio Recorder Tests**: Recording functionality, concurrency handling, UI states
 - **Audio Message Tests**: Visual integration, playback controls, component interactions
 - **Claude Service Tests**: API integration, TTS integration, error handling, response processing
@@ -195,6 +236,15 @@ For more detailed information about the test groups and specific tests, see the 
 - **Character Guide Testing**: Added comprehensive voice configuration tests
 
 ## Changelog
+
+### v1.0.36
+- **🎭 Emotional TTS Preprocessing System**: Advanced text processing with emotional voice modulation
+  - Intelligent action description removal for natural speech synthesis
+  - Emotional context extraction from character actions for dynamic voice parameter adjustment
+  - Multi-language support (Portuguese & English) with smart pattern detection
+  - Real-time voice adaptation based on detected emotions (thoughtful, warm, playful, serious, confident)
+  - Comprehensive documentation and feature proposals for future enhancements
+  - 36 new tests covering text processing and emotional tone mapping
 
 ### v1.0.35
 - **Professional App Icon System**: Complete implementation of character-based app branding
