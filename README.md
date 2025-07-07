@@ -3,7 +3,7 @@
 A Flutter-based chat application that implements an AI-powered chat interface with comprehensive audio assistant capabilities.
 
 ## Version
-Current version: v1.0.34 (tag: v1.0.34)
+Current version: v1.0.35 (tag: v1.0.35)
 
 ## Features
 
@@ -33,6 +33,7 @@ Current version: v1.0.34 (tag: v1.0.34)
 - Relative path storage for reliable audio file access (see [Path Storage Strategy](#path-storage-strategy))
 - Comprehensive error handling and user feedback
 - **Enhanced Test Suite**: 480 tests across comprehensive test categories
+- **Professional App Icons**: Complete app icon system with character-based branding across all platforms
 
 ## Setup
 
@@ -70,6 +71,36 @@ The app includes a comprehensive TTS system that automatically generates audio v
 ### Supported TTS Providers
 - **ElevenLabs**: Professional-grade voice synthesis (requires API key)
 - **Mock TTS**: Development and testing provider (no API key required)
+
+## App Icon System
+
+The application features a professional app icon system with character-based branding:
+
+### Icon Features
+- **Character-Based Design**: Cheerful purple-bearded character that reflects the app's AI assistant personality
+- **Multi-Platform Support**: 32 optimized icons across iOS, Android, Web, and macOS
+- **Smart Optimizations**: Platform-specific styling with automatic rounded corners and adaptive layouts
+- **Professional Quality**: High-resolution icons (up to 1024x1024px) with crisp scaling
+
+### Icon Generation
+The app includes an automated icon generation system:
+- **Source Image**: `source_icon.png` - High-quality character illustration
+- **Generation Script**: `scripts/generate_app_icons.py` - Automated icon generation with platform optimizations
+- **Setup Script**: `scripts/setup_icon_generator.sh` - Dependency installation for icon generation
+- **Documentation**: Complete implementation guide in `docs/features/`
+
+### Platform Coverage
+- **📱 iOS**: 15 icons (20x20px to 1024x1024px) with iOS rounded corners
+- **🤖 Android**: 5 launcher icons (48x48px to 192x192px) with adaptive design
+- **🌐 Web**: 5 PWA/favicon icons including maskable versions
+- **🖥️ macOS**: 7 desktop icons with macOS styling
+
+To regenerate icons from a new source image:
+```bash
+# Place your character image as source_icon.png
+./scripts/setup_icon_generator.sh  # Install dependencies (run once)
+python3 scripts/generate_app_icons.py  # Generate all platform icons
+```
 
 ## Character Guides
 
@@ -164,6 +195,21 @@ For more detailed information about the test groups and specific tests, see the 
 - **Character Guide Testing**: Added comprehensive voice configuration tests
 
 ## Changelog
+
+### v1.0.35
+- **Professional App Icon System**: Complete implementation of character-based app branding
+  - **Character Icon Design**: Cheerful purple-bearded character that perfectly represents the AI assistant personality
+  - **Multi-Platform Icon Generation**: 32 optimized icons across all platforms (iOS, Android, Web, macOS)
+  - **Automated Generation Pipeline**: Complete Python-based icon generation system with smart optimizations
+    - **Platform-Specific Styling**: Automatic rounded corners for iOS/macOS, adaptive design for Android
+    - **High-Quality Scaling**: Crisp icons from 16x16px to 1024x1024px using Lanczos resampling
+    - **Maskable Icons**: PWA-compatible icons with proper safe zones for Android adaptive icons
+  - **Professional Documentation**: Complete implementation guide and PRD for icon system
+  - **Source Management**: Clean source icon workflow with `source_icon.png` as the master image
+- **Enhanced Brand Identity**: 
+  - **Memorable Character**: Friendly, approachable design that creates instant brand recognition
+  - **Consistent Experience**: Professional icons across all platforms maintain unified brand identity
+  - **App Store Ready**: High-resolution icons meet all platform requirements for app store submission
 
 ### v1.0.34
 - **Enhanced User Experience**: Improved chat interface with tap-to-dismiss keyboard functionality
