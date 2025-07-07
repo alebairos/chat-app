@@ -59,6 +59,6 @@ class ConfigLoader {
   String get activePersonaDisplayName => _characterManager.personaDisplayName;
 
   /// Get a list of all available personas
-  List<Map<String, dynamic>> get availablePersonas =>
+  Future<List<Map<String, dynamic>>> get availablePersonas =>
       _characterManager.availablePersonas;
 }

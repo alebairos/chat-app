@@ -5,11 +5,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('CharacterConfigManager Tests', () {
-    test('Default persona should be Personal Development Assistant', () {
+    test('Default persona should be Sergeant Oracle', () {
       final manager = CharacterConfigManager();
-      expect(
-          manager.activePersona, CharacterPersona.personalDevelopmentAssistant);
-      expect(manager.personaDisplayName, 'Personal Development Assistant');
+      expect(manager.activePersona, CharacterPersona.sergeantOracle);
+      expect(manager.personaDisplayName, 'Sergeant Oracle');
     });
 
     test('Should change active persona', () {
@@ -32,14 +31,13 @@ void main() {
       expect(manager.configFilePath, 'lib/config/zen_guide_config.json');
     });
 
-    test('Should return list of available personas', () {
+    test('Should return list of available personas', () async {
       final manager = CharacterConfigManager();
-      final personas = manager.availablePersonas;
+      final personas = await manager.availablePersonas;
 
-      expect(personas.length, 3);
-      expect(personas[0]['displayName'], 'Personal Development Assistant');
-      expect(personas[1]['displayName'], 'Sergeant Oracle');
-      expect(personas[2]['displayName'], 'The Zen Master');
+      expect(
+          personas.length, 1); // Only Sergeant Oracle is enabled in our config
+      expect(personas[0]['displayName'], 'Sergeant Oracle');
     });
   });
 }

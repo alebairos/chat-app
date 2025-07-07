@@ -27,8 +27,6 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final availablePersonas = _configLoader.availablePersonas;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Choose Your Guide'),
@@ -45,80 +43,105 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: ListView.builder(
-                itemCount: availablePersonas.length,
-                itemBuilder: (context, index) {
-                  final persona = availablePersonas[index];
-                  final personaEnum = CharacterPersona.values[index];
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _configLoader.availablePersonas,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  return Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: _selectedPersona == personaEnum
-                            ? Theme.of(context).primaryColor
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedPersona = personaEnum;
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Error loading personas: ${snapshot.error}'),
+                    );
+                  }
+
+                  final availablePersonas = snapshot.data ?? [];
+
+                  if (availablePersonas.isEmpty) {
+                    return const Center(
+                      child: Text('No personas available'),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: availablePersonas.length,
+                    itemBuilder: (context, index) {
+                      final persona = availablePersonas[index];
+                      final personaKey = persona['key'] as String;
+                      final personaEnum = _getPersonaEnumFromKey(personaKey);
+
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: _selectedPersona == personaEnum
+                                ? Theme.of(context).primaryColor
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedPersona = personaEnum;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  backgroundColor: _getAvatarColor(personaEnum),
-                                  child: Text(
-                                    persona['displayName'][0],
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor:
+                                          _getAvatarColor(personaEnum),
+                                      child: Text(
+                                        persona['displayName'][0],
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    persona['displayName'],
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        persona['displayName'],
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    Radio<CharacterPersona>(
+                                      value: personaEnum,
+                                      groupValue: _selectedPersona,
+                                      onChanged: (CharacterPersona? value) {
+                                        if (value != null) {
+                                          setState(() {
+                                            _selectedPersona = value;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                Radio<CharacterPersona>(
-                                  value: personaEnum,
-                                  groupValue: _selectedPersona,
-                                  onChanged: (CharacterPersona? value) {
-                                    if (value != null) {
-                                      setState(() {
-                                        _selectedPersona = value;
-                                      });
-                                    }
-                                  },
+                                const SizedBox(height: 8),
+                                Text(
+                                  persona['description'],
+                                  style: const TextStyle(fontSize: 14),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              persona['description'],
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -148,6 +171,19 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
         ),
       ),
     );
+  }
+
+  CharacterPersona _getPersonaEnumFromKey(String key) {
+    switch (key) {
+      case 'personalDevelopmentAssistant':
+        return CharacterPersona.personalDevelopmentAssistant;
+      case 'sergeantOracle':
+        return CharacterPersona.sergeantOracle;
+      case 'zenGuide':
+        return CharacterPersona.zenGuide;
+      default:
+        return CharacterPersona.sergeantOracle; // Default fallback
+    }
   }
 
   Color _getAvatarColor(CharacterPersona persona) {

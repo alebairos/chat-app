@@ -307,10 +307,12 @@ class MockConfigLoader extends _i1.Mock implements _i7.ConfigLoader {
       ) as String);
 
   @override
-  List<Map<String, dynamic>> get availablePersonas => (super.noSuchMethod(
+  _i3.Future<List<Map<String, dynamic>>> get availablePersonas =>
+      (super.noSuchMethod(
         Invocation.getter(#availablePersonas),
-        returnValue: <Map<String, dynamic>>[],
-      ) as List<Map<String, dynamic>>);
+        returnValue: _i3.Future<List<Map<String, dynamic>>>.value(
+            <Map<String, dynamic>>[]),
+      ) as _i3.Future<List<Map<String, dynamic>>>);
 
   @override
   _i3.Future<String> loadSystemPrompt() => (super.noSuchMethod(

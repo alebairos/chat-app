@@ -49,3 +49,5 @@ flutter:
     - assets/data/Trilhas.csv
     - assets/data/habit-assistant-prompt-v13.json
     - lib/config/claude_config.json
+    - assets/config/
+    - assets/prompts/

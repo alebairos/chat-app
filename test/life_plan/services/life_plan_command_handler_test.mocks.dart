@@ -3,11 +3,12 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
-import 'package:character_ai_clone/services/claude_service.dart' as _i2;
+import 'package:character_ai_clone/models/claude_audio_response.dart' as _i2;
+import 'package:character_ai_clone/services/claude_service.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i4;
+import 'package:mockito/src/dummies.dart' as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -22,13 +23,39 @@ import 'package:mockito/src/dummies.dart' as _i4;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
+class _FakeClaudeAudioResponse_0 extends _i1.SmartFake
+    implements _i2.ClaudeAudioResponse {
+  _FakeClaudeAudioResponse_0(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [ClaudeService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockClaudeService extends _i1.Mock implements _i2.ClaudeService {
+class MockClaudeService extends _i1.Mock implements _i3.ClaudeService {
   MockClaudeService() {
     _i1.throwOnMissingStub(this);
   }
+
+  @override
+  bool get audioEnabled => (super.noSuchMethod(
+        Invocation.getter(#audioEnabled),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  set audioEnabled(bool? value) => super.noSuchMethod(
+        Invocation.setter(
+          #audioEnabled,
+          value,
+        ),
+        returnValueForMissingStub: null,
+      );
 
   @override
   List<Map<String, String>> get conversationHistory => (super.noSuchMethod(
@@ -46,28 +73,28 @@ class MockClaudeService extends _i1.Mock implements _i2.ClaudeService {
       );
 
   @override
-  _i3.Future<bool> initialize() => (super.noSuchMethod(
+  _i4.Future<bool> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,
           [],
         ),
-        returnValue: _i3.Future<bool>.value(false),
-      ) as _i3.Future<bool>);
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
 
   @override
-  _i3.Future<String> sendMessage(String? message) => (super.noSuchMethod(
+  _i4.Future<String> sendMessage(String? message) => (super.noSuchMethod(
         Invocation.method(
           #sendMessage,
           [message],
         ),
-        returnValue: _i3.Future<String>.value(_i4.dummyValue<String>(
+        returnValue: _i4.Future<String>.value(_i5.dummyValue<String>(
           this,
           Invocation.method(
             #sendMessage,
             [message],
           ),
         )),
-      ) as _i3.Future<String>);
+      ) as _i4.Future<String>);
 
   @override
   void clearConversation() => super.noSuchMethod(
@@ -77,4 +104,21 @@ class MockClaudeService extends _i1.Mock implements _i2.ClaudeService {
         ),
         returnValueForMissingStub: null,
       );
+
+  @override
+  _i4.Future<_i2.ClaudeAudioResponse> sendMessageWithAudio(String? message) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #sendMessageWithAudio,
+          [message],
+        ),
+        returnValue: _i4.Future<_i2.ClaudeAudioResponse>.value(
+            _FakeClaudeAudioResponse_0(
+          this,
+          Invocation.method(
+            #sendMessageWithAudio,
+            [message],
+          ),
+        )),
+      ) as _i4.Future<_i2.ClaudeAudioResponse>);
 }
