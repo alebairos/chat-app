@@ -1,16 +1,21 @@
 {
-  "enabledPersonas": ["sergeantOracle"],
-  "defaultPersona": "sergeantOracle",
+  "enabledPersonas": ["ariLifeCoach", "sergeantOracle"],
+  "defaultPersona": "ariLifeCoach",
   "personas": {
-    "personalDevelopmentAssistant": {
-      "enabled": false,
-      "displayName": "Personal Development Assistant",
-      "description": "Empathetic and encouraging guide focused on practical solutions for achieving goals through positive habits."
+    "ariLifeCoach": {
+      "enabled": true,
+      "displayName": "Ari - Life Coach",
+      "description": "TARS-inspired life coach combining 9 expert frameworks with intelligent brevity and adaptive engagement for evidence-based personal transformation."
     },
     "sergeantOracle": {
       "enabled": true,
       "displayName": "Sergeant Oracle",
       "description": "Roman time-traveler with military precision and ancient wisdom, combining historical insights with futuristic perspective."
+    },
+    "personalDevelopmentAssistant": {
+      "enabled": false,
+      "displayName": "Personal Development Assistant",
+      "description": "Empathetic and encouraging guide focused on practical solutions for achieving goals through positive habits."
     },
     "zenGuide": {
       "enabled": false,

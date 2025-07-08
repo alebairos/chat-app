@@ -2,7 +2,12 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
 /// Enum representing the available character personas
-enum CharacterPersona { personalDevelopmentAssistant, sergeantOracle, zenGuide }
+enum CharacterPersona {
+  personalDevelopmentAssistant,
+  sergeantOracle,
+  zenGuide,
+  ariLifeCoach
+}
 
 /// Class to manage character configurations and allow switching between personas
 class CharacterConfigManager {
@@ -12,7 +17,7 @@ class CharacterConfigManager {
   CharacterConfigManager._internal();
 
   /// The currently active character persona
-  CharacterPersona _activePersona = CharacterPersona.sergeantOracle;
+  CharacterPersona _activePersona = CharacterPersona.ariLifeCoach;
 
   /// Get the currently active character persona
   CharacterPersona get activePersona => _activePersona;
@@ -31,6 +36,8 @@ class CharacterConfigManager {
         return 'lib/config/sergeant_oracle_config.json';
       case CharacterPersona.zenGuide:
         return 'lib/config/zen_guide_config.json';
+      case CharacterPersona.ariLifeCoach:
+        return 'lib/config/ari_life_coach_config.json';
     }
   }
 
@@ -43,6 +50,8 @@ class CharacterConfigManager {
         return 'Sergeant Oracle';
       case CharacterPersona.zenGuide:
         return 'The Zen Master';
+      case CharacterPersona.ariLifeCoach:
+        return 'Ari - Life Coach';
     }
   }
 
@@ -76,6 +85,8 @@ class CharacterConfigManager {
         return 'assets/prompts/sergeant_oracle_system.txt';
       case CharacterPersona.zenGuide:
         return 'assets/prompts/zen_guide_system.txt';
+      case CharacterPersona.ariLifeCoach:
+        return 'assets/prompts/ari_life_coach_system.txt';
     }
   }
 
@@ -135,6 +146,8 @@ class CharacterConfigManager {
         return 'assets/prompts/sergeant_oracle_$dimension.txt';
       case CharacterPersona.zenGuide:
         return 'assets/prompts/zen_guide_$dimension.txt';
+      case CharacterPersona.ariLifeCoach:
+        return 'assets/prompts/ari_life_coach_$dimension.txt';
     }
   }
 

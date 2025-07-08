@@ -181,8 +181,10 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
         return CharacterPersona.sergeantOracle;
       case 'zenGuide':
         return CharacterPersona.zenGuide;
+      case 'ariLifeCoach':
+        return CharacterPersona.ariLifeCoach;
       default:
-        return CharacterPersona.sergeantOracle; // Default fallback
+        return CharacterPersona.ariLifeCoach; // Default to Ari
     }
   }
 
@@ -194,6 +196,8 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
         return Colors.red;
       case CharacterPersona.zenGuide:
         return Colors.green;
+      case CharacterPersona.ariLifeCoach:
+        return Colors.teal;
     }
   }
 }
