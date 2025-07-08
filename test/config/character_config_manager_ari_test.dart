@@ -20,7 +20,8 @@ void main() {
 
     test('Should return correct config path for Ari', () {
       manager.setActivePersona(CharacterPersona.ariLifeCoach);
-      expect(manager.configFilePath, 'lib/config/ari_life_coach_config.json');
+      expect(
+          manager.configFilePath, 'assets/config/ari_life_coach_config.json');
     });
 
     test('Should return correct display name for Ari', () {
@@ -47,7 +48,8 @@ void main() {
       manager.setActivePersona(CharacterPersona.ariLifeCoach);
       // This is testing the private method through the public interface
       // The actual path would be used in loadSystemPrompt()
-      expect(manager.configFilePath, 'lib/config/ari_life_coach_config.json');
+      expect(
+          manager.configFilePath, 'assets/config/ari_life_coach_config.json');
     });
 
     test('All personas should have unique display names', () {

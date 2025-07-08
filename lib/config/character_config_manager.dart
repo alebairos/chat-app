@@ -31,13 +31,13 @@ class CharacterConfigManager {
   String get configFilePath {
     switch (_activePersona) {
       case CharacterPersona.personalDevelopmentAssistant:
-        return 'lib/config/claude_config.json';
+        return 'assets/config/claude_config.json';
       case CharacterPersona.sergeantOracle:
-        return 'lib/config/sergeant_oracle_config.json';
+        return 'assets/config/sergeant_oracle_config.json';
       case CharacterPersona.zenGuide:
-        return 'lib/config/zen_guide_config.json';
+        return 'assets/config/zen_guide_config.json';
       case CharacterPersona.ariLifeCoach:
-        return 'lib/config/ari_life_coach_config.json';
+        return 'assets/config/ari_life_coach_config.json';
     }
   }
 

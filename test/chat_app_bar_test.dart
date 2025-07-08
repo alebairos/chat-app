@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/widgets/chat_app_bar.dart';
+import 'package:character_ai_clone/config/character_config_manager.dart';
 
 void main() {
   group('CustomChatAppBar', () {
@@ -11,8 +12,9 @@ void main() {
         ),
       ));
 
-      expect(find.text('Sergeant Oracle'), findsOneWidget);
-      expect(find.byIcon(Icons.military_tech), findsOneWidget);
+      // Should show current active persona (Ari - Life Coach by default)
+      expect(find.text('Ari - Life Coach'), findsOneWidget);
+      expect(find.byIcon(Icons.psychology), findsOneWidget);
       expect(find.byIcon(Icons.info_outline), findsOneWidget);
     });
 
@@ -27,9 +29,9 @@ void main() {
       await tester.tap(find.byIcon(Icons.info_outline));
       await tester.pumpAndSettle(); // Wait for dialog animation
 
-      expect(find.text('About Sergeant Oracle'), findsOneWidget);
+      expect(find.text('About Ari - Life Coach'), findsOneWidget);
       expect(
-        find.text('Sergeant Oracle is an AI assistant powered by Claude.'),
+        find.text('Ari - Life Coach is an AI assistant powered by Claude.'),
         findsOneWidget,
       );
       expect(find.text('Close'), findsOneWidget);
@@ -66,7 +68,7 @@ void main() {
         find.descendant(
           of: columnFinder,
           matching: find
-              .text('Sergeant Oracle is an AI assistant powered by Claude.'),
+              .text('Ari - Life Coach is an AI assistant powered by Claude.'),
         ),
         findsOneWidget,
       );
@@ -171,12 +173,12 @@ void main() {
       await tester.tap(find.byIcon(Icons.info_outline));
       await tester.pumpAndSettle();
 
-      expect(find.text('About Sergeant Oracle'), findsOneWidget);
+      expect(find.text('About Ari - Life Coach'), findsOneWidget);
 
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
 
-      expect(find.text('About Sergeant Oracle'), findsNothing);
+      expect(find.text('About Ari - Life Coach'), findsNothing);
     });
   });
 }

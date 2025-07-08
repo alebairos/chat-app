@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/transcription_service.dart';
 import '../utils/logger.dart';
 import '../config/config_loader.dart';
+import '../config/character_config_manager.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
 import '../features/audio_assistant/widgets/assistant_audio_message.dart';
@@ -368,6 +369,34 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  /// Get the appropriate color for the current persona
+  Color _getPersonaColor() {
+    switch (_configLoader.activePersona) {
+      case CharacterPersona.ariLifeCoach:
+        return Colors.teal;
+      case CharacterPersona.sergeantOracle:
+        return Colors.deepPurple;
+      case CharacterPersona.zenGuide:
+        return Colors.green;
+      case CharacterPersona.personalDevelopmentAssistant:
+        return Colors.blue;
+    }
+  }
+
+  /// Get the appropriate icon for the current persona
+  IconData _getPersonaIcon() {
+    switch (_configLoader.activePersona) {
+      case CharacterPersona.ariLifeCoach:
+        return Icons.psychology;
+      case CharacterPersona.sergeantOracle:
+        return Icons.military_tech;
+      case CharacterPersona.zenGuide:
+        return Icons.self_improvement;
+      case CharacterPersona.personalDevelopmentAssistant:
+        return Icons.person;
+    }
+  }
+
   Future<void> _sendMessage() async {
     if (_messageController.text.isEmpty) return;
 
@@ -675,14 +704,15 @@ class _ChatScreenState extends State<ChatScreen> {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: const Row(
+                child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: Colors.deepPurple,
-                      child: Icon(Icons.military_tech, color: Colors.white),
+                      backgroundColor: _getPersonaColor(),
+                      child: Icon(_getPersonaIcon(), color: Colors.white),
                     ),
-                    SizedBox(width: 8),
-                    Text('Claude is typing...'),
+                    const SizedBox(width: 8),
+                    Text(
+                        '${_configLoader.activePersonaDisplayName} is typing...'),
                   ],
                 ),
               ),

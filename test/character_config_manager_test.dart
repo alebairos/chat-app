@@ -5,10 +5,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('CharacterConfigManager Tests', () {
-    test('Default persona should be Sergeant Oracle', () {
+    test('Default persona should be Ari Life Coach', () {
       final manager = CharacterConfigManager();
-      expect(manager.activePersona, CharacterPersona.sergeantOracle);
-      expect(manager.personaDisplayName, 'Sergeant Oracle');
+      expect(manager.activePersona, CharacterPersona.ariLifeCoach);
+      expect(manager.personaDisplayName, 'Ari - Life Coach');
     });
 
     test('Should change active persona', () {
@@ -22,22 +22,29 @@ void main() {
       final manager = CharacterConfigManager();
 
       manager.setActivePersona(CharacterPersona.personalDevelopmentAssistant);
-      expect(manager.configFilePath, 'lib/config/claude_config.json');
+      expect(manager.configFilePath, 'assets/config/claude_config.json');
 
       manager.setActivePersona(CharacterPersona.sergeantOracle);
-      expect(manager.configFilePath, 'lib/config/sergeant_oracle_config.json');
+      expect(
+          manager.configFilePath, 'assets/config/sergeant_oracle_config.json');
 
       manager.setActivePersona(CharacterPersona.zenGuide);
-      expect(manager.configFilePath, 'lib/config/zen_guide_config.json');
+      expect(manager.configFilePath, 'assets/config/zen_guide_config.json');
+
+      manager.setActivePersona(CharacterPersona.ariLifeCoach);
+      expect(
+          manager.configFilePath, 'assets/config/ari_life_coach_config.json');
     });
 
     test('Should return list of available personas', () async {
       final manager = CharacterConfigManager();
       final personas = await manager.availablePersonas;
 
+      expect(personas.length, 2); // Ari and Sergeant Oracle are enabled
       expect(
-          personas.length, 1); // Only Sergeant Oracle is enabled in our config
-      expect(personas[0]['displayName'], 'Sergeant Oracle');
+          personas.any((p) => p['displayName'] == 'Ari - Life Coach'), isTrue);
+      expect(
+          personas.any((p) => p['displayName'] == 'Sergeant Oracle'), isTrue);
     });
   });
 }
