@@ -331,8 +331,9 @@ class ClaudeService {
             // Try to parse the error response and log it for debugging
             try {
               final errorBody = utf8.decode(response.bodyBytes);
-              _logger.error('Claude API Error (${response.statusCode}): $errorBody');
-              
+              _logger.error(
+                  'Claude API Error (${response.statusCode}): $errorBody');
+
               final errorData = jsonDecode(errorBody);
               if (errorData['error'] != null &&
                   errorData['error']['type'] == 'overloaded_error') {
