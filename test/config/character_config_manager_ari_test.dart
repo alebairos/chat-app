@@ -20,8 +20,11 @@ void main() {
 
     test('Should return correct config path for Ari', () {
       manager.setActivePersona(CharacterPersona.ariLifeCoach);
+      // With Oracle enabled, Ari uses 2.0 overlay; fallback may use 1.0
       expect(
-          manager.configFilePath, 'assets/config/ari_life_coach_config.json');
+          manager.configFilePath,
+          anyOf('assets/config/ari_life_coach_config_1.0.json',
+              'assets/config/ari_life_coach_config_2.0.json'));
     });
 
     test('Should return correct display name for Ari', () {
@@ -49,7 +52,9 @@ void main() {
       // This is testing the private method through the public interface
       // The actual path would be used in loadSystemPrompt()
       expect(
-          manager.configFilePath, 'assets/config/ari_life_coach_config.json');
+          manager.configFilePath,
+          anyOf('assets/config/ari_life_coach_config_1.0.json',
+              'assets/config/ari_life_coach_config_2.0.json'));
     });
 
     test('All personas should have unique display names', () {

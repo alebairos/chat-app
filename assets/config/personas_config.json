@@ -5,22 +5,14 @@
     "ariLifeCoach": {
       "enabled": true,
       "displayName": "Ari - Life Coach",
-      "description": "TARS-inspired life coach combining 9 expert frameworks with intelligent brevity and adaptive engagement for evidence-based personal transformation."
+      "description": "TARS-inspired life coach combining 9 expert frameworks with intelligent brevity and adaptive engagement for evidence-based personal transformation.",
+      "configPath": "assets/config/ari_life_coach_config_2.0.json"
     },
     "sergeantOracle": {
       "enabled": true,
       "displayName": "Sergeant Oracle",
-      "description": "Roman time-traveler with military precision and ancient wisdom, combining historical insights with futuristic perspective."
-    },
-    "personalDevelopmentAssistant": {
-      "enabled": false,
-      "displayName": "Personal Development Assistant",
-      "description": "Empathetic and encouraging guide focused on practical solutions for achieving goals through positive habits."
-    },
-    "zenGuide": {
-      "enabled": false,
-      "displayName": "The Zen Master",
-      "description": "Enlightened sage embodying Lao Tzu's wisdom and Buddhist zen tradition, offering profound insights and gentle guidance for any question or challenge."
+      "description": "Roman time-traveler with military precision and ancient wisdom, combining historical insights with futuristic perspective.",
+      "configPath": "assets/config/sergeant_oracle_config.json"
     }
   }
 } 

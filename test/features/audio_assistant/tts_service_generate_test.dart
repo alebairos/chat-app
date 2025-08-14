@@ -71,7 +71,7 @@ class TestableAudioAssistantTTSService extends AudioAssistantTTSService {
 
   // Override to track calls and handle test scenarios
   @override
-  Future<String?> generateAudio(String text) async {
+  Future<String?> generateAudio(String text, {String? language}) async {
     lastGeneratedText = text;
 
     if (forceGenerateFailure) {
@@ -90,7 +90,7 @@ class TestableAudioAssistantTTSService extends AudioAssistantTTSService {
       return lastGeneratedPath;
     }
 
-    return await super.generateAudio(text);
+    return await super.generateAudio(text, language: language);
   }
 
   // Add a custom provider for testing - this is a no-op since we can't access private fields

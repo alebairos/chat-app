@@ -1,11 +1,22 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+// ignore_for_file: unused_import
 import '../../../utils/logger.dart';
 
 /// Service for managing character-specific voice configurations
 class CharacterVoiceConfig {
-  final Logger _logger = Logger();
-
   /// Voice configurations for different characters
-  static const Map<String, Map<String, dynamic>> _characterVoices = {
+  static final Map<String, Map<String, dynamic>> _characterVoices = {
+    'Ari - Life Coach': {
+      // Voice ID is overridden at runtime from .env if available
+      'voiceId': 'pNInz6obpgDQGcFmaJgB',
+      'modelId': 'eleven_multilingual_v1',
+      'stability': 0.7,
+      'similarityBoost': 0.8,
+      'style': 0.1,
+      'speakerBoost': true,
+      'description':
+          'Masculine coach voice tuned for Portuguese (Brazil) and English',
+    },
     'Guide Sergeant Oracle': {
       'voiceId':
           'pNInz6obpgDQGcFmaJgB', // Can be updated to more military voice
@@ -40,9 +51,28 @@ class CharacterVoiceConfig {
 
   /// Get voice configuration for a specific character
   static Map<String, dynamic> getVoiceConfig(String characterName) {
-    final config =
+    final baseConfig =
         _characterVoices[characterName] ?? _characterVoices['default']!;
-    return Map<String, dynamic>.from(config);
+    final resolved = Map<String, dynamic>.from(baseConfig);
+
+    // If Ari is the active character, prefer voiceId from .env to keep a
+    // single masculine multilingual voice across languages.
+    if (characterName == 'Ari - Life Coach') {
+      final envVoiceId = dotenv.env['ELEVEN_LABS_VOICE_ID'] ??
+          dotenv.env['ELEVENLABS_VOICE_ID'];
+      if (envVoiceId != null && envVoiceId.isNotEmpty) {
+        resolved['voiceId'] = envVoiceId;
+      }
+
+      // Ensure multilingual model is used for cross-language support
+      // Prefer existing value if already multilingual; otherwise set it.
+      final modelId = (resolved['modelId'] as String?) ?? '';
+      if (!modelId.startsWith('eleven_multilingual_')) {
+        resolved['modelId'] = 'eleven_multilingual_v1';
+      }
+    }
+
+    return resolved;
   }
 
   /// Get all available character voices

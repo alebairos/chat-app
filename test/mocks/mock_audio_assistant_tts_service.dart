@@ -26,7 +26,7 @@ class MockAudioAssistantTTSService extends Mock
   }
 
   @override
-  Future<String?> generateAudio(String text) async {
+  Future<String?> generateAudio(String text, {String? language}) async {
     if (!_initialized) {
       throw Exception('TTS service not initialized');
     }

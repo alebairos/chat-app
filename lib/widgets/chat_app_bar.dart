@@ -25,12 +25,14 @@ class CustomChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         personaColor = Colors.deepPurple;
         break;
       case CharacterPersona.zenGuide:
-        personaIcon = Icons.self_improvement;
-        personaColor = Colors.green;
+        // Deprecated persona → route to Ari visuals
+        personaIcon = Icons.psychology;
+        personaColor = Colors.teal;
         break;
       case CharacterPersona.personalDevelopmentAssistant:
-        personaIcon = Icons.person;
-        personaColor = Colors.blue;
+        // Deprecated persona → route to Sergeant visuals
+        personaIcon = Icons.military_tech;
+        personaColor = Colors.deepPurple;
         break;
     }
 

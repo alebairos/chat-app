@@ -19,7 +19,8 @@ class ValidationResult {
 class ClaudeService {
   static const String _baseUrl = 'https://api.anthropic.com/v1/messages';
   late final String _apiKey;
-  final List<Map<String, String>> _conversationHistory = [];
+  late final String _model;
+  final List<Map<String, dynamic>> _conversationHistory = [];
   String? _systemPrompt;
   bool _isInitialized = false;
   final _logger = Logger();
@@ -43,6 +44,8 @@ class ClaudeService {
         _ttsService = ttsService,
         _audioEnabled = audioEnabled {
     _apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
+    _model =
+        (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-latest').trim();
   }
 
   // Add getter and setter for audioEnabled
@@ -241,10 +244,12 @@ class ClaudeService {
         }
       }
 
-      // Add user message to history
+      // Add user message to history using content blocks format
       _conversationHistory.add({
         'role': 'user',
-        'content': message,
+        'content': [
+          {'type': 'text', 'text': message}
+        ],
       });
 
       // Fetch relevant MCP data based on user message
@@ -257,7 +262,7 @@ class ClaudeService {
       }
 
       // Prepare messages array with history
-      final messages = <Map<String, String>>[];
+      final messages = <Map<String, dynamic>>[];
 
       // Add conversation history
       messages.addAll(_conversationHistory);
@@ -278,7 +283,7 @@ class ClaudeService {
           'anthropic-version': '2023-06-01',
         },
         body: jsonEncode({
-          'model': 'claude-3-opus-20240229',
+          'model': _model,
           'max_tokens': 1024,
           'messages': messages,
           'system': systemPrompt,
@@ -301,10 +306,12 @@ class ClaudeService {
           }
         }
 
-        // Add assistant's response to history
+        // Add assistant's response to history using content blocks format
         _conversationHistory.add({
           'role': 'assistant',
-          'content': assistantMessage,
+          'content': [
+            {'type': 'text', 'text': assistantMessage}
+          ],
         });
 
         return assistantMessage;
@@ -321,15 +328,19 @@ class ClaudeService {
           case 504:
             return 'Claude service is temporarily unavailable. Please try again later.';
           default:
-            // Try to parse the error response
+            // Try to parse the error response and log it for debugging
             try {
-              final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+              final errorBody = utf8.decode(response.bodyBytes);
+              _logger.error('Claude API Error (${response.statusCode}): $errorBody');
+              
+              final errorData = jsonDecode(errorBody);
               if (errorData['error'] != null &&
                   errorData['error']['type'] == 'overloaded_error') {
                 return 'Claude is currently experiencing high demand. Please try again in a moment.';
               }
-              return _getUserFriendlyErrorMessage(response.body);
+              return _getUserFriendlyErrorMessage(errorBody);
             } catch (e) {
+              _logger.error('Failed to parse error response: $e');
               return 'Error: Unable to get a response from Claude (Status ${response.statusCode})';
             }
         }
@@ -492,7 +503,7 @@ class ClaudeService {
   }
 
   // Getter for conversation history
-  List<Map<String, String>> get conversationHistory =>
+  List<Map<String, dynamic>> get conversationHistory =>
       List.unmodifiable(_conversationHistory);
 
   // Add method to send message with audio
@@ -507,11 +518,10 @@ class ClaudeService {
         return ClaudeAudioResponse(text: textResponse);
       }
 
-      // Check if the response is an error message from Claude
-      // If it is, don't try to generate audio and don't add TTS error
-      // Convert to lowercase for case-insensitive comparison
+      // Check common error patterns; if detected, skip TTS and return text-only
       final lowerResponse = textResponse.toLowerCase();
-      if (lowerResponse.contains('rate limit') ||
+      if (lowerResponse.contains('issue with the request') ||
+          lowerResponse.contains('rate limit') ||
           lowerResponse.contains('unable to') ||
           lowerResponse.contains('authentication failed') ||
           lowerResponse.contains('claude error') ||

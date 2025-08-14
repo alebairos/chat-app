@@ -377,9 +377,9 @@ class _ChatScreenState extends State<ChatScreen> {
       case CharacterPersona.sergeantOracle:
         return Colors.deepPurple;
       case CharacterPersona.zenGuide:
-        return Colors.green;
+        return Colors.teal; // route deprecated to Ari color
       case CharacterPersona.personalDevelopmentAssistant:
-        return Colors.blue;
+        return Colors.deepPurple; // route deprecated to Sergeant color
     }
   }
 
@@ -391,9 +391,9 @@ class _ChatScreenState extends State<ChatScreen> {
       case CharacterPersona.sergeantOracle:
         return Icons.military_tech;
       case CharacterPersona.zenGuide:
-        return Icons.self_improvement;
+        return Icons.psychology; // route deprecated to Ari icon
       case CharacterPersona.personalDevelopmentAssistant:
-        return Icons.person;
+        return Icons.military_tech; // route deprecated to Sergeant icon
     }
   }
 
@@ -423,6 +423,9 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _messageController.clear();
       _scrollToBottom();
+
+      // Add user message to TTS service for language detection
+      _ttsService.addUserMessage(userMessage);
 
       // Get AI response with audio
       final response = await _claudeService.sendMessageWithAudio(userMessage);
@@ -550,6 +553,9 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages[0] = userAudioMessage;
       });
       _scrollToBottom();
+
+      // Add transcription to TTS service for language detection
+      _ttsService.addUserMessage(transcription);
 
       // Send transcription to Claude WITH AUDIO
       final response = await _claudeService.sendMessageWithAudio(transcription);

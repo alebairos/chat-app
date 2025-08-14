@@ -2,7 +2,7 @@ Issues:
 - numbers are being read in english while the conversation is in pt_Br. It should follow the language used or maybe a explicit user request.
 - Do not read the text acronyms of the catalog (SF, R, etc) that are presented between parenthesis (need to inform eleven labs to ignore this chunks)
 
-Document this as a ft_014_ari_persona_prompt_reading_enhancement and then proceed with the implementation.
+Document this as a ft_015_ari_persona_prompt_reading_enhancement and then proceed with the implementation.
 
 ux:
 Título "Parcerias da Lyfe" como titulo no topo
@@ -14,5 +14,6 @@ Melhorar sargento com bsse no Ari (tars e promp progressivo)
 criar persona cachorrinho da Marcella
 fix tests (UI)
 
+duolingo for public impactuful tweets (Naval's how to be rich, for financial wealth). FInd first principles, scientific and philosophical fundaments, find dtaa anda cases. 
 
 

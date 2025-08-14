@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Enum representing the available character personas
 enum CharacterPersona {
@@ -31,13 +32,16 @@ class CharacterConfigManager {
   String get configFilePath {
     switch (_activePersona) {
       case CharacterPersona.personalDevelopmentAssistant:
-        return 'assets/config/claude_config.json';
+        // Deprecated persona → route to Sergeant Oracle config to avoid referencing removed files
+        return 'assets/config/sergeant_oracle_config.json';
       case CharacterPersona.sergeantOracle:
         return 'assets/config/sergeant_oracle_config.json';
       case CharacterPersona.zenGuide:
-        return 'assets/config/zen_guide_config.json';
+        // Deprecated persona → route to Ari config to avoid referencing removed files
+        return 'assets/config/ari_life_coach_config_2.0.json';
       case CharacterPersona.ariLifeCoach:
-        return 'assets/config/ari_life_coach_config.json';
+        // Use Ari 2.0 persona overlay with Oracle composition per FT-021
+        return 'assets/config/ari_life_coach_config_2.0.json';
     }
   }
 
@@ -58,70 +62,124 @@ class CharacterConfigManager {
   /// Load the system prompt for the active persona
   Future<String> loadSystemPrompt() async {
     try {
-      // Try to load from external prompt file first
-      final String promptPath = _getSystemPromptPath();
+      // 1) Resolve Oracle prompt (ALWAYS try) using env path or default
+      final String defaultOraclePath =
+          'assets/config/oracle/oracle_prompt_1.0.md';
+      final String oraclePathEnv =
+          (dotenv.env['ORACLE_PROMPT_PATH'] ?? '').trim();
+      final String oraclePath =
+          oraclePathEnv.isNotEmpty ? oraclePathEnv : defaultOraclePath;
+
+      String? oraclePrompt;
       try {
-        return await rootBundle.loadString(promptPath);
-      } catch (promptError) {
-        print(
-            'External prompt not found, falling back to config: $promptError');
-        // Fallback to original JSON config
-        final String jsonString = await rootBundle.loadString(configFilePath);
-        final Map<String, dynamic> jsonMap = json.decode(jsonString);
-        return jsonMap['system_prompt']['content'] as String;
+        oraclePrompt = await rootBundle.loadString(oraclePath);
+      } catch (oracleError) {
+        print('Oracle prompt not found or failed to load: $oracleError');
       }
+
+      // 2) Load persona layer from JSON config only
+      String personaPrompt;
+
+      // 2a) Try dynamic configPath from personas_config.json (FT-022 compatible)
+      String? dynamicConfigPath;
+      try {
+        dynamicConfigPath = await _resolvePersonaConfigPathFromConfig();
+      } catch (e) {
+        // Ignore and continue to hardcoded fallback
+      }
+
+      final String effectiveConfigPath =
+          (dynamicConfigPath != null && dynamicConfigPath.isNotEmpty)
+              ? dynamicConfigPath
+              : configFilePath;
+
+      // 2b) Load from effective config path (with Ari legacy fallback if needed)
+      try {
+        final String jsonString =
+            await rootBundle.loadString(effectiveConfigPath);
+        final Map<String, dynamic> jsonMap = json.decode(jsonString);
+        personaPrompt = jsonMap['system_prompt']['content'] as String;
+      } catch (jsonLoadError) {
+        // Ari-specific legacy fallback chain
+        if (_activePersona == CharacterPersona.ariLifeCoach) {
+          // Prefer Ari 1.0 (full) to preserve semantics when overlay missing
+          try {
+            final String jsonString = await rootBundle
+                .loadString('assets/config/ari_life_coach_config_1.0.json');
+            final Map<String, dynamic> jsonMap = json.decode(jsonString);
+            personaPrompt = jsonMap['system_prompt']['content'] as String;
+          } catch (_) {
+            final String legacyPath =
+                'assets/config/ari_life_coach_config.json';
+            final String jsonString = await rootBundle.loadString(legacyPath);
+            final Map<String, dynamic> jsonMap = json.decode(jsonString);
+            personaPrompt = jsonMap['system_prompt']['content'] as String;
+          }
+        } else {
+          rethrow;
+        }
+      }
+
+      // 3) Compose: Oracle (if loaded) + Persona overlay/content
+      if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
+        return oraclePrompt.trim() + '\n\n' + personaPrompt.trim();
+      }
+
+      // 4) Oracle missing → preserve semantics for Ari by returning full Ari 1.0
+      if (_activePersona == CharacterPersona.ariLifeCoach) {
+        try {
+          final String jsonString = await rootBundle
+              .loadString('assets/config/ari_life_coach_config_1.0.json');
+          final Map<String, dynamic> jsonMap = json.decode(jsonString);
+          return jsonMap['system_prompt']['content'] as String;
+        } catch (_) {
+          // Final legacy fallback
+          final String jsonString = await rootBundle
+              .loadString('assets/config/ari_life_coach_config.json');
+          final Map<String, dynamic> jsonMap = json.decode(jsonString);
+          return jsonMap['system_prompt']['content'] as String;
+        }
+      }
+
+      // 5) Other personas: return persona prompt only
+      return personaPrompt;
     } catch (e) {
       print('Error loading system prompt: $e');
       throw Exception('Failed to load system prompt for $personaDisplayName');
     }
   }
 
-  /// Get the system prompt file path for the active persona
-  String _getSystemPromptPath() {
-    switch (_activePersona) {
-      case CharacterPersona.personalDevelopmentAssistant:
-        return 'assets/prompts/personal_development_system.txt';
-      case CharacterPersona.sergeantOracle:
-        return 'assets/prompts/sergeant_oracle_system.txt';
-      case CharacterPersona.zenGuide:
-        return 'assets/prompts/zen_guide_system.txt';
-      case CharacterPersona.ariLifeCoach:
-        return 'assets/prompts/ari_life_coach_system.txt';
-    }
-  }
-
   /// Load the exploration prompts for the active persona
   Future<Map<String, String>> loadExplorationPrompts() async {
     try {
-      // Try to load from external prompt files first
-      final Map<String, String> prompts = {};
-      final List<String> dimensions = [
-        'physical',
-        'mental',
-        'relationships',
-        'spirituality',
-        'work'
-      ];
-
-      bool hasExternalPrompts = false;
-      for (final dimension in dimensions) {
-        try {
-          final String promptPath = _getExplorationPromptPath(dimension);
-          final String content = await rootBundle.loadString(promptPath);
-          prompts[dimension] = content;
-          hasExternalPrompts = true;
-        } catch (promptError) {
-          print('External prompt not found for $dimension: $promptError');
+      // Load from JSON config using dynamic configPath when available
+      Map<String, dynamic> jsonMap;
+      try {
+        String? dynamicConfigPath = await _resolvePersonaConfigPathFromConfig();
+        final String effectiveConfigPath =
+            (dynamicConfigPath != null && dynamicConfigPath.isNotEmpty)
+                ? dynamicConfigPath
+                : configFilePath;
+        final String jsonString =
+            await rootBundle.loadString(effectiveConfigPath);
+        jsonMap = json.decode(jsonString);
+      } catch (jsonLoadError) {
+        if (_activePersona == CharacterPersona.ariLifeCoach) {
+          // Prefer Ari 1.0 if overlay missing
+          try {
+            final String jsonString = await rootBundle
+                .loadString('assets/config/ari_life_coach_config_1.0.json');
+            jsonMap = json.decode(jsonString);
+          } catch (_) {
+            final String legacyPath =
+                'assets/config/ari_life_coach_config.json';
+            final String jsonString = await rootBundle.loadString(legacyPath);
+            jsonMap = json.decode(jsonString);
+          }
+        } else {
+          rethrow;
         }
       }
-
-      if (hasExternalPrompts && prompts.isNotEmpty) {
-        return prompts;
-      }
-
-      // Fallback to original JSON config
-      final String jsonString = await rootBundle.loadString(configFilePath);
-      final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
       if (jsonMap['exploration_prompts'] == null) {
         throw Exception('Exploration prompts not found in config');
@@ -137,17 +195,35 @@ class CharacterConfigManager {
     }
   }
 
-  /// Get the exploration prompt file path for the active persona and dimension
-  String _getExplorationPromptPath(String dimension) {
+  /// Resolve configPath from personas_config.json for the active persona (FT-022 compatible)
+  Future<String?> _resolvePersonaConfigPathFromConfig() async {
+    try {
+      final String jsonString =
+          await rootBundle.loadString('assets/config/personas_config.json');
+      final Map<String, dynamic> config = json.decode(jsonString);
+      final Map<String, dynamic> personas =
+          (config['personas'] as Map<String, dynamic>?) ?? {};
+      final String key = _activePersonaKey;
+      final Map<String, dynamic>? persona =
+          personas[key] as Map<String, dynamic>?;
+      if (persona == null) return null;
+      final String? path = persona['configPath'] as String?;
+      return path;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  String get _activePersonaKey {
     switch (_activePersona) {
       case CharacterPersona.personalDevelopmentAssistant:
-        return 'assets/prompts/personal_development_$dimension.txt';
+        return 'personalDevelopmentAssistant';
       case CharacterPersona.sergeantOracle:
-        return 'assets/prompts/sergeant_oracle_$dimension.txt';
+        return 'sergeantOracle';
       case CharacterPersona.zenGuide:
-        return 'assets/prompts/zen_guide_$dimension.txt';
+        return 'zenGuide';
       case CharacterPersona.ariLifeCoach:
-        return 'assets/prompts/ari_life_coach_$dimension.txt';
+        return 'ariLifeCoach';
     }
   }
 

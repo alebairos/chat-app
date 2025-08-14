@@ -22,18 +22,24 @@ void main() {
       final manager = CharacterConfigManager();
 
       manager.setActivePersona(CharacterPersona.personalDevelopmentAssistant);
-      expect(manager.configFilePath, 'assets/config/claude_config.json');
+      // Deprecated persona now routes to Sergeant Oracle config
+      expect(
+          manager.configFilePath, 'assets/config/sergeant_oracle_config.json');
 
       manager.setActivePersona(CharacterPersona.sergeantOracle);
       expect(
           manager.configFilePath, 'assets/config/sergeant_oracle_config.json');
 
       manager.setActivePersona(CharacterPersona.zenGuide);
-      expect(manager.configFilePath, 'assets/config/zen_guide_config.json');
+      // Deprecated persona now routes to Ari config overlay
+      expect(manager.configFilePath,
+          'assets/config/ari_life_coach_config_2.0.json');
 
       manager.setActivePersona(CharacterPersona.ariLifeCoach);
       expect(
-          manager.configFilePath, 'assets/config/ari_life_coach_config.json');
+          manager.configFilePath,
+          anyOf('assets/config/ari_life_coach_config_1.0.json',
+              'assets/config/ari_life_coach_config_2.0.json'));
     });
 
     test('Should return list of available personas', () async {

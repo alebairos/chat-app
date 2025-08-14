@@ -49,4 +49,5 @@ flutter:
     - assets/data/Trilhas.csv
     - assets/data/habit-assistant-prompt-v13.json
     - assets/config/
+    - assets/config/oracle/
     - assets/prompts/
