@@ -14,7 +14,7 @@ void main() {
 
       // Load Ari configuration
       final configManager = CharacterConfigManager();
-      configManager.setActivePersona(CharacterPersona.ariLifeCoach);
+      configManager.setActivePersona('ariLifeCoach');
 
       try {
         systemPrompt = await configManager.loadSystemPrompt();
@@ -265,7 +265,7 @@ void main() {
           () async {
         // This test ensures the configuration can be loaded successfully
         final configManager = CharacterConfigManager();
-        configManager.setActivePersona(CharacterPersona.ariLifeCoach);
+        configManager.setActivePersona('ariLifeCoach');
 
         // Test that configuration loads without error
         expect(

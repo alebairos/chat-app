@@ -1,0 +1,13 @@
+# TestFlight Release Credentials
+# Copy this content to .env file in project root
+
+APPLE_ID=your.email@domain.com
+APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
+TEAM_ID=ABCD123456
+BUNDLE_ID=com.yourname.chatapp
+
+# How to get each credential:
+# 1. APPLE_ID: Your Apple Developer account email
+# 2. APP_SPECIFIC_PASSWORD: Generate at https://appleid.apple.com → App-Specific Passwords
+# 3. TEAM_ID: Find at https://developer.apple.com/account → Membership tab  
+# 4. BUNDLE_ID: Create app in App Store Connect, use its bundle ID

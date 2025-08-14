@@ -9,7 +9,7 @@ void main() {
 
     setUp(() {
       manager = CharacterConfigManager();
-      manager.setActivePersona(CharacterPersona.ariLifeCoach);
+      manager.setActivePersona('ariLifeCoach');
     });
 
     testWidgets('Should create CharacterSelectionScreen widget',

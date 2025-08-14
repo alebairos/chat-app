@@ -7,7 +7,6 @@ import 'dart:async' as _i3;
 import 'dart:convert' as _i4;
 import 'dart:typed_data' as _i6;
 
-import 'package:character_ai_clone/config/character_config_manager.dart' as _i8;
 import 'package:character_ai_clone/config/config_loader.dart' as _i7;
 import 'package:http/http.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
@@ -292,19 +291,22 @@ class MockConfigLoader extends _i1.Mock implements _i7.ConfigLoader {
   }
 
   @override
-  _i8.CharacterPersona get activePersona => (super.noSuchMethod(
-        Invocation.getter(#activePersona),
-        returnValue: _i8.CharacterPersona.personalDevelopmentAssistant,
-      ) as _i8.CharacterPersona);
-
-  @override
-  String get activePersonaDisplayName => (super.noSuchMethod(
-        Invocation.getter(#activePersonaDisplayName),
+  String get activePersonaKey => (super.noSuchMethod(
+        Invocation.getter(#activePersonaKey),
         returnValue: _i5.dummyValue<String>(
           this,
-          Invocation.getter(#activePersonaDisplayName),
+          Invocation.getter(#activePersonaKey),
         ),
       ) as String);
+
+  @override
+  _i3.Future<String> get activePersonaDisplayName => (super.noSuchMethod(
+        Invocation.getter(#activePersonaDisplayName),
+        returnValue: _i3.Future<String>.value(_i5.dummyValue<String>(
+          this,
+          Invocation.getter(#activePersonaDisplayName),
+        )),
+      ) as _i3.Future<String>);
 
   @override
   _i3.Future<List<Map<String, dynamic>>> get availablePersonas =>
@@ -361,10 +363,10 @@ class MockConfigLoader extends _i1.Mock implements _i7.ConfigLoader {
       );
 
   @override
-  void setActivePersona(_i8.CharacterPersona? persona) => super.noSuchMethod(
+  void setActivePersona(String? personaKey) => super.noSuchMethod(
         Invocation.method(
           #setActivePersona,
-          [persona],
+          [personaKey],
         ),
         returnValueForMissingStub: null,
       );

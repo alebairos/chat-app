@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../config/character_config_manager.dart';
+
 import '../config/config_loader.dart';
 
 class CharacterSelectionScreen extends StatefulWidget {
@@ -17,12 +17,12 @@ class CharacterSelectionScreen extends StatefulWidget {
 
 class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
   final ConfigLoader _configLoader = ConfigLoader();
-  late CharacterPersona _selectedPersona;
+  late String _selectedPersonaKey;
 
   @override
   void initState() {
     super.initState();
-    _selectedPersona = _configLoader.activePersona;
+    _selectedPersonaKey = _configLoader.activePersonaKey;
   }
 
   @override
@@ -69,7 +69,6 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                     itemBuilder: (context, index) {
                       final persona = availablePersonas[index];
                       final personaKey = persona['key'] as String;
-                      final personaEnum = _getPersonaEnumFromKey(personaKey);
 
                       return Card(
                         elevation: 2,
@@ -77,7 +76,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: _selectedPersona == personaEnum
+                            color: _selectedPersonaKey == personaKey
                                 ? Theme.of(context).primaryColor
                                 : Colors.transparent,
                             width: 2,
@@ -86,7 +85,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                         child: InkWell(
                           onTap: () {
                             setState(() {
-                              _selectedPersona = personaEnum;
+                              _selectedPersonaKey = personaKey;
                             });
                           },
                           borderRadius: BorderRadius.circular(12),
@@ -99,7 +98,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                                   children: [
                                     CircleAvatar(
                                       backgroundColor:
-                                          _getAvatarColor(personaEnum),
+                                          _getAvatarColor(personaKey),
                                       child: Text(
                                         persona['displayName'][0],
                                         style: const TextStyle(
@@ -118,13 +117,13 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                                         ),
                                       ),
                                     ),
-                                    Radio<CharacterPersona>(
-                                      value: personaEnum,
-                                      groupValue: _selectedPersona,
-                                      onChanged: (CharacterPersona? value) {
+                                    Radio<String>(
+                                      value: personaKey,
+                                      groupValue: _selectedPersonaKey,
+                                      onChanged: (String? value) {
                                         if (value != null) {
                                           setState(() {
-                                            _selectedPersona = value;
+                                            _selectedPersonaKey = value;
                                           });
                                         }
                                       },
@@ -151,7 +150,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _configLoader.setActivePersona(_selectedPersona);
+                  _configLoader.setActivePersona(_selectedPersonaKey);
                   widget.onCharacterSelected();
                   Navigator.pop(context);
                 },
@@ -173,31 +172,19 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
     );
   }
 
-  CharacterPersona _getPersonaEnumFromKey(String key) {
-    switch (key) {
-      case 'personalDevelopmentAssistant':
-        return CharacterPersona.personalDevelopmentAssistant;
-      case 'sergeantOracle':
-        return CharacterPersona.sergeantOracle;
-      case 'zenGuide':
-        return CharacterPersona.zenGuide;
-      case 'ariLifeCoach':
-        return CharacterPersona.ariLifeCoach;
-      default:
-        return CharacterPersona.ariLifeCoach; // Default to Ari
-    }
-  }
-
-  Color _getAvatarColor(CharacterPersona persona) {
-    switch (persona) {
-      case CharacterPersona.personalDevelopmentAssistant:
-        return Colors.blue;
-      case CharacterPersona.sergeantOracle:
-        return Colors.red;
-      case CharacterPersona.zenGuide:
-        return Colors.green;
-      case CharacterPersona.ariLifeCoach:
-        return Colors.teal;
-    }
+  Color _getAvatarColor(String personaKey) {
+    // Generate colors based on persona key hash for consistency
+    final int hash = personaKey.hashCode;
+    final List<Color> colors = [
+      Colors.teal,
+      Colors.blue,
+      Colors.red,
+      Colors.green,
+      Colors.purple,
+      Colors.orange,
+      Colors.indigo,
+      Colors.pink,
+    ];
+    return colors[hash.abs() % colors.length];
   }
 }

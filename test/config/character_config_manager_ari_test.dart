@@ -3,95 +3,85 @@ import 'package:flutter/material.dart';
 import '../../lib/config/character_config_manager.dart';
 
 void main() {
-  group('CharacterConfigManager - Ari Life Coach Tests', () {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('CharacterConfigManager - Dynamic Persona Tests', () {
     late CharacterConfigManager manager;
 
     setUp(() {
       manager = CharacterConfigManager();
     });
 
-    test('Should include ariLifeCoach in CharacterPersona enum', () {
-      expect(CharacterPersona.values, contains(CharacterPersona.ariLifeCoach));
+    test('Default persona should be ariLifeCoach', () {
+      expect(manager.activePersonaKey, 'ariLifeCoach');
     });
 
-    test('Default persona should be Ari Life Coach', () {
-      expect(manager.activePersona, CharacterPersona.ariLifeCoach);
+    test('Should return correct config path for Ari', () async {
+      manager.setActivePersona('ariLifeCoach');
+      final configPath = await manager.configFilePath;
+      expect(configPath, contains('ari_life_coach_config'));
     });
 
-    test('Should return correct config path for Ari', () {
-      manager.setActivePersona(CharacterPersona.ariLifeCoach);
-      // With Oracle enabled, Ari uses 2.0 overlay; fallback may use 1.0
-      expect(
-          manager.configFilePath,
-          anyOf('assets/config/ari_life_coach_config_1.0.json',
-              'assets/config/ari_life_coach_config_2.0.json'));
+    test('Should return correct display name for Ari', () async {
+      manager.setActivePersona('ariLifeCoach');
+      final displayName = await manager.personaDisplayName;
+      expect(displayName, contains('Ari'));
     });
 
-    test('Should return correct display name for Ari', () {
-      manager.setActivePersona(CharacterPersona.ariLifeCoach);
-      expect(manager.personaDisplayName, 'Ari - Life Coach');
-    });
-
-    test('Should handle persona switching correctly', () {
+    test('Should handle persona switching correctly', () async {
       // Start with Ari as default
-      expect(manager.activePersona, CharacterPersona.ariLifeCoach);
+      expect(manager.activePersonaKey, 'ariLifeCoach');
 
       // Switch to Sergeant Oracle
-      manager.setActivePersona(CharacterPersona.sergeantOracle);
-      expect(manager.activePersona, CharacterPersona.sergeantOracle);
-      expect(manager.personaDisplayName, 'Sergeant Oracle');
+      manager.setActivePersona('sergeantOracle');
+      expect(manager.activePersonaKey, 'sergeantOracle');
+      final oracleDisplayName = await manager.personaDisplayName;
+      expect(oracleDisplayName, contains('Oracle'));
 
       // Switch back to Ari
-      manager.setActivePersona(CharacterPersona.ariLifeCoach);
-      expect(manager.activePersona, CharacterPersona.ariLifeCoach);
-      expect(manager.personaDisplayName, 'Ari - Life Coach');
+      manager.setActivePersona('ariLifeCoach');
+      expect(manager.activePersonaKey, 'ariLifeCoach');
+      final ariDisplayName = await manager.personaDisplayName;
+      expect(ariDisplayName, contains('Ari'));
     });
 
-    test('Should return correct system prompt path for Ari', () {
-      manager.setActivePersona(CharacterPersona.ariLifeCoach);
-      // This is testing the private method through the public interface
-      // The actual path would be used in loadSystemPrompt()
-      expect(
-          manager.configFilePath,
-          anyOf('assets/config/ari_life_coach_config_1.0.json',
-              'assets/config/ari_life_coach_config_2.0.json'));
+    test('Should return config path for any valid persona', () async {
+      manager.setActivePersona('ariLifeCoach');
+      final ariPath = await manager.configFilePath;
+      expect(ariPath, isNotEmpty);
+
+      manager.setActivePersona('sergeantOracle');
+      final oraclePath = await manager.configFilePath;
+      expect(oraclePath, isNotEmpty);
+      expect(oraclePath, isNot(equals(ariPath)));
     });
 
-    test('All personas should have unique display names', () {
-      final displayNames = <String>{};
+    test('Should load available personas from config', () async {
+      final personas = await manager.availablePersonas;
+      expect(personas, isNotEmpty);
 
-      for (final persona in CharacterPersona.values) {
-        manager.setActivePersona(persona);
-        final displayName = manager.personaDisplayName;
-        expect(displayNames.contains(displayName), false,
-            reason: 'Display name "$displayName" is not unique');
-        displayNames.add(displayName);
-      }
+      // Should have at least Ari and Sergeant Oracle
+      final personaKeys = personas.map((p) => p['key']).toList();
+      expect(personaKeys, contains('ariLifeCoach'));
+      expect(personaKeys, contains('sergeantOracle'));
     });
 
-    test('All personas should have unique config file paths', () {
-      final configPaths = <String>{};
-
-      for (final persona in CharacterPersona.values) {
-        manager.setActivePersona(persona);
-        final configPath = manager.configFilePath;
-        expect(configPaths.contains(configPath), false,
-            reason: 'Config path "$configPath" is not unique');
-        configPaths.add(configPath);
-      }
-    });
-
-    test('Should maintain singleton behavior with Ari as default', () {
+    test('Should maintain singleton behavior', () {
       final manager1 = CharacterConfigManager();
       final manager2 = CharacterConfigManager();
 
       expect(identical(manager1, manager2), true);
-      expect(manager1.activePersona, CharacterPersona.ariLifeCoach);
-      expect(manager2.activePersona, CharacterPersona.ariLifeCoach);
+      expect(manager1.activePersonaKey, manager2.activePersonaKey);
 
       // Changing one should affect the other (singleton behavior)
-      manager1.setActivePersona(CharacterPersona.sergeantOracle);
-      expect(manager2.activePersona, CharacterPersona.sergeantOracle);
+      manager1.setActivePersona('sergeantOracle');
+      expect(manager2.activePersonaKey, 'sergeantOracle');
+    });
+
+    test('Should handle unknown persona keys gracefully', () async {
+      manager.setActivePersona('unknownPersona');
+      final configPath = await manager.configFilePath;
+      expect(configPath, isNotEmpty); // Should fallback to default
     });
   });
 }

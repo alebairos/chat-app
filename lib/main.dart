@@ -61,7 +61,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_configLoader.activePersonaDisplayName),
+        title: FutureBuilder<String>(
+          future: _configLoader.activePersonaDisplayName,
+          builder: (context, snapshot) {
+            final personaDisplayName = snapshot.data ?? 'Loading...';
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'AI Personas',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  personaDisplayName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
         centerTitle: true,
         actions: [
           IconButton(

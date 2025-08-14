@@ -224,6 +224,9 @@ class ClaudeService {
     try {
       await initialize();
 
+      // Always reload system prompt to get current persona
+      _systemPrompt = await _configLoader.loadSystemPrompt();
+
       // Check if message contains a life plan command
       if (_lifePlanMCP != null && message.startsWith('{')) {
         try {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/chat_message.dart';
 import '../widgets/chat_input.dart';
-import '../widgets/chat_app_bar.dart';
+
 import '../services/claude_service.dart';
 import '../services/chat_storage_service.dart';
 import '../models/message_type.dart';
@@ -10,10 +10,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/transcription_service.dart';
 import '../utils/logger.dart';
 import '../config/config_loader.dart';
-import '../config/character_config_manager.dart';
+
 import '../features/audio_assistant/tts_service.dart';
-import '../models/claude_audio_response.dart';
-import '../features/audio_assistant/widgets/assistant_audio_message.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -48,7 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
       OpenAITranscriptionService();
   final Logger _logger = Logger();
   final ConfigLoader _configLoader = ConfigLoader();
-  late String _currentPersona;
+  String _currentPersona = '';
 
   @override
   void initState() {
@@ -57,7 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _claudeService = widget.claudeService ??
         ClaudeService(ttsService: _ttsService, audioEnabled: true);
     _storageService = widget.storageService ?? ChatStorageService();
-    _currentPersona = _configLoader.activePersonaDisplayName;
+    _loadCurrentPersona();
     _checkEnvironment();
     _initializeServices();
     _setupScrollListener();
@@ -91,8 +89,22 @@ class _ChatScreenState extends State<ChatScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Check if the character has changed
-    if (_currentPersona != _configLoader.activePersonaDisplayName) {
-      _currentPersona = _configLoader.activePersonaDisplayName;
+    _checkPersonaChange();
+  }
+
+  Future<void> _loadCurrentPersona() async {
+    final personaDisplayName = await _configLoader.activePersonaDisplayName;
+    setState(() {
+      _currentPersona = personaDisplayName;
+    });
+  }
+
+  Future<void> _checkPersonaChange() async {
+    final currentDisplayName = await _configLoader.activePersonaDisplayName;
+    if (_currentPersona != currentDisplayName) {
+      setState(() {
+        _currentPersona = currentDisplayName;
+      });
       _resetChat();
     }
   }
@@ -371,30 +383,31 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// Get the appropriate color for the current persona
   Color _getPersonaColor() {
-    switch (_configLoader.activePersona) {
-      case CharacterPersona.ariLifeCoach:
-        return Colors.teal;
-      case CharacterPersona.sergeantOracle:
-        return Colors.deepPurple;
-      case CharacterPersona.zenGuide:
-        return Colors.teal; // route deprecated to Ari color
-      case CharacterPersona.personalDevelopmentAssistant:
-        return Colors.deepPurple; // route deprecated to Sergeant color
-    }
+    final personaKey = _configLoader.activePersonaKey;
+    // Generate consistent colors based on persona key hash
+    final int hash = personaKey.hashCode;
+    final List<Color> colors = [
+      Colors.teal,
+      Colors.deepPurple,
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.indigo,
+    ];
+    return colors[hash.abs() % colors.length];
   }
 
   /// Get the appropriate icon for the current persona
   IconData _getPersonaIcon() {
-    switch (_configLoader.activePersona) {
-      case CharacterPersona.ariLifeCoach:
-        return Icons.psychology;
-      case CharacterPersona.sergeantOracle:
-        return Icons.military_tech;
-      case CharacterPersona.zenGuide:
-        return Icons.psychology; // route deprecated to Ari icon
-      case CharacterPersona.personalDevelopmentAssistant:
-        return Icons.military_tech; // route deprecated to Sergeant icon
-    }
+    final personaKey = _configLoader.activePersonaKey;
+    // Generate consistent icons based on persona key
+    final Map<String, IconData> iconMap = {
+      'ariLifeCoach': Icons.psychology,
+      'sergeantOracle': Icons.military_tech,
+      'iThereClone': Icons.face,
+    };
+
+    return iconMap[personaKey] ?? Icons.smart_toy;
   }
 
   Future<void> _sendMessage() async {
@@ -640,108 +653,104 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return Scaffold(
-        appBar: const CustomChatAppBar(),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              _error!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            _error!,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
           ),
         ),
       );
     }
 
     if (_isInitialLoading) {
-      return const Scaffold(
-        appBar: CustomChatAppBar(),
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+      return const Center(
+        child: CircularProgressIndicator(),
       );
     }
 
-    return Scaffold(
-      appBar: const CustomChatAppBar(),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  // Dismiss keyboard when tapping on chat area
-                  FocusScope.of(context).unfocus();
-                },
-                behavior: HitTestBehavior.translucent,
-                child: _messages.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No messages yet.\nStart a conversation!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                          ),
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                // Dismiss keyboard when tapping on chat area
+                FocusScope.of(context).unfocus();
+              },
+              behavior: HitTestBehavior.translucent,
+              child: _messages.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No messages yet.\nStart a conversation!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
                         ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        reverse: true,
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _messages.length) {
-                            return const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
-                          return _messages[index];
-                        },
                       ),
-              ),
-            ),
-            if (_isTyping)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: _getPersonaColor(),
-                      child: Icon(_getPersonaIcon(), color: Colors.white),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _messages.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        return _messages[index];
+                      },
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                        '${_configLoader.activePersonaDisplayName} is typing...'),
-                  ],
-                ),
-              ),
-            ChatInput(
-              controller: _messageController,
-              onSend: _sendMessage,
-              onSendAudio: _handleAudioMessage,
             ),
+          ),
+          if (_isTyping)
             Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-              color: Colors.grey[100],
-              child: const Text(
-                'This is A.I. and not a real person. Treat everything it says as fiction',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 11,
-                ),
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: _getPersonaColor(),
+                    child: Icon(_getPersonaIcon(), color: Colors.white),
+                  ),
+                  const SizedBox(width: 8),
+                  FutureBuilder<String>(
+                    future: _configLoader.activePersonaDisplayName,
+                    builder: (context, snapshot) {
+                      final personaName = snapshot.data ?? 'AI';
+                      return Text('$personaName is typing...');
+                    },
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ChatInput(
+            controller: _messageController,
+            onSend: _sendMessage,
+            onSendAudio: _handleAudioMessage,
+          ),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+            color: Colors.grey[100],
+            child: const Text(
+              'This is A.I. and not a real person. Treat everything it says as fiction',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

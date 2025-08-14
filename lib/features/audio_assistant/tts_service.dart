@@ -33,9 +33,6 @@ class AudioAssistantTTSService {
   /// Recent user messages for language detection
   final List<String> _recentUserMessages = [];
 
-  /// TTS preprocessing service for improving audio quality
-  final TTSPreprocessingService _preprocessingService = TTSPreprocessingService();
-
   /// Creates a new [AudioAssistantTTSService] instance.
   AudioAssistantTTSService() {
     // Register available providers
@@ -96,7 +93,7 @@ class AudioAssistantTTSService {
       if (_isTestMode) {
         return true;
       }
-      final characterName = _configLoader.activePersonaDisplayName;
+      final characterName = await _configLoader.activePersonaDisplayName;
       final characterConfig =
           CharacterVoiceConfig.getVoiceConfig(characterName);
 

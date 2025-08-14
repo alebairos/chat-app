@@ -10,7 +10,7 @@ void main() {
         (WidgetTester tester) async {
       // Set Ari as active persona
       final configLoader = ConfigLoader();
-      configLoader.setActivePersona(CharacterPersona.ariLifeCoach);
+      configLoader.setActivePersona('ariLifeCoach');
 
       await tester.pumpWidget(
         MaterialApp(
@@ -31,7 +31,7 @@ void main() {
         (WidgetTester tester) async {
       // Set Sergeant Oracle as active persona
       final configLoader = ConfigLoader();
-      configLoader.setActivePersona(CharacterPersona.sergeantOracle);
+      configLoader.setActivePersona('sergeantOracle');
 
       await tester.pumpWidget(
         MaterialApp(

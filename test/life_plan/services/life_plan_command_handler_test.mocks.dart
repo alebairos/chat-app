@@ -58,10 +58,10 @@ class MockClaudeService extends _i1.Mock implements _i3.ClaudeService {
       );
 
   @override
-  List<Map<String, String>> get conversationHistory => (super.noSuchMethod(
+  List<Map<String, dynamic>> get conversationHistory => (super.noSuchMethod(
         Invocation.getter(#conversationHistory),
-        returnValue: <Map<String, String>>[],
-      ) as List<Map<String, String>>);
+        returnValue: <Map<String, dynamic>>[],
+      ) as List<Map<String, dynamic>>);
 
   @override
   void setLogging(bool? enable) => super.noSuchMethod(

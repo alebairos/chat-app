@@ -47,16 +47,17 @@ class ConfigLoader {
     _loadExplorationPromptsImpl = impl;
   }
 
-  /// Get the currently active character persona
-  CharacterPersona get activePersona => _characterManager.activePersona;
+  /// Get the currently active character persona key
+  String get activePersonaKey => _characterManager.activePersonaKey;
 
-  /// Set the active character persona
-  void setActivePersona(CharacterPersona persona) {
-    _characterManager.setActivePersona(persona);
+  /// Set the active character persona by key
+  void setActivePersona(String personaKey) {
+    _characterManager.setActivePersona(personaKey);
   }
 
   /// Get the display name for the active persona
-  String get activePersonaDisplayName => _characterManager.personaDisplayName;
+  Future<String> get activePersonaDisplayName =>
+      _characterManager.personaDisplayName;
 
   /// Get a list of all available personas
   Future<List<Map<String, dynamic>>> get availablePersonas =>

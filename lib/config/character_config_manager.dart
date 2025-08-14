@@ -2,14 +2,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Enum representing the available character personas
-enum CharacterPersona {
-  personalDevelopmentAssistant,
-  sergeantOracle,
-  zenGuide,
-  ariLifeCoach
-}
-
 /// Class to manage character configurations and allow switching between personas
 class CharacterConfigManager {
   static final CharacterConfigManager _instance =
@@ -17,52 +9,67 @@ class CharacterConfigManager {
   factory CharacterConfigManager() => _instance;
   CharacterConfigManager._internal();
 
-  /// The currently active character persona
-  CharacterPersona _activePersona = CharacterPersona.ariLifeCoach;
+  /// The currently active character persona key
+  String _activePersonaKey = 'ariLifeCoach';
 
-  /// Get the currently active character persona
-  CharacterPersona get activePersona => _activePersona;
+  /// Get the currently active character persona key
+  String get activePersonaKey => _activePersonaKey;
 
-  /// Set the active character persona
-  void setActivePersona(CharacterPersona persona) {
-    _activePersona = persona;
+  /// Set the active character persona by key
+  void setActivePersona(String personaKey) {
+    _activePersonaKey = personaKey;
   }
 
   /// Get the configuration file path for the active persona
-  String get configFilePath {
-    switch (_activePersona) {
-      case CharacterPersona.personalDevelopmentAssistant:
-        // Deprecated persona → route to Sergeant Oracle config to avoid referencing removed files
-        return 'assets/config/sergeant_oracle_config.json';
-      case CharacterPersona.sergeantOracle:
-        return 'assets/config/sergeant_oracle_config.json';
-      case CharacterPersona.zenGuide:
-        // Deprecated persona → route to Ari config to avoid referencing removed files
-        return 'assets/config/ari_life_coach_config_2.0.json';
-      case CharacterPersona.ariLifeCoach:
-        // Use Ari 2.0 persona overlay with Oracle composition per FT-021
-        return 'assets/config/ari_life_coach_config_2.0.json';
+  Future<String> get configFilePath async {
+    try {
+      // Get configPath from personas_config.json
+      final String jsonString =
+          await rootBundle.loadString('assets/config/personas_config.json');
+      final Map<String, dynamic> config = json.decode(jsonString);
+      final Map<String, dynamic> personas = config['personas'] ?? {};
+
+      if (personas.containsKey(_activePersonaKey)) {
+        final persona = personas[_activePersonaKey] as Map<String, dynamic>?;
+        if (persona != null && persona['configPath'] != null) {
+          return persona['configPath'] as String;
+        }
+      }
+    } catch (e) {
+      print('Error loading persona config path: $e');
     }
+
+    // Default fallback
+    return 'assets/config/ari_life_coach_config_2.0.json';
   }
 
   /// Get the display name for the active persona
-  String get personaDisplayName {
-    switch (_activePersona) {
-      case CharacterPersona.personalDevelopmentAssistant:
-        return 'Personal Development Assistant';
-      case CharacterPersona.sergeantOracle:
-        return 'Sergeant Oracle';
-      case CharacterPersona.zenGuide:
-        return 'The Zen Master';
-      case CharacterPersona.ariLifeCoach:
-        return 'Ari - Life Coach';
+  Future<String> get personaDisplayName async {
+    try {
+      // Get displayName from personas_config.json
+      final String jsonString =
+          await rootBundle.loadString('assets/config/personas_config.json');
+      final Map<String, dynamic> config = json.decode(jsonString);
+      final Map<String, dynamic> personas = config['personas'] ?? {};
+
+      if (personas.containsKey(_activePersonaKey)) {
+        final persona = personas[_activePersonaKey] as Map<String, dynamic>?;
+        if (persona != null && persona['displayName'] != null) {
+          return persona['displayName'] as String;
+        }
+      }
+    } catch (e) {
+      print('Error loading persona display name: $e');
     }
+
+    // Default fallback
+    return 'Unknown Persona';
   }
 
   /// Load the system prompt for the active persona
   Future<String> loadSystemPrompt() async {
     try {
-      // 1) Resolve Oracle prompt (ALWAYS try) using env path or default
+      // 1) Always try to load Oracle prompt first
       final String defaultOraclePath =
           'assets/config/oracle/oracle_prompt_1.0.md';
       final String oraclePathEnv =
@@ -77,41 +84,26 @@ class CharacterConfigManager {
         print('Oracle prompt not found or failed to load: $oracleError');
       }
 
-      // 2) Load persona layer from JSON config only
+      // 2) Load persona prompt from dynamic config path
       String personaPrompt;
+      final String personaConfigPath = await configFilePath;
 
-      // 2a) Try dynamic configPath from personas_config.json (FT-022 compatible)
-      String? dynamicConfigPath;
-      try {
-        dynamicConfigPath = await _resolvePersonaConfigPathFromConfig();
-      } catch (e) {
-        // Ignore and continue to hardcoded fallback
-      }
-
-      final String effectiveConfigPath =
-          (dynamicConfigPath != null && dynamicConfigPath.isNotEmpty)
-              ? dynamicConfigPath
-              : configFilePath;
-
-      // 2b) Load from effective config path (with Ari legacy fallback if needed)
       try {
         final String jsonString =
-            await rootBundle.loadString(effectiveConfigPath);
+            await rootBundle.loadString(personaConfigPath);
         final Map<String, dynamic> jsonMap = json.decode(jsonString);
         personaPrompt = jsonMap['system_prompt']['content'] as String;
       } catch (jsonLoadError) {
-        // Ari-specific legacy fallback chain
-        if (_activePersona == CharacterPersona.ariLifeCoach) {
-          // Prefer Ari 1.0 (full) to preserve semantics when overlay missing
+        // Legacy fallback only for Ari
+        if (_activePersonaKey == 'ariLifeCoach') {
           try {
             final String jsonString = await rootBundle
                 .loadString('assets/config/ari_life_coach_config_1.0.json');
             final Map<String, dynamic> jsonMap = json.decode(jsonString);
             personaPrompt = jsonMap['system_prompt']['content'] as String;
           } catch (_) {
-            final String legacyPath =
-                'assets/config/ari_life_coach_config.json';
-            final String jsonString = await rootBundle.loadString(legacyPath);
+            final String jsonString = await rootBundle
+                .loadString('assets/config/ari_life_coach_config.json');
             final Map<String, dynamic> jsonMap = json.decode(jsonString);
             personaPrompt = jsonMap['system_prompt']['content'] as String;
           }
@@ -120,66 +112,44 @@ class CharacterConfigManager {
         }
       }
 
-      // 3) Compose: Oracle (if loaded) + Persona overlay/content
+      // 3) Compose: Oracle (if loaded) + Persona prompt
       if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
         return oraclePrompt.trim() + '\n\n' + personaPrompt.trim();
       }
 
-      // 4) Oracle missing → preserve semantics for Ari by returning full Ari 1.0
-      if (_activePersona == CharacterPersona.ariLifeCoach) {
-        try {
-          final String jsonString = await rootBundle
-              .loadString('assets/config/ari_life_coach_config_1.0.json');
-          final Map<String, dynamic> jsonMap = json.decode(jsonString);
-          return jsonMap['system_prompt']['content'] as String;
-        } catch (_) {
-          // Final legacy fallback
-          final String jsonString = await rootBundle
-              .loadString('assets/config/ari_life_coach_config.json');
-          final Map<String, dynamic> jsonMap = json.decode(jsonString);
-          return jsonMap['system_prompt']['content'] as String;
-        }
-      }
-
-      // 5) Other personas: return persona prompt only
+      // 4) Fallback: return persona prompt only
       return personaPrompt;
     } catch (e) {
       print('Error loading system prompt: $e');
-      throw Exception('Failed to load system prompt for $personaDisplayName');
+      final displayName = await personaDisplayName;
+      throw Exception('Failed to load system prompt for $displayName');
     }
   }
 
   /// Load the exploration prompts for the active persona
   Future<Map<String, String>> loadExplorationPrompts() async {
     try {
-      // Load from JSON config using dynamic configPath when available
-      Map<String, dynamic> jsonMap;
+      final String personaConfigPath = await configFilePath;
+      String jsonString;
+
       try {
-        String? dynamicConfigPath = await _resolvePersonaConfigPathFromConfig();
-        final String effectiveConfigPath =
-            (dynamicConfigPath != null && dynamicConfigPath.isNotEmpty)
-                ? dynamicConfigPath
-                : configFilePath;
-        final String jsonString =
-            await rootBundle.loadString(effectiveConfigPath);
-        jsonMap = json.decode(jsonString);
+        jsonString = await rootBundle.loadString(personaConfigPath);
       } catch (jsonLoadError) {
-        if (_activePersona == CharacterPersona.ariLifeCoach) {
-          // Prefer Ari 1.0 if overlay missing
+        // Legacy fallback only for Ari
+        if (_activePersonaKey == 'ariLifeCoach') {
           try {
-            final String jsonString = await rootBundle
+            jsonString = await rootBundle
                 .loadString('assets/config/ari_life_coach_config_1.0.json');
-            jsonMap = json.decode(jsonString);
           } catch (_) {
-            final String legacyPath =
-                'assets/config/ari_life_coach_config.json';
-            final String jsonString = await rootBundle.loadString(legacyPath);
-            jsonMap = json.decode(jsonString);
+            jsonString = await rootBundle
+                .loadString('assets/config/ari_life_coach_config.json');
           }
         } else {
           rethrow;
         }
       }
+
+      final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
       if (jsonMap['exploration_prompts'] == null) {
         throw Exception('Exploration prompts not found in config');
@@ -190,40 +160,8 @@ class CharacterConfigManager {
       return promptsMap.map((key, value) => MapEntry(key, value as String));
     } catch (e) {
       print('Error loading exploration prompts: $e');
-      throw Exception(
-          'Failed to load exploration prompts for $personaDisplayName');
-    }
-  }
-
-  /// Resolve configPath from personas_config.json for the active persona (FT-022 compatible)
-  Future<String?> _resolvePersonaConfigPathFromConfig() async {
-    try {
-      final String jsonString =
-          await rootBundle.loadString('assets/config/personas_config.json');
-      final Map<String, dynamic> config = json.decode(jsonString);
-      final Map<String, dynamic> personas =
-          (config['personas'] as Map<String, dynamic>?) ?? {};
-      final String key = _activePersonaKey;
-      final Map<String, dynamic>? persona =
-          personas[key] as Map<String, dynamic>?;
-      if (persona == null) return null;
-      final String? path = persona['configPath'] as String?;
-      return path;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  String get _activePersonaKey {
-    switch (_activePersona) {
-      case CharacterPersona.personalDevelopmentAssistant:
-        return 'personalDevelopmentAssistant';
-      case CharacterPersona.sergeantOracle:
-        return 'sergeantOracle';
-      case CharacterPersona.zenGuide:
-        return 'zenGuide';
-      case CharacterPersona.ariLifeCoach:
-        return 'ariLifeCoach';
+      final displayName = await personaDisplayName;
+      throw Exception('Failed to load exploration prompts for $displayName');
     }
   }
 
@@ -233,35 +171,28 @@ class CharacterConfigManager {
       final String jsonString =
           await rootBundle.loadString('assets/config/personas_config.json');
       final Map<String, dynamic> config = json.decode(jsonString);
-
-      final List<String> enabledPersonas =
-          List<String>.from(config['enabledPersonas'] ?? []);
       final Map<String, dynamic> personas = config['personas'] ?? {};
 
-      return enabledPersonas
-          .map((personaKey) {
-            final persona = personas[personaKey];
-            if (persona != null && persona['enabled'] == true) {
-              return {
-                'key': personaKey,
-                'displayName': persona['displayName'],
-                'description': persona['description']
-              };
-            }
-            return null;
-          })
-          .where((persona) => persona != null)
-          .cast<Map<String, dynamic>>()
-          .toList();
+      return personas.entries.where((entry) {
+        final persona = entry.value as Map<String, dynamic>?;
+        return persona != null && persona['enabled'] == true;
+      }).map((entry) {
+        final personaKey = entry.key;
+        final persona = entry.value as Map<String, dynamic>;
+        return {
+          'key': personaKey,
+          'displayName': persona['displayName'],
+          'description': persona['description']
+        };
+      }).toList();
     } catch (e) {
       print('Error loading personas config: $e');
-      // Fallback to Sergeant Oracle only
+      // Minimal fallback
       return [
         {
-          'key': 'sergeantOracle',
-          'displayName': 'Sergeant Oracle',
-          'description':
-              'Roman time-traveler with military precision and ancient wisdom, combining historical insights with futuristic perspective.'
+          'key': 'ariLifeCoach',
+          'displayName': 'Ari - Life Coach',
+          'description': 'Default persona'
         }
       ];
     }
