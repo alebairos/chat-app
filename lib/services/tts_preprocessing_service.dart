@@ -17,11 +17,20 @@ class TTSPreprocessingService {
       // Remove acronyms in parentheses (existing functionality)
       processedText = _removeAcronymsInParentheses(processedText);
 
+      // Convert numbers to words
+      processedText = _convertNumbersToWords(processedText, language);
+
+      // Expand abbreviations
+      processedText = _expandAbbreviations(processedText, language);
+
       // Fix author-book list patterns (functionality for author-book issue)
       processedText = _fixAuthorBookLists(processedText);
 
       // Add other preprocessing rules as needed
       processedText = _addGeneralPauses(processedText);
+
+      // Normalize whitespace
+      processedText = _normalizeWhitespace(processedText);
 
       _logger.debug('TTS preprocessing completed');
       return processedText;
@@ -34,14 +43,108 @@ class TTSPreprocessingService {
   /// Remove acronyms in parentheses for better TTS flow
   static String _removeAcronymsInParentheses(String text) {
     // Remove patterns like (SF1233), (SM13), (R1) etc.
-    // But preserve newlines
-    return text
-        .replaceAll(RegExp(r'\s*\([A-Z]+\d*\)\s*'), ' ')
-        .replaceAll(RegExp(r'[ \t]+'),
-            ' ') // Only collapse spaces and tabs, not newlines
-        .replaceAll(RegExp(r' +\n'), '\n') // Clean up spaces before newlines
-        .replaceAll(RegExp(r'\n +'), '\n') // Clean up spaces after newlines
-        .trim();
+    // But preserve normal parentheses content like (30 minutes)
+    String result = text.replaceAll(RegExp(r'\s*\([A-Z]+\d*\)\s*'), ' ');
+
+    // Fix comma spacing issues that might arise
+    result = result.replaceAll(RegExp(r'\s*,\s*'), ', ');
+
+    return result.trim();
+  }
+
+  /// Convert numbers to words based on language
+  static String _convertNumbersToWords(String text, String language) {
+    // Maps for number conversion
+    final Map<int, String> portugueseNumbers = {
+      0: 'zero',
+      1: 'um',
+      2: 'dois',
+      3: 'três',
+      4: 'quatro',
+      5: 'cinco',
+      6: 'seis',
+      7: 'sete',
+      8: 'oito',
+      9: 'nove',
+      10: 'dez',
+      11: 'onze',
+      12: 'doze',
+      13: 'treze',
+      14: 'quatorze',
+      15: 'quinze',
+      16: 'dezesseis',
+      17: 'dezessete',
+      18: 'dezoito',
+      19: 'dezenove',
+      20: 'vinte',
+      30: 'trinta',
+      40: 'quarenta',
+      50: 'cinquenta',
+      60: 'sessenta',
+      70: 'setenta',
+      80: 'oitenta',
+      90: 'noventa'
+    };
+
+    final Map<int, String> englishNumbers = {
+      0: 'zero',
+      1: 'one',
+      2: 'two',
+      3: 'three',
+      4: 'four',
+      5: 'five',
+      6: 'six',
+      7: 'seven',
+      8: 'eight',
+      9: 'nine',
+      10: 'ten',
+      11: 'eleven',
+      12: 'twelve',
+      13: 'thirteen',
+      14: 'fourteen',
+      15: 'fifteen',
+      16: 'sixteen',
+      17: 'seventeen',
+      18: 'eighteen',
+      19: 'nineteen',
+      20: 'twenty',
+      30: 'thirty',
+      40: 'forty',
+      50: 'fifty',
+      60: 'sixty',
+      70: 'seventy',
+      80: 'eighty',
+      90: 'ninety'
+    };
+
+    final numberMap =
+        language.startsWith('pt') ? portugueseNumbers : englishNumbers;
+
+    return text.replaceAllMapped(RegExp(r'\b(\d+)\b'), (match) {
+      final num = int.tryParse(match.group(1)!);
+      if (num != null && numberMap.containsKey(num)) {
+        return numberMap[num]!;
+      }
+      return match.group(0)!;
+    });
+  }
+
+  /// Expand abbreviations based on language
+  static String _expandAbbreviations(String text, String language) {
+    if (language.startsWith('pt')) {
+      return text
+          .replaceAll(RegExp(r'\bmin\b'), 'minutos')
+          .replaceAll(RegExp(r'\bhr\b'), 'horas');
+    } else {
+      return text
+          .replaceAll(RegExp(r'\bmin\b'), 'minutes')
+          .replaceAll(RegExp(r'\bhr\b'), 'hours');
+    }
+  }
+
+  /// Normalize whitespace
+  static String _normalizeWhitespace(String text) {
+    return text.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
   /// Fix author-book list patterns by adding proper punctuation
@@ -143,6 +246,12 @@ class TTSPreprocessingService {
   static bool containsProcessableElements(String text) {
     // Check for acronyms in parentheses
     if (RegExp(r'\([A-Z]+\d*\)').hasMatch(text)) return true;
+
+    // Check for numbers
+    if (RegExp(r'\b\d+\b').hasMatch(text)) return true;
+
+    // Check for abbreviations
+    if (RegExp(r'\b(min|hr)\b').hasMatch(text)) return true;
 
     // Check for author-book patterns
     if (RegExp(r'^[^-]+\s*[-–—]\s*.+$', multiLine: true).hasMatch(text))

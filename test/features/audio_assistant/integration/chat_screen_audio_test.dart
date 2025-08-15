@@ -104,10 +104,12 @@ void main() {
     // Build widget
     await tester.pumpWidget(
       MaterialApp(
-        home: ChatScreen(
-          claudeService: mockClaudeService,
-          storageService: mockStorageService,
-          testMode: true,
+        home: Scaffold(
+          body: ChatScreen(
+            claudeService: mockClaudeService,
+            storageService: mockStorageService,
+            testMode: true,
+          ),
         ),
       ),
     );

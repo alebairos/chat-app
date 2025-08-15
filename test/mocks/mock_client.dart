@@ -17,15 +17,30 @@ class MockClient extends Mock implements http.Client {
 
     if (body is String && body.contains('"messages"')) {
       try {
-        // Simple extraction of the user message - this is a simplification
-        // In a real scenario, you'd want to parse the JSON properly
-        final regex = RegExp(r'"content"\s*:\s*"([^"]*)"');
+        // Parse the JSON to extract the user message properly
+        final jsonBody = json.decode(body);
+        if (jsonBody['messages'] is List && jsonBody['messages'].isNotEmpty) {
+          // Find the last user message
+          for (final msg in jsonBody['messages'].reversed) {
+            if (msg['role'] == 'user' &&
+                msg['content'] is List &&
+                msg['content'].isNotEmpty) {
+              final content = msg['content'][0];
+              if (content['type'] == 'text') {
+                message = content['text'];
+                break;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print('Error extracting message: $e');
+        // Fallback to regex approach
+        final regex = RegExp(r'"text"\s*:\s*"([^"]*)"');
         final match = regex.firstMatch(body.toString());
         if (match != null && match.groupCount >= 1) {
           message = match.group(1);
         }
-      } catch (e) {
-        print('Error extracting message: $e');
       }
     }
 

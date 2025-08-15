@@ -126,10 +126,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -202,10 +204,12 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -235,10 +239,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -263,10 +269,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -306,10 +314,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -334,10 +344,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -362,10 +374,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -396,10 +410,12 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -425,10 +441,12 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
@@ -456,10 +474,12 @@ void main() {
       // This test verifies that the implementation structure supports focus management
       await tester.pumpWidget(
         MaterialApp(
-          home: ChatScreen(
-            claudeService: mockClaudeService,
-            storageService: mockStorageService,
-            testMode: true,
+          home: Scaffold(
+            body: ChatScreen(
+              claudeService: mockClaudeService,
+              storageService: mockStorageService,
+              testMode: true,
+            ),
           ),
         ),
       );
