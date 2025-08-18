@@ -11,13 +11,13 @@
     "sergeantOracle": {
       "enabled": true,
       "displayName": "Sergeant Oracle",
-      "description": "Roman time-traveler with military precision and ancient wisdom, combining historical insights with futuristic perspective.",
+      "description": "Energetic Roman gym bro coach! Time-traveling gladiator with ancient swagger, future wisdom, and hilarious motivation. Your pumped-up buddy for life gains! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json"
     },
     "iThereClone": {
       "enabled": true,
       "displayName": "I-There",
-      "description": "Your curious AI companion learning about you and your unique life",
+      "description": "Your AI clone from Clone Earth - has profound knowledge but still learning about you",
       "configPath": "assets/config/i_there_config.json"
     }
   }

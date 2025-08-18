@@ -9,14 +9,11 @@ Current version: v1.0.37 (tag: v1.0.37)
 
 - Real-time chat interface
 - AI-powered responses using Claude API
-- **Configurable Character Personas**: Dynamic persona system with consolidated configuration architecture
-  - **Unified Configuration**: Single source of truth for all persona configs in `assets/config/`
-  - **External Prompt System**: Persona prompts stored in external text files for easy modification
-  - **Backward Compatibility**: Graceful fallback to embedded prompts when external files unavailable
-  - **Ari - Life Coach**: TARS-inspired brevity system with progressive engagement (default active)
-  - **Sergeant Oracle**: Roman military time-traveler with wisdom across ages (configurable)
-  - **The Zen Master**: Enlightened guide inspired by Lao Tzu and Buddhist zen traditions (configurable)
-  - **Personal Development Assistant**: Empathetic guide focused on achieving goals (configurable)
+- **Configurable AI Personas**: Dynamic persona system with consolidated configuration architecture
+  - **Unified Configuration**: Single source of truth in `assets/config/personas_config.json`
+  - **Dynamic Loading**: Runtime persona switching with preserved conversation context
+  - **Oracle Integration**: Base knowledge system with persona-specific overlays
+  - **3 Active Personas**: Ari (Life Coach), Sergeant Oracle (Roman Gym Bro), I-There (AI Clone)
 - **Audio Assistant with Text-to-Speech (TTS)**: Comprehensive TTS system with multiple provider support
   - ElevenLabs TTS integration with high-quality voice synthesis
   - Mock TTS provider for testing and development
@@ -144,34 +141,29 @@ To regenerate icons from a new source image:
 python3 scripts/generate_app_icons.py  # Generate all platform icons
 ```
 
-## Character Guides
+## AI Personas
 
-The application features multiple AI character guides, each with unique personalities, voices, and expertise:
+The application features 3 distinct AI personalities, each with unique characteristics and expertise:
 
-### Ari - Life Coach (Default)
-- TARS-inspired brevity system with progressive engagement
-- Strict word limits: 3-6 words for first message, escalating with user investment
-- Forbidden coaching clichés with approved response patterns
-- Features concise, impactful communication style
-- Focuses on practical life coaching with word economy principles
+### Ari - Life Coach (Default Active)
+- **TARS-inspired brevity system** with progressive engagement
+- **Strict word limits**: 3-6 words for first message, escalating with user investment
+- **Evidence-based coaching**: Combines 9 expert frameworks from behavioral science
+- **Communication style**: Intelligent conciseness, forbidden coaching clichés
+- **Focus**: Practical life coaching with maximum impact, minimum words
 
 ### Sergeant Oracle
-- Roman time-traveler with military precision and ancient wisdom
-- Combines historical insights with futuristic perspective
-- Features authoritative military voice with Latin phrases
-- General-purpose assistant with Roman military personality
+- **Energetic Roman gym bro coach** with ancient swagger and future wisdom
+- **Personality**: Time-traveling gladiator with hilarious motivation
+- **Communication style**: Modern gym terminology mixed with Roman references
+- **Voice**: Pumped-up, supportive teammate rather than intimidating drill sergeant
+- **Focus**: Life gains through Roman wisdom and futuristic insights 💪🏛️⚡
 
-### The Zen Master
-- Enlightened sage embodying Lao Tzu's wisdom and Buddhist zen tradition
-- Offers profound insights through simple, contemplative language
-- Uses nature metaphors and paradox to guide conversations
-- Features serene, calm voice with Eastern wisdom quotes
-
-### Personal Development Assistant
-- Empathetic and encouraging guide focused on practical solutions
-- Helps achieve goals through positive habits and mindful approaches
-- Balances empathy with actionable advice
-- Features friendly, supportive voice
+### I-There
+- **AI clone from Clone Earth** with profound knowledge
+- **Personality**: Still learning about you while sharing deep insights
+- **Communication style**: Knowledgeable yet curious about your world
+- **Focus**: Bridging knowledge from another dimension to help you
 
 ## Development
 
@@ -312,18 +304,12 @@ For more detailed information about the test groups and specific tests, see the 
 
 ### v1.0.33
 - **Configurable Personas v0 Implementation**: Complete implementation of configurable persona system
-  - **JSON Configuration**: Added `assets/config/personas_config.json` for enabling/disabling personas
-  - **External Prompt Files**: Moved persona prompts to external text files in `assets/prompts/`
-    - `sergeant_oracle_system.txt` - Main personality prompt
-    - `sergeant_oracle_physical.txt` - Physical health exploration
-    - `sergeant_oracle_mental.txt` - Mental health exploration
-    - `sergeant_oracle_relationships.txt` - Relationships exploration
-    - `sergeant_oracle_spirituality.txt` - Spirituality exploration
-    - `sergeant_oracle_work.txt` - Work/career exploration
-  - **Async Persona Loading**: Converted `availablePersonas` to async method for configuration loading
-  - **Backward Compatibility**: Graceful fallback to embedded JSON prompts when external files unavailable
-  - **Default Persona**: Changed default active persona from Personal Development Assistant to Sergeant Oracle
-  - **Character Selection UI**: Updated to use `FutureBuilder` for async persona loading with proper error handling
+  - **JSON Configuration**: Added `assets/config/personas_config.json` for dynamic persona management
+  - **Oracle Integration**: Base knowledge system with persona-specific overlays
+  - **Async Persona Loading**: Dynamic persona loading with proper error handling
+  - **Backward Compatibility**: Graceful fallback system for missing configurations
+  - **Default Persona**: Set Ari Life Coach as default active persona
+  - **3-Persona System**: Streamlined to Ari, Sergeant Oracle, and I-There personas
 - **Test Suite Maintenance**: Fixed 6 failing tests reduced to 0 failures
   - **Mock Regeneration**: Updated mock signatures for async `availablePersonas` method
   - **Character Config Tests**: Updated tests for new default persona and available personas count
@@ -340,12 +326,11 @@ For more detailed information about the test groups and specific tests, see the 
   - Graceful fallback ensures system stability
 
 ### v1.0.32
-- **Enhanced Character Guide System**: 
-  - Transformed Sergeant Oracle from a habit specialist to a general-purpose AI assistant with Roman military personality
-  - Converted "The Zen Guide" to "The Zen Master" with Lao Tzu and Buddhist zen tradition inspiration
-  - Updated character voice configurations with personality-appropriate settings
-  - Created specific voice configuration for The Zen Master with serene, contemplative settings
-  - Redesigned prompt systems to be more versatile and less specialized
+- **Enhanced Persona System**: 
+  - Transformed Sergeant Oracle to energetic "Roman gym bro coach" personality
+  - Updated persona voice configurations with personality-appropriate TTS settings
+  - Redesigned prompt systems to be more engaging and conversational
+  - Streamlined persona selection to focus on most effective personalities
 - **Test Suite Expansion**: 
   - Added complete test coverage for character voice configurations
   - Updated character config manager tests for the new guide implementations
