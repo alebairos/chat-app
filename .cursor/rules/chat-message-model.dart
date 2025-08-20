@@ -42,3 +42,4 @@ class ChatMessageModel {
 
   Map<String, dynamic> toJson() => _$ChatMessageModelToJson(this);
 }
+

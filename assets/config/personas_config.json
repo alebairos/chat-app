@@ -19,6 +19,20 @@
       "displayName": "I-There",
       "description": "Your AI clone from Clone Earth - has profound knowledge but still learning about you",
       "configPath": "assets/config/i_there_config.json"
+    },
+    "ariWithOracle21": {
+      "enabled": true,
+      "displayName": "Ari 2.0",
+      "description": "Life coach with Oracle 2.1 knowledge base",
+      "configPath": "assets/config/ari_life_coach_config_2.0.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md"
+    },
+    "iThereWithOracle21": {
+      "enabled": true,
+      "displayName": "I-There 2.0",
+      "description": "AI clone with Oracle 2.1 knowledge base",
+      "configPath": "assets/config/i_there_config.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md"
     }
   }
 } 

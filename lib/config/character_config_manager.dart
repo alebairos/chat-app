@@ -66,16 +66,39 @@ class CharacterConfigManager {
     return 'Unknown Persona';
   }
 
+  /// Get the Oracle configuration path for the active persona
+  Future<String?> getOracleConfigPath() async {
+    try {
+      // Get oracleConfigPath from personas_config.json
+      final String jsonString =
+          await rootBundle.loadString('assets/config/personas_config.json');
+      final Map<String, dynamic> config = json.decode(jsonString);
+      final Map<String, dynamic> personas = config['personas'] ?? {};
+
+      if (personas.containsKey(_activePersonaKey)) {
+        final persona = personas[_activePersonaKey] as Map<String, dynamic>?;
+        if (persona != null && persona['oracleConfigPath'] != null) {
+          return persona['oracleConfigPath'] as String;
+        }
+      }
+    } catch (e) {
+      print('Error loading Oracle config path: $e');
+    }
+
+    return null; // No Oracle config specified
+  }
+
   /// Load the system prompt for the active persona
   Future<String> loadSystemPrompt() async {
     try {
       // 1) Always try to load Oracle prompt first
-      final String defaultOraclePath =
+      final String? oracleConfigPath = await getOracleConfigPath();
+      const String defaultOraclePath =
           'assets/config/oracle/oracle_prompt_1.0.md';
       final String oraclePathEnv =
           (dotenv.env['ORACLE_PROMPT_PATH'] ?? '').trim();
-      final String oraclePath =
-          oraclePathEnv.isNotEmpty ? oraclePathEnv : defaultOraclePath;
+      final String oraclePath = oracleConfigPath ??
+          (oraclePathEnv.isNotEmpty ? oraclePathEnv : defaultOraclePath);
 
       String? oraclePrompt;
       try {

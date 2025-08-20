@@ -411,6 +411,8 @@ class _ChatScreenState extends State<ChatScreen> {
       'ariLifeCoach': Icons.psychology,
       'sergeantOracle': Icons.military_tech,
       'iThereClone': Icons.face,
+      'ariWithOracle21': Icons.psychology,
+      'iThereWithOracle21': Icons.face,
     };
 
     return iconMap[personaKey] ?? Icons.smart_toy;

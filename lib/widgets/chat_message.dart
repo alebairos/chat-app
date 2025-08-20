@@ -47,6 +47,8 @@ class ChatMessage extends StatelessWidget {
       'ariLifeCoach': Icons.psychology,
       'sergeantOracle': Icons.military_tech,
       'iThereClone': Icons.face,
+      'ariWithOracle21': Icons.psychology,
+      'iThereWithOracle21': Icons.face,
     };
 
     return iconMap[personaKey] ?? Icons.smart_toy;

@@ -63,3 +63,4 @@ class TemplateService {
     Logger.info('TemplateService: Disposed');
   }
 }
+
