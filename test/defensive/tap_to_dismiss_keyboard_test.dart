@@ -89,6 +89,9 @@ class MockChatStorageService implements ChatStorageService {
   Future<void> migratePathsToRelative() async {}
 
   @override
+  Future<void> migrateToPersonaMetadata() async {}
+
+  @override
   Future<void> close() async {}
 
   @override

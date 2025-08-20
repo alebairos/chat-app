@@ -184,6 +184,44 @@ class ChatStorageService {
     print('Migrated $migratedCount paths from absolute to relative');
   }
 
+  /// Migrate existing AI messages to include persona metadata
+  Future<void> migrateToPersonaMetadata() async {
+    final isar = await db;
+
+    // Check if migration is needed by looking for AI messages without persona data
+    final messagesWithoutPersona = await isar.chatMessageModels
+        .where()
+        .filter()
+        .isUserEqualTo(false) // Only AI messages
+        .and()
+        .personaKeyIsNull() // Without persona data
+        .findAll();
+
+    if (messagesWithoutPersona.isEmpty) {
+      // Migration already completed or no AI messages
+      return;
+    }
+
+    print(
+        'Found ${messagesWithoutPersona.length} AI messages without persona data, migrating...');
+
+    int migratedCount = 0;
+    await isar.writeTxn(() async {
+      for (final message in messagesWithoutPersona) {
+        // For legacy messages, we can't determine exact persona
+        // Use a generic fallback that won't confuse users
+        final updatedMessage = message.copyWith(
+          personaKey: 'unknown',
+          personaDisplayName: 'AI Assistant',
+        );
+        await isar.chatMessageModels.put(updatedMessage);
+        migratedCount++;
+      }
+    });
+
+    print('Migrated $migratedCount AI messages to include persona metadata');
+  }
+
   Future<void> close() async {
     final isar = await db;
     await isar.close();

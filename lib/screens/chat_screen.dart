@@ -74,6 +74,9 @@ class _ChatScreenState extends State<ChatScreen> {
       // Migrate any existing absolute paths to relative paths
       await _storageService.migratePathsToRelative();
 
+      // Migrate AI messages to include persona metadata
+      await _storageService.migrateToPersonaMetadata();
+
       // Then load messages
       await _loadMessages();
     } catch (e) {
@@ -353,6 +356,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _logger.logStartup('- ID: ${model.id}');
       _logger.logStartup('- Text: ${model.text}');
       _logger.logStartup('- Is user: ${model.isUser}');
+      _logger.logStartup('- Persona: ${model.personaKey}');
     }
 
     return ChatMessage(
@@ -361,6 +365,8 @@ class _ChatScreenState extends State<ChatScreen> {
       isUser: model.isUser,
       audioPath: model.mediaPath,
       duration: model.duration,
+      personaKey: model.personaKey,
+      personaDisplayName: model.personaDisplayName,
       onDelete: () => _deleteMessage(model.id),
       onEdit: model.isUser
           ? (text) {
@@ -481,11 +487,12 @@ class _ChatScreenState extends State<ChatScreen> {
       final messageType =
           response.audioPath != null ? MessageType.audio : MessageType.text;
 
-      final aiMessageModel = ChatMessageModel(
+      final aiMessageModel = ChatMessageModel.aiMessage(
         text: response.text,
-        isUser: false,
         type: messageType,
         timestamp: DateTime.now(),
+        personaKey: _configLoader.activePersonaKey,
+        personaDisplayName: await _configLoader.activePersonaDisplayName,
         mediaPath: response.audioPath,
         duration: response.audioDuration,
       );
@@ -610,11 +617,12 @@ class _ChatScreenState extends State<ChatScreen> {
       final messageType =
           response.audioPath != null ? MessageType.audio : MessageType.text;
 
-      final aiMessageModel = ChatMessageModel(
+      final aiMessageModel = ChatMessageModel.aiMessage(
         text: response.text,
-        isUser: false,
         type: messageType,
         timestamp: DateTime.now(),
+        personaKey: _configLoader.activePersonaKey,
+        personaDisplayName: await _configLoader.activePersonaDisplayName,
         mediaPath: response.audioPath,
         duration: response.audioDuration,
       );

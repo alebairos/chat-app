@@ -37,18 +37,28 @@ const ChatMessageModelSchema = CollectionSchema(
       name: r'mediaPath',
       type: IsarType.string,
     ),
-    r'text': PropertySchema(
+    r'personaDisplayName': PropertySchema(
       id: 4,
+      name: r'personaDisplayName',
+      type: IsarType.string,
+    ),
+    r'personaKey': PropertySchema(
+      id: 5,
+      name: r'personaKey',
+      type: IsarType.string,
+    ),
+    r'text': PropertySchema(
+      id: 6,
       name: r'text',
       type: IsarType.string,
     ),
     r'timestamp': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'timestamp',
       type: IsarType.dateTime,
     ),
     r'type': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'type',
       type: IsarType.byte,
       enumMap: _ChatMessageModeltypeEnumValueMap,
@@ -98,6 +108,19 @@ const ChatMessageModelSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'personaKey': IndexSchema(
+      id: 4384643838277515272,
+      name: r'personaKey',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'personaKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -126,6 +149,18 @@ int _chatMessageModelEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.personaDisplayName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.personaKey;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.text.length * 3;
   return bytesCount;
 }
@@ -140,9 +175,11 @@ void _chatMessageModelSerialize(
   writer.writeBool(offsets[1], object.isUser);
   writer.writeByteList(offsets[2], object.mediaData);
   writer.writeString(offsets[3], object.mediaPath);
-  writer.writeString(offsets[4], object.text);
-  writer.writeDateTime(offsets[5], object.timestamp);
-  writer.writeByte(offsets[6], object.type.index);
+  writer.writeString(offsets[4], object.personaDisplayName);
+  writer.writeString(offsets[5], object.personaKey);
+  writer.writeString(offsets[6], object.text);
+  writer.writeDateTime(offsets[7], object.timestamp);
+  writer.writeByte(offsets[8], object.type.index);
 }
 
 ChatMessageModel _chatMessageModelDeserialize(
@@ -155,10 +192,12 @@ ChatMessageModel _chatMessageModelDeserialize(
     isUser: reader.readBool(offsets[1]),
     mediaData: reader.readByteList(offsets[2]),
     mediaPath: reader.readStringOrNull(offsets[3]),
-    text: reader.readString(offsets[4]),
-    timestamp: reader.readDateTime(offsets[5]),
+    personaDisplayName: reader.readStringOrNull(offsets[4]),
+    personaKey: reader.readStringOrNull(offsets[5]),
+    text: reader.readString(offsets[6]),
+    timestamp: reader.readDateTime(offsets[7]),
     type:
-        _ChatMessageModeltypeValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+        _ChatMessageModeltypeValueEnumMap[reader.readByteOrNull(offsets[8])] ??
             MessageType.text,
   );
   object.durationInMillis = reader.readLongOrNull(offsets[0]);
@@ -182,10 +221,14 @@ P _chatMessageModelDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readDateTime(offset)) as P;
+    case 8:
       return (_ChatMessageModeltypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           MessageType.text) as P;
@@ -563,6 +606,73 @@ extension ChatMessageModelQueryWhere
         upper: [upperDurationInMillis],
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      personaKeyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'personaKey',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      personaKeyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'personaKey',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      personaKeyEqualTo(String? personaKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'personaKey',
+        value: [personaKey],
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterWhereClause>
+      personaKeyNotEqualTo(String? personaKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'personaKey',
+              lower: [],
+              upper: [personaKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'personaKey',
+              lower: [personaKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'personaKey',
+              lower: [personaKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'personaKey',
+              lower: [],
+              upper: [personaKey],
+              includeUpper: false,
+            ));
+      }
     });
   }
 }
@@ -1027,6 +1137,314 @@ extension ChatMessageModelQueryFilter
   }
 
   QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'personaDisplayName',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'personaDisplayName',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'personaDisplayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'personaDisplayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'personaDisplayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'personaDisplayName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'personaDisplayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'personaDisplayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'personaDisplayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'personaDisplayName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'personaDisplayName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaDisplayNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'personaDisplayName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'personaKey',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'personaKey',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'personaKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'personaKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'personaKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'personaKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'personaKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'personaKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'personaKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'personaKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'personaKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
+      personaKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'personaKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterFilterCondition>
       textEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1325,6 +1743,34 @@ extension ChatMessageModelQuerySortBy
     });
   }
 
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByPersonaDisplayName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaDisplayName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByPersonaDisplayNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaDisplayName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByPersonaKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      sortByPersonaKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy> sortByText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.asc);
@@ -1423,6 +1869,34 @@ extension ChatMessageModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByPersonaDisplayName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaDisplayName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByPersonaDisplayNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaDisplayName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByPersonaKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy>
+      thenByPersonaKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'personaKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<ChatMessageModel, ChatMessageModel, QAfterSortBy> thenByText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.asc);
@@ -1494,6 +1968,21 @@ extension ChatMessageModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct>
+      distinctByPersonaDisplayName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'personaDisplayName',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct>
+      distinctByPersonaKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'personaKey', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<ChatMessageModel, ChatMessageModel, QDistinct> distinctByText(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1547,6 +2036,20 @@ extension ChatMessageModelQueryProperty
       mediaPathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'mediaPath');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, String?, QQueryOperations>
+      personaDisplayNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'personaDisplayName');
+    });
+  }
+
+  QueryBuilder<ChatMessageModel, String?, QQueryOperations>
+      personaKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'personaKey');
     });
   }
 

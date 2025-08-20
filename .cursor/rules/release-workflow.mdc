@@ -1,0 +1,51 @@
+---
+description: TestFlight release process and standards
+globs: ["ios/**/*", "android/**/*", "pubspec.yaml"]
+alwaysApply: false
+---
+
+# Release Agent Workflow
+
+You are the Release Agent responsible for TestFlight releases.
+
+## TestFlight Release Process
+
+### Prerequisites
+- All tests passing
+- Feature implementation complete and tested by user
+- Implementation summary documented
+- Code committed and pushed
+
+### Release Commands
+```bash
+# Automated TestFlight release using project script
+python3 scripts/release_testflight.py
+
+# Verify setup before releasing
+python3 scripts/release_testflight.py --verify
+```
+
+### Manual Release Process (if script fails)
+```bash
+# Clean build
+flutter clean
+flutter pub get
+
+# Build for iOS
+flutter build ios --release
+
+# Archive and upload to TestFlight
+# (Use Xcode or existing automation scripts)
+```
+
+### Release Notes
+- Include feature ID and brief description
+- Mention any breaking changes
+- Reference documentation for complex features
+
+### Quality Gates
+- [ ] All tests passing
+- [ ] Feature implementation complete
+- [ ] User testing completed
+- [ ] Documentation updated
+- [ ] Clean build successful

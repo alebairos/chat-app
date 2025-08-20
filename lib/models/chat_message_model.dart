@@ -25,6 +25,13 @@ class ChatMessageModel {
   @Index()
   int? durationInMillis;
 
+  // NEW FIELDS for persona metadata
+  @Index()
+  String? personaKey; // e.g., 'ariLifeCoach', 'sergeantOracle', 'iThereClone'
+
+  String?
+      personaDisplayName; // e.g., 'Ari Life Coach', 'Sergeant Oracle', 'I-There'
+
   ChatMessageModel({
     required this.text,
     required this.isUser,
@@ -33,7 +40,22 @@ class ChatMessageModel {
     this.mediaData,
     this.mediaPath,
     Duration? duration,
+    this.personaKey, // NEW
+    this.personaDisplayName, // NEW
   }) : durationInMillis = duration?.inMilliseconds;
+
+  // Additional constructor for AI messages with persona
+  ChatMessageModel.aiMessage({
+    required this.text,
+    required this.type,
+    required this.timestamp,
+    required this.personaKey,
+    required this.personaDisplayName,
+    this.mediaData,
+    this.mediaPath,
+    Duration? duration,
+  })  : isUser = false,
+        durationInMillis = duration?.inMilliseconds;
 
   @ignore
   Duration? get duration => durationInMillis != null
@@ -54,6 +76,8 @@ class ChatMessageModel {
     List<byte>? mediaData,
     String? mediaPath,
     Duration? duration,
+    String? personaKey, // NEW
+    String? personaDisplayName, // NEW
   }) {
     final model = ChatMessageModel(
       text: text ?? this.text,
@@ -63,6 +87,8 @@ class ChatMessageModel {
       mediaData: mediaData ?? this.mediaData,
       mediaPath: mediaPath ?? this.mediaPath,
       duration: duration ?? this.duration,
+      personaKey: personaKey ?? this.personaKey, // NEW
+      personaDisplayName: personaDisplayName ?? this.personaDisplayName, // NEW
     );
     model.id = id ?? this.id;
     return model;

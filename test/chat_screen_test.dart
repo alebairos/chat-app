@@ -122,6 +122,11 @@ class FakeChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<void> migrateToPersonaMetadata() async {
+    // No-op for testing
+  }
+
+  @override
   Future<void> close() async {
     // No-op for testing
   }

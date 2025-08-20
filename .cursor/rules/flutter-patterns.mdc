@@ -1,0 +1,44 @@
+---
+description: Flutter and Dart coding patterns for this project
+globs: ["lib/**/*.dart"]
+alwaysApply: true
+---
+
+# Flutter/Dart Project Patterns
+
+## File Organization
+- **Models:** `lib/models/` - Data structures and JSON serialization
+- **Services:** `lib/services/` - Business logic and external integrations  
+- **Screens:** `lib/screens/` - Full-screen UI components
+- **Widgets:** `lib/widgets/` - Reusable UI components
+- **Config:** `lib/config/` - Configuration management
+- **Features:** `lib/features/` - Feature-specific code organization
+- **Tests:** `test/` - Mirror lib structure for test organization
+
+## Database (Isar) Patterns
+- Use `@Collection()` for data models
+- Include `@JsonSerializable()` for API integration
+- Implement proper indexes for query performance
+- Handle schema migrations carefully
+- Test database operations thoroughly
+
+## Audio Assistant Integration
+- Follow existing patterns in `lib/features/audio_assistant/`
+- Use established TTS service patterns
+- Implement proper audio file management
+- Consider persona-specific voice configurations
+
+## Configuration Management
+- Use JSON configuration files in `assets/config/`
+- Implement validation for configuration loading
+- Support runtime configuration changes where appropriate
+- Document configuration schema and options
+
+## Error Handling
+- Use try-catch blocks for all async operations
+- Implement proper logging with `lib/utils/logger.dart`
+- Provide user-friendly error messages
+- Handle network connectivity issues gracefully
+
+@chat-message-model.dart
+@service-template.dart

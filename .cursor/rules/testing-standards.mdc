@@ -1,0 +1,58 @@
+---
+description: Testing standards and patterns for this Flutter project
+globs: ["test/**/*.dart"]
+alwaysApply: true
+---
+
+# Testing Standards
+
+## Testing Philosophy
+- Very focused: Each test targets a specific scenario
+- Simple: Tests are straightforward and easy to understand
+- No mocks needed initially: Avoid complex mock structures
+- Easy to understand and maintain: Tests have clear assertions and comments
+- One test at a time: Each test focuses on a single functionality aspect
+
+## Test Organization
+- Mirror `lib/` structure in `test/` directory
+- Group related tests in describe blocks
+- Use descriptive test names that explain the scenario
+- Include setup and teardown when needed
+
+## Test Types
+1. **Unit Tests:** Test individual functions and classes
+2. **Widget Tests:** Test UI components in isolation
+3. **Integration Tests:** Test feature workflows end-to-end
+4. **Golden Tests:** Test UI appearance and layout
+
+## Testing Patterns
+```dart
+// Example test structure
+group('Feature Name', () {
+  setUp(() {
+    // Test setup
+  });
+
+  testWidgets('should do something when condition', (tester) async {
+    // Arrange
+    // Act
+    // Assert
+  });
+});
+```
+
+## Mock Usage (Avoid When Possible)
+- **AVOID MOCKS:** Start with simple, direct testing approaches
+- Only introduce mocking after simpler approaches are proven successful
+- When mocking is absolutely necessary, use mocktail (not mockito)
+- Keep mocks focused and minimal
+- Consider if you can test the real implementation instead
+
+## Test Coverage
+- Focus on critical business logic
+- Test error conditions and edge cases
+- Ensure UI components render correctly
+- Verify integration points work as expected
+
+@test-helper.dart
+@mock-patterns.dart

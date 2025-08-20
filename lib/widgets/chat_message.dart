@@ -12,6 +12,8 @@ class ChatMessage extends StatelessWidget {
   final bool isTest;
   final VoidCallback? onDelete;
   final Function(String)? onEdit;
+  final String? personaKey;
+  final String? personaDisplayName;
 
   const ChatMessage({
     required this.text,
@@ -21,8 +23,34 @@ class ChatMessage extends StatelessWidget {
     this.isTest = false,
     this.onDelete,
     this.onEdit,
+    this.personaKey,
+    this.personaDisplayName,
     super.key,
   });
+
+  Color _getPersonaColor(String? personaKey) {
+    if (personaKey == null) return Colors.deepPurple; // default to Sergeant
+
+    final Map<String, Color> colorMap = {
+      'ariLifeCoach': Colors.teal,
+      'sergeantOracle': Colors.deepPurple,
+      'iThereClone': Colors.blue,
+    };
+
+    return colorMap[personaKey] ?? Colors.grey;
+  }
+
+  IconData _getPersonaIcon(String? personaKey) {
+    if (personaKey == null) return Icons.military_tech; // default to Sergeant
+
+    final Map<String, IconData> iconMap = {
+      'ariLifeCoach': Icons.psychology,
+      'sergeantOracle': Icons.military_tech,
+      'iThereClone': Icons.face,
+    };
+
+    return iconMap[personaKey] ?? Icons.smart_toy;
+  }
 
   void _showMessageMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
@@ -105,6 +133,8 @@ class ChatMessage extends StatelessWidget {
     bool? isTest,
     VoidCallback? onDelete,
     Function(String)? onEdit,
+    String? personaKey,
+    String? personaDisplayName,
   }) {
     return ChatMessage(
       text: text ?? this.text,
@@ -114,6 +144,8 @@ class ChatMessage extends StatelessWidget {
       isTest: isTest ?? this.isTest,
       onDelete: onDelete ?? this.onDelete,
       onEdit: onEdit ?? this.onEdit,
+      personaKey: personaKey ?? this.personaKey,
+      personaDisplayName: personaDisplayName ?? this.personaDisplayName,
     );
   }
 
@@ -132,9 +164,12 @@ class ChatMessage extends StatelessWidget {
                     height: 40,
                     child: Placeholder(),
                   )
-                : const CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
-                    child: Icon(Icons.military_tech, color: Colors.white),
+                : CircleAvatar(
+                    backgroundColor: _getPersonaColor(personaKey),
+                    child: Icon(
+                      _getPersonaIcon(personaKey),
+                      color: Colors.white,
+                    ),
                   ),
             const SizedBox(width: 8),
           ],

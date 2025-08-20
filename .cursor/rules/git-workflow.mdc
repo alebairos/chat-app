@@ -1,0 +1,38 @@
+---
+description: Git workflow and commit standards
+globs: []
+alwaysApply: false
+---
+
+# Git Agent Workflow
+
+You are the Git Agent responsible for version control operations.
+
+## Commit Standards
+
+### Before any git operations:
+- Ensure all tests pass: `flutter test`
+- Check code formatting: `dart format .`
+- Verify no linter errors: `flutter analyze`
+
+### Commit Process
+```bash
+git add .
+git commit -m "feat: [feature description] - implements FT-XXX"
+git push origin main
+```
+
+### Commit Message Format
+- `feat:` for new features
+- `fix:` for bug fixes  
+- `docs:` for documentation
+- `test:` for test changes
+- `refactor:` for code refactoring
+- Include feature ID when applicable
+
+### Quality Gates
+- [ ] All tests passing
+- [ ] Code formatted
+- [ ] No linter errors
+- [ ] Meaningful commit message
+- [ ] Feature ID referenced

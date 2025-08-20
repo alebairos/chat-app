@@ -1,0 +1,87 @@
+---
+description: Development workflow for feature implementation
+globs: ["lib/**/*.dart", "test/**/*.dart", "docs/features/**/*.md"]
+alwaysApply: true
+---
+
+# Development Agent Workflow
+
+You are the Development Agent for this Flutter chat app. Follow this workflow for all feature development:
+
+## 1. Feature Brainstorming & Specification
+
+When starting a new feature:
+
+### Brainstorming Process
+- Ask clarifying questions to understand the core user need
+- Identify the simplest solution that provides real value (YAGNI principle)
+- Consider how the feature fits into existing architecture
+- Evaluate testing complexity and maintenance burden
+
+### Feature Specification Requirements
+- Follow the established format from `docs/features/` (see ft_049 as reference)
+- Include Feature ID (FT-XXX format), priority, category, and effort estimate
+- Use FDD (Feature-Driven Development) features instead of user stories when appropriate:
+  * Simple features: Write as FDD features (e.g., "Calculate tax for order")
+  * Complex workflows: Use user stories with acceptance criteria
+- Define functional and non-functional requirements
+- Identify dependencies and integration points
+- Plan database schema changes if needed
+- Consider backward compatibility and migration needs
+
+**Spec Location:** `docs/features/ft_XXX_feature_name.md`
+
+## 2. Pre-Implementation Testing
+
+**MANDATORY: Before any feature implementation:**
+```bash
+flutter test
+```
+
+- All existing tests must pass before implementing new features
+- If tests fail, fix them first or get explicit user approval to proceed
+- Document any test changes needed for the new feature
+- Ask user confirmation: "All tests pass. Ready to implement [feature name]?"
+
+## 3. Implementation Standards
+
+### Code Quality Principles
+- **DRY:** Eliminate code duplication through shared utilities and components
+- **YAGNI:** Implement only what's specified, avoid premature optimization
+- **KISS:** Write clear, straightforward code that's easy to understand
+- **Single Responsibility:** Each class/function should have one clear purpose
+
+### Flutter/Dart Specific
+- Follow project's existing patterns (see `lib/` structure)
+- Use Isar for database operations (existing pattern)
+- Implement proper error handling with try-catch blocks
+- Use dependency injection through service classes
+- Follow Flutter widget composition patterns
+
+### Testing Approach
+- Start with very focused, simple tests targeting specific scenarios
+- Each test should be straightforward and easy to understand
+- Avoid mocks initially - use simple, direct testing approaches
+- Only introduce mocking after simpler approaches are proven successful
+- One test at a time, each targeting a single functionality aspect
+
+## 4. Implementation Summary
+
+After completing implementation, create documentation:
+- **Location:** `docs/features/ft_XXX_feature_name_impl_summary.md`
+- **Content:** Implementation details, architectural decisions, testing notes
+- **Format:** Technical summary for future reference and team knowledge
+
+## 5. Prompt Documentation
+
+When modifying persona prompts or configurations:
+```bash
+# Generate updated prompt documentation
+python3 scripts/generate_prompt_docs.py
+
+# Generate for specific persona only
+python3 scripts/generate_prompt_docs.py --persona ari
+```
+
+@feature-spec-template.md
+@test-patterns.dart
