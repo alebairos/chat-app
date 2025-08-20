@@ -145,7 +145,7 @@
   - T14 (3x/semana) - Ler livro relacionado ao tema
   - T13 (2x/semana) - Ler resumo de livro do tema
 - **AE1AL** (Nível 1): Aprenda com a Lyfe
-  - T15 (2x/semana) - Escutar podcast ou TED talks
+  - T15 (2x/semana) - Fale sobre 
   - T17 (1x/semana) - Fazer manutenção lista YouTube
   - T13 (3x/semana) - Ler resumo de livro
   - T9 (7x/semana) - Assistir vídeo educacional

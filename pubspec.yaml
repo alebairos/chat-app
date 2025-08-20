@@ -2,7 +2,7 @@ name: character_ai_clone
 description: A Character.ai clone app
 publish_to: 'none'
 
-version: 1.1.0+6
+version: 1.1.0+7
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -23,6 +23,10 @@ dependencies:
   path: ^1.8.3
   # CSV parsing
   csv: ^5.1.1
+  # Sharing functionality for chat export
+  share_plus: ^7.2.2
+  # Date/time formatting for export
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
