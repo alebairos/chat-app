@@ -7,6 +7,8 @@ import '../models/life_plan/dimensions.dart';
 import '../utils/logger.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
+import 'time_context_service.dart';
+import 'chat_storage_service.dart';
 
 // Helper class for validation results
 class ValidationResult {
@@ -30,6 +32,7 @@ class ClaudeService {
 
   // Add these fields
   final AudioAssistantTTSService? _ttsService;
+  final ChatStorageService? _storageService;
   bool _audioEnabled = true;
 
   ClaudeService({
@@ -37,11 +40,13 @@ class ClaudeService {
     LifePlanMCPService? lifePlanMCP,
     ConfigLoader? configLoader,
     AudioAssistantTTSService? ttsService,
+    ChatStorageService? storageService,
     bool audioEnabled = true,
   })  : _client = client ?? http.Client(),
         _lifePlanMCP = lifePlanMCP,
         _configLoader = configLoader ?? ConfigLoader(),
         _ttsService = ttsService,
+        _storageService = storageService,
         _audioEnabled = audioEnabled {
     _apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     _model =
@@ -270,8 +275,29 @@ class ClaudeService {
       // Add conversation history
       messages.addAll(_conversationHistory);
 
-      // If we have MCP data, add it as a system message before sending to Claude
+      // Generate time-aware context
+      final lastMessageTime = await _getLastMessageTimestamp();
+      final timeContext =
+          TimeContextService.generateTimeContext(lastMessageTime);
+
+      // Debug logging for time context
+      if (lastMessageTime != null) {
+        final debugInfo =
+            TimeContextService.getTimeGapDebugInfo(lastMessageTime);
+        _logger.debug('Time Context Debug: $debugInfo');
+      } else {
+        _logger.debug('Time Context: No previous message found');
+      }
+
+      // Build enhanced system prompt with time context and MCP data
       String systemPrompt = _systemPrompt ?? '';
+
+      // Add time context at the beginning if available
+      if (timeContext.isNotEmpty) {
+        systemPrompt = '$timeContext\n\n$systemPrompt';
+      }
+
+      // Add MCP data at the end if available
       if (mcpData.isNotEmpty) {
         systemPrompt +=
             '\n\nHere is the relevant data from the MCP database that you MUST use to answer the user\'s query. DO NOT make up any information not contained in this data:\n$mcpData';
@@ -509,6 +535,28 @@ class ClaudeService {
   // Getter for conversation history
   List<Map<String, dynamic>> get conversationHistory =>
       List.unmodifiable(_conversationHistory);
+
+  /// Get the timestamp of the last message from storage
+  ///
+  /// Returns the timestamp of the most recent message, or null if no messages exist
+  /// or if storage service is not available.
+  Future<DateTime?> _getLastMessageTimestamp() async {
+    try {
+      if (_storageService == null) {
+        return null;
+      }
+
+      final messages = await _storageService!.getMessages(limit: 1);
+      if (messages.isEmpty) {
+        return null;
+      }
+
+      return TimeContextService.validateTimestamp(messages.first.timestamp);
+    } catch (e) {
+      _logger.error('Error getting last message timestamp: $e');
+      return null;
+    }
+  }
 
   // Add method to send message with audio
   Future<ClaudeAudioResponse> sendMessageWithAudio(String message) async {

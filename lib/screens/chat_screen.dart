@@ -52,9 +52,13 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _ttsService = AudioAssistantTTSService();
-    _claudeService = widget.claudeService ??
-        ClaudeService(ttsService: _ttsService, audioEnabled: true);
     _storageService = widget.storageService ?? ChatStorageService();
+    _claudeService = widget.claudeService ??
+        ClaudeService(
+          ttsService: _ttsService,
+          storageService: _storageService,
+          audioEnabled: true,
+        );
     _loadCurrentPersona();
     _checkEnvironment();
     _initializeServices();
