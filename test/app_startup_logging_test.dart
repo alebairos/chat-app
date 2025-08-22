@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/utils/logger.dart';
-import 'package:character_ai_clone/services/life_plan_service.dart';
+// Note: LifePlan service removed during cleanup
 import 'package:character_ai_clone/services/claude_service.dart';
 import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -42,10 +42,7 @@ void main() {
 
         logger.info('Starting application');
 
-        // Initialize services with logging settings
-        final lifePlanService = LifePlanService();
-        lifePlanService.setLogging(true);
-        lifePlanService.setStartupLogging(false);
+        // Note: LifePlan service initialization removed during cleanup
 
         // Initialize Claude service
         final claudeService = ClaudeService();
@@ -56,7 +53,7 @@ void main() {
             logOutput.toString(), contains('ℹ️ [INFO] Starting application'));
 
         // Verify startup logs don't appear when disabled
-        await lifePlanService.initialize();
+        // Note: LifePlan service initialization removed during cleanup
         expect(logOutput.toString(), isNot(contains('🚀 [STARTUP]')));
       });
     });
@@ -71,10 +68,7 @@ void main() {
         logger.info('Starting application');
         logger.logStartup('Initializing app components');
 
-        // Initialize services with logging settings
-        final lifePlanService = LifePlanService();
-        lifePlanService.setLogging(true);
-        lifePlanService.setStartupLogging(true);
+        // Note: LifePlan service initialization removed during cleanup
 
         // Verify both regular and startup logs appear
         expect(
@@ -83,7 +77,7 @@ void main() {
             contains('🚀 [STARTUP] Initializing app components'));
 
         // Verify startup logs appear during initialization
-        await lifePlanService.initialize();
+        // Note: LifePlan service initialization removed during cleanup
         expect(logOutput.toString(), contains('🚀 [STARTUP]'));
       });
     });

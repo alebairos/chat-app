@@ -3,30 +3,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/services/life_plan_mcp_service.dart';
+import 'package:character_ai_clone/services/system_mcp_service.dart';
 import 'package:character_ai_clone/config/config_loader.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Replace Mockito mocks with Mocktail mocks
 class MockHttpClient extends Mock implements http.Client {}
 
-class MockLifePlanMCPService extends Mock implements LifePlanMCPService {}
+class MockSystemMCPService extends Mock implements SystemMCPService {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   print('\n🚀 Starting Claude Service Tests');
 
   late MockHttpClient mockClient;
-  late MockLifePlanMCPService mockMCP;
+  late MockSystemMCPService mockMCP;
   late ClaudeService service;
 
   Future<String> mockSystemPrompt() async => 'Test system prompt';
 
-  ConfigLoader createMockConfigLoader() {
-    final loader = ConfigLoader();
-    loader.setLoadSystemPromptImpl(mockSystemPrompt);
-    return loader;
-  }
+  // Mock helper function removed - ConfigLoader is created inline in setUp
 
   setUpAll(() {
     print('\n📝 Setting up test environment...');
@@ -45,7 +41,7 @@ void main() {
   setUp(() {
     print('\n🔄 Setting up test case...');
     mockClient = MockHttpClient();
-    mockMCP = MockLifePlanMCPService();
+    mockMCP = MockSystemMCPService();
     print('✓ Mock client and MCP initialized');
 
     final configLoader = ConfigLoader();
@@ -54,7 +50,7 @@ void main() {
 
     service = ClaudeService(
       client: mockClient,
-      lifePlanMCP: mockMCP,
+      systemMCP: mockMCP,
       configLoader: configLoader,
     );
     print('✓ Claude Service initialized');
@@ -222,23 +218,19 @@ void main() {
     });
   });
 
-  group('Life Plan MCP Integration', () {
-    test('processes life plan commands through MCP', () async {
-      print('\n🧪 Testing life plan command processing...');
-      final command =
-          json.encode({'action': 'get_goals_by_dimension', 'dimension': 'SF'});
+  group('System MCP Integration', () {
+    test('processes system commands through MCP', () async {
+      print('\n🧪 Testing system command processing...');
+      final command = json.encode({'action': 'get_current_time'});
       print('📤 Sending command: $command');
 
       when(() => mockMCP.processCommand(command)).thenReturn(json.encode({
         'status': 'success',
-        'data': [
-          {
-            'dimension': 'SF',
-            'id': 'G1',
-            'description': 'Test Goal',
-            'trackId': 'T1'
-          }
-        ]
+        'data': {
+          'current_time': '2025-01-02T15:30:00Z',
+          'formatted_time': 'Thursday, January 2, 2025 at 3:30 PM',
+          'timezone': 'UTC'
+        }
       }));
       print('✓ Mock MCP response configured');
 
@@ -283,32 +275,19 @@ void main() {
       final response = await service.sendMessage(command);
       print('📥 Received response: $response');
 
-      expect(response, contains('Missing required parameter'));
+      expect(response, contains('Error processing system command'));
       expect(response, contains('MCP Error'));
 
       print('✓ Test completed successfully');
     });
 
-    test('Life Plan MCP Integration processes normal messages without MCP',
-        () async {
+    test('processes normal messages without MCP', () async {
       print('\n🧪 Testing normal message processing...');
       const message = 'Hello';
       print('📤 Sending message: $message');
 
-      // Add stubs for all dimension codes
-      for (final dimension in ['SF', 'SM', 'R', 'E', 'TG']) {
-        // Stub for get_goals_by_dimension
-        when(() => mockMCP.processCommand(json.encode(
-                {'action': 'get_goals_by_dimension', 'dimension': dimension})))
-            .thenReturn(json.encode({'status': 'success', 'data': []}));
-
-        // Stub for get_recommended_habits
-        when(() => mockMCP.processCommand(json.encode({
-              'action': 'get_recommended_habits',
-              'dimension': dimension,
-              'minImpact': 3
-            }))).thenReturn(json.encode({'status': 'success', 'data': []}));
-      }
+      // SystemMCP should not be called for normal messages
+      // No stubbing needed since regular messages don't trigger MCP commands
 
       when(() => mockClient.post(
             any(),
@@ -336,8 +315,8 @@ void main() {
       expect(response, equals('Normal response'),
           reason: 'Response should match expected normal response');
 
-      // Now we can verify that the MCP service was called for each dimension
-      // but we don't need to verify it was never called since we've stubbed the calls
+      // Verify that SystemMCP was not called for regular messages
+      verifyNever(() => mockMCP.processCommand(any()));
       print('✓ Test completed successfully');
     });
   });

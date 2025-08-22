@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:character_ai_clone/config/config_loader.dart';
-import 'life_plan_mcp_service.dart';
-import '../models/life_plan/dimensions.dart';
+import 'system_mcp_service.dart';
 import '../utils/logger.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
@@ -27,7 +26,7 @@ class ClaudeService {
   bool _isInitialized = false;
   final _logger = Logger();
   final http.Client _client;
-  final LifePlanMCPService? _lifePlanMCP;
+  final SystemMCPService? _systemMCP;
   final ConfigLoader _configLoader;
 
   // Add these fields
@@ -37,13 +36,13 @@ class ClaudeService {
 
   ClaudeService({
     http.Client? client,
-    LifePlanMCPService? lifePlanMCP,
+    SystemMCPService? systemMCP,
     ConfigLoader? configLoader,
     AudioAssistantTTSService? ttsService,
     ChatStorageService? storageService,
     bool audioEnabled = true,
   })  : _client = client ?? http.Client(),
-        _lifePlanMCP = lifePlanMCP,
+        _systemMCP = systemMCP,
         _configLoader = configLoader ?? ConfigLoader(),
         _ttsService = ttsService,
         _storageService = storageService,
@@ -61,7 +60,7 @@ class ClaudeService {
   void setLogging(bool enable) {
     _logger.setLogging(enable);
     // Also set logging for MCP service if available
-    _lifePlanMCP?.setLogging(enable);
+    _systemMCP?.setLogging(enable);
   }
 
   Future<bool> initialize() async {
@@ -123,107 +122,10 @@ class ClaudeService {
     }
   }
 
-  // Helper method to process MCP commands and get data
-  Future<Map<String, dynamic>> _processMCPCommand(String command) async {
-    if (_lifePlanMCP == null) {
-      return {'error': 'MCP service not available'};
-    }
+  // Note: MCP command processing now handled directly in sendMessage method
 
-    try {
-      final response = _lifePlanMCP!.processCommand(command);
-      final decoded = json.decode(response);
-      return decoded;
-    } catch (e) {
-      _logger.error('Error processing MCP command: $e');
-      return {'error': e.toString()};
-    }
-  }
-
-  // Helper method to detect dimensions in user message
-  List<String> _detectDimensions(String message) {
-    // Instead of hard-coded keyword matching, we'll fetch all dimensions
-    // and let Claude's system prompt handle the detection
-    return Dimensions.codes; // Return all dimension codes
-  }
-
-  // Helper method to fetch relevant MCP data based on user message
-  Future<String> _fetchRelevantMCPData(String message) async {
-    if (_lifePlanMCP == null) {
-      return '';
-    }
-
-    final dimensions = _detectDimensions(message);
-    final buffer = StringBuffer();
-
-    // If no dimensions detected, fetch data for all dimensions
-    if (dimensions.isEmpty) {
-      dimensions.addAll(['SF', 'SM', 'R']);
-    }
-
-    // Fetch goals for each detected dimension
-    for (final dimension in dimensions) {
-      final command = json
-          .encode({'action': 'get_goals_by_dimension', 'dimension': dimension});
-
-      final result = await _processMCPCommand(command);
-      if (result['status'] == 'success' && result['data'] != null) {
-        buffer.writeln('\nMCP DATA - Goals for dimension $dimension:');
-        buffer.writeln(json.encode(result['data']));
-
-        // For each goal, try to fetch the associated track
-        for (final goal in result['data']) {
-          if (goal['trackId'] != null) {
-            final trackCommand = json.encode(
-                {'action': 'get_track_by_id', 'trackId': goal['trackId']});
-
-            final trackResult = await _processMCPCommand(trackCommand);
-            if (trackResult['status'] == 'success' &&
-                trackResult['data'] != null) {
-              buffer.writeln('\nMCP DATA - Track for goal ${goal['id']}:');
-              buffer.writeln(json.encode(trackResult['data']));
-
-              // For each challenge in the track, fetch habits
-              if (trackResult['data']['challenges'] != null) {
-                for (final challenge in trackResult['data']['challenges']) {
-                  final habitsCommand = json.encode({
-                    'action': 'get_habits_for_challenge',
-                    'trackId': goal['trackId'],
-                    'challengeCode': challenge['code']
-                  });
-
-                  final habitsResult = await _processMCPCommand(habitsCommand);
-                  if (habitsResult['status'] == 'success' &&
-                      habitsResult['data'] != null) {
-                    buffer.writeln(
-                        '\nMCP DATA - Habits for challenge ${challenge['code']}:');
-                    buffer.writeln(json.encode(habitsResult['data']));
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Fetch recommended habits for each dimension
-    for (final dimension in dimensions) {
-      final command = json.encode({
-        'action': 'get_recommended_habits',
-        'dimension': dimension,
-        'minImpact': 3
-      });
-
-      final result = await _processMCPCommand(command);
-      if (result['status'] == 'success' && result['data'] != null) {
-        buffer.writeln(
-            '\nMCP DATA - Recommended habits for dimension $dimension:');
-        buffer.writeln(json.encode(result['data']));
-      }
-    }
-
-    return buffer.toString();
-  }
+  // Note: Legacy LifePlan data fetching logic removed
+  // System MCP functions are now called directly via JSON commands in user messages
 
   Future<String> sendMessage(String message) async {
     try {
@@ -232,8 +134,8 @@ class ClaudeService {
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
 
-      // Check if message contains a life plan command
-      if (_lifePlanMCP != null && message.startsWith('{')) {
+      // Check if message contains a system MCP command
+      if (_systemMCP != null && message.startsWith('{')) {
         try {
           final Map<String, dynamic> command = json.decode(message);
           final action = command['action'] as String?;
@@ -243,9 +145,9 @@ class ClaudeService {
           }
 
           try {
-            return _lifePlanMCP!.processCommand(message);
+            return _systemMCP!.processCommand(message);
           } catch (e) {
-            return 'Missing required parameter: ${e.toString()}';
+            return 'Error processing system command: ${e.toString()}';
           }
         } catch (e) {
           return 'Invalid command format';
@@ -260,14 +162,8 @@ class ClaudeService {
         ],
       });
 
-      // Fetch relevant MCP data based on user message
-      final mcpData = await _fetchRelevantMCPData(message);
-      Map<String, dynamic>? mcpDataMap;
-
-      // Parse MCP data for validation
-      if (mcpData.isNotEmpty) {
-        mcpDataMap = _parseMCPDataForValidation(mcpData);
-      }
+      // Note: Legacy MCP data fetching removed
+      // System functions now called directly via JSON commands
 
       // Prepare messages array with history
       final messages = <Map<String, dynamic>>[];
@@ -275,10 +171,10 @@ class ClaudeService {
       // Add conversation history
       messages.addAll(_conversationHistory);
 
-      // Generate time-aware context
+      // Generate enhanced time-aware context (FT-060)
       final lastMessageTime = await _getLastMessageTimestamp();
       final timeContext =
-          TimeContextService.generateTimeContext(lastMessageTime);
+          TimeContextService.generatePreciseTimeContext(lastMessageTime);
 
       // Debug logging for time context
       if (lastMessageTime != null) {
@@ -289,7 +185,7 @@ class ClaudeService {
         _logger.debug('Time Context: No previous message found');
       }
 
-      // Build enhanced system prompt with time context and MCP data
+      // Build enhanced system prompt with time context
       String systemPrompt = _systemPrompt ?? '';
 
       // Add time context at the beginning if available
@@ -297,10 +193,14 @@ class ClaudeService {
         systemPrompt = '$timeContext\n\n$systemPrompt';
       }
 
-      // Add MCP data at the end if available
-      if (mcpData.isNotEmpty) {
-        systemPrompt +=
-            '\n\nHere is the relevant data from the MCP database that you MUST use to answer the user\'s query. DO NOT make up any information not contained in this data:\n$mcpData';
+      // Add system MCP function documentation
+      if (_systemMCP != null) {
+        systemPrompt += '\n\nSystem Functions Available:\n'
+            'You can call system functions by using JSON format: {"action": "function_name"}\n'
+            'Available functions:\n'
+            '- get_current_time: Returns current date, time, and temporal information\n'
+            '- get_device_info: Returns device platform, OS version, locale, and system info\n\n'
+            'Note: Current time information is provided in the context above. Use these functions only when you need additional device information or precise timestamps.';
       }
 
       final response = await _client.post(
@@ -324,16 +224,11 @@ class ClaudeService {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         var assistantMessage = data['content'][0]['text'];
 
-        // Validate response against MCP data if available
-        if (mcpDataMap != null && mcpDataMap.isNotEmpty) {
-          final validationResult =
-              _validateResponseAgainstMCPData(assistantMessage, mcpDataMap);
-          if (!validationResult.isValid) {
-            // Add a warning to the response
-            assistantMessage = _addValidationWarning(
-                assistantMessage, validationResult.reason);
-          }
-        }
+        // Log the original AI response to see what we're working with
+        _logger.debug('Original AI response: $assistantMessage');
+
+        // Process MCP commands in the AI's response
+        assistantMessage = await _processMCPCommands(assistantMessage);
 
         // Add assistant's response to history using content blocks format
         _conversationHistory.add({
@@ -380,152 +275,7 @@ class ClaudeService {
     }
   }
 
-  // Helper method to parse MCP data for validation
-  Map<String, dynamic> _parseMCPDataForValidation(String mcpData) {
-    final result = <String, dynamic>{};
-    final lines = mcpData.split('\n');
-    String currentSection = '';
-    StringBuffer currentData = StringBuffer();
-
-    for (final line in lines) {
-      if (line.startsWith('MCP DATA - ')) {
-        // If we were processing a section, save it
-        if (currentSection.isNotEmpty && currentData.isNotEmpty) {
-          try {
-            result[currentSection] = json.decode(currentData.toString());
-          } catch (e) {
-            _logger.error(
-                'Error parsing MCP data for section $currentSection: $e');
-          }
-        }
-
-        // Start a new section
-        currentSection = line.substring('MCP DATA - '.length);
-        currentData = StringBuffer();
-      } else if (currentSection.isNotEmpty && line.trim().isNotEmpty) {
-        currentData.writeln(line);
-      }
-    }
-
-    // Save the last section
-    if (currentSection.isNotEmpty && currentData.isNotEmpty) {
-      try {
-        result[currentSection] = json.decode(currentData.toString());
-      } catch (e) {
-        _logger.error('Error parsing MCP data for section $currentSection: $e');
-      }
-    }
-
-    return result;
-  }
-
-  // Helper method to validate Claude's response against MCP data
-  ValidationResult _validateResponseAgainstMCPData(
-      String response, Map<String, dynamic> mcpData) {
-    // This is a simplified validation that checks if the response mentions key terms from the MCP data
-    // A more sophisticated validation would parse the response and check for specific facts
-
-    final lowerResponse = response.toLowerCase();
-    final mentionedTerms = <String>[];
-    final missingTerms = <String>[];
-
-    // Extract key terms from MCP data
-    final keyTerms = _extractKeyTermsFromMCPData(mcpData);
-
-    // Check if response mentions key terms
-    for (final term in keyTerms) {
-      if (lowerResponse.contains(term.toLowerCase())) {
-        mentionedTerms.add(term);
-      } else {
-        missingTerms.add(term);
-      }
-    }
-
-    // If no key terms are mentioned, the response might not be based on MCP data
-    if (mentionedTerms.isEmpty && keyTerms.isNotEmpty) {
-      return ValidationResult(
-          false, 'Response does not mention any key terms from MCP data');
-    }
-
-    // If less than 30% of key terms are mentioned, the response might not be based on MCP data
-    if (keyTerms.isNotEmpty && mentionedTerms.length / keyTerms.length < 0.3) {
-      return ValidationResult(false,
-          'Response mentions only ${mentionedTerms.length} out of ${keyTerms.length} key terms from MCP data');
-    }
-
-    return ValidationResult(true, '');
-  }
-
-  // Helper method to extract key terms from MCP data
-  List<String> _extractKeyTermsFromMCPData(Map<String, dynamic> mcpData) {
-    final keyTerms = <String>{};
-
-    // Extract terms from goals
-    for (final entry in mcpData.entries) {
-      if (entry.key.contains('Goals for dimension')) {
-        final goals = entry.value as List<dynamic>;
-        for (final goal in goals) {
-          if (goal['description'] != null) {
-            final description = goal['description'] as String;
-            // Extract significant words (longer than 4 characters)
-            final words = description
-                .split(' ')
-                .where((word) => word.length > 4)
-                .map((word) => word.replaceAll(RegExp(r'[^\w\s]'), ''))
-                .toList();
-            keyTerms.addAll(words);
-          }
-        }
-      }
-    }
-
-    // Extract terms from tracks
-    for (final entry in mcpData.entries) {
-      if (entry.key.contains('Track for goal')) {
-        final track = entry.value as Map<String, dynamic>;
-        if (track['name'] != null) {
-          keyTerms.add(track['name'] as String);
-        }
-
-        if (track['challenges'] != null) {
-          final challenges = track['challenges'] as List<dynamic>;
-          for (final challenge in challenges) {
-            if (challenge['name'] != null) {
-              keyTerms.add(challenge['name'] as String);
-            }
-          }
-        }
-      }
-    }
-
-    // Extract terms from habits
-    for (final entry in mcpData.entries) {
-      if (entry.key.contains('Habits for challenge') ||
-          entry.key.contains('Recommended habits')) {
-        final habits = entry.value as List<dynamic>;
-        for (final habit in habits) {
-          if (habit['description'] != null) {
-            final description = habit['description'] as String;
-            // Extract significant words (longer than 4 characters)
-            final words = description
-                .split(' ')
-                .where((word) => word.length > 4)
-                .map((word) => word.replaceAll(RegExp(r'[^\w\s]'), ''))
-                .toList();
-            keyTerms.addAll(words);
-          }
-        }
-      }
-    }
-
-    return keyTerms.toList();
-  }
-
-  // Helper method to add a validation warning to the response
-  String _addValidationWarning(String response, String reason) {
-    // Add a warning at the end of the response
-    return '$response\n\n[SYSTEM WARNING: This response may not be based on specialist-created content. $reason]';
-  }
+  // Note: Legacy LifePlan validation methods removed
 
   // Method to clear conversation history
   void clearConversation() {
@@ -535,6 +285,72 @@ class ClaudeService {
   // Getter for conversation history
   List<Map<String, dynamic>> get conversationHistory =>
       List.unmodifiable(_conversationHistory);
+
+  /// Process MCP commands in the AI's response and replace them with results
+  ///
+  /// Looks for JSON commands like {"action": "get_current_time"} in the AI's response,
+  /// executes them via SystemMCP, and replaces the commands with the results.
+  Future<String> _processMCPCommands(String message) async {
+    if (_systemMCP == null) {
+      return message;
+    }
+
+    // Look for JSON MCP commands in the message with multiple patterns
+    final patterns = [
+      RegExp(r'\{"action":\s*"([^"]+)"[^}]*\}'), // Standard format
+      RegExp(
+          r'\{["\x27]action["\x27]:\s*["\x27]([^"\x27]+)["\x27][^}]*\}'), // Alternative quotes
+    ];
+
+    List<RegExpMatch> allMatches = [];
+    for (final pattern in patterns) {
+      allMatches.addAll(pattern.allMatches(message));
+    }
+
+    _logger.debug(
+        'Looking for MCP commands in: ${message.substring(0, message.length > 100 ? 100 : message.length)}...');
+
+    if (allMatches.isEmpty) {
+      _logger.debug(
+          'No MCP commands found - AI did not call get_current_time function');
+      return message;
+    }
+
+    String processedMessage = message;
+
+    for (final match in allMatches) {
+      final command = match.group(0)!;
+      final action = match.group(1)!;
+
+      try {
+        _logger.debug('Processing MCP command in AI response: $command');
+        final result = _systemMCP!.processCommand(command);
+        final data = jsonDecode(result);
+
+        if (data['status'] == 'success' && action == 'get_current_time') {
+          final timeData = data['data'];
+          final readableTime = timeData['readableTime'];
+          final timeOfDay = timeData['timeOfDay'];
+
+          // Replace the JSON command with a natural time response
+          processedMessage = processedMessage.replaceFirst(
+              command, 'It is currently $readableTime ($timeOfDay).');
+
+          _logger.info('Replaced MCP command with time: $readableTime');
+        } else {
+          // Remove the command if it failed
+          processedMessage = processedMessage.replaceFirst(command, '');
+          _logger.warning('MCP command failed: $result');
+        }
+      } catch (e) {
+        _logger.error('Error processing MCP command: $e');
+        // Remove the failed command
+        processedMessage = processedMessage.replaceFirst(command, '');
+      }
+    }
+
+    return processedMessage.trim();
+  }
 
   /// Get the timestamp of the last message from storage
   ///

@@ -21,8 +21,7 @@ dependencies:
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   path: ^1.8.3
-  # CSV parsing
-  csv: ^5.1.1
+  # Note: CSV dependency removed with LifePlan cleanup
   # Sharing functionality for chat export
   share_plus: ^7.2.2
   # Date/time formatting for export
@@ -48,10 +47,7 @@ flutter:
   assets:
     - .env
     - assets/images/avatar.png
-    - assets/data/Objetivos.csv
-    - assets/data/habitos.csv
-    - assets/data/Trilhas.csv
-    - assets/data/habit-assistant-prompt-v13.json
+    # Note: LifePlan data assets removed
     - assets/config/
     - assets/config/oracle/
     - assets/prompts/

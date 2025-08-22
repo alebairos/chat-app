@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/utils/logger.dart';
-import 'package:character_ai_clone/services/life_plan_service.dart';
+// Note: LifePlan service removed during cleanup
 import 'package:character_ai_clone/services/claude_service.dart';
 import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -22,10 +22,7 @@ Future<void> mockMainStartup() async {
     return null;
   });
 
-  // Initialize services with logging settings
-  final lifePlanService = LifePlanService();
-  lifePlanService.setLogging(true);
-  lifePlanService.setStartupLogging(false);
+  // Note: LifePlan service initialization removed during cleanup
 
   // Initialize Claude service
   final claudeService = ClaudeService();
@@ -93,10 +90,7 @@ void main() {
         logger.info('Starting application');
         logger.logStartup('Application startup initiated');
 
-        // Initialize services with logging settings
-        final lifePlanService = LifePlanService();
-        lifePlanService.setLogging(true);
-        lifePlanService.setStartupLogging(true);
+        // Note: LifePlan service initialization removed during cleanup
 
         // Verify both regular and startup logs appear
         expect(

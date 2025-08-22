@@ -4,17 +4,17 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/services/life_plan_mcp_service.dart';
+import 'package:character_ai_clone/services/system_mcp_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'claude_service_test.mocks.dart';
 
-@GenerateMocks([http.Client, LifePlanMCPService])
+@GenerateMocks([http.Client, SystemMCPService])
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  print('\n🚀 Starting Life Plan MCP Integration Tests');
+  print('\n🚀 Starting System MCP Integration Tests');
 
   late MockClient mockClient;
-  late MockLifePlanMCPService mockMCP;
+  late MockSystemMCPService mockMCP;
   late ClaudeService service;
 
   setUpAll(() {
@@ -29,34 +29,33 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
   setUp(() {
     print('\n🔄 Setting up test case...');
     mockClient = MockClient();
-    mockMCP = MockLifePlanMCPService();
+    mockMCP = MockSystemMCPService();
     service = ClaudeService(
       client: mockClient,
-      lifePlanMCP: mockMCP,
+      systemMCP: mockMCP,
     );
     print('✓ Mock client and MCP service initialized');
     print('✓ Claude service created with mock dependencies');
   });
 
-  group('Life Plan MCP Integration', () {
-    test('processes life plan commands through MCP', () async {
-      print('\n🧪 Testing life plan command processing...');
-      final command =
-          json.encode({'action': 'get_goals_by_dimension', 'dimension': 'SF'});
+  group('System MCP Integration', () {
+    test('processes system commands through MCP', () async {
+      print('\n🧪 Testing system command processing...');
+      final command = json.encode({'action': 'get_current_time'});
       print('📤 Sending command: $command');
 
       when(mockMCP.processCommand(command)).thenAnswer((_) {
         print('📡 Mock MCP processing command');
         final response = json.encode({
           'status': 'success',
-          'data': [
-            {
-              'dimension': 'SF',
-              'id': 'G1',
-              'description': 'Test Goal',
-              'trackId': 'T1'
-            }
-          ]
+          'data': {
+            'timestamp': '2024-01-18T15:30:45.123Z',
+            'hour': 15,
+            'minute': 30,
+            'dayOfWeek': 'Thursday',
+            'timeOfDay': 'afternoon',
+            'readableTime': 'Thursday, January 18, 2024 at 3:30 PM'
+          }
         });
         print('📥 MCP response: $response');
         return response;
@@ -109,9 +108,8 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       final response = await service.sendMessage(command);
       print('📥 Service response received: $response');
 
-      expect(response, contains('Missing required parameter'),
-          reason:
-              'Response should contain error message about missing parameter');
+      expect(response, contains('Error processing system command'),
+          reason: 'Response should contain error message about MCP failure');
       expect(response, contains('MCP Error'),
           reason: 'Response should contain MCP error message');
       print('✓ Test completed successfully');

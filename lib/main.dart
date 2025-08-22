@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/chat_screen.dart';
 import 'screens/character_selection_screen.dart';
 import 'utils/logger.dart';
-import 'services/life_plan_service.dart';
+
 import 'config/config_loader.dart';
 
 Future<void> main() async {
@@ -19,10 +19,7 @@ Future<void> main() async {
 
   await dotenv.load(fileName: '.env');
 
-  // Initialize services with logging settings
-  final lifePlanService = LifePlanService();
-  lifePlanService.setLogging(true);
-  lifePlanService.setStartupLogging(false);
+  // Note: LifePlan service initialization removed
 
   runApp(const ChatApp());
 }

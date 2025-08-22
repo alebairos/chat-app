@@ -1,4 +1,6 @@
+import 'dart:convert';
 import '../utils/logger.dart';
+import 'system_mcp_service.dart';
 
 /// Enumeration of different time gaps between conversations
 enum TimeGap {
@@ -109,18 +111,7 @@ class TimeContextService {
   ///
   /// Returns a string with current day of week and time period
   /// Example: "Current context: It is Wednesday afternoon."
-  static String getCurrentTimeContext() {
-    try {
-      final now = DateTime.now();
-      final dayOfWeek = _getDayOfWeekName(now.weekday);
-      final timeOfDay = _getTimeOfDay(now.hour);
-
-      return 'Current context: It is $dayOfWeek $timeOfDay.';
-    } catch (e) {
-      _logger.error('Error generating current time context: $e');
-      return ''; // Safe fallback
-    }
-  }
+  /// Note: This method is deprecated, use the enhanced version below
 
   /// Get human-readable day of week name
   ///
@@ -143,6 +134,23 @@ class TimeContextService {
       return 'evening';
     } else {
       return 'night';
+    }
+  }
+
+  /// Generate current time context string
+  ///
+  /// Returns formatted string with current day, time, and period information
+  static String getCurrentTimeContext() {
+    try {
+      final now = DateTime.now();
+      final dayName = _getDayOfWeekName(now.weekday);
+      final timeOfDay = _getTimeOfDay(now.hour);
+      final time12Hour = _formatTime12Hour(now.hour, now.minute);
+
+      return 'Current context: It is $dayName at $time12Hour ($timeOfDay).';
+    } catch (e) {
+      _logger.error('Error generating current time context: $e');
+      return 'Current context: It is ${_getDayOfWeekName(DateTime.now().weekday)}.';
     }
   }
 
@@ -195,6 +203,196 @@ class TimeContextService {
       _logger.error('Error generating enhanced time context: $e');
       return generateTimeContext(lastMessageTime); // Fallback to basic context
     }
+  }
+
+  /// Generate enhanced time context with precise calculations
+  ///
+  /// This method integrates with SystemMCP get_current_time for precise
+  /// time calculations when gaps are >= 4 hours (FT-060 enhancement).
+  ///
+  /// [lastMessageTime] - Optional timestamp of last message
+  /// Returns enhanced context string with precise durations and current time
+  static String generatePreciseTimeContext(DateTime? lastMessageTime) {
+    try {
+      _logger.debug('FT-060: Generating precise time context');
+
+      // Get precise current time data from SystemMCP
+      final currentTimeData = _getCurrentTimeData();
+      if (currentTimeData == null) {
+        _logger.warning(
+            'FT-060: Could not get current time data, falling back to basic context');
+        return generateTimeContext(lastMessageTime);
+      }
+
+      if (lastMessageTime == null) {
+        return _formatEnhancedCurrentTimeContext(currentTimeData);
+      }
+
+      final gap = calculateTimeGap(lastMessageTime);
+
+      // Use precise calculations for longer gaps (>= 4 hours)
+      if (_shouldUsePreciseCalculations(gap)) {
+        _logger.info('FT-060: 🎯 Using PRECISE time context for gap: $gap');
+        return _generatePreciseGapContext(lastMessageTime, currentTimeData);
+      }
+
+      // Fall back to existing behavior for short gaps
+      _logger.debug(
+          'FT-060: 📝 Using BASIC time context for gap: $gap (< 4 hours)');
+      return generateTimeContext(lastMessageTime);
+    } catch (e) {
+      _logger.error('FT-060: Error generating precise time context: $e');
+      return generateTimeContext(lastMessageTime); // Safe fallback
+    }
+  }
+
+  /// Determine if precise calculations should be used for the time gap
+  ///
+  /// [gap] - The calculated time gap
+  /// Returns true if gap warrants precise duration calculations
+  static bool _shouldUsePreciseCalculations(TimeGap gap) {
+    return gap == TimeGap.recentBreak ||
+        gap == TimeGap.today ||
+        gap == TimeGap.yesterday ||
+        gap == TimeGap.thisWeek ||
+        gap == TimeGap.lastWeek ||
+        gap == TimeGap.longAgo;
+  }
+
+  /// Get current time data from SystemMCP service
+  ///
+  /// Returns parsed time data map or null if unavailable
+  static Map<String, dynamic>? _getCurrentTimeData() {
+    try {
+      final mcpService = SystemMCPService();
+      final response =
+          mcpService.processCommand('{"action":"get_current_time"}');
+
+      // Log the complete raw response
+      _logger.debug('FT-060: get_current_time raw response: $response');
+
+      final decoded = json.decode(response);
+
+      if (decoded['status'] == 'success') {
+        final timeData = decoded['data'] as Map<String, dynamic>;
+
+        // Log the structured time data for visibility
+        _logger.info('FT-060: ⏰ Current time data retrieved:');
+        _logger.info(
+            '  📅 Date: ${timeData['dayOfWeek']}, ${timeData['readableTime']}');
+        _logger.info(
+            '  🕐 Time: ${timeData['hour']}:${timeData['minute'].toString().padLeft(2, '0')}:${timeData['second'].toString().padLeft(2, '0')} (${timeData['timeOfDay']})');
+        _logger.info('  🌍 Timezone: ${timeData['timezone']}');
+        _logger.info('  📊 Unix timestamp: ${timeData['unixTimestamp']}');
+        _logger.info('  🔧 ISO8601: ${timeData['iso8601']}');
+
+        return timeData;
+      } else {
+        _logger.warning(
+            'FT-060: SystemMCP get_current_time returned error: ${decoded['message']}');
+        return null;
+      }
+    } catch (e) {
+      _logger.error('FT-060: Error getting current time data: $e');
+      return null;
+    }
+  }
+
+  /// Generate precise gap context using exact duration calculations
+  ///
+  /// [lastMessageTime] - Timestamp of last message
+  /// [currentTimeData] - Current time data from SystemMCP
+  /// Returns formatted context with precise duration and current time
+  static String _generatePreciseGapContext(
+      DateTime lastMessageTime, Map<String, dynamic> currentTimeData) {
+    try {
+      final now = DateTime.parse(currentTimeData['timestamp']);
+      final difference = now.difference(lastMessageTime);
+      final gap = calculateTimeGap(lastMessageTime);
+
+      final contextParts = <String>[];
+
+      // Add precise gap context
+      final baseContext = _contextTemplates[gap] ?? '';
+      if (baseContext.isNotEmpty) {
+        final preciseDuration = _formatPreciseDuration(difference);
+        final enhancedContext =
+            baseContext.replaceFirst('.', ' ($preciseDuration ago).');
+        contextParts.add(enhancedContext);
+      }
+
+      // Add enhanced current time context
+      final currentContext = _formatEnhancedCurrentTimeContext(currentTimeData);
+      if (currentContext.isNotEmpty) {
+        contextParts.add(currentContext);
+      }
+
+      return contextParts.join('\n');
+    } catch (e) {
+      _logger.error('FT-060: Error generating precise gap context: $e');
+      return generateTimeContext(lastMessageTime); // Safe fallback
+    }
+  }
+
+  /// Format enhanced current time context with precise time
+  ///
+  /// [timeData] - Current time data from SystemMCP
+  /// Returns formatted current time context with exact time
+  static String _formatEnhancedCurrentTimeContext(
+      Map<String, dynamic> timeData) {
+    try {
+      final dayOfWeek = timeData['dayOfWeek'] as String;
+      final hour = timeData['hour'] as int;
+      final minute = timeData['minute'] as int;
+      final timeOfDay = timeData['timeOfDay'] as String;
+
+      // Format as "It is Wednesday at 2:47 PM."
+      final timeString = _formatTime12Hour(hour, minute);
+      return 'Current context: It is $dayOfWeek at $timeString.';
+    } catch (e) {
+      _logger
+          .error('FT-060: Error formatting enhanced current time context: $e');
+      return getCurrentTimeContext(); // Fallback to basic context
+    }
+  }
+
+  /// Format precise duration in human-readable format
+  ///
+  /// [duration] - Duration to format
+  /// Returns formatted duration string (e.g., "2 days and 3 hours")
+  static String _formatPreciseDuration(Duration duration) {
+    if (duration.inDays >= 1) {
+      final days = duration.inDays;
+      final hours = duration.inHours % 24;
+      if (hours > 0) {
+        return '$days day${days == 1 ? '' : 's'} and $hours hour${hours == 1 ? '' : 's'}';
+      } else {
+        return '$days day${days == 1 ? '' : 's'}';
+      }
+    } else if (duration.inHours >= 1) {
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes % 60;
+      if (minutes > 0) {
+        return '$hours hour${hours == 1 ? '' : 's'} and $minutes minute${minutes == 1 ? '' : 's'}';
+      } else {
+        return '$hours hour${hours == 1 ? '' : 's'}';
+      }
+    } else {
+      final minutes = duration.inMinutes;
+      return '$minutes minute${minutes == 1 ? '' : 's'}';
+    }
+  }
+
+  /// Format time in 12-hour format with AM/PM
+  ///
+  /// [hour] - 24-hour format hour (0-23)
+  /// [minute] - Minute (0-59)
+  /// Returns formatted time string (e.g., "2:47 PM")
+  static String _formatTime12Hour(int hour, int minute) {
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    final minuteString = minute.toString().padLeft(2, '0');
+    return '$displayHour:$minuteString $period';
   }
 
   /// Validate and sanitize timestamp input
