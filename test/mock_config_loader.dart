@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
 
 class MockConfigLoader extends ConfigLoader {
   static final String _defaultSystemPrompt = json.encode({

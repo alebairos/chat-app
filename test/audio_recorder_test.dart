@@ -4,7 +4,7 @@ import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import 'package:character_ai_clone/widgets/audio_recorder.dart';
+import 'package:ai_personas_app/widgets/audio_recorder.dart';
 
 @GenerateMocks([Record, AudioPlayer])
 import 'audio_recorder_test.mocks.dart';

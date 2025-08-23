@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/services/language_detection_service.dart';
+import 'package:ai_personas_app/services/language_detection_service.dart';
 
 void main() {
   group('LanguageDetectionService', () {

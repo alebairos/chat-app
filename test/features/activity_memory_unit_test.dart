@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/services/oracle_activity_parser.dart';
-import 'package:character_ai_clone/services/system_mcp_service.dart';
+import 'package:ai_personas_app/services/oracle_activity_parser.dart';
+import 'package:ai_personas_app/services/system_mcp_service.dart';
 import 'dart:convert';
 
 void main() {

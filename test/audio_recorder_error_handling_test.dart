@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:character_ai_clone/widgets/audio_recorder.dart';
+import 'package:ai_personas_app/widgets/audio_recorder.dart';
 
 void main() {
   testWidgets('error messages have consistent red background color',

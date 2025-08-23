@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/screens/stats_screen.dart';
-import 'package:character_ai_clone/services/activity_memory_service.dart';
+import 'package:ai_personas_app/screens/stats_screen.dart';
+import 'package:ai_personas_app/services/activity_memory_service.dart';
 
 void main() {
   group('StatsScreen', () {

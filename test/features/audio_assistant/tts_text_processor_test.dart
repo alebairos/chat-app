@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/features/audio_assistant/services/tts_text_processor.dart';
+import 'package:ai_personas_app/features/audio_assistant/services/tts_text_processor.dart';
 
 void main() {
   group('TTSTextProcessor', () {

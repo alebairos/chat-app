@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:character_ai_clone/screens/chat_screen.dart';
-import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/services/chat_storage_service.dart';
-import 'package:character_ai_clone/services/transcription_service.dart';
-import 'package:character_ai_clone/models/claude_audio_response.dart';
-import 'package:character_ai_clone/models/chat_message_model.dart';
-import 'package:character_ai_clone/models/message_type.dart';
-import 'package:character_ai_clone/widgets/chat_input.dart';
+import 'package:ai_personas_app/screens/chat_screen.dart';
+import 'package:ai_personas_app/services/claude_service.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/services/transcription_service.dart';
+import 'package:ai_personas_app/models/claude_audio_response.dart';
+import 'package:ai_personas_app/models/chat_message_model.dart';
+import 'package:ai_personas_app/models/message_type.dart';
+import 'package:ai_personas_app/widgets/chat_input.dart';
 
 class MockClaudeService extends Mock implements ClaudeService {
   bool _hasBeenInitialized = false;
@@ -96,7 +96,7 @@ void main() {
 
     registerFallbackValue(DateTime.now());
     registerFallbackValue(MessageType.audio);
-    registerFallbackValue(Duration(seconds: 10));
+    registerFallbackValue(const Duration(seconds: 10));
   });
 
   testWidgets('ChatScreen initializes Claude service with audio enabled',

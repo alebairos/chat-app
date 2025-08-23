@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import '../../../../lib/services/claude_service.dart';
-import '../../../../lib/features/audio_assistant/tts_service.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
-import '../../../../lib/models/claude_audio_response.dart';
+import 'package:ai_personas_app/services/claude_service.dart';
+import 'package:ai_personas_app/features/audio_assistant/tts_service.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
+import 'package:ai_personas_app/models/claude_audio_response.dart';
 import '../../../mocks/mock_client.dart';
 import '../../../mocks/mock_config_loader.dart';
 

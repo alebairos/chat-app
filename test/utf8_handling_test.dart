@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:character_ai_clone/widgets/chat_input.dart';
-import 'package:character_ai_clone/services/chat_storage_service.dart';
-import 'package:character_ai_clone/models/message_type.dart';
+import 'package:ai_personas_app/widgets/chat_input.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/models/message_type.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:isar/isar.dart';
 import 'dart:io';

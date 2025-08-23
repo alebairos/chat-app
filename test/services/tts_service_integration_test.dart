@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/features/audio_assistant/tts_service.dart';
-import 'package:character_ai_clone/services/tts_preprocessing_service.dart';
-import 'package:character_ai_clone/services/language_detection_service.dart';
+import 'package:ai_personas_app/features/audio_assistant/tts_service.dart';
+import 'package:ai_personas_app/services/tts_preprocessing_service.dart';
+import 'package:ai_personas_app/services/language_detection_service.dart';
 
 void main() {
   group('TTS Service Integration Tests', () {
@@ -257,7 +257,7 @@ void main() {
         final audioPath1 = await ttsService.generateAudio(inputText);
 
         // Add a small delay to ensure different timestamps
-        await Future.delayed(Duration(milliseconds: 10));
+        await Future.delayed(const Duration(milliseconds: 10));
 
         final audioPath2 = await ttsService.generateAudio(inputText);
 

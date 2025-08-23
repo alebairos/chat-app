@@ -4,7 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'package:character_ai_clone/utils/path_utils.dart';
+import 'package:ai_personas_app/utils/path_utils.dart';
 
 // Mock classes
 class MockFile extends Mock implements File {}

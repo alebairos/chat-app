@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
-import 'package:character_ai_clone/config/character_config_manager.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
+import 'package:ai_personas_app/config/character_config_manager.dart';
 
 // Create a mock of the CharacterConfigManager
 class MockCharacterConfigManager extends Mock

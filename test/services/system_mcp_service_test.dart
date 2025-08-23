@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/services/system_mcp_service.dart';
+import 'package:ai_personas_app/services/system_mcp_service.dart';
 
 void main() {
   group('SystemMCPService', () {
@@ -57,7 +57,7 @@ void main() {
       });
 
       test('should return error for invalid JSON', () async {
-        final command = 'not valid json';
+        const command = 'not valid json';
         final response = await service.processCommand(command);
 
         final decoded = json.decode(response);

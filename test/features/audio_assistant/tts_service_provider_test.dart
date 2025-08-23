@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/features/audio_assistant/tts_service.dart';
+import 'package:ai_personas_app/features/audio_assistant/tts_service.dart';
 
 void main() {
   late AudioAssistantTTSService ttsService;

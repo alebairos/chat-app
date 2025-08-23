@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
-import 'package:character_ai_clone/models/activity_model.dart';
-import 'package:character_ai_clone/services/activity_memory_service.dart';
-import 'package:character_ai_clone/services/integrated_mcp_processor.dart';
-import 'package:character_ai_clone/services/oracle_context_manager.dart';
+import 'package:ai_personas_app/models/activity_model.dart';
+import 'package:ai_personas_app/services/activity_memory_service.dart';
+import 'package:ai_personas_app/services/integrated_mcp_processor.dart';
+import 'package:ai_personas_app/services/oracle_context_manager.dart';
 
 /// FT-064 Database Integration Test
 /// 

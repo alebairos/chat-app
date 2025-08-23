@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:character_ai_clone/features/audio_assistant/tts_service.dart';
+import 'package:ai_personas_app/features/audio_assistant/tts_service.dart';
 
 class MockAudioAssistantTTSService extends Mock
     implements AudioAssistantTTSService {

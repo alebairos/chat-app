@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:character_ai_clone/features/audio_assistant/services/audio_playback_manager.dart';
-import 'package:character_ai_clone/features/audio_assistant/services/audio_playback.dart';
-import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
-import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
+import 'package:ai_personas_app/features/audio_assistant/services/audio_playback.dart';
+import 'package:ai_personas_app/features/audio_assistant/models/audio_file.dart';
+import 'package:ai_personas_app/features/audio_assistant/models/playback_state.dart';
 
 // Mock classes
 class MockAudioPlayback extends Mock implements AudioPlayback {}

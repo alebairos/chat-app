@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/services/chat_storage_service.dart';
-import 'package:character_ai_clone/models/chat_message_model.dart';
-import 'package:character_ai_clone/models/message_type.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:ai_personas_app/services/claude_service.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/models/chat_message_model.dart';
+import 'package:ai_personas_app/models/message_type.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';

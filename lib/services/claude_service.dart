@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
 
 import 'system_mcp_service.dart';
 import '../utils/logger.dart';

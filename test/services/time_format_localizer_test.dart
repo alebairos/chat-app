@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/services/time_format_localizer.dart';
+import 'package:ai_personas_app/services/time_format_localizer.dart';
 
 void main() {
   group('TimeFormatLocalizer', () {

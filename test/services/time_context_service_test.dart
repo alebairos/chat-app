@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/services/time_context_service.dart';
+import 'package:ai_personas_app/services/time_context_service.dart';
 
 void main() {
   group('TimeContextService', () {

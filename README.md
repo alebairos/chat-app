@@ -9,6 +9,7 @@ A Flutter chat app with AI personas, voice features, and activity tracking.
 - **Personas**: Ari (Life Coach), Sergeant Oracle, I-There
 - **Stats**: Activity tracking and insights
 - **Storage**: Local message and audio storage
+- **MCP Integration**: Local data processing with intelligent persona responses
 
 ## Quick Start
 
@@ -33,11 +34,20 @@ A Flutter chat app with AI personas, voice features, and activity tracking.
 - **Sergeant Oracle**: Energetic Roman gym coach
 - **I-There**: AI clone with dimensional knowledge
 
+## Recent Updates
+
+### FT-078: Persona-Aware MCP Data Integration ✅
+- **Natural Intelligence**: Removed hardcoded rules for authentic persona responses
+- **Zero Contradictions**: AI now sees full context (persona + Oracle + time + MCP data)
+- **Language Agnostic**: Works seamlessly in any language
+- **Foundation Ready**: Enables future proactive AI features (FT-073, FT-074, FT-075, FT-076)
+
 ## Development
 
 - **Tests**: 500+ tests with 95%+ pass rate
 - **Architecture**: Clean Flutter with Isar database
 - **Audio**: Provider-based TTS with emotional preprocessing
+- **MCP**: Local Model Context Protocol for privacy-preserving data integration
 
 ## Version
 

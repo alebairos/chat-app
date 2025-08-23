@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/utils/logger.dart';
+import 'package:ai_personas_app/utils/logger.dart';
 import 'dart:async';
 
 void main() {

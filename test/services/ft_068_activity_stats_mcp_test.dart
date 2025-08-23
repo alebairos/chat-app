@@ -2,9 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'dart:convert';
 
-import '../../lib/services/activity_memory_service.dart';
-import '../../lib/services/system_mcp_service.dart';
-import '../../lib/models/activity_model.dart';
+import 'package:ai_personas_app/services/activity_memory_service.dart';
+import 'package:ai_personas_app/services/system_mcp_service.dart';
+import 'package:ai_personas_app/models/activity_model.dart';
 
 void main() {
   group('FT-068 Activity Stats MCP Command', () {
@@ -34,7 +34,7 @@ void main() {
 
     test('should return empty stats when no activities exist', () async {
       // Test MCP command with empty database
-      final command = '{"action": "get_activity_stats"}';
+      const command = '{"action": "get_activity_stats"}';
       final result = await mcpService.processCommand(command);
 
       final response = json.decode(result);
@@ -65,7 +65,7 @@ void main() {
       );
 
       // Test MCP command
-      final command = '{"action": "get_activity_stats"}';
+      const command = '{"action": "get_activity_stats"}';
       final result = await mcpService.processCommand(command);
 
       final response = json.decode(result);
@@ -102,7 +102,7 @@ void main() {
       );
 
       // Test with days parameter
-      final command = '{"action": "get_activity_stats", "days": 7}';
+      const command = '{"action": "get_activity_stats", "days": 7}';
       final result = await mcpService.processCommand(command);
 
       final response = json.decode(result);
@@ -135,7 +135,7 @@ void main() {
         source: 'Test',
       );
 
-      final command = '{"action": "get_activity_stats"}';
+      const command = '{"action": "get_activity_stats"}';
       final result = await mcpService.processCommand(command);
 
       final response = json.decode(result);
@@ -150,7 +150,7 @@ void main() {
     });
 
     test('should handle invalid commands gracefully', () async {
-      final command = '{"action": "get_activity_stats", "days": "invalid"}';
+      const command = '{"action": "get_activity_stats", "days": "invalid"}';
       final result = await mcpService.processCommand(command);
 
       // When parsing fails, days will be null and default to 1
@@ -160,7 +160,7 @@ void main() {
     });
 
     test('should handle missing action parameter', () async {
-      final command = '{"days": 7}';
+      const command = '{"days": 7}';
       final result = await mcpService.processCommand(command);
 
       final response = json.decode(result);
@@ -177,7 +177,7 @@ void main() {
         source: 'Test',
       );
 
-      final command = '{"action": "get_activity_stats"}';
+      const command = '{"action": "get_activity_stats"}';
       final result = await mcpService.processCommand(command);
 
       final response = json.decode(result);

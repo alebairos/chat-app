@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:character_ai_clone/services/chat_storage_service.dart';
-import 'package:character_ai_clone/models/message_type.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/models/message_type.dart';
 import 'dart:typed_data';
 import 'dart:io';
 

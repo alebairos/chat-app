@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:character_ai_clone/widgets/chat_message.dart';
+import 'package:ai_personas_app/widgets/chat_message.dart';
 
 void main() {
   group('ChatMessage Persona Icons', () {

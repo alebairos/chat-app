@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/widgets/stats/activity_card.dart';
+import 'package:ai_personas_app/widgets/stats/activity_card.dart';
 
 void main() {
   group('ActivityCard', () {

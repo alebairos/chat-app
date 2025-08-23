@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/features/audio_assistant/models/audio_file.dart';
-import 'package:character_ai_clone/features/audio_assistant/models/playback_state.dart';
+import 'package:ai_personas_app/features/audio_assistant/models/audio_file.dart';
+import 'package:ai_personas_app/features/audio_assistant/models/playback_state.dart';
 
 void main() {
   group('AudioFile Model', () {
     test('should create AudioFile with required parameters', () {
       const audioFile = AudioFile(
         path: 'audio/test.mp3',
-        duration: const Duration(seconds: 30),
+        duration: Duration(seconds: 30),
       );
 
       expect(audioFile.path, 'audio/test.mp3');
@@ -34,7 +34,7 @@ void main() {
     test('should create a copy with updated values', () {
       const audioFile = AudioFile(
         path: 'audio/test.mp3',
-        duration: const Duration(seconds: 30),
+        duration: Duration(seconds: 30),
       );
 
       final updatedFile = audioFile.copyWith(
@@ -71,7 +71,7 @@ void main() {
     test('should correctly encode and decode', () {
       const original = AudioFile(
         path: 'audio/test.mp3',
-        duration: const Duration(seconds: 30),
+        duration: Duration(seconds: 30),
         transcription: 'Test transcription',
       );
 
@@ -86,21 +86,21 @@ void main() {
     test('equality should work correctly', () {
       const file1 = AudioFile(
         path: 'audio/test.mp3',
-        duration: const Duration(seconds: 30),
+        duration: Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],
         transcription: 'Test',
       );
 
       const file2 = AudioFile(
         path: 'audio/test.mp3',
-        duration: const Duration(seconds: 30),
+        duration: Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],
         transcription: 'Test',
       );
 
       const file3 = AudioFile(
         path: 'audio/different.mp3',
-        duration: const Duration(seconds: 30),
+        duration: Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],
         transcription: 'Test',
       );
@@ -112,7 +112,7 @@ void main() {
     test('toString should include path, duration and data length', () {
       const file = AudioFile(
         path: 'audio/test.mp3',
-        duration: const Duration(seconds: 30),
+        duration: Duration(seconds: 30),
         waveformData: [0.1, 0.5, 0.3],
         transcription: 'This is a long transcription that should be truncated',
       );

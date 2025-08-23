@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
-import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/services/system_mcp_service.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:ai_personas_app/services/claude_service.dart';
+import 'package:ai_personas_app/services/system_mcp_service.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Replace Mockito mocks with Mocktail mocks

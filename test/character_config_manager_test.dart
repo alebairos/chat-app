@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/config/character_config_manager.dart';
+import 'package:ai_personas_app/config/character_config_manager.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

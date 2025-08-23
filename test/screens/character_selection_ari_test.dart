@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/screens/character_selection_screen.dart';
-import '../../lib/config/character_config_manager.dart';
+import 'package:ai_personas_app/screens/character_selection_screen.dart';
+import 'package:ai_personas_app/config/character_config_manager.dart';
 
 void main() {
   group('CharacterSelectionScreen - Basic Tests', () {

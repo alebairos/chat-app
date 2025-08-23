@@ -1,8 +1,8 @@
-name: character_ai_clone
-description: A Character.ai clone app
+name: ai_personas_app
+description: AI personas app
 publish_to: 'none'
 
-version: 1.1.0+7
+version: 1.1.0+9
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -52,4 +52,3 @@ flutter:
     # Note: LifePlan data assets removed
     - assets/config/
     - assets/config/oracle/
-    - assets/prompts/

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:character_ai_clone/widgets/chat_message.dart';
-import 'package:character_ai_clone/widgets/audio_message.dart';
+import 'package:ai_personas_app/widgets/chat_message.dart';
+import 'package:ai_personas_app/widgets/audio_message.dart';
 import 'helpers/test_messages.dart';
 import 'package:mockito/mockito.dart';
 

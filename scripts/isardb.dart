@@ -2,13 +2,12 @@ import 'dart:io';
 
 // Adjust the import path based on your project structure.
 // This assumes 'scripts' is at the root of your Flutter project.
-import 'package:character_ai_clone/services/chat_storage_service.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
 // If running as a pure Dart script (not via Flutter tools) and Isar native libraries are not found,
 // you might need to uncomment and use the following:
 import 'package:isar/isar.dart'; // For Isar.initializeIsarCore
-import 'package:path_provider/path_provider.dart'; // Potentially, if ChatStorageService is modified
-import 'package:path/path.dart'
-    as path; // Potentially, if ChatStorageService is modified
+// Potentially, if ChatStorageService is modified
+// Potentially, if ChatStorageService is modified
 
 void main(List<String> args) async {
   if (args.isEmpty || args[0].toLowerCase() != 'clean') {

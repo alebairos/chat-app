@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/services/system_mcp_service.dart';
+import 'package:ai_personas_app/services/claude_service.dart';
+import 'package:ai_personas_app/services/system_mcp_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../mock_config_loader.dart';
 import 'claude_service_integration_test.mocks.dart';
@@ -110,7 +110,7 @@ void main() {
     test('processes normal chat messages', () async {
       print('\n🧪 Testing normal message processing...');
 
-      final message = 'Hello, how are you?';
+      const message = 'Hello, how are you?';
       print('📤 Sending message: $message');
 
       final response = await claudeService.sendMessage(message);

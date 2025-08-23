@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
-import 'package:character_ai_clone/widgets/chat_message.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
+import 'package:ai_personas_app/widgets/chat_message.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {

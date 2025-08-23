@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/widgets/stats/stats_summary.dart';
+import 'package:ai_personas_app/widgets/stats/stats_summary.dart';
 
 void main() {
   group('StatsSummary', () {

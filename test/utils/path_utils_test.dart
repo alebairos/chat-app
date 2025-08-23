@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:mocktail/mocktail.dart';
 
-import 'package:character_ai_clone/utils/path_utils.dart';
+import 'package:ai_personas_app/utils/path_utils.dart';
 
 class MockDirectory extends Mock implements Directory {}
 

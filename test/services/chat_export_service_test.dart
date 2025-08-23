@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import '../../lib/services/chat_export_service.dart';
-import '../../lib/services/chat_storage_service.dart';
-import '../../lib/models/chat_message_model.dart';
-import '../../lib/models/message_type.dart';
+import 'package:ai_personas_app/services/chat_export_service.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/models/chat_message_model.dart';
+import 'package:ai_personas_app/models/message_type.dart';
 
 class MockChatStorageService extends Mock implements ChatStorageService {}
 

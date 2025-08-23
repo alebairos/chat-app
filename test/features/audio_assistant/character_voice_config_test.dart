@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/features/audio_assistant/services/character_voice_config.dart';
+import 'package:ai_personas_app/features/audio_assistant/services/character_voice_config.dart';
 
 void main() {
   group('CharacterVoiceConfig Tests', () {

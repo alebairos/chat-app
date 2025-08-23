@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:character_ai_clone/services/activity_memory_service.dart';
-import 'package:character_ai_clone/services/chat_storage_service.dart';
-import 'package:character_ai_clone/models/activity_model.dart';
-import 'package:isar/isar.dart';
+import 'package:ai_personas_app/services/activity_memory_service.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/models/activity_model.dart';
 
 void main() async {
   // Initialize Flutter binding

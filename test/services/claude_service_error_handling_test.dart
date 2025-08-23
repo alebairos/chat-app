@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/config/config_loader.dart';
+import 'package:ai_personas_app/services/claude_service.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 @GenerateMocks([http.Client, ConfigLoader])

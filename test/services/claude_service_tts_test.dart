@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:character_ai_clone/services/claude_service.dart';
-import 'package:character_ai_clone/models/claude_audio_response.dart';
+import 'package:ai_personas_app/services/claude_service.dart';
 import '../mocks/mock_audio_assistant_tts_service.dart';
 import '../mocks/mock_client.dart';
 import '../mocks/mock_config_loader.dart';
