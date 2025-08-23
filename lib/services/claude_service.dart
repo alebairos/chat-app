@@ -383,10 +383,14 @@ class ClaudeService {
             final readableTime = timeData['readableTime'];
             final timeOfDay = timeData['timeOfDay'];
 
-            // Replace the JSON command with a natural time response
+            // Create language-aware time response
+            final timeResponse = _createLocalizedTimeResponse(
+                readableTime, timeOfDay, processedMessage);
+
+            // Replace the JSON command with a localized time response
             processedMessage = processedMessage.replaceFirst(
               command,
-              'It is currently $readableTime ($timeOfDay).',
+              timeResponse,
             );
 
             _logger.info('Replaced MCP command with time: $readableTime');
@@ -574,5 +578,231 @@ class ClaudeService {
             .debug('FT-064: Background activity detection failed silently: $e');
       }
     }();
+  }
+
+  /// Create localized time response based on conversation language (FT-081)
+  ///
+  /// Detects the conversation language and formats time response accordingly
+  /// to avoid mixing English and Portuguese in the same response.
+  String _createLocalizedTimeResponse(
+      String readableTime, String timeOfDay, String context) {
+    try {
+      // Detect language from conversation context
+      final language = _detectLanguageFromContext(context);
+
+      switch (language) {
+        case 'pt_BR':
+          return _createPortugueseTimeResponse(readableTime, timeOfDay);
+        case 'en_US':
+          return _createEnglishTimeResponse(readableTime, timeOfDay);
+        default:
+          // Default to Portuguese (Brazilian market focus)
+          return _createPortugueseTimeResponse(readableTime, timeOfDay);
+      }
+    } catch (e) {
+      _logger.error('Error creating localized time response: $e');
+      // Fallback to Portuguese if localization fails
+      return _createPortugueseTimeResponse(readableTime, timeOfDay);
+    }
+  }
+
+  /// Detect language from conversation context
+  String _detectLanguageFromContext(String context) {
+    try {
+      // Extract text content for language analysis
+      // Remove MCP commands and focus on natural language
+      final cleanContext =
+          context.replaceAll(RegExp(r'\{"action":[^}]+\}'), '').trim();
+
+      if (cleanContext.isEmpty) {
+        return 'pt_BR'; // Default to Portuguese
+      }
+
+      // Simple language detection based on common Portuguese vs English patterns
+      final portugueseIndicators = [
+        'às',
+        'tome',
+        'cuidado',
+        'melhor',
+        'horário',
+        'depois',
+        'antes',
+        'energia',
+        'hoje',
+        'agora',
+        'que',
+        'como',
+        'para',
+        'seu',
+        'sua'
+      ];
+
+      final englishIndicators = [
+        'the',
+        'and',
+        'you',
+        'your',
+        'how',
+        'what',
+        'when',
+        'where',
+        'take',
+        'care',
+        'better',
+        'time',
+        'after',
+        'before',
+        'energy'
+      ];
+
+      int portugueseScore = 0;
+      int englishScore = 0;
+
+      final lowerContext = cleanContext.toLowerCase();
+
+      for (final indicator in portugueseIndicators) {
+        if (lowerContext.contains(indicator)) portugueseScore++;
+      }
+
+      for (final indicator in englishIndicators) {
+        if (lowerContext.contains(indicator)) englishScore++;
+      }
+
+      // Return language with higher score, default to Portuguese
+      return portugueseScore >= englishScore ? 'pt_BR' : 'en_US';
+    } catch (e) {
+      _logger.error('Error detecting language from context: $e');
+      return 'pt_BR'; // Safe fallback
+    }
+  }
+
+  /// Create Portuguese time response
+  String _createPortugueseTimeResponse(String readableTime, String timeOfDay) {
+    try {
+      // Localize time format for Portuguese
+      final localizedTime = _localizeTimeFormat(readableTime, 'pt_BR');
+      final localizedPeriod = _localizePeriod(timeOfDay, 'pt_BR');
+
+      return 'Atualmente são $localizedTime ($localizedPeriod).';
+    } catch (e) {
+      _logger.error('Error creating Portuguese time response: $e');
+      return 'Atualmente são $readableTime ($timeOfDay).';
+    }
+  }
+
+  /// Create English time response
+  String _createEnglishTimeResponse(String readableTime, String timeOfDay) {
+    return 'It is currently $readableTime ($timeOfDay).';
+  }
+
+  /// Localize time format for specific language
+  String _localizeTimeFormat(String englishTime, String language) {
+    if (language == 'pt_BR') {
+      try {
+        // Convert "Saturday, August 23, 2025 at 2:04 PM" to Portuguese format
+        String localized = englishTime;
+
+        // Day of week translations
+        final dayTranslations = {
+          'Monday': 'segunda-feira',
+          'Tuesday': 'terça-feira',
+          'Wednesday': 'quarta-feira',
+          'Thursday': 'quinta-feira',
+          'Friday': 'sexta-feira',
+          'Saturday': 'sábado',
+          'Sunday': 'domingo'
+        };
+
+        // Month translations
+        final monthTranslations = {
+          'January': 'janeiro',
+          'February': 'fevereiro',
+          'March': 'março',
+          'April': 'abril',
+          'May': 'maio',
+          'June': 'junho',
+          'July': 'julho',
+          'August': 'agosto',
+          'September': 'setembro',
+          'October': 'outubro',
+          'November': 'novembro',
+          'December': 'dezembro'
+        };
+
+        // Apply translations
+        dayTranslations.forEach((english, portuguese) {
+          localized = localized.replaceAll(english, portuguese);
+        });
+
+        monthTranslations.forEach((english, portuguese) {
+          localized = localized.replaceAll(english, portuguese);
+        });
+
+        // Convert "at" to "às" and adjust format
+        localized = localized.replaceAll(' at ', ' às ');
+
+        // Convert 12-hour to 24-hour format if needed
+        if (localized.contains('PM') || localized.contains('AM')) {
+          localized = _convert12to24Hour(localized);
+        }
+
+        return localized;
+      } catch (e) {
+        _logger.error('Error localizing time format: $e');
+        return englishTime; // Fallback to original
+      }
+    }
+    return englishTime;
+  }
+
+  /// Localize time period (morning, afternoon, etc.)
+  String _localizePeriod(String timeOfDay, String language) {
+    if (language == 'pt_BR') {
+      final periodMap = {
+        'morning': 'manhã',
+        'afternoon': 'tarde',
+        'evening': 'noite',
+        'night': 'madrugada'
+      };
+      return periodMap[timeOfDay] ?? timeOfDay;
+    }
+    return timeOfDay;
+  }
+
+  /// Convert 12-hour format to 24-hour format for Portuguese
+  String _convert12to24Hour(String timeString) {
+    try {
+      // Simple conversion for common patterns
+      if (timeString.contains('PM')) {
+        // Handle PM times (12 PM = 12:xx, 1-11 PM = 13-23:xx)
+        final match = RegExp(r'(\d{1,2}):(\d{2})\s*PM').firstMatch(timeString);
+        if (match != null) {
+          int hour = int.parse(match.group(1)!);
+          final minute = match.group(2)!;
+
+          if (hour != 12) hour += 12; // Convert PM (except 12 PM)
+
+          return timeString.replaceAll(RegExp(r'\d{1,2}:\d{2}\s*PM'),
+              '${hour.toString().padLeft(2, '0')}:$minute');
+        }
+      } else if (timeString.contains('AM')) {
+        // Handle AM times (12 AM = 00:xx, 1-11 AM = 01-11:xx)
+        final match = RegExp(r'(\d{1,2}):(\d{2})\s*AM').firstMatch(timeString);
+        if (match != null) {
+          int hour = int.parse(match.group(1)!);
+          final minute = match.group(2)!;
+
+          if (hour == 12) hour = 0; // Convert 12 AM to 00:xx
+
+          return timeString.replaceAll(RegExp(r'\d{1,2}:\d{2}\s*AM'),
+              '${hour.toString().padLeft(2, '0')}:$minute');
+        }
+      }
+
+      return timeString;
+    } catch (e) {
+      _logger.error('Error converting 12-hour to 24-hour format: $e');
+      return timeString;
+    }
   }
 }
