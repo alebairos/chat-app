@@ -12,6 +12,9 @@ class CharacterConfigManager {
   /// The currently active character persona key
   String _activePersonaKey = 'ariLifeCoach';
 
+  /// Flag to track if the manager has been initialized
+  bool _isInitialized = false;
+
   /// Get the currently active character persona key
   String get activePersonaKey => _activePersonaKey;
 
@@ -19,6 +22,45 @@ class CharacterConfigManager {
   void setActivePersona(String personaKey) {
     _activePersonaKey = personaKey;
   }
+
+  /// Initialize the manager by reading the default persona from config
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      // Load personas config to get defaultPersona
+      final String jsonString =
+          await rootBundle.loadString('assets/config/personas_config.json');
+      final Map<String, dynamic> config = json.decode(jsonString);
+
+      // Check for defaultPersona in config
+      final String? defaultPersona = config['defaultPersona'] as String?;
+      if (defaultPersona != null && defaultPersona.isNotEmpty) {
+        // Verify the default persona exists in the personas list
+        final Map<String, dynamic> personas = config['personas'] ?? {};
+        if (personas.containsKey(defaultPersona)) {
+          _activePersonaKey = defaultPersona;
+          print(
+              '✅ CharacterConfigManager initialized with default persona: $defaultPersona');
+        } else {
+          print(
+              '⚠️ Default persona "$defaultPersona" not found in personas list, keeping current: $_activePersonaKey');
+        }
+      } else {
+        print(
+            '⚠️ No defaultPersona specified in config, keeping current: $_activePersonaKey');
+      }
+
+      _isInitialized = true;
+    } catch (e) {
+      print('❌ Error initializing CharacterConfigManager: $e');
+      print('⚠️ Keeping current persona: $_activePersonaKey');
+      _isInitialized = true; // Mark as initialized to prevent repeated attempts
+    }
+  }
+
+  /// Check if the manager has been initialized
+  bool get isInitialized => _isInitialized;
 
   /// Get the configuration file path for the active persona
   Future<String> get configFilePath async {
@@ -137,7 +179,7 @@ class CharacterConfigManager {
 
       // 3) Compose: Oracle (if loaded) + Persona prompt
       if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
-        return oraclePrompt.trim() + '\n\n' + personaPrompt.trim();
+        return '${oraclePrompt.trim()}\n\n${personaPrompt.trim()}';
       }
 
       // 4) Fallback: return persona prompt only

@@ -8,8 +8,7 @@ import '../utils/logger.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
 import 'time_context_service.dart';
-import '../config/character_config_manager.dart';
-import 'activity_memory_service.dart';
+
 import 'integrated_mcp_processor.dart';
 
 import 'chat_storage_service.dart';
@@ -193,24 +192,7 @@ class ClaudeService {
         _logger.debug('Time Context: No previous message found');
       }
 
-      // Generate activity memory context (FT-061) - only for Oracle-compatible personas
-      String activityContext = '';
-      try {
-        final configManager = CharacterConfigManager();
-        final oracleConfigPath = await configManager.getOracleConfigPath();
-
-        if (oracleConfigPath != null) {
-          // Persona has Oracle config - enable activity memory
-          activityContext =
-              await ActivityMemoryService.generateActivityContext();
-        } else {
-          // Persona doesn't have Oracle config - skip activity memory
-          _logger.debug('Skipping activity memory for non-Oracle persona');
-        }
-      } catch (e) {
-        _logger.warning(
-            'Error checking Oracle compatibility for activity memory: $e');
-      }
+      // Activity context is now handled only when explicitly requested via MCP (FT-078)
 
       // Build enhanced system prompt with time and activity context
       String systemPrompt = _systemPrompt ?? '';
@@ -220,10 +202,10 @@ class ClaudeService {
         systemPrompt = '$timeContext\n\n$systemPrompt';
       }
 
-      // Add activity context after time context if available
-      if (activityContext.isNotEmpty) {
-        systemPrompt = '$systemPrompt\n\n$activityContext';
-      }
+      // REMOVED: Activity context injection - now only available via MCP when explicitly requested
+      // if (activityContext.isNotEmpty) {
+      //   systemPrompt = '$systemPrompt\n\n$activityContext';
+      // }
 
       // Add system MCP function documentation
       if (_systemMCP != null) {
@@ -236,10 +218,6 @@ class ClaudeService {
             '  Usage: {"action": "get_activity_stats", "days": 1} (optional days parameter, defaults to today)\n'
             '- get_message_stats: Get chat message statistics from database\n'
             '  Usage: {"action": "get_message_stats", "limit": 10} (optional limit parameter, defaults to 10)';
-
-        mcpFunctions +=
-            '\n\nNote: Current time information is provided in the context above.\n'
-            'Use get_activity_stats for precise activity data when users ask about tracking.';
 
         systemPrompt += mcpFunctions;
       }
@@ -435,12 +413,11 @@ class ClaudeService {
                 replacement = summaryParts.join('\n');
                 if (totalActivities > 10) {
                   replacement +=
-                      '\n[... e mais ${totalActivities - 10} atividades]';
+                      '\n[... and ${totalActivities - 10} more activities]';
                 }
               }
             } else {
-              replacement =
-                  'Nenhuma atividade encontrada no período consultado.';
+              replacement = 'No activities found for the requested period.';
             }
 
             processedMessage =

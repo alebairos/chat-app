@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/chat_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/settings/settings_hub_screen.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
@@ -20,6 +19,11 @@ Future<void> main() async {
   logger.info('Starting application');
 
   await dotenv.load(fileName: '.env');
+
+  // Initialize the config loader and character manager
+  final configLoader = ConfigLoader();
+  await configLoader.initialize();
+  logger.info('✅ ConfigLoader and CharacterConfigManager initialized');
 
   // Note: LifePlan service initialization removed
 

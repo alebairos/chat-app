@@ -24,6 +24,64 @@ class ActivityMemoryService {
     return _isar!;
   }
 
+  /// Check if the database is available and accessible
+  static Future<bool> isDatabaseAvailable() async {
+    try {
+      if (_isar == null) {
+        print('❌ ActivityMemoryService: _isar is null');
+        return false;
+      }
+      // Try to access the database to see if it's still open
+      final count = await _isar!.activityModels.count();
+      print('✅ ActivityMemoryService: Database available, count: $count');
+      return true;
+    } catch (e) {
+      print('❌ ActivityMemoryService: Database not available: $e');
+      _logger.warning('Database not available: $e');
+      return false;
+    }
+  }
+
+  /// Reinitialize the database connection if needed
+  static Future<bool> ensureDatabaseConnection() async {
+    if (await isDatabaseAvailable()) return true;
+
+    try {
+      // Try to reinitialize if we have a storage service reference
+      // This is a fallback for when the database connection is lost
+      _logger.info('Attempting to reestablish database connection...');
+      
+      // For now, we can't reinitialize without the storage service
+      // This would require passing the storage service reference
+      print('⚠️ ActivityMemoryService: Cannot reinitialize database without storage service reference');
+      return false;
+    } catch (e) {
+      _logger.error('Failed to reestablish database connection: $e');
+      return false;
+    }
+  }
+  
+  /// Try to reinitialize the database with a new Isar instance
+  static Future<bool> reinitializeDatabase(Isar newIsar) async {
+    try {
+      print('🔄 ActivityMemoryService: Attempting to reinitialize with new Isar instance...');
+      _isar = newIsar;
+      
+      // Test the new connection
+      final isAvailable = await isDatabaseAvailable();
+      if (isAvailable) {
+        print('✅ ActivityMemoryService: Successfully reinitialized database connection');
+        return true;
+      } else {
+        print('❌ ActivityMemoryService: Failed to reinitialize database connection');
+        return false;
+      }
+    } catch (e) {
+      print('❌ ActivityMemoryService: Error during database reinitialization: $e');
+      return false;
+    }
+  }
+
   /// Log a detected activity with precise timestamp
   static Future<ActivityModel> logActivity({
     required String? activityCode,
@@ -175,87 +233,22 @@ class ActivityMemoryService {
   /// Generate activity summary for context injection
   static Future<String> generateActivityContext({int days = 7}) async {
     try {
-      final oracleResult = await OracleActivityParser.parseFromPersona();
       final recentActivities = await getRecentActivities(days);
 
-      final buffer = StringBuffer();
-
-      // Oracle framework info
-      if (oracleResult.isNotEmpty) {
-        buffer.writeln('Oracle Framework (${oracleResult.sourceFileName}):');
-
-        // Group activities by dimension
-        final dimensionCounts = <String, int>{};
-        for (final dimension in oracleResult.dimensions.values) {
-          final count = oracleResult.activities.values
-              .where((a) => a.dimension == dimension.code)
-              .length;
-          dimensionCounts[dimension.displayName] = count;
-        }
-
-        for (final entry in dimensionCounts.entries) {
-          buffer.writeln('• ${entry.key}: ${entry.value} activities available');
-        }
-        buffer.writeln();
-      }
-
-      // Recent activity summary
+      // Only provide minimal context - no detailed lists
       if (recentActivities.isNotEmpty) {
-        buffer.writeln('Recent Activity Memory ($days days):');
+        final activeDimensions = recentActivities
+            .map((a) => a.dimension)
+            .toSet()
+            .length;
 
-        // Group by dimension
-        final byDimension = <String, List<ActivityModel>>{};
-        for (final activity in recentActivities) {
-          byDimension.putIfAbsent(activity.dimension, () => []).add(activity);
-        }
+        final totalActivities = recentActivities.length;
 
-        for (final entry in byDimension.entries) {
-          final dimensionName = oracleResult.dimensions.values
-              .firstWhere((d) => d.id == entry.key,
-                  orElse: () => DimensionDefinition(
-                        id: entry.key,
-                        code: entry.key.toUpperCase(),
-                        fullName: entry.key.toUpperCase(),
-                        displayName: entry.key
-                            .replaceAll('_', ' ')
-                            .split(' ')
-                            .map((w) => w.isEmpty
-                                ? w
-                                : w[0].toUpperCase() + w.substring(1))
-                            .join(' '),
-                      ))
-              .displayName;
-
-          buffer.writeln('• $dimensionName: ${entry.value.length} activities');
-
-          // Show most frequent activities
-          final activityCounts = <String, int>{};
-          for (final activity in entry.value) {
-            final key = activity.isOracleActivity
-                ? activity.activityCode!
-                : activity.activityName;
-            activityCounts[key] = (activityCounts[key] ?? 0) + 1;
-          }
-
-          final topActivities = activityCounts.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value))
-            ..take(3);
-
-          for (final activityEntry in topActivities) {
-            buffer.writeln('  - ${activityEntry.key}: ${activityEntry.value}x');
-          }
-        }
-
-        // Smart insights
-        buffer.writeln('\nSmart Insights:');
-        final insights =
-            _generateActivityInsights(recentActivities, oracleResult);
-        buffer.writeln(insights);
+        // Very minimal summary - just enough for context, not for display
+        return 'Activity context: $totalActivities activities across $activeDimensions dimensions this week.';
       } else {
-        buffer.writeln('No recent activities recorded.');
+        return 'No recent activities recorded.';
       }
-
-      return buffer.toString();
     } catch (e) {
       _logger.error('Failed to generate activity context: $e');
       return '';
@@ -396,10 +389,33 @@ class ActivityMemoryService {
   /// This method serves both MCP commands and Stats UI
   static Future<Map<String, dynamic>> getActivityStats({int days = 1}) async {
     try {
+      print('🔍 ActivityMemoryService: getActivityStats called for $days days');
+
+      // Check if database is available before proceeding
+      final dbAvailable = await isDatabaseAvailable();
+      if (!dbAvailable) {
+        print(
+            '❌ ActivityMemoryService: Database not available, returning empty stats');
+        _logger.warning('Database not available, returning empty stats');
+        return {
+          'period': days == 1 ? 'today' : 'last_${days}_days',
+          'total_activities': 0,
+          'activities': <Map<String, dynamic>>[],
+          'summary': _getEmptySummary(),
+          'database_error': 'Database connection not available',
+        };
+      }
+
+      print(
+          '✅ ActivityMemoryService: Database available, proceeding with query');
+
       // Calculate date range
       final now = DateTime.now();
       final startDate = DateTime(now.year, now.month, now.day)
           .subtract(Duration(days: days - 1));
+
+      print(
+          '🔍 ActivityMemoryService: Querying activities from ${startDate.toIso8601String()} to ${now.toIso8601String()}');
 
       // Get activities in timeframe
       final activities = await _database.activityModels
@@ -407,6 +423,8 @@ class ActivityMemoryService {
           .completedAtBetween(startDate, now)
           .sortByCompletedAtDesc()
           .findAll();
+
+      print('✅ ActivityMemoryService: Found ${activities.length} activities');
 
       // Calculate summary statistics
       final summary = _calculateSummaryStats(activities);
@@ -427,6 +445,7 @@ class ActivityMemoryService {
               })
           .toList();
 
+      print('✅ ActivityMemoryService: Returning stats for $days days');
       return {
         'period': days == 1 ? 'today' : 'last_${days}_days',
         'total_activities': activities.length,
@@ -434,12 +453,14 @@ class ActivityMemoryService {
         'summary': summary,
       };
     } catch (e) {
+      print('❌ ActivityMemoryService: Exception in getActivityStats: $e');
       _logger.error('Failed to get activity stats: $e');
       return {
         'period': days == 1 ? 'today' : 'last_${days}_days',
         'total_activities': 0,
         'activities': <Map<String, dynamic>>[],
         'summary': _getEmptySummary(),
+        'database_error': e.toString(),
       };
     }
   }
@@ -517,6 +538,319 @@ class ActivityMemoryService {
     } catch (e) {
       _logger.error('Failed to get total activity count: $e');
       return 0;
+    }
+  }
+
+  /// Get enhanced activity statistics with streaks, time patterns, and all-time data
+  static Future<Map<String, dynamic>> getEnhancedActivityStats(
+      {int days = 7}) async {
+    try {
+      // Get basic stats
+      final basicStats = await getActivityStats(days: days);
+
+      // Get all-time count
+      final allTimeCount = await getTotalActivityCount();
+
+      // Calculate streaks
+      final streaks = await _calculateActivityStreaks();
+
+      // Calculate time patterns
+      final timePatterns = await _calculateTimePatterns(days: days);
+
+      // Get Oracle suggestions (activities not yet tried)
+      final oracleSuggestions = await _getOracleActivitySuggestions();
+
+      // Combine all data
+      return {
+        ...basicStats,
+        'all_time_count': allTimeCount,
+        'streaks': streaks,
+        'time_patterns': timePatterns,
+        'oracle_suggestions': oracleSuggestions,
+      };
+    } catch (e) {
+      _logger.error('Failed to get enhanced activity stats: $e');
+      return {
+        'period': days == 1 ? 'today' : '${days}_days',
+        'total_activities': 0,
+        'activities': [],
+        'summary': _getEmptySummary(),
+        'all_time_count': 0,
+        'streaks': {},
+        'time_patterns': {},
+        'oracle_suggestions': [],
+      };
+    }
+  }
+
+  /// Calculate activity streaks for different activities
+  static Future<Map<String, dynamic>> _calculateActivityStreaks() async {
+    try {
+      final now = DateTime.now();
+      final activities = await _database.activityModels.where().findAll();
+
+      // Sort in descending order (most recent first)
+      activities.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+
+      if (activities.isEmpty) {
+        return {
+          'longest_streak': {'activity': 'None', 'days': 0},
+          'current_streaks': [],
+        };
+      }
+
+      // Group activities by code and calculate streaks
+      final Map<String, List<DateTime>> activityDates = {};
+
+      for (final activity in activities) {
+        final code = activity.activityCode ?? activity.description ?? 'Unknown';
+        final date = DateTime(
+          activity.completedAt.year,
+          activity.completedAt.month,
+          activity.completedAt.day,
+        );
+
+        activityDates.putIfAbsent(code, () => []);
+        if (!activityDates[code]!.any((d) =>
+            d.year == date.year &&
+            d.month == date.month &&
+            d.day == date.day)) {
+          activityDates[code]!.add(date);
+        }
+      }
+
+      // Calculate streaks for each activity
+      String longestStreakActivity = 'None';
+      int longestStreakDays = 0;
+      final List<Map<String, dynamic>> currentStreaks = [];
+
+      for (final entry in activityDates.entries) {
+        final code = entry.key;
+        final dates = entry.value
+          ..sort((a, b) => b.compareTo(a)); // Most recent first
+
+        if (dates.isEmpty) continue;
+
+        // Calculate current streak
+        int currentStreak = 0;
+        DateTime checkDate = DateTime(now.year, now.month, now.day);
+
+        for (int i = 0; i < dates.length; i++) {
+          final activityDate = dates[i];
+          final daysDiff = checkDate.difference(activityDate).inDays;
+
+          if (daysDiff == currentStreak) {
+            currentStreak++;
+            checkDate = checkDate.subtract(const Duration(days: 1));
+          } else {
+            break;
+          }
+        }
+
+        // Calculate longest streak for this activity
+        int longestStreak = 0;
+        int tempStreak = 1;
+
+        for (int i = 1; i < dates.length; i++) {
+          final daysDiff = dates[i - 1].difference(dates[i]).inDays;
+          if (daysDiff == 1) {
+            tempStreak++;
+          } else {
+            longestStreak =
+                tempStreak > longestStreak ? tempStreak : longestStreak;
+            tempStreak = 1;
+          }
+        }
+        longestStreak = tempStreak > longestStreak ? tempStreak : longestStreak;
+
+        // Update global longest streak
+        if (longestStreak > longestStreakDays) {
+          longestStreakDays = longestStreak;
+          longestStreakActivity = code;
+        }
+
+        // Add to current streaks if > 0
+        if (currentStreak > 0) {
+          currentStreaks.add({
+            'activity': code,
+            'days': currentStreak,
+            'longest': longestStreak,
+          });
+        }
+      }
+
+      // Sort current streaks by days (descending)
+      currentStreaks
+          .sort((a, b) => (b['days'] as int).compareTo(a['days'] as int));
+
+      return {
+        'longest_streak': {
+          'activity': longestStreakActivity,
+          'days': longestStreakDays,
+        },
+        'current_streaks':
+            currentStreaks.take(5).toList(), // Top 5 current streaks
+      };
+    } catch (e) {
+      _logger.error('Failed to calculate activity streaks: $e');
+      return {
+        'longest_streak': {'activity': 'None', 'days': 0},
+        'current_streaks': [],
+      };
+    }
+  }
+
+  /// Calculate time patterns (morning, afternoon, evening distribution)
+  static Future<Map<String, dynamic>> _calculateTimePatterns(
+      {int days = 7}) async {
+    try {
+      final now = DateTime.now();
+      final startDate = now.subtract(Duration(days: days));
+
+      final activities = await _database.activityModels
+          .filter()
+          .completedAtBetween(startDate, now)
+          .findAll();
+
+      if (activities.isEmpty) {
+        return {
+          'most_active_time': 'No data',
+          'time_distribution': {
+            'morning': 0,
+            'afternoon': 0,
+            'evening': 0,
+            'night': 0,
+          },
+          'hourly_distribution': {},
+        };
+      }
+
+      // Count activities by time periods
+      int morning = 0; // 6-12
+      int afternoon = 0; // 12-18
+      int evening = 0; // 18-22
+      int night = 0; // 22-6
+
+      final Map<int, int> hourlyCount = {};
+
+      for (final activity in activities) {
+        final hour = activity.completedAt.hour;
+
+        // Count by time period
+        if (hour >= 6 && hour < 12) {
+          morning++;
+        } else if (hour >= 12 && hour < 18) {
+          afternoon++;
+        } else if (hour >= 18 && hour < 22) {
+          evening++;
+        } else {
+          night++;
+        }
+
+        // Count by hour
+        hourlyCount[hour] = (hourlyCount[hour] ?? 0) + 1;
+      }
+
+      // Find most active time
+      final timeDistribution = {
+        'morning': morning,
+        'afternoon': afternoon,
+        'evening': evening,
+        'night': night,
+      };
+
+      String mostActiveTime = 'morning';
+      int maxCount = morning;
+
+      timeDistribution.forEach((period, count) {
+        if (count > maxCount) {
+          maxCount = count;
+          mostActiveTime = period;
+        }
+      });
+
+      return {
+        'most_active_time': mostActiveTime,
+        'time_distribution': timeDistribution,
+        'hourly_distribution':
+            hourlyCount.map((key, value) => MapEntry(key.toString(), value)),
+      };
+    } catch (e) {
+      _logger.error('Failed to calculate time patterns: $e');
+      return {
+        'most_active_time': 'No data',
+        'time_distribution': {
+          'morning': 0,
+          'afternoon': 0,
+          'evening': 0,
+          'night': 0,
+        },
+        'hourly_distribution': {},
+      };
+    }
+  }
+
+  /// Get Oracle activity suggestions (activities not yet tried)
+  static Future<List<Map<String, dynamic>>>
+      _getOracleActivitySuggestions() async {
+    try {
+      // Get all Oracle activities from parser
+      final oracleResult = await OracleActivityParser.parseFromPersona();
+      final oracleActivities = <Map<String, dynamic>>[];
+
+      // Extract activities from Oracle result
+      for (final activity in oracleResult.activities.values) {
+        oracleActivities.add({
+          'code': activity.code,
+          'name': activity.name,
+          'dimension': activity.dimension,
+          'description': activity.name,
+        });
+      }
+
+      // Get user's completed activity codes
+      final completedActivities = await _database.activityModels
+          .filter()
+          .activityCodeIsNotNull()
+          .distinctByActivityCode()
+          .findAll();
+
+      final completedCodes =
+          completedActivities.map((a) => a.activityCode!).toSet();
+
+      // Find Oracle activities not yet tried
+      final suggestions = <Map<String, dynamic>>[];
+
+      for (final oracle in oracleActivities) {
+        final code = oracle['code'] as String?;
+        if (code != null && !completedCodes.contains(code)) {
+          suggestions.add({
+            'code': code,
+            'name': oracle['name'],
+            'dimension': oracle['dimension'],
+            'description': oracle['description'] ?? oracle['name'],
+          });
+        }
+      }
+
+      // Limit to 10 suggestions and prioritize by dimension diversity
+      final dimensionCounts = <String, int>{};
+      final diverseSuggestions = <Map<String, dynamic>>[];
+
+      for (final suggestion in suggestions) {
+        final dimension = suggestion['dimension'] as String;
+        final count = dimensionCounts[dimension] ?? 0;
+
+        if (count < 2 && diverseSuggestions.length < 10) {
+          diverseSuggestions.add(suggestion);
+          dimensionCounts[dimension] = count + 1;
+        }
+      }
+
+      return diverseSuggestions;
+    } catch (e) {
+      _logger.error('Failed to get Oracle activity suggestions: $e');
+      return [];
     }
   }
 

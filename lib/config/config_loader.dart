@@ -7,6 +7,11 @@ class ConfigLoader {
       _defaultLoadExplorationPrompts;
 
   final CharacterConfigManager _characterManager = CharacterConfigManager();
+  
+  /// Initialize the config loader and character manager
+  Future<void> initialize() async {
+    await _characterManager.initialize();
+  }
 
   Future<String> loadSystemPrompt() async {
     return _loadSystemPromptImpl();
@@ -19,6 +24,7 @@ class ConfigLoader {
   static Future<String> _defaultLoadSystemPrompt() async {
     try {
       final characterManager = CharacterConfigManager();
+      await characterManager.initialize(); // Initialize before loading
       return await characterManager.loadSystemPrompt();
     } catch (e) {
       print('Error loading system prompt: $e');
@@ -29,6 +35,7 @@ class ConfigLoader {
   static Future<Map<String, String>> _defaultLoadExplorationPrompts() async {
     try {
       final characterManager = CharacterConfigManager();
+      await characterManager.initialize(); // Initialize before loading
       return await characterManager.loadExplorationPrompts();
     } catch (e) {
       print('Error loading exploration prompts: $e');
