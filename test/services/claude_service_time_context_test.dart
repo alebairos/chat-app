@@ -17,6 +17,8 @@ class MockChatStorageService extends Mock implements ChatStorageService {}
 class MockConfigLoader extends Mock implements ConfigLoader {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('ClaudeService Time Context Integration', () {
     late MockClient mockClient;
     late MockChatStorageService mockStorageService;

@@ -127,6 +127,11 @@ class FakeChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<void> restoreMessagesFromData() async {
+    // No-op for testing
+  }
+
+  @override
   Future<void> close() async {
     // No-op for testing
   }

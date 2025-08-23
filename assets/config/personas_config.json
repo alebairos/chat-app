@@ -33,6 +33,13 @@
       "description": "AI clone with Oracle 2.1 knowledge base",
       "configPath": "assets/config/i_there_config.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md"
+    },
+    "sergeantOracleWithOracle21": {
+      "enabled": true,
+      "displayName": "Sergeant Oracle 2.1",
+      "description": "Energetic Roman gym bro coach! Time-traveling gladiator with ancient swagger, future wisdom, and hilarious motivation. Your pumped-up buddy for life gains! 💪🏛️⚡",
+      "configPath": "assets/config/sergeant_oracle_config.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md"
     }
   }
 } 

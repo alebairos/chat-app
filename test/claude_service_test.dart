@@ -224,14 +224,15 @@ void main() {
       final command = json.encode({'action': 'get_current_time'});
       print('📤 Sending command: $command');
 
-      when(() => mockMCP.processCommand(command)).thenReturn(json.encode({
-        'status': 'success',
-        'data': {
-          'current_time': '2025-01-02T15:30:00Z',
-          'formatted_time': 'Thursday, January 2, 2025 at 3:30 PM',
-          'timezone': 'UTC'
-        }
-      }));
+      when(() => mockMCP.processCommand(command))
+          .thenAnswer((_) async => json.encode({
+                'status': 'success',
+                'data': {
+                  'current_time': '2025-01-02T15:30:00Z',
+                  'formatted_time': 'Thursday, January 2, 2025 at 3:30 PM',
+                  'timezone': 'UTC'
+                }
+              }));
       print('✓ Mock MCP response configured');
 
       final response = await service.sendMessage(command);
@@ -251,7 +252,7 @@ void main() {
       print('📤 Sending invalid command: $command');
 
       when(() => mockMCP.processCommand(command))
-          .thenThrow(Exception('MCP Error'));
+          .thenAnswer((_) async => throw Exception('MCP Error'));
       print('✓ Mock MCP error configured');
 
       when(() => mockClient.post(

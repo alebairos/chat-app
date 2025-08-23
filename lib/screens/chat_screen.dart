@@ -4,6 +4,7 @@ import '../widgets/chat_input.dart';
 
 import '../services/claude_service.dart';
 import '../services/chat_storage_service.dart';
+import '../services/system_mcp_service.dart';
 import '../models/message_type.dart';
 import '../models/chat_message_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,6 +13,7 @@ import '../utils/logger.dart';
 import '../config/config_loader.dart';
 
 import '../features/audio_assistant/tts_service.dart';
+import '../services/activity_memory_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -55,6 +57,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _storageService = widget.storageService ?? ChatStorageService();
     _claudeService = widget.claudeService ??
         ClaudeService(
+          systemMCP: SystemMCPService(),
           ttsService: _ttsService,
           storageService: _storageService,
           audioEnabled: true,
@@ -69,6 +72,10 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       await _claudeService.initialize();
       await _ttsService.initialize();
+
+      // Initialize ActivityMemoryService for Oracle activity tracking (FT-061)
+      final isar = await _storageService.db;
+      ActivityMemoryService.initialize(isar);
 
       // Ensure audio is enabled in Claude service
       if (_claudeService is ClaudeService && !widget.testMode) {

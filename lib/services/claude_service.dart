@@ -2,11 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:character_ai_clone/config/config_loader.dart';
+
 import 'system_mcp_service.dart';
 import '../utils/logger.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
 import 'time_context_service.dart';
+import '../config/character_config_manager.dart';
+import 'activity_memory_service.dart';
+import 'integrated_mcp_processor.dart';
+
 import 'chat_storage_service.dart';
 
 // Helper class for validation results
@@ -83,7 +88,8 @@ class ClaudeService {
       if (error is String && error.contains('{') && error.contains('}')) {
         // Try to extract the error message from the JSON
         final errorJson = json.decode(
-            error.substring(error.indexOf('{'), error.lastIndexOf('}') + 1));
+          error.substring(error.indexOf('{'), error.lastIndexOf('}') + 1),
+        );
 
         // Handle specific error types
         if (errorJson['error'] != null && errorJson['error']['type'] != null) {
@@ -145,7 +151,7 @@ class ClaudeService {
           }
 
           try {
-            return _systemMCP!.processCommand(message);
+            return await _systemMCP!.processCommand(message);
           } catch (e) {
             return 'Error processing system command: ${e.toString()}';
           }
@@ -158,7 +164,7 @@ class ClaudeService {
       _conversationHistory.add({
         'role': 'user',
         'content': [
-          {'type': 'text', 'text': message}
+          {'type': 'text', 'text': message},
         ],
       });
 
@@ -173,19 +179,40 @@ class ClaudeService {
 
       // Generate enhanced time-aware context (FT-060)
       final lastMessageTime = await _getLastMessageTimestamp();
-      final timeContext =
-          TimeContextService.generatePreciseTimeContext(lastMessageTime);
+      final timeContext = await TimeContextService.generatePreciseTimeContext(
+        lastMessageTime,
+      );
 
       // Debug logging for time context
       if (lastMessageTime != null) {
-        final debugInfo =
-            TimeContextService.getTimeGapDebugInfo(lastMessageTime);
+        final debugInfo = TimeContextService.getTimeGapDebugInfo(
+          lastMessageTime,
+        );
         _logger.debug('Time Context Debug: $debugInfo');
       } else {
         _logger.debug('Time Context: No previous message found');
       }
 
-      // Build enhanced system prompt with time context
+      // Generate activity memory context (FT-061) - only for Oracle-compatible personas
+      String activityContext = '';
+      try {
+        final configManager = CharacterConfigManager();
+        final oracleConfigPath = await configManager.getOracleConfigPath();
+
+        if (oracleConfigPath != null) {
+          // Persona has Oracle config - enable activity memory
+          activityContext =
+              await ActivityMemoryService.generateActivityContext();
+        } else {
+          // Persona doesn't have Oracle config - skip activity memory
+          _logger.debug('Skipping activity memory for non-Oracle persona');
+        }
+      } catch (e) {
+        _logger.warning(
+            'Error checking Oracle compatibility for activity memory: $e');
+      }
+
+      // Build enhanced system prompt with time and activity context
       String systemPrompt = _systemPrompt ?? '';
 
       // Add time context at the beginning if available
@@ -193,14 +220,28 @@ class ClaudeService {
         systemPrompt = '$timeContext\n\n$systemPrompt';
       }
 
+      // Add activity context after time context if available
+      if (activityContext.isNotEmpty) {
+        systemPrompt = '$systemPrompt\n\n$activityContext';
+      }
+
       // Add system MCP function documentation
       if (_systemMCP != null) {
-        systemPrompt += '\n\nSystem Functions Available:\n'
+        String mcpFunctions = '\n\nSystem Functions Available:\n'
             'You can call system functions by using JSON format: {"action": "function_name"}\n'
             'Available functions:\n'
             '- get_current_time: Returns current date, time, and temporal information\n'
-            '- get_device_info: Returns device platform, OS version, locale, and system info\n\n'
-            'Note: Current time information is provided in the context above. Use these functions only when you need additional device information or precise timestamps.';
+            '- get_device_info: Returns device platform, OS version, locale, and system info\n'
+            '- get_activity_stats: Get precise activity tracking data from database\n'
+            '  Usage: {"action": "get_activity_stats", "days": 1} (optional days parameter, defaults to today)\n'
+            '- get_message_stats: Get chat message statistics from database\n'
+            '  Usage: {"action": "get_message_stats", "limit": 10} (optional limit parameter, defaults to 10)';
+
+        mcpFunctions +=
+            '\n\nNote: Current time information is provided in the context above.\n'
+            'Use get_activity_stats for precise activity data when users ask about tracking.';
+
+        systemPrompt += mcpFunctions;
       }
 
       final response = await _client.post(
@@ -228,13 +269,25 @@ class ClaudeService {
         _logger.debug('Original AI response: $assistantMessage');
 
         // Process MCP commands in the AI's response
+        // Process any MCP commands in the assistant's response
+        _logger.debug(
+            '🔍 [MCP DEBUG] Before processing: ${assistantMessage.length} chars');
+        _logger.debug(
+            '🔍 [MCP DEBUG] Response preview: ${assistantMessage.substring(0, assistantMessage.length > 200 ? 200 : assistantMessage.length)}');
         assistantMessage = await _processMCPCommands(assistantMessage);
+        _logger.debug(
+            '🔍 [MCP DEBUG] After processing: ${assistantMessage.length} chars');
+
+        // FT-064: Two-pass semantic activity detection (background processing)
+        // Pass 1: Return immediate conversation response (no latency impact)
+        // Pass 2: Background semantic analysis for activity detection
+        _performBackgroundActivityDetection(message, assistantMessage);
 
         // Add assistant's response to history using content blocks format
         _conversationHistory.add({
           'role': 'assistant',
           'content': [
-            {'type': 'text', 'text': assistantMessage}
+            {'type': 'text', 'text': assistantMessage},
           ],
         });
 
@@ -256,7 +309,8 @@ class ClaudeService {
             try {
               final errorBody = utf8.decode(response.bodyBytes);
               _logger.error(
-                  'Claude API Error (${response.statusCode}): $errorBody');
+                'Claude API Error (${response.statusCode}): $errorBody',
+              );
 
               final errorData = jsonDecode(errorBody);
               if (errorData['error'] != null &&
@@ -290,6 +344,16 @@ class ClaudeService {
   ///
   /// Looks for JSON commands like {"action": "get_current_time"} in the AI's response,
   /// executes them via SystemMCP, and replaces the commands with the results.
+  /// Helper method to extract action from JSON command
+  String _extractActionFromCommand(String command) {
+    try {
+      final data = jsonDecode(command);
+      return data['action'] ?? 'unknown';
+    } catch (e) {
+      return 'unknown';
+    }
+  }
+
   Future<String> _processMCPCommands(String message) async {
     if (_systemMCP == null) {
       return message;
@@ -297,9 +361,7 @@ class ClaudeService {
 
     // Look for JSON MCP commands in the message with multiple patterns
     final patterns = [
-      RegExp(r'\{"action":\s*"([^"]+)"[^}]*\}'), // Standard format
-      RegExp(
-          r'\{["\x27]action["\x27]:\s*["\x27]([^"\x27]+)["\x27][^}]*\}'), // Alternative quotes
+      RegExp(r'\{[^}]*"action":\s*"([^"]+)"[^}]*\}'), // Standard JSON pattern
     ];
 
     List<RegExpMatch> allMatches = [];
@@ -308,11 +370,21 @@ class ClaudeService {
     }
 
     _logger.debug(
-        'Looking for MCP commands in: ${message.substring(0, message.length > 100 ? 100 : message.length)}...');
+      '🔍 [MCP DEBUG] Looking for MCP commands in: ${message.substring(0, message.length > 100 ? 100 : message.length)}...',
+    );
+    _logger.debug(
+        '🔍 [MCP DEBUG] Total regex patterns tested: ${patterns.length}');
+    _logger.debug('🔍 [MCP DEBUG] Total matches found: ${allMatches.length}');
 
     if (allMatches.isEmpty) {
       _logger.debug(
-          'No MCP commands found - AI did not call get_current_time function');
+        '🔍 [MCP DEBUG] No MCP commands found - testing each pattern individually',
+      );
+      for (int i = 0; i < patterns.length; i++) {
+        final testMatches = patterns[i].allMatches(message);
+        _logger
+            .debug('🔍 [MCP DEBUG] Pattern $i matches: ${testMatches.length}');
+      }
       return message;
     }
 
@@ -320,23 +392,68 @@ class ClaudeService {
 
     for (final match in allMatches) {
       final command = match.group(0)!;
-      final action = match.group(1)!;
+      final action = match.group(1) ?? _extractActionFromCommand(command);
 
       try {
         _logger.debug('Processing MCP command in AI response: $command');
-        final result = _systemMCP!.processCommand(command);
+        final result = await _systemMCP!.processCommand(command);
         final data = jsonDecode(result);
 
-        if (data['status'] == 'success' && action == 'get_current_time') {
-          final timeData = data['data'];
-          final readableTime = timeData['readableTime'];
-          final timeOfDay = timeData['timeOfDay'];
+        if (data['status'] == 'success') {
+          if (action == 'get_current_time') {
+            final timeData = data['data'];
+            final readableTime = timeData['readableTime'];
+            final timeOfDay = timeData['timeOfDay'];
 
-          // Replace the JSON command with a natural time response
-          processedMessage = processedMessage.replaceFirst(
-              command, 'It is currently $readableTime ($timeOfDay).');
+            // Replace the JSON command with a natural time response
+            processedMessage = processedMessage.replaceFirst(
+              command,
+              'It is currently $readableTime ($timeOfDay).',
+            );
 
-          _logger.info('Replaced MCP command with time: $readableTime');
+            _logger.info('Replaced MCP command with time: $readableTime');
+          } else if (action == 'get_activity_stats') {
+            // FT-068: Replace get_activity_stats with formatted data
+            final statsData = data['data'];
+            final totalActivities = statsData['total_activities'] ?? 0;
+            final activities = statsData['activities'] as List<dynamic>? ?? [];
+
+            String replacement = '';
+            if (totalActivities > 0) {
+              final summaryParts = <String>[];
+
+              // Add specific activities with times
+              for (final activity in activities.take(10)) {
+                // Show max 10 recent
+                final code = activity['code'] ?? '';
+                final name = activity['name'] ?? '';
+                final time = activity['time'] ?? '';
+                summaryParts.add('• $code ($name): $time');
+              }
+
+              if (summaryParts.isNotEmpty) {
+                replacement = summaryParts.join('\n');
+                if (totalActivities > 10) {
+                  replacement +=
+                      '\n[... e mais ${totalActivities - 10} atividades]';
+                }
+              }
+            } else {
+              replacement =
+                  'Nenhuma atividade encontrada no período consultado.';
+            }
+
+            processedMessage =
+                processedMessage.replaceFirst(command, replacement);
+            _logger.info(
+                'Replaced get_activity_stats with $totalActivities activities');
+          } else if (action == 'extract_activities') {
+            // Legacy extract_activities command - remove from response
+            processedMessage = processedMessage.replaceFirst(command, '');
+          } else {
+            // Remove other successful commands
+            processedMessage = processedMessage.replaceFirst(command, '');
+          }
         } else {
           // Remove the command if it failed
           processedMessage = processedMessage.replaceFirst(command, '');
@@ -404,9 +521,10 @@ class ClaudeService {
         if (!ttsInitialized) {
           _logger.error('Failed to initialize TTS service');
           return ClaudeAudioResponse(
-              text: textResponse,
-              error:
-                  'Audio generation is temporarily unavailable. Please try again later.');
+            text: textResponse,
+            error:
+                'Audio generation is temporarily unavailable. Please try again later.',
+          );
         }
 
         // Generate audio from the text response
@@ -416,9 +534,10 @@ class ClaudeService {
         if (audioPath == null) {
           _logger.error('Failed to generate audio for response');
           return ClaudeAudioResponse(
-              text: textResponse,
-              error:
-                  'Failed to generate audio. Text response is still available.');
+            text: textResponse,
+            error:
+                'Failed to generate audio. Text response is still available.',
+          );
         }
 
         _logger.debug('Generated audio at path: $audioPath');
@@ -432,7 +551,9 @@ class ClaudeService {
       } catch (e) {
         _logger.error('Error generating audio for response: $e');
         return ClaudeAudioResponse(
-            text: textResponse, error: _handleTTSError(e));
+          text: textResponse,
+          error: _handleTTSError(e),
+        );
       }
     } catch (e) {
       final errorMessage = _getUserFriendlyErrorMessage(e.toString());
@@ -450,5 +571,31 @@ class ClaudeService {
       return 'Failed to generate audio. Text response is still available.';
     }
     return 'An error occurred during audio generation.';
+  }
+
+  /// FT-064: Background semantic activity detection (Pass 2)
+  ///
+  /// Performs semantic activity detection without blocking conversation flow.
+  /// Uses IntegratedMCPProcessor to coordinate time + activity detection.
+  void _performBackgroundActivityDetection(
+      String userMessage, String assistantMessage) {
+    // Use unawaited to ensure background processing doesn't block response
+    () async {
+      try {
+        _logger.debug('FT-064: Starting background activity detection');
+
+        // Coordinate time + activity detection via IntegratedMCPProcessor
+        await IntegratedMCPProcessor.processTimeAndActivity(
+          userMessage: userMessage,
+          claudeResponse: assistantMessage,
+        );
+
+        _logger.debug('FT-064: Background activity detection completed');
+      } catch (e) {
+        // Silent failure - never interrupt conversation flow
+        _logger
+            .debug('FT-064: Background activity detection failed silently: $e');
+      }
+    }();
   }
 }

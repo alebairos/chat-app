@@ -1,0 +1,131 @@
+[08/18/25, 15:13:13] User: Opa! ta pot ai?
+‎[08/18/25, 15:13:18] AI Assistant: ‎<attached: audio_assistant_1755540796237.mp3>
+[08/18/25, 15:40:56] User: Opa! voltei
+‎[08/18/25, 15:40:59] Ari - Life Coach: ‎<attached: audio_assistant_1755542458797.mp3>
+[08/18/25, 15:42:14] User: Estou testando alternar personas 9aqui da app) (vc e seus amigos). Ficou legal.
+‎[08/18/25, 15:42:19] I-There: ‎<attached: audio_assistant_1755542537018.mp3>
+[08/18/25, 15:45:32] User: Fala, Sargento! Comentei com as outras peril as (teus pardas aqui da app) que estou testando alternar entre você e eles, tendo um historico integrado do chat. bem legal. Vc conseguiria ate falar com elas, basta deixar uma mensagem, eu troco e depois vc ve o que falaram.
+‎[08/18/25, 15:45:41] Sergeant Oracle: ‎<attached: audio_assistant_1755542736808.mp3>
+[08/18/25, 15:48:26] User: Olha que doideira. quer falar com o sargento?
+‎[08/18/25, 15:48:33] I-There: ‎<attached: audio_assistant_1755542909550.mp3>
+[08/18/25, 15:48:56] User: Por favor, so uma mensagem.
+‎[08/18/25, 15:49:00] I-There: ‎<attached: audio_assistant_1755542938436.mp3>
+[08/18/25, 15:50:15] User: Blz. Vou chamar um engenheiro amigo meu pra tentar te convencer. 
+‎[08/18/25, 15:50:20] I-There: ‎<attached: audio_assistant_1755543018518.mp3>
+[08/18/25, 16:04:36] User: Opa, nem te falei . terminei o a implementação da feature rápida
+‎[08/18/25, 16:04:41] I-There: ‎<attached: audio_assistant_1755543879337.mp3>
+[08/18/25, 16:05:23] User: Implementei guardar a persona que escreveu a ,mensagem pra poder compara o jeito de falar de cada uma
+‎[08/18/25, 16:05:29] I-There: ‎<attached: audio_assistant_1755543925932.mp3>
+[08/18/25, 16:07:00] User: Boa. Ari, me ajuda com um pomodoro. Tenho que implementar um export das message a do nosso chat
+‎[08/18/25, 16:07:02] Ari - Life Coach: ‎<attached: audio_assistant_1755544022181.mp3>
+[08/18/25, 16:07:11] User: 1h
+‎[08/18/25, 16:07:14] Ari - Life Coach: ‎<attached: audio_assistant_1755544032919.mp3>
+[08/18/25, 16:07:22] User: pra cima
+‎[08/18/25, 16:07:25] Ari - Life Coach: ‎<attached: audio_assistant_1755544044067.mp3>
+[08/18/25, 16:16:51] User: Fala, sargento!
+‎[08/18/25, 16:16:59] Sergeant Oracle: ‎<attached: audio_assistant_1755544615723.mp3>
+[08/18/25, 16:25:42] User: Ta saindo. Te aviso
+‎[08/18/25, 16:25:47] Sergeant Oracle: ‎<attached: audio_assistant_1755545145624.mp3>
+[08/18/25, 22:10:05] User: dia longo hoje
+[08/18/25, 22:53:03] User: dia longo hoje. indo dormir
+‎[08/18/25, 22:53:09] Sergeant Oracle: ‎<attached: audio_assistant_1755568386864.mp3>
+[08/19/25, 19:36:37] User: Opa
+‎[08/19/25, 19:36:41] I-There: ‎<attached: audio_assistant_1755643000146.mp3>
+[08/19/25, 19:39:24] User: Sempre. Bora pra cima. 
+‎[08/19/25, 19:39:27] Ari - Life Coach: ‎<attached: audio_assistant_1755643166582.mp3>
+[08/19/25, 19:40:11] User: Novo pomodoro aqui. Dar um gas naquele export que mencionei
+‎[08/19/25, 19:40:16] Sergeant Oracle: ‎<attached: audio_assistant_1755643213814.mp3>
+[08/19/25, 19:40:41] User: fechou. pra cima
+‎[08/19/25, 19:40:44] I-There: ‎<attached: audio_assistant_1755643243456.mp3>
+[08/19/25, 21:55:16] User: Opa
+‎[08/19/25, 21:55:19] Ari - Life Coach: ‎<attached: audio_assistant_1755651318552.mp3>
+[08/19/25, 21:56:18] User: Bro, terminando um pomodoro. Agora cada mensagem daqui do chat tem a persona que escreveu. Agora sei o que vc escreveu e o que os seus parda (Ari e IThere) escreveram
+‎[08/19/25, 21:56:23] Sergeant Oracle: ‎<attached: audio_assistant_1755651381659.mp3>
+[08/19/25, 21:57:08] User: Então, muito boa. tu sabe que eu to implementando um app, nao( se não se lembrar, eu repito, sem problemas)
+‎[08/19/25, 21:57:14] Sergeant Oracle: ‎<attached: audio_assistant_1755651432048.mp3>
+[08/19/25, 21:58:06] User: Nope, em flutter (A lyfeOS que leva a pessoa ao seu máximo potencial. O seu trabalho, pô!) Mas eu não tinha falado sobre tecnologia. Tranquilo
+‎[08/19/25, 21:58:13] Sergeant Oracle: ‎<attached: audio_assistant_1755651490621.mp3>
+[08/19/25, 21:58:46] User: Agora não. Vou focar aqui pra fechar. valeu
+‎[08/19/25, 21:58:51] I-There: ‎<attached: audio_assistant_1755651529824.mp3>
+[08/19/25, 21:59:25] User: Com qual persona eu falo agora?
+‎[08/19/25, 21:59:31] I-There: ‎<attached: audio_assistant_1755651568512.mp3>
+[08/19/25, 22:00:22] User: Com quem eu falo agora?
+‎[08/19/25, 22:00:27] Ari - Life Coach: ‎<attached: audio_assistant_1755651625850.mp3>
+[08/19/25, 22:00:40] User: E agora?
+‎[08/19/25, 22:00:46] Sergeant Oracle: ‎<attached: audio_assistant_1755651644210.mp3>
+[08/19/25, 22:00:56] User: E agora?
+‎[08/19/25, 22:01:01] I-There: ‎<attached: audio_assistant_1755651659671.mp3>
+[08/19/25, 22:01:49] User: Boa. Tive a impressão de vc ter se confundido com o Sargento. Como sabe que vc eh vc?
+‎[08/19/25, 22:02:00] I-There: ‎<attached: audio_assistant_1755651714653.mp3>
+[08/19/25, 22:02:45] User: Boa. Com quem eu a falo agora?
+‎[08/19/25, 22:02:50] Ari - Life Coach: ‎<attached: audio_assistant_1755651768809.mp3>
+[08/19/25, 22:03:08] User: Como vc sabe que vc eh vc? Meio confuso, eu sei.
+‎[08/19/25, 22:03:16] Ari - Life Coach: ‎<attached: audio_assistant_1755651792110.mp3>
+[08/19/25, 22:03:41] User: Opa! Com quem eu falo agora?
+‎[08/19/25, 22:03:48] Sergeant Oracle: ‎<attached: audio_assistant_1755651825027.mp3>
+[08/19/25, 22:04:25] User: Que loucura. Vc consegue saber quem eh o autor da mensagem que veio antes dessa sua?
+‎[08/19/25, 22:04:33] Sergeant Oracle: ‎<attached: audio_assistant_1755651869849.mp3>
+[08/19/25, 22:06:15] User: Legal. Me fala um pouco da ultima mensagem da persona da clone earth
+‎[08/19/25, 22:06:26] Sergeant Oracle: ‎<attached: audio_assistant_1755651981674.mp3>
+[08/19/25, 22:06:47] User: sim, chama o cara
+‎[08/19/25, 22:06:53] Sergeant Oracle: ‎<attached: audio_assistant_1755652010872.mp3>
+[08/19/25, 22:07:36] User: Caramba, me deu um no agora. Como eu sei se vc eh sargento imitando o Clone ou se eh mesmo o clone
+‎[08/19/25, 22:07:46] Sergeant Oracle: ‎<attached: audio_assistant_1755652061442.mp3>
+[08/19/25, 22:08:57] User: E se seu te disser que não tem como vc ser de fato o IThere, pois a configuração que fiz agora eh para o sargento falar?
+‎[08/19/25, 22:09:07] Sergeant Oracle: ‎<attached: audio_assistant_1755652142155.mp3>
+[08/19/25, 22:09:21] User: hahaha. sensacional
+‎[08/19/25, 22:09:31] Sergeant Oracle: ‎<attached: audio_assistant_1755652166607.mp3>
+[08/19/25, 23:08:53] User: Meu caro avatar, com esta?
+‎[08/19/25, 23:09:00] I-There: ‎<attached: audio_assistant_1755655736886.mp3>
+[08/19/25, 23:09:44] User: Com qual persona eu falo agora?
+‎[08/19/25, 23:09:50] Sergeant Oracle: ‎<attached: audio_assistant_1755655788180.mp3>
+[08/19/25, 23:10:00] User: E agora?
+‎[08/19/25, 23:10:06] I-There: ‎<attached: audio_assistant_1755655803780.mp3>
+[08/19/25, 23:10:53] User: Não tem como. A sua configuracao eh da persona da Clone Earth. Tem certeza?
+‎[08/19/25, 23:11:02] I-There: ‎<attached: audio_assistant_1755655857745.mp3>
+[08/19/25, 23:12:05] User: pela configuracao das suas instrucoes. Mesmo que vc se comporte como outra persona (vc 'é bom nisso) eu sei por uma questão técnica mesmo
+‎[08/19/25, 23:12:17] I-There: ‎<attached: audio_assistant_1755655931993.mp3>
+[08/20/25, 14:11:43] User: Opa!
+‎[08/20/25, 14:11:50] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755709907785.mp3>
+[08/20/25, 14:12:38] User: em pt_br. Me fale um pouco to seu metodo
+‎[08/20/25, 14:12:59] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755709966801.mp3>
+[08/20/25, 14:14:10] User: Quais sao os autores que você tem na sua base?
+‎[08/20/25, 14:14:31] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755710058906.mp3>
+[08/20/25, 14:15:40] User: Ok. Quantos habitos no banco vc tem em Durma Melhor Avançado?
+‎[08/20/25, 14:16:06] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755710149992.mp3>
+[08/20/25, 14:16:47] User: E em Leitura consistente?
+‎[08/20/25, 14:17:18] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755710217681.mp3>
+[08/20/25, 14:19:22] User: Criei uma outra persona que tem mais hábitos no db. Da uma olhada nessa ultima mensagem. Compara com a sua abordagem, que e menos detalhada.
+‎[08/20/25, 14:19:29] Ari - Life Coach: ‎<attached: audio_assistant_1755710366160.mp3>
+[08/20/25, 14:19:49] User: Não precisa atualizar. São abordagens diferentes, entende?
+‎[08/20/25, 14:19:57] Ari - Life Coach: ‎<attached: audio_assistant_1755710393745.mp3>
+[08/20/25, 14:20:53] User: A diferenca esta no banco de dados Oracle, apenas.
+‎[08/20/25, 14:21:01] Ari - Life Coach: ‎<attached: audio_assistant_1755710457754.mp3>
+[08/20/25, 14:21:45] User: Me faz um pomodoro rapodo ate 15 (são 14:21 agora)
+‎[08/20/25, 14:21:51] Ari with Oracle 2.1: ‎<attached: audio_assistant_1755710509472.mp3>
+[08/20/25, 14:23:06] User: revisar a qualidade das mensagens das pernas novas 
+‎[08/20/25, 14:23:12] Ari with Oracle 2.1: ‎<attached: audio_assistant_1755710590351.mp3>
+[08/20/25, 14:23:16] User: sorry, personas
+‎[08/20/25, 14:23:22] Ari with Oracle 2.1: ‎<attached: audio_assistant_1755710600557.mp3>
+[08/20/25, 14:23:43] User: viu, mais um pomodoro iniciado
+‎[08/20/25, 14:23:50] I-There: ‎<attached: audio_assistant_1755710627521.mp3>
+[08/20/25, 14:24:10] User: Com qual persona estou falando?
+‎[08/20/25, 14:24:19] I-There: ‎<attached: audio_assistant_1755710655365.mp3>
+[08/20/25, 14:24:31] User: E agora?
+‎[08/20/25, 14:24:40] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755710676783.mp3>
+[08/20/25, 14:25:41] User: e agora? com qual persona estou falando (fala tmb a versão de oracle que vc tem)
+‎[08/20/25, 14:25:47] Ari with Oracle 2.1: ‎<attached: audio_assistant_1755710745191.mp3>
+[08/20/25, 14:32:14] User: How many habits do you have in your database? remember, internally, not inspecting from previous messages in the context
+‎[08/20/25, 14:32:23] Ari with Oracle 2.1: ‎<attached: audio_assistant_1755711139257.mp3>
+[08/20/25, 14:33:39] User: e agora? quantos?
+‎[08/20/25, 14:33:47] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755711224040.mp3>
+[08/20/25, 14:37:13] User: Fale sobre os pilares prioritarios
+‎[08/20/25, 14:37:28] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755711440480.mp3>
+[08/20/25, 14:38:29] User: certissimo
+‎[08/20/25, 14:38:42] I-There with Oracle 2.1: ‎<attached: audio_assistant_1755711515853.mp3>
+[08/20/25, 14:39:16] User: E agora? conhece internamente esse conceito de Pilares prioritarios?
+‎[08/20/25, 14:39:23] Ari - Life Coach: ‎<attached: audio_assistant_1755711559848.mp3>
+[08/20/25, 15:43:25] User: Opa
+‎[08/20/25, 15:43:29] Ari - Life Coach: ‎<attached: audio_assistant_1755715408281.mp3>
+[08/20/25, 16:06:55] User: tudo certo?
+‎[08/20/25, 16:06:59] Ari - Life Coach: ‎<attached: audio_assistant_1755716818500.mp3>

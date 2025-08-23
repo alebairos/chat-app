@@ -181,7 +181,8 @@ void main() {
       test('should format correctly', () {
         final context = TimeContextService.getCurrentTimeContext();
 
-        expect(context, matches(RegExp(r'Current context: It is \w+ \w+\.')));
+        expect(context,
+            matches(RegExp(r'Current context: It is \w+ at .+ \(.+\)\.')));
       });
     });
 

@@ -12,9 +12,9 @@ void main() {
     });
 
     group('processCommand', () {
-      test('should handle get_current_time command', () {
+      test('should handle get_current_time command', () async {
         final command = json.encode({'action': 'get_current_time'});
-        final response = service.processCommand(command);
+        final response = await service.processCommand(command);
 
         final decoded = json.decode(response);
         expect(decoded['status'], 'success');
@@ -37,18 +37,18 @@ void main() {
         expect(data['minute'], lessThan(60));
       });
 
-      test('should return error for unknown action', () {
+      test('should return error for unknown action', () async {
         final command = json.encode({'action': 'unknown_action'});
-        final response = service.processCommand(command);
+        final response = await service.processCommand(command);
 
         final decoded = json.decode(response);
         expect(decoded['status'], 'error');
         expect(decoded['message'], contains('Unknown action'));
       });
 
-      test('should return error for missing action parameter', () {
+      test('should return error for missing action parameter', () async {
         final command = json.encode({'not_action': 'value'});
-        final response = service.processCommand(command);
+        final response = await service.processCommand(command);
 
         final decoded = json.decode(response);
         expect(decoded['status'], 'error');
@@ -56,9 +56,9 @@ void main() {
             decoded['message'], contains('Missing required parameter: action'));
       });
 
-      test('should return error for invalid JSON', () {
+      test('should return error for invalid JSON', () async {
         final command = 'not valid json';
-        final response = service.processCommand(command);
+        final response = await service.processCommand(command);
 
         final decoded = json.decode(response);
         expect(decoded['status'], 'error');
@@ -67,9 +67,9 @@ void main() {
     });
 
     group('time data validation', () {
-      test('should return valid day of week', () {
+      test('should return valid day of week', () async {
         final command = json.encode({'action': 'get_current_time'});
-        final response = service.processCommand(command);
+        final response = await service.processCommand(command);
 
         final decoded = json.decode(response);
         final data = decoded['data'] as Map<String, dynamic>;
@@ -87,9 +87,9 @@ void main() {
         expect(validDays, contains(dayOfWeek));
       });
 
-      test('should return valid time of day', () {
+      test('should return valid time of day', () async {
         final command = json.encode({'action': 'get_current_time'});
-        final response = service.processCommand(command);
+        final response = await service.processCommand(command);
 
         final decoded = json.decode(response);
         final data = decoded['data'] as Map<String, dynamic>;
@@ -99,9 +99,9 @@ void main() {
         expect(validTimes, contains(timeOfDay));
       });
 
-      test('should return valid timestamp format', () {
+      test('should return valid timestamp format', () async {
         final command = json.encode({'action': 'get_current_time'});
-        final response = service.processCommand(command);
+        final response = await service.processCommand(command);
 
         final decoded = json.decode(response);
         final data = decoded['data'] as Map<String, dynamic>;

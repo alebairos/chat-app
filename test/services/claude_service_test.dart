@@ -44,7 +44,7 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       final command = json.encode({'action': 'get_current_time'});
       print('📤 Sending command: $command');
 
-      when(mockMCP.processCommand(command)).thenAnswer((_) {
+      when(mockMCP.processCommand(command)).thenAnswer((_) async {
         print('📡 Mock MCP processing command');
         final response = json.encode({
           'status': 'success',
@@ -79,7 +79,7 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       final command = json.encode({'action': 'invalid_command'});
       print('📤 Sending invalid command: $command');
 
-      when(mockMCP.processCommand(command)).thenAnswer((_) {
+      when(mockMCP.processCommand(command)).thenAnswer((_) async {
         print('📡 Mock MCP throwing error');
         throw Exception('MCP Error');
       });
@@ -125,14 +125,16 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
         // Stub for get_goals_by_dimension
         when(mockMCP.processCommand(json.encode(
                 {'action': 'get_goals_by_dimension', 'dimension': dimension})))
-            .thenReturn(json.encode({'status': 'success', 'data': []}));
+            .thenAnswer(
+                (_) async => json.encode({'status': 'success', 'data': []}));
 
         // Stub for get_recommended_habits
         when(mockMCP.processCommand(json.encode({
           'action': 'get_recommended_habits',
           'dimension': dimension,
           'minImpact': 3
-        }))).thenReturn(json.encode({'status': 'success', 'data': []}));
+        }))).thenAnswer(
+            (_) async => json.encode({'status': 'success', 'data': []}));
       }
 
       when(mockClient.post(

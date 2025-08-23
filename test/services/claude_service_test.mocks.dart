@@ -291,19 +291,19 @@ class MockSystemMCPService extends _i1.Mock implements _i7.SystemMCPService {
   }
 
   @override
-  String processCommand(String? command) => (super.noSuchMethod(
+  _i3.Future<String> processCommand(String? command) => (super.noSuchMethod(
         Invocation.method(
           #processCommand,
           [command],
         ),
-        returnValue: _i5.dummyValue<String>(
+        returnValue: _i3.Future<String>.value(_i5.dummyValue<String>(
           this,
           Invocation.method(
             #processCommand,
             [command],
           ),
-        ),
-      ) as String);
+        )),
+      ) as _i3.Future<String>);
 
   @override
   void setLogging(bool? enable) => super.noSuchMethod(

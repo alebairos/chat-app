@@ -10,7 +10,7 @@ enum TimeGap {
   yesterday, // 1-2 days
   thisWeek, // 2-7 days
   lastWeek, // 1-2 weeks
-  longAgo // > 2 weeks
+  longAgo, // > 2 weeks
 }
 
 /// Service for generating time-aware conversation context
@@ -212,15 +212,17 @@ class TimeContextService {
   ///
   /// [lastMessageTime] - Optional timestamp of last message
   /// Returns enhanced context string with precise durations and current time
-  static String generatePreciseTimeContext(DateTime? lastMessageTime) {
+  static Future<String> generatePreciseTimeContext(
+      DateTime? lastMessageTime) async {
     try {
       _logger.debug('FT-060: Generating precise time context');
 
       // Get precise current time data from SystemMCP
-      final currentTimeData = _getCurrentTimeData();
+      final currentTimeData = await _getCurrentTimeData();
       if (currentTimeData == null) {
         _logger.warning(
-            'FT-060: Could not get current time data, falling back to basic context');
+          'FT-060: Could not get current time data, falling back to basic context',
+        );
         return generateTimeContext(lastMessageTime);
       }
 
@@ -238,7 +240,8 @@ class TimeContextService {
 
       // Fall back to existing behavior for short gaps
       _logger.debug(
-          'FT-060: 📝 Using BASIC time context for gap: $gap (< 4 hours)');
+        'FT-060: 📝 Using BASIC time context for gap: $gap (< 4 hours)',
+      );
       return generateTimeContext(lastMessageTime);
     } catch (e) {
       _logger.error('FT-060: Error generating precise time context: $e');
@@ -262,11 +265,12 @@ class TimeContextService {
   /// Get current time data from SystemMCP service
   ///
   /// Returns parsed time data map or null if unavailable
-  static Map<String, dynamic>? _getCurrentTimeData() {
+  static Future<Map<String, dynamic>?> _getCurrentTimeData() async {
     try {
       final mcpService = SystemMCPService();
-      final response =
-          mcpService.processCommand('{"action":"get_current_time"}');
+      final response = await mcpService.processCommand(
+        '{"action":"get_current_time"}',
+      );
 
       // Log the complete raw response
       _logger.debug('FT-060: get_current_time raw response: $response');
@@ -279,9 +283,11 @@ class TimeContextService {
         // Log the structured time data for visibility
         _logger.info('FT-060: ⏰ Current time data retrieved:');
         _logger.info(
-            '  📅 Date: ${timeData['dayOfWeek']}, ${timeData['readableTime']}');
+          '  📅 Date: ${timeData['dayOfWeek']}, ${timeData['readableTime']}',
+        );
         _logger.info(
-            '  🕐 Time: ${timeData['hour']}:${timeData['minute'].toString().padLeft(2, '0')}:${timeData['second'].toString().padLeft(2, '0')} (${timeData['timeOfDay']})');
+          '  🕐 Time: ${timeData['hour']}:${timeData['minute'].toString().padLeft(2, '0')}:${timeData['second'].toString().padLeft(2, '0')} (${timeData['timeOfDay']})',
+        );
         _logger.info('  🌍 Timezone: ${timeData['timezone']}');
         _logger.info('  📊 Unix timestamp: ${timeData['unixTimestamp']}');
         _logger.info('  🔧 ISO8601: ${timeData['iso8601']}');
@@ -289,7 +295,8 @@ class TimeContextService {
         return timeData;
       } else {
         _logger.warning(
-            'FT-060: SystemMCP get_current_time returned error: ${decoded['message']}');
+          'FT-060: SystemMCP get_current_time returned error: ${decoded['message']}',
+        );
         return null;
       }
     } catch (e) {
@@ -304,7 +311,9 @@ class TimeContextService {
   /// [currentTimeData] - Current time data from SystemMCP
   /// Returns formatted context with precise duration and current time
   static String _generatePreciseGapContext(
-      DateTime lastMessageTime, Map<String, dynamic> currentTimeData) {
+    DateTime lastMessageTime,
+    Map<String, dynamic> currentTimeData,
+  ) {
     try {
       final now = DateTime.parse(currentTimeData['timestamp']);
       final difference = now.difference(lastMessageTime);
@@ -316,8 +325,10 @@ class TimeContextService {
       final baseContext = _contextTemplates[gap] ?? '';
       if (baseContext.isNotEmpty) {
         final preciseDuration = _formatPreciseDuration(difference);
-        final enhancedContext =
-            baseContext.replaceFirst('.', ' ($preciseDuration ago).');
+        final enhancedContext = baseContext.replaceFirst(
+          '.',
+          ' ($preciseDuration ago).',
+        );
         contextParts.add(enhancedContext);
       }
 
@@ -339,7 +350,8 @@ class TimeContextService {
   /// [timeData] - Current time data from SystemMCP
   /// Returns formatted current time context with exact time
   static String _formatEnhancedCurrentTimeContext(
-      Map<String, dynamic> timeData) {
+    Map<String, dynamic> timeData,
+  ) {
     try {
       final dayOfWeek = timeData['dayOfWeek'] as String;
       final hour = timeData['hour'] as int;
@@ -350,8 +362,9 @@ class TimeContextService {
       final timeString = _formatTime12Hour(hour, minute);
       return 'Current context: It is $dayOfWeek at $timeString.';
     } catch (e) {
-      _logger
-          .error('FT-060: Error formatting enhanced current time context: $e');
+      _logger.error(
+        'FT-060: Error formatting enhanced current time context: $e',
+      );
       return getCurrentTimeContext(); // Fallback to basic context
     }
   }

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/chat_message_model.dart';
+import '../models/activity_model.dart';
 import '../models/message_type.dart';
 import 'dart:typed_data';
 import '../utils/path_utils.dart';
@@ -17,7 +18,7 @@ class ChatStorageService {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
-        [ChatMessageModelSchema],
+        [ChatMessageModelSchema, ActivityModelSchema],
         directory: dir.path,
       );
     }
@@ -220,6 +221,75 @@ class ChatStorageService {
     });
 
     print('Migrated $migratedCount AI messages to include persona metadata');
+  }
+
+  /// Restore chat messages from exported data
+  /// WARNING: This will clear existing chat messages but preserve activities
+  ///
+  /// Usage: Add this to your app (e.g., in main.dart or debug screen):
+  /// ```dart
+  /// final storage = ChatStorageService();
+  /// await storage.restoreMessagesFromData();
+  /// ```
+  Future<void> restoreMessagesFromData() async {
+    print('🔄 Starting chat restoration from exported data...');
+
+    final isar = await db;
+
+    // CRITICAL: Verify activities exist before clearing messages
+    final activityCount = await isar.activityModels.count();
+    print('📊 Current activities in database: $activityCount');
+    if (activityCount > 0) {
+      print('✅ Activities preserved - proceeding with message restoration');
+    }
+
+    // Clear existing messages only (preserve activities!)
+    await isar.writeTxn(() async {
+      await isar.chatMessageModels.clear();
+    });
+    print('🗑️  Cleared existing chat messages (activities preserved)');
+
+    // Load messages from restoration JSON file
+    final messages = await _loadRestorationMessages();
+
+    print('📝 Generated ${messages.length} message objects');
+
+    // Insert messages in batches to avoid memory issues
+    const batchSize = 50;
+    for (int i = 0; i < messages.length; i += batchSize) {
+      final batch = messages.skip(i).take(batchSize).toList();
+
+      await isar.writeTxn(() async {
+        await isar.chatMessageModels.putAll(batch);
+      });
+
+      print(
+          '💾 Inserted batch ${(i ~/ batchSize) + 1}/${(messages.length / batchSize).ceil()}');
+    }
+
+    // Verify restoration
+    final finalMessageCount = await isar.chatMessageModels.count();
+    final finalActivityCount = await isar.activityModels.count();
+
+    print('✅ Restoration complete!');
+    print('📊 Final counts:');
+    print('   💬 Messages: $finalMessageCount');
+    print('   🎯 Activities: $finalActivityCount (preserved)');
+
+    if (finalActivityCount != activityCount) {
+      print(
+          '⚠️  WARNING: Activity count changed! Expected: $activityCount, Got: $finalActivityCount');
+    }
+  }
+
+  /// Load restoration messages from file path
+  /// This will be simplified for FT-070 UI-based import
+  Future<List<ChatMessageModel>> _loadRestorationMessages() async {
+    // TODO: This method will be updated for FT-070 file-based import
+    // The complex asset loading approach has been removed
+    print(
+        '⚠️ _loadRestorationMessages needs file path parameter for UI import');
+    return <ChatMessageModel>[];
   }
 
   Future<void> close() async {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/chat_screen.dart';
-import 'screens/character_selection_screen.dart';
+import 'screens/stats_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/settings/settings_hub_screen.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
@@ -51,8 +53,30 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   final ConfigLoader _configLoader = ConfigLoader();
+  late TabController _tabController;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {
+          _currentIndex = _tabController.index;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,25 +108,39 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CharacterSelectionScreen(
-                    onCharacterSelected: () {
-                      setState(() {});
-                    },
-                  ),
-                ),
-              );
-            },
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          ChatScreen(),
+          StatsScreen(),
+          ProfileScreen(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          _tabController.animateTo(index);
+        },
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            activeIcon: Icon(Icons.chat_bubble),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart_outlined),
+            activeIcon: Icon(Icons.bar_chart),
+            label: 'Stats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
-      body: const ChatScreen(),
     );
   }
 }
