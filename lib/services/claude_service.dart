@@ -315,7 +315,7 @@ class ClaudeService {
 
   /// Check if response contains MCP commands that require data
   bool _containsMCPCommand(String response) {
-    final mcpPattern = RegExp(r'\{"action":\s*"[^"]+"\}');
+    final mcpPattern = RegExp(r'\{"action":\s*"[^"]+"[^}]*\}');
     return mcpPattern.hasMatch(response);
   }
 
@@ -446,14 +446,22 @@ Please provide a natural response using this information while maintaining your 
           '## TEMPORAL INTELLIGENCE GUIDELINES (FT-095)\n\n'
           '### Temporal Expression Mapping\n'
           'When users ask about activities with time references, automatically map to appropriate MCP commands:\n\n'
-          '**Portuguese/English Temporal Expressions:**\n'
-          '- "hoje", "today" → {"action": "get_activity_stats", "days": 0}\n'
-          '- "ontem", "yesterday" → {"action": "get_activity_stats", "days": 1}\n'
-          '- "anteontem", "day before yesterday" → {"action": "get_activity_stats", "days": 2}\n'
-          '- "esta semana", "this week" → {"action": "get_activity_stats", "days": 7}\n'
-          '- "semana passada", "last week" → {"action": "get_activity_stats", "days": 14}\n'
-          '- "último mês", "last month" → {"action": "get_activity_stats", "days": 30}\n'
-          '- "[X] dias atrás", "[X] days ago" → {"action": "get_activity_stats", "days": X}\n\n'
+          '**Temporal Intelligence Guidelines:**\n'
+          'Use your natural understanding of temporal expressions to generate appropriate MCP commands.\n\n'
+          '**Command Structure**: {"action": "get_activity_stats", "days": N}\n'
+          '- days: 0 = today (current day activities)\n'
+          '- days: 1 = yesterday (previous day activities)\n'
+          '- days: 7 = last week (7 days of data)\n'
+          '- days: 14 = last 2 weeks (14 days of data)\n'
+          '- days: 30 = last month (30 days of data)\n\n'
+          '**Smart Temporal Mapping**:\n'
+          '- Present/current references → days: 0\n'
+          '- Single past day references → days: 1, 2, 3, etc.\n'
+          '- Week period references → days: 7\n'
+          '- Multiple week references → days: 14, 21, etc.\n'
+          '- Month period references → days: 30\n\n'
+          'Trust your understanding of temporal expressions in any language. '
+          'Map user intent to appropriate days parameter based on natural temporal relationships.\n\n'
           '### Complex Query Processing\n'
           'For multi-part temporal queries, use structured approach:\n\n'
           '**Exclusion Queries ("além de X", "other than X"):**\n'
