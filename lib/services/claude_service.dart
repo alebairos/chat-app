@@ -362,6 +362,10 @@ System Data Available:$collectedData
 Please provide a natural response using this information while maintaining your persona and language style.''';
 
       _logger.debug('Sending enriched prompt to Claude for final response');
+      _logger.debug(
+          '🔍 [DATA DEBUG] Raw collected data length: ${collectedData.length} chars');
+      _logger.debug(
+          '🔍 [DATA DEBUG] Collected data preview: ${collectedData.length > 500 ? collectedData.substring(0, 500) + "..." : collectedData}');
 
       // FT-085: Smart delay to prevent API rate limiting bursts
       // 500ms delay is imperceptible to users but prevents 429 errors
@@ -479,8 +483,11 @@ Please provide a natural response using this information while maintaining your 
           '3. Present time-specific activities\n\n'
           '### Data Utilization Rules\n'
           '- ALWAYS use real data from MCP commands, never approximate\n'
+          '- Use EXACT counts from "total_activities" and "by_activity" fields\n'
           '- Reference specific times and counts from returned data\n'
           '- Use exact activity codes (SF1, T8, etc.) from results\n'
+          '- Count activities from the activities array for precision\n'
+          '- Never inflate or summarize numbers - report actual database counts\n'
           '- Include confidence scores and timestamps when relevant\n'
           '- Present data in natural, conversational language while being accurate\n\n'
           '### Contextual Response Enhancement\n'
