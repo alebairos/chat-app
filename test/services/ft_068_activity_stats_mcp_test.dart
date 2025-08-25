@@ -93,7 +93,7 @@ void main() {
     });
 
     test('should handle days parameter correctly', () async {
-      // Add test activity
+      // Add test activity for today
       await ActivityMemoryService.logActivity(
         activityCode: 'SM8',
         activityName: 'Pausas regulares durante trabalho',
@@ -101,7 +101,8 @@ void main() {
         source: 'Test',
       );
 
-      // Test with days parameter
+      // Test with days parameter - FT-083: days=7 means "previous 7 days excluding today"
+      // So today's activity should NOT be included in the results
       const command = '{"action": "get_activity_stats", "days": 7}';
       final result = await mcpService.processCommand(command);
 
@@ -109,7 +110,8 @@ void main() {
 
       expect(response['status'], equals('success'));
       expect(response['data']['period'], equals('last_7_days'));
-      expect(response['data']['total_activities'], equals(1));
+      expect(response['data']['total_activities'],
+          equals(0)); // FT-083: excludes today
     });
 
     test('should calculate summary statistics correctly', () async {

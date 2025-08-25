@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/chat_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/profile_screen.dart';
@@ -19,6 +20,14 @@ Future<void> main() async {
   logger.info('Starting application');
 
   await dotenv.load(fileName: '.env');
+
+  // Initialize Portuguese locale for date formatting
+  try {
+    await initializeDateFormatting('pt_BR', null);
+    logger.info('✅ Portuguese locale initialized');
+  } catch (e) {
+    logger.warning('Failed to initialize Portuguese locale: $e');
+  }
 
   // Initialize the config loader and character manager
   final configLoader = ConfigLoader();

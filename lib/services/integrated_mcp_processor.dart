@@ -45,10 +45,10 @@ class IntegratedMCPProcessor {
           .debug('FT-064: Time context retrieved: ${timeData['readableTime']}');
 
       // Step 3: Semantic activity detection with time context
+      // FT-086: Only analyze user message to prevent false positives from assistant responses
       final detectedActivities =
           await SemanticActivityDetector.analyzeWithTimeContext(
         userMessage: userMessage,
-        claudeResponse: claudeResponse,
         oracleContext: oracleContext,
         timeContext: timeData,
       );

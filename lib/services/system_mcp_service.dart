@@ -41,12 +41,12 @@ class SystemMCPService {
           return _getDeviceInfo();
 
         case 'get_activity_stats':
-          // Parse days parameter safely, default to 1 if invalid
-          int days = 1;
+          // Parse days parameter safely, default to 0 (today) if invalid
+          int days = 0;
           if (parsedCommand['days'] is int) {
             days = parsedCommand['days'] as int;
           } else if (parsedCommand['days'] is String) {
-            days = int.tryParse(parsedCommand['days'] as String) ?? 1;
+            days = int.tryParse(parsedCommand['days'] as String) ?? 0;
           }
           return await _getActivityStats(days);
 
@@ -154,14 +154,29 @@ class SystemMCPService {
   /// Returns human-readable time string
   String _getReadableTime(DateTime dateTime) {
     try {
-      // Use Portuguese format since the app is primarily used in Portuguese
-      return DateFormat(
+      _logger.debug('Formatting date: ${dateTime.toIso8601String()}');
+
+      // Try Portuguese format first
+      final portugueseFormat = DateFormat(
         'EEEE, d \'de\' MMMM \'de\' yyyy \'às\' HH:mm',
         'pt_BR',
-      ).format(dateTime);
+      );
+      final result = portugueseFormat.format(dateTime);
+      _logger.debug('Portuguese format result: $result');
+      return result;
     } catch (e) {
+      _logger.warning('Portuguese locale failed, using English fallback: $e');
       // Fallback to English if Portuguese locale is not available
-      return DateFormat('EEEE, MMMM d, yyyy \'at\' h:mm a').format(dateTime);
+      try {
+        final englishResult =
+            DateFormat('EEEE, MMMM d, yyyy \'at\' h:mm a').format(dateTime);
+        _logger.debug('English fallback result: $englishResult');
+        return englishResult;
+      } catch (e2) {
+        _logger.error('Both date formats failed: $e2');
+        // Ultimate fallback - simple ISO format
+        return dateTime.toIso8601String();
+      }
     }
   }
 

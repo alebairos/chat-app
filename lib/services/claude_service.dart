@@ -215,7 +215,9 @@ class ClaudeService {
             '- get_current_time: Returns current date, time, and temporal information\n'
             '- get_device_info: Returns device platform, OS version, locale, and system info\n'
             '- get_activity_stats: Get precise activity tracking data from database\n'
-            '  Usage: {"action": "get_activity_stats", "days": 1} (optional days parameter, defaults to today)\n'
+            '  Usage: {"action": "get_activity_stats", "days": 0} for today\'s activities\n'
+            '  Usage: {"action": "get_activity_stats", "days": 1} for yesterday\'s activities\n'
+            '  Usage: {"action": "get_activity_stats", "days": 7} for last 7 days (optional days parameter)\n'
             '- get_message_stats: Get chat message statistics from database\n'
             '  Usage: {"action": "get_message_stats", "limit": 10} (optional limit parameter, defaults to 10)';
 
@@ -246,22 +248,28 @@ class ClaudeService {
         // Log the original AI response to see what we're working with
         _logger.debug('Original AI response: $assistantMessage');
 
-        // Process MCP commands in the AI's response
-        // Process any MCP commands in the assistant's response
-        _logger.debug(
-            '🔍 [MCP DEBUG] Before processing: ${assistantMessage.length} chars');
-        _logger.debug(
-            '🔍 [MCP DEBUG] Response preview: ${assistantMessage.substring(0, assistantMessage.length > 200 ? 200 : assistantMessage.length)}');
-        assistantMessage = await _processMCPCommands(assistantMessage);
-        _logger.debug(
-            '🔍 [MCP DEBUG] After processing: ${assistantMessage.length} chars');
+        // FT-084: Check if Claude requested data using intelligent two-pass approach
+        if (_containsMCPCommand(assistantMessage)) {
+          _logger.info(
+              '🧠 FT-084: Detected data request, switching to two-pass processing');
+          final dataInformedResponse =
+              await _processDataRequiredQuery(message, assistantMessage);
+
+          // Background activity detection for data-informed responses
+          _performBackgroundActivityDetection(message, dataInformedResponse);
+
+          return dataInformedResponse;
+        }
+
+        // Regular conversation flow (no data required)
+        _logger.debug('Regular conversation - no data required');
 
         // FT-064: Two-pass semantic activity detection (background processing)
         // Pass 1: Return immediate conversation response (no latency impact)
         // Pass 2: Background semantic analysis for activity detection
         _performBackgroundActivityDetection(message, assistantMessage);
 
-        // Add assistant's response to history using content blocks format
+        // Add assistant response to history (user message already added at line 163)
         _conversationHistory.add({
           'role': 'assistant',
           'content': [
@@ -332,6 +340,168 @@ class ClaudeService {
     }
   }
 
+  /// Check if response contains MCP commands that require data
+  bool _containsMCPCommand(String response) {
+    final mcpPattern = RegExp(r'\{"action":\s*"[^"]+"\}');
+    return mcpPattern.hasMatch(response);
+  }
+
+  /// Extract MCP commands from response
+  List<String> _extractMCPCommands(String response) {
+    final mcpPattern = RegExp(r'\{"action":\s*"[^"]+"[^}]*\}');
+    return mcpPattern
+        .allMatches(response)
+        .map((match) => match.group(0)!)
+        .toList();
+  }
+
+  /// Process data-required query using intelligent two-pass approach
+  Future<String> _processDataRequiredQuery(
+      String userMessage, String initialResponse) async {
+    try {
+      _logger.info(
+          '🧠 FT-084: Processing data-required query with two-pass approach');
+
+      // Extract MCP commands from Claude's initial response
+      final mcpCommands = _extractMCPCommands(initialResponse);
+      _logger.debug('Found MCP commands: $mcpCommands');
+
+      // Execute all MCP commands and collect data
+      String collectedData = '';
+      for (final command in mcpCommands) {
+        try {
+          final result = await _systemMCP!.processCommand(command);
+          final data = jsonDecode(result);
+
+          if (data['status'] == 'success') {
+            collectedData += '\n${data['data']}';
+          }
+        } catch (e) {
+          _logger.warning('MCP command failed: $command - $e');
+        }
+      }
+
+      // Create enriched prompt for second pass
+      final enrichedPrompt = '''$userMessage
+
+System Data Available:$collectedData
+
+Please provide a natural response using this information while maintaining your persona and language style.''';
+
+      _logger.debug('Sending enriched prompt to Claude for final response');
+
+      // FT-085: Smart delay to prevent API rate limiting bursts
+      // 500ms delay is imperceptible to users but prevents 429 errors
+      _logger.debug('🕐 FT-085: Applying 500ms delay to prevent rate limiting');
+      await Future.delayed(Duration(milliseconds: 500));
+      _logger
+          .debug('✅ FT-085: Delay completed, proceeding with second API call');
+
+      // Second pass: Get data-informed response
+      final dataInformedResponse = await _callClaudeWithPrompt(enrichedPrompt);
+
+      // Add to conversation history
+      _conversationHistory.add({
+        'role': 'user',
+        'content': [
+          {'type': 'text', 'text': userMessage}
+        ],
+      });
+
+      _conversationHistory.add({
+        'role': 'assistant',
+        'content': [
+          {'type': 'text', 'text': dataInformedResponse}
+        ],
+      });
+
+      _logger
+          .info('✅ FT-084: Successfully completed two-pass data integration');
+      return dataInformedResponse;
+    } catch (e) {
+      _logger.error('FT-084: Error in two-pass processing: $e');
+      // Fallback to original response without data
+      return initialResponse.replaceAll(RegExp(r'\{"action"[^}]*\}'), '');
+    }
+  }
+
+  /// Build system prompt with time context and MCP documentation
+  Future<String> _buildSystemPrompt() async {
+    // Generate enhanced time-aware context (FT-060)
+    final lastMessageTime = await _getLastMessageTimestamp();
+    final timeContext = await TimeContextService.generatePreciseTimeContext(
+      lastMessageTime,
+    );
+
+    // Build enhanced system prompt with time context
+    String systemPrompt = _systemPrompt ?? '';
+
+    // Add time context at the beginning if available
+    if (timeContext.isNotEmpty) {
+      systemPrompt = '$timeContext\n\n$systemPrompt';
+    }
+
+    // Add system MCP function documentation
+    if (_systemMCP != null) {
+      String mcpFunctions = '\n\nSystem Functions Available:\n'
+          'You can call system functions by using JSON format: {"action": "function_name"}\n'
+          'Available functions:\n'
+          '- get_current_time: Returns current date, time, and temporal information\n'
+          '- get_device_info: Returns device platform, OS version, locale, and system info\n'
+          '- get_activity_stats: Get precise activity tracking data from database\n'
+          '  Usage: {"action": "get_activity_stats", "days": 0} for today\'s activities\n'
+          '  Usage: {"action": "get_activity_stats", "days": 1} for yesterday\'s activities\n'
+          '  Usage: {"action": "get_activity_stats", "days": 7} for last 7 days (optional days parameter)\n'
+          '- get_message_stats: Get chat message statistics from database\n'
+          '  Usage: {"action": "get_message_stats", "limit": 10} (optional limit parameter, defaults to 10)';
+
+      systemPrompt += mcpFunctions;
+    }
+
+    return systemPrompt;
+  }
+
+  /// Helper method to call Claude with a specific prompt
+  Future<String> _callClaudeWithPrompt(String prompt) async {
+    final messages = [
+      {
+        'role': 'user',
+        'content': [
+          {'type': 'text', 'text': prompt}
+        ],
+      }
+    ];
+
+    final systemPrompt = await _buildSystemPrompt();
+
+    final response = await _client.post(
+      Uri.parse(_baseUrl),
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Accept': 'application/json; charset=utf-8',
+        'x-api-key': _apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: jsonEncode({
+        'model': _model,
+        'max_tokens': 1024,
+        'messages': messages,
+        'system': systemPrompt,
+      }),
+      encoding: utf8,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['content'][0]['text'];
+    } else {
+      throw Exception('Claude API error: ${response.statusCode}');
+    }
+  }
+
+  /// LEGACY: Old post-processing MCP command system (replaced by FT-084 two-pass approach)
+  /// This method is kept for potential fallback scenarios but is no longer used in main flow
+  // ignore: unused_element
   Future<String> _processMCPCommands(String message) async {
     if (_systemMCP == null) {
       return message;
@@ -381,16 +551,11 @@ class ClaudeService {
           if (action == 'get_current_time') {
             final timeData = data['data'];
             final readableTime = timeData['readableTime'];
-            final timeOfDay = timeData['timeOfDay'];
 
-            // Create language-aware time response
-            final timeResponse = _createLocalizedTimeResponse(
-                readableTime, timeOfDay, processedMessage);
-
-            // Replace the JSON command with a localized time response
+            // Remove MCP command silently - time context already provided
             processedMessage = processedMessage.replaceFirst(
               command,
-              timeResponse,
+              '',
             );
 
             _logger.info('Replaced MCP command with time: $readableTime');
@@ -417,11 +582,12 @@ class ClaudeService {
                 replacement = summaryParts.join('\n');
                 if (totalActivities > 10) {
                   replacement +=
-                      '\n[... and ${totalActivities - 10} more activities]';
+                      '\n[+${totalActivities - 10} more]'; // Simplified, let Claude localize
                 }
               }
             } else {
-              replacement = 'No activities found for the requested period.';
+              replacement =
+                  ''; // Let Claude handle "no activities" in persona style
             }
 
             processedMessage =
@@ -578,231 +744,5 @@ class ClaudeService {
             .debug('FT-064: Background activity detection failed silently: $e');
       }
     }();
-  }
-
-  /// Create localized time response based on conversation language (FT-081)
-  ///
-  /// Detects the conversation language and formats time response accordingly
-  /// to avoid mixing English and Portuguese in the same response.
-  String _createLocalizedTimeResponse(
-      String readableTime, String timeOfDay, String context) {
-    try {
-      // Detect language from conversation context
-      final language = _detectLanguageFromContext(context);
-
-      switch (language) {
-        case 'pt_BR':
-          return _createPortugueseTimeResponse(readableTime, timeOfDay);
-        case 'en_US':
-          return _createEnglishTimeResponse(readableTime, timeOfDay);
-        default:
-          // Default to Portuguese (Brazilian market focus)
-          return _createPortugueseTimeResponse(readableTime, timeOfDay);
-      }
-    } catch (e) {
-      _logger.error('Error creating localized time response: $e');
-      // Fallback to Portuguese if localization fails
-      return _createPortugueseTimeResponse(readableTime, timeOfDay);
-    }
-  }
-
-  /// Detect language from conversation context
-  String _detectLanguageFromContext(String context) {
-    try {
-      // Extract text content for language analysis
-      // Remove MCP commands and focus on natural language
-      final cleanContext =
-          context.replaceAll(RegExp(r'\{"action":[^}]+\}'), '').trim();
-
-      if (cleanContext.isEmpty) {
-        return 'pt_BR'; // Default to Portuguese
-      }
-
-      // Simple language detection based on common Portuguese vs English patterns
-      final portugueseIndicators = [
-        'às',
-        'tome',
-        'cuidado',
-        'melhor',
-        'horário',
-        'depois',
-        'antes',
-        'energia',
-        'hoje',
-        'agora',
-        'que',
-        'como',
-        'para',
-        'seu',
-        'sua'
-      ];
-
-      final englishIndicators = [
-        'the',
-        'and',
-        'you',
-        'your',
-        'how',
-        'what',
-        'when',
-        'where',
-        'take',
-        'care',
-        'better',
-        'time',
-        'after',
-        'before',
-        'energy'
-      ];
-
-      int portugueseScore = 0;
-      int englishScore = 0;
-
-      final lowerContext = cleanContext.toLowerCase();
-
-      for (final indicator in portugueseIndicators) {
-        if (lowerContext.contains(indicator)) portugueseScore++;
-      }
-
-      for (final indicator in englishIndicators) {
-        if (lowerContext.contains(indicator)) englishScore++;
-      }
-
-      // Return language with higher score, default to Portuguese
-      return portugueseScore >= englishScore ? 'pt_BR' : 'en_US';
-    } catch (e) {
-      _logger.error('Error detecting language from context: $e');
-      return 'pt_BR'; // Safe fallback
-    }
-  }
-
-  /// Create Portuguese time response
-  String _createPortugueseTimeResponse(String readableTime, String timeOfDay) {
-    try {
-      // Localize time format for Portuguese
-      final localizedTime = _localizeTimeFormat(readableTime, 'pt_BR');
-      final localizedPeriod = _localizePeriod(timeOfDay, 'pt_BR');
-
-      return 'Atualmente são $localizedTime ($localizedPeriod).';
-    } catch (e) {
-      _logger.error('Error creating Portuguese time response: $e');
-      return 'Atualmente são $readableTime ($timeOfDay).';
-    }
-  }
-
-  /// Create English time response
-  String _createEnglishTimeResponse(String readableTime, String timeOfDay) {
-    return 'It is currently $readableTime ($timeOfDay).';
-  }
-
-  /// Localize time format for specific language
-  String _localizeTimeFormat(String englishTime, String language) {
-    if (language == 'pt_BR') {
-      try {
-        // Convert "Saturday, August 23, 2025 at 2:04 PM" to Portuguese format
-        String localized = englishTime;
-
-        // Day of week translations
-        final dayTranslations = {
-          'Monday': 'segunda-feira',
-          'Tuesday': 'terça-feira',
-          'Wednesday': 'quarta-feira',
-          'Thursday': 'quinta-feira',
-          'Friday': 'sexta-feira',
-          'Saturday': 'sábado',
-          'Sunday': 'domingo'
-        };
-
-        // Month translations
-        final monthTranslations = {
-          'January': 'janeiro',
-          'February': 'fevereiro',
-          'March': 'março',
-          'April': 'abril',
-          'May': 'maio',
-          'June': 'junho',
-          'July': 'julho',
-          'August': 'agosto',
-          'September': 'setembro',
-          'October': 'outubro',
-          'November': 'novembro',
-          'December': 'dezembro'
-        };
-
-        // Apply translations
-        dayTranslations.forEach((english, portuguese) {
-          localized = localized.replaceAll(english, portuguese);
-        });
-
-        monthTranslations.forEach((english, portuguese) {
-          localized = localized.replaceAll(english, portuguese);
-        });
-
-        // Convert "at" to "às" and adjust format
-        localized = localized.replaceAll(' at ', ' às ');
-
-        // Convert 12-hour to 24-hour format if needed
-        if (localized.contains('PM') || localized.contains('AM')) {
-          localized = _convert12to24Hour(localized);
-        }
-
-        return localized;
-      } catch (e) {
-        _logger.error('Error localizing time format: $e');
-        return englishTime; // Fallback to original
-      }
-    }
-    return englishTime;
-  }
-
-  /// Localize time period (morning, afternoon, etc.)
-  String _localizePeriod(String timeOfDay, String language) {
-    if (language == 'pt_BR') {
-      final periodMap = {
-        'morning': 'manhã',
-        'afternoon': 'tarde',
-        'evening': 'noite',
-        'night': 'madrugada'
-      };
-      return periodMap[timeOfDay] ?? timeOfDay;
-    }
-    return timeOfDay;
-  }
-
-  /// Convert 12-hour format to 24-hour format for Portuguese
-  String _convert12to24Hour(String timeString) {
-    try {
-      // Simple conversion for common patterns
-      if (timeString.contains('PM')) {
-        // Handle PM times (12 PM = 12:xx, 1-11 PM = 13-23:xx)
-        final match = RegExp(r'(\d{1,2}):(\d{2})\s*PM').firstMatch(timeString);
-        if (match != null) {
-          int hour = int.parse(match.group(1)!);
-          final minute = match.group(2)!;
-
-          if (hour != 12) hour += 12; // Convert PM (except 12 PM)
-
-          return timeString.replaceAll(RegExp(r'\d{1,2}:\d{2}\s*PM'),
-              '${hour.toString().padLeft(2, '0')}:$minute');
-        }
-      } else if (timeString.contains('AM')) {
-        // Handle AM times (12 AM = 00:xx, 1-11 AM = 01-11:xx)
-        final match = RegExp(r'(\d{1,2}):(\d{2})\s*AM').firstMatch(timeString);
-        if (match != null) {
-          int hour = int.parse(match.group(1)!);
-          final minute = match.group(2)!;
-
-          if (hour == 12) hour = 0; // Convert 12 AM to 00:xx
-
-          return timeString.replaceAll(RegExp(r'\d{1,2}:\d{2}\s*AM'),
-              '${hour.toString().padLeft(2, '0')}:$minute');
-        }
-      }
-
-      return timeString;
-    } catch (e) {
-      _logger.error('Error converting 12-hour to 24-hour format: $e');
-      return timeString;
-    }
   }
 }

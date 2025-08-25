@@ -17,19 +17,20 @@ class SemanticActivityDetector {
 
   /// Main entry point: Semantic activity detection with time context
   ///
+  /// FT-086: Only analyzes user messages to prevent false positives from assistant responses
   /// Returns detected activities or empty list on failure (graceful degradation)
   static Future<List<ActivityDetection>> analyzeWithTimeContext({
     required String userMessage,
-    required String claudeResponse,
     required OracleContext oracleContext,
     required Map<String, dynamic> timeContext,
   }) async {
     try {
       Logger().debug('FT-064: Starting semantic activity detection');
+      Logger().debug(
+          'FT-086: Analyzing USER message only (assistant responses ignored)');
 
       final prompt = _buildDetectionPrompt(
         userMessage: userMessage,
-        claudeResponse: claudeResponse,
         oracleContext: oracleContext,
         timeContext: timeContext,
       );
@@ -46,9 +47,9 @@ class SemanticActivityDetector {
   }
 
   /// Build minimal, focused detection prompt
+  /// FT-086: Only analyzes user messages to prevent assistant-derived false positives
   static String _buildDetectionPrompt({
     required String userMessage,
-    required String claudeResponse,
     required OracleContext oracleContext,
     required Map<String, dynamic> timeContext,
   }) {
@@ -58,18 +59,20 @@ class SemanticActivityDetector {
 ## Oracle Activities Available
 ${_formatOracleActivities(oracleContext)}
 
-## Conversation to Analyze
+## User Message to Analyze
 **Time Context**: ${timeContext['readableTime'] ?? 'Unknown'}
-**User**: "$userMessage"
-**Assistant**: "$claudeResponse"
+**User Message**: "$userMessage"
 
 ## Task
-Detect COMPLETED activities (past tense only) mentioned by the user.
+Detect COMPLETED activities (past tense only) mentioned by the USER ONLY.
+FT-086: CRITICAL - Only analyze user messages, NEVER assistant responses.
 
 ## Rules
 - ONLY past completions: "fiz", "acabei", "terminei", "did", "finished", "completed"
 - IGNORE future plans: "vou", "pretendo", "will", "planning", "want to"
 - IGNORE preferences: "gosto de", "amo", "love", "like"
+- FT-086: IGNORE QUERIES: "o que fiz?", "what did I do?", "show me", "quantas vezes"
+- FT-086: IGNORE DISCUSSIONS: questions about activities, requests for data
 - MATCH semantically: "malhar" = "exercitar" = "treinar" = "workout"
 - EXTRACT duration when mentioned
 - BE CONFIDENT: only return activities you're certain about

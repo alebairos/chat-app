@@ -50,34 +50,39 @@ class ActivityMemoryService {
       // Try to reinitialize if we have a storage service reference
       // This is a fallback for when the database connection is lost
       _logger.info('Attempting to reestablish database connection...');
-      
+
       // For now, we can't reinitialize without the storage service
       // This would require passing the storage service reference
-      print('⚠️ ActivityMemoryService: Cannot reinitialize database without storage service reference');
+      print(
+          '⚠️ ActivityMemoryService: Cannot reinitialize database without storage service reference');
       return false;
     } catch (e) {
       _logger.error('Failed to reestablish database connection: $e');
       return false;
     }
   }
-  
+
   /// Try to reinitialize the database with a new Isar instance
   static Future<bool> reinitializeDatabase(Isar newIsar) async {
     try {
-      print('🔄 ActivityMemoryService: Attempting to reinitialize with new Isar instance...');
+      print(
+          '🔄 ActivityMemoryService: Attempting to reinitialize with new Isar instance...');
       _isar = newIsar;
-      
+
       // Test the new connection
       final isAvailable = await isDatabaseAvailable();
       if (isAvailable) {
-        print('✅ ActivityMemoryService: Successfully reinitialized database connection');
+        print(
+            '✅ ActivityMemoryService: Successfully reinitialized database connection');
         return true;
       } else {
-        print('❌ ActivityMemoryService: Failed to reinitialize database connection');
+        print(
+            '❌ ActivityMemoryService: Failed to reinitialize database connection');
         return false;
       }
     } catch (e) {
-      print('❌ ActivityMemoryService: Error during database reinitialization: $e');
+      print(
+          '❌ ActivityMemoryService: Error during database reinitialization: $e');
       return false;
     }
   }
@@ -237,10 +242,8 @@ class ActivityMemoryService {
 
       // Only provide minimal context - no detailed lists
       if (recentActivities.isNotEmpty) {
-        final activeDimensions = recentActivities
-            .map((a) => a.dimension)
-            .toSet()
-            .length;
+        final activeDimensions =
+            recentActivities.map((a) => a.dimension).toSet().length;
 
         final totalActivities = recentActivities.length;
 
@@ -398,7 +401,7 @@ class ActivityMemoryService {
             '❌ ActivityMemoryService: Database not available, returning empty stats');
         _logger.warning('Database not available, returning empty stats');
         return {
-          'period': days == 1 ? 'today' : 'last_${days}_days',
+          'period': days == 0 ? 'today' : 'last_${days}_days',
           'total_activities': 0,
           'activities': <Map<String, dynamic>>[],
           'summary': _getEmptySummary(),
@@ -409,18 +412,33 @@ class ActivityMemoryService {
       print(
           '✅ ActivityMemoryService: Database available, proceeding with query');
 
-      // Calculate date range
+      // Calculate date range (FT-083 fix + today support)
       final now = DateTime.now();
-      final startDate = DateTime(now.year, now.month, now.day)
-          .subtract(Duration(days: days - 1));
+      final today = DateTime(now.year, now.month, now.day);
 
-      print(
-          '🔍 ActivityMemoryService: Querying activities from ${startDate.toIso8601String()} to ${now.toIso8601String()}');
+      late DateTime startDate;
+      late DateTime queryEndDate;
 
-      // Get activities in timeframe
+      if (days == 0) {
+        // Special case: Query today's activities only
+        startDate = today;
+        queryEndDate = now;
+        print(
+            '🔍 ActivityMemoryService: Querying TODAY\'s activities from ${startDate.toIso8601String()} to ${queryEndDate.toIso8601String()}');
+      } else {
+        // Query previous days (exclude today)
+        startDate = today.subtract(Duration(days: days));
+        final endDate = today.subtract(Duration(days: 1));
+        queryEndDate =
+            DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999);
+        print(
+            '🔍 ActivityMemoryService: Querying PREVIOUS $days days from ${startDate.toIso8601String()} to ${queryEndDate.toIso8601String()}');
+      }
+
+      // Get activities in calculated timeframe
       final activities = await _database.activityModels
           .filter()
-          .completedAtBetween(startDate, now)
+          .completedAtBetween(startDate, queryEndDate)
           .sortByCompletedAtDesc()
           .findAll();
 
@@ -447,7 +465,7 @@ class ActivityMemoryService {
 
       print('✅ ActivityMemoryService: Returning stats for $days days');
       return {
-        'period': days == 1 ? 'today' : 'last_${days}_days',
+        'period': days == 0 ? 'today' : 'last_${days}_days',
         'total_activities': activities.length,
         'activities': formattedActivities,
         'summary': summary,
@@ -456,7 +474,7 @@ class ActivityMemoryService {
       print('❌ ActivityMemoryService: Exception in getActivityStats: $e');
       _logger.error('Failed to get activity stats: $e');
       return {
-        'period': days == 1 ? 'today' : 'last_${days}_days',
+        'period': days == 0 ? 'today' : 'last_${days}_days',
         'total_activities': 0,
         'activities': <Map<String, dynamic>>[],
         'summary': _getEmptySummary(),
@@ -571,7 +589,7 @@ class ActivityMemoryService {
     } catch (e) {
       _logger.error('Failed to get enhanced activity stats: $e');
       return {
-        'period': days == 1 ? 'today' : '${days}_days',
+        'period': days == 0 ? 'today' : '${days}_days',
         'total_activities': 0,
         'activities': [],
         'summary': _getEmptySummary(),
