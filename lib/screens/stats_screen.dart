@@ -60,7 +60,8 @@ class _StatsScreenState extends State<StatsScreen> {
 
       // Load today's stats, week stats, and enhanced stats
       print('🔍 StatsScreen: Loading today\'s stats...');
-      final todayData = await ActivityMemoryService.getActivityStats(days: 1);
+      // FT-088: Fix critical bug - use days: 0 for today's activities (not days: 1 which is yesterday)
+      final todayData = await ActivityMemoryService.getActivityStats(days: 0);
       print(
           '🔍 StatsScreen: Today\'s stats loaded: ${todayData['total_activities']} activities');
 
@@ -407,7 +408,7 @@ class _StatsScreenState extends State<StatsScreen> {
       code: activity['code'] as String?,
       name: activity['name'] as String? ?? 'Unknown Activity',
       time: activity['time'] as String? ?? '',
-      confidence: (activity['confidence'] as num?)?.toDouble() ?? 0.0,
+      // FT-089: Removed confidence parameter - now using simple "Completed" indicator
       dimension: activity['dimension'] as String? ?? '',
       source: activity['source'] as String? ?? '',
     );
@@ -417,29 +418,37 @@ class _StatsScreenState extends State<StatsScreen> {
     if (activities.isEmpty) return '';
 
     final lastActivity = activities.first;
-    final time = lastActivity['time'] as String?;
-    if (time == null || time.isEmpty) return '';
 
-    // Calculate relative time (e.g., "2 hours ago")
+    // FT-088: Use full_timestamp instead of reconstructing date from time
+    final fullTimestamp = lastActivity['full_timestamp'] as String?;
+    if (fullTimestamp == null || fullTimestamp.isEmpty) {
+      // Fallback to old method if no full timestamp
+      final time = lastActivity['time'] as String?;
+      return time ?? '';
+    }
+
+    // Calculate relative time using proper full timestamp
     try {
+      final activityTime = DateTime.parse(fullTimestamp);
       final now = DateTime.now();
-      final parts = time.split(':');
-      final activityTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        int.parse(parts[0]),
-        int.parse(parts[1]),
-      );
-
       final diff = now.difference(activityTime);
+
+      if (diff.isNegative) {
+        // Should not happen with proper data, but handle gracefully
+        return 'Recently';
+      }
+
       if (diff.inMinutes < 60) {
         return '${diff.inMinutes} minutes ago';
-      } else {
+      } else if (diff.inHours < 24) {
         return '${diff.inHours} hours ago';
+      } else {
+        return '${diff.inDays} days ago';
       }
     } catch (e) {
-      return time;
+      // Fallback to displaying the raw time if parsing fails
+      final time = lastActivity['time'] as String?;
+      return time ?? 'Recently';
     }
   }
 

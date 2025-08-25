@@ -420,8 +420,24 @@ Please provide a natural response using this information while maintaining your 
       return dataInformedResponse;
     } catch (e) {
       _logger.error('FT-084: Error in two-pass processing: $e');
-      // Fallback to original response without data
-      return initialResponse.replaceAll(RegExp(r'\{"action"[^}]*\}'), '');
+      // Fallback to original response without data - properly remove MCP commands
+      String cleanResponse = initialResponse;
+
+      // Use the same extraction logic that successfully identifies commands
+      final mcpCommands = _extractMCPCommands(initialResponse);
+      for (final command in mcpCommands) {
+        cleanResponse = cleanResponse.replaceAll(command, '');
+      }
+
+      // Clean up any extra whitespace or punctuation left behind
+      cleanResponse =
+          cleanResponse.replaceAll(RegExp(r'\s*\.\.\.\s*'), ' ').trim();
+
+      _logger.warning(
+          'FT-084: Returning cleaned fallback response after MCP command removal');
+      return cleanResponse.isEmpty
+          ? 'Desculpe, não consegui processar sua solicitação.'
+          : cleanResponse;
     }
   }
 
@@ -441,7 +457,7 @@ Please provide a natural response using this information while maintaining your 
       systemPrompt = '$timeContext\n\n$systemPrompt';
     }
 
-    // Add system MCP function documentation
+    // Add system MCP function documentation with enhanced temporal intelligence (FT-095)
     if (_systemMCP != null) {
       String mcpFunctions = '\n\nSystem Functions Available:\n'
           'You can call system functions by using JSON format: {"action": "function_name"}\n'
@@ -453,7 +469,64 @@ Please provide a natural response using this information while maintaining your 
           '  Usage: {"action": "get_activity_stats", "days": 1} for yesterday\'s activities\n'
           '  Usage: {"action": "get_activity_stats", "days": 7} for last 7 days (optional days parameter)\n'
           '- get_message_stats: Get chat message statistics from database\n'
-          '  Usage: {"action": "get_message_stats", "limit": 10} (optional limit parameter, defaults to 10)';
+          '  Usage: {"action": "get_message_stats", "limit": 10} (optional limit parameter, defaults to 10)\n\n'
+          
+          '## TEMPORAL INTELLIGENCE GUIDELINES (FT-095)\n\n'
+          '### Temporal Expression Mapping\n'
+          'When users ask about activities with time references, automatically map to appropriate MCP commands:\n\n'
+          '**Portuguese/English Temporal Expressions:**\n'
+          '- "hoje", "today" → {"action": "get_activity_stats", "days": 0}\n'
+          '- "ontem", "yesterday" → {"action": "get_activity_stats", "days": 1}\n'
+          '- "anteontem", "day before yesterday" → {"action": "get_activity_stats", "days": 2}\n'
+          '- "esta semana", "this week" → {"action": "get_activity_stats", "days": 7}\n'
+          '- "semana passada", "last week" → {"action": "get_activity_stats", "days": 14}\n'
+          '- "último mês", "last month" → {"action": "get_activity_stats", "days": 30}\n'
+          '- "[X] dias atrás", "[X] days ago" → {"action": "get_activity_stats", "days": X}\n\n'
+          
+          '### Complex Query Processing\n'
+          'For multi-part temporal queries, use structured approach:\n\n'
+          '**Exclusion Queries ("além de X", "other than X"):**\n'
+          '1. Execute appropriate temporal query: {"action": "get_activity_stats", "days": N}\n'
+          '2. Filter returned data to exclude mentioned activities (e.g., SF1 for water)\n'
+          '3. Present filtered results with context\n\n'
+          
+          '**Comparison Queries ("comparado com", "vs", "compared to"):**\n'
+          '1. Execute current period query\n'
+          '2. Execute previous period query (typically double the days for comparison)\n'
+          '3. Calculate differences and identify trends\n'
+          '4. Present comparative analysis\n\n'
+          
+          '**Time-of-Day Filtering ("manhã", "tarde", "morning", "afternoon"):**\n'
+          '1. Execute temporal query for appropriate day(s)\n'
+          '2. Filter results using "timeOfDay" field from activity data\n'
+          '3. Present time-specific activities\n\n'
+          
+          '### Data Utilization Rules\n'
+          '- ALWAYS use real data from MCP commands, never approximate\n'
+          '- Reference specific times and counts from returned data\n'
+          '- Use exact activity codes (SF1, T8, etc.) from results\n'
+          '- Include confidence scores and timestamps when relevant\n'
+          '- Present data in natural, conversational language while being accurate\n\n'
+          
+          '### Contextual Response Enhancement\n'
+          'Adapt response tone and language based on temporal context:\n\n'
+          '**Time-of-Day Awareness:**\n'
+          '- Morning queries (6-12h): "Esta manhã você já...", "Bom ritmo para começar o dia!"\n'
+          '- Afternoon queries (12-18h): "Hoje pela manhã você fez... E à tarde?", "Como vai o restante do dia?"\n'
+          '- Evening queries (18-22h): "Hoje você completou...", "Como foi o dia?"\n'
+          '- Night queries (22-6h): "Reflexão do dia...", "Hora de descansar?"\n\n'
+          
+          '**Data-Driven Insights:**\n'
+          '- Identify patterns: "água manteve consistência (5x)", "pomodoros diminuíram de 3x para 1x"\n'
+          '- Suggest improvements: "Quer aumentar o foco à tarde?", "Que tal mais água pela manhã?"\n'
+          '- Celebrate achievements: "Excelente consistência!", "Superou a meta da semana!"\n'
+          '- Reference specific times: "às 10:58", "entre 11:23 e 11:24"\n\n'
+          
+          '**Natural Query Flow:**\n'
+          '- Use MCP data to generate relevant follow-up questions\n'
+          '- Connect current data to previous patterns when available\n'
+          '- Maintain conversational persona while being data-accurate\n'
+          '- Provide actionable insights based on real activity trends';
 
       systemPrompt += mcpFunctions;
     }

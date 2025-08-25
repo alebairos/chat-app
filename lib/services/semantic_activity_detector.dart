@@ -46,8 +46,8 @@ class SemanticActivityDetector {
     }
   }
 
-  /// Build minimal, focused detection prompt
-  /// FT-086: Only analyzes user messages to prevent assistant-derived false positives
+  /// Build intent-first detection prompt with enhanced semantic understanding
+  /// FT-091: Intent classification before activity detection to eliminate false positives
   static String _buildDetectionPrompt({
     required String userMessage,
     required OracleContext oracleContext,
@@ -59,23 +59,34 @@ class SemanticActivityDetector {
 ## Oracle Activities Available
 ${_formatOracleActivities(oracleContext)}
 
-## User Message to Analyze
+## User Message Analysis
 **Time Context**: ${timeContext['readableTime'] ?? 'Unknown'}
 **User Message**: "$userMessage"
 
-## Task
-Detect COMPLETED activities (past tense only) mentioned by the USER ONLY.
-FT-086: CRITICAL - Only analyze user messages, NEVER assistant responses.
+## Step 1: Intent Classification (CRITICAL FIRST STEP)
+FT-091: Determine the user's primary intent before any activity detection.
 
-## Rules
-- ONLY past completions: "fiz", "acabei", "terminei", "did", "finished", "completed"
-- IGNORE future plans: "vou", "pretendo", "will", "planning", "want to"
-- IGNORE preferences: "gosto de", "amo", "love", "like"
-- FT-086: IGNORE QUERIES: "o que fiz?", "what did I do?", "show me", "quantas vezes"
-- FT-086: IGNORE DISCUSSIONS: questions about activities, requests for data
+**REPORTING**: User is telling you about activities they completed
+- Examples: "acabei de beber água", "fiz exercício", "terminei o pomodoro"
+- Indicators: Past tense completion statements, direct activity claims
+- Action: Proceed to Step 2 for activity detection
+
+**ASKING**: User is requesting information about past activities
+- Examples: "o que fiz hoje?", "além de beber água?", "what did I do?"
+- Indicators: Questions, requests for data, information seeking
+- Action: Return {"detected_activities": []} - NO DETECTION
+
+**DISCUSSING**: User is talking about activities in general context
+- Examples: "gosto de beber água", "quero fazer exercício", "planning to work out"
+- Indicators: Preferences, future plans, general discussion
+- Action: Return {"detected_activities": []} - NO DETECTION
+
+## Step 2: Activity Detection (ONLY for REPORTING intent)
+If intent is REPORTING, detect completed activities using semantic understanding:
 - MATCH semantically: "malhar" = "exercitar" = "treinar" = "workout"
 - EXTRACT duration when mentioned
 - BE CONFIDENT: only return activities you're certain about
+- Focus on past completions with high confidence
 
 ## Output Format (JSON only)
 {

@@ -5,7 +5,6 @@ class ActivityCard extends StatelessWidget {
   final String? code;
   final String name;
   final String time;
-  final double confidence;
   final String dimension;
   final String source;
 
@@ -14,7 +13,6 @@ class ActivityCard extends StatelessWidget {
     this.code,
     required this.name,
     required this.time,
-    required this.confidence,
     required this.dimension,
     required this.source,
   });
@@ -112,25 +110,23 @@ class ActivityCard extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // Confidence indicator
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.verified,
-                      size: 12,
-                      color: _getConfidenceColor(confidence),
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${(confidence * 100).round()}%',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: _getConfidenceColor(confidence),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                // FT-089: Replace confidence indicator with simple completion badge
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle, size: 12, color: Colors.green),
+                      SizedBox(width: 2),
+                      Text('Completed',
+                          style: TextStyle(fontSize: 11, color: Colors.green)),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -213,11 +209,5 @@ class ActivityCard extends StatelessWidget {
       default:
         return dimension;
     }
-  }
-
-  Color _getConfidenceColor(double confidence) {
-    if (confidence >= 0.9) return Colors.green;
-    if (confidence >= 0.7) return Colors.orange;
-    return Colors.red;
   }
 }

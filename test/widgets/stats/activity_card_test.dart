@@ -11,7 +11,6 @@ void main() {
         code: 'T8',
         name: 'Realizar sessão de trabalho focado',
         time: '14:20',
-        confidence: 0.95,
         dimension: 'TG',
         source: 'Oracle FT-064 Semantic',
       );
@@ -29,7 +28,8 @@ void main() {
       expect(find.text('T8'), findsOneWidget);
       expect(find.text('Realizar sessão de trabalho focado'), findsOneWidget);
       expect(find.text('14:20'), findsOneWidget);
-      expect(find.text('95%'), findsOneWidget);
+      // FT-089: Confidence removed, now shows "Completed" indicator
+      expect(find.text('Completed'), findsOneWidget);
       expect(find.text('Work & Management'), findsOneWidget);
     });
 
@@ -38,7 +38,6 @@ void main() {
       const activityCard = ActivityCard(
         name: 'Custom Activity',
         time: '15:30',
-        confidence: 0.8,
         dimension: 'SF',
         source: 'Manual',
       );
@@ -55,7 +54,8 @@ void main() {
       // Assert
       expect(find.text('Custom Activity'), findsOneWidget);
       expect(find.text('15:30'), findsOneWidget);
-      expect(find.text('80%'), findsOneWidget);
+      // FT-089: Confidence removed, now shows "Completed" indicator
+      expect(find.text('Completed'), findsOneWidget);
       expect(find.text('Physical Health'), findsOneWidget);
     });
 
@@ -77,7 +77,6 @@ void main() {
               body: ActivityCard(
                 name: 'Test Activity',
                 time: '12:00',
-                confidence: 0.9,
                 dimension: code,
                 source: 'Test',
               ),
@@ -93,35 +92,28 @@ void main() {
       }
     });
 
-    testWidgets('should display confidence levels with proper colors',
+    testWidgets('should display completed indicator consistently',
         (tester) async {
-      final confidenceTests = [
-        (0.95, '95%'), // High confidence - should be green
-        (0.75, '75%'), // Medium confidence - should be orange
-        (0.55, '55%'), // Low confidence - should be red
-      ];
-
-      for (final (confidence, expected) in confidenceTests) {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ActivityCard(
-                name: 'Test Activity',
-                time: '12:00',
-                confidence: confidence,
-                dimension: 'SF',
-                source: 'Test',
-              ),
+      // FT-089: Test that all activities show "Completed" indicator
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: ActivityCard(
+              name: 'Test Activity',
+              time: '12:00',
+              dimension: 'SF',
+              source: 'Test',
             ),
           ),
-        );
+        ),
+      );
 
-        // Assert confidence percentage is displayed
-        expect(find.text(expected), findsOneWidget);
+      // Assert "Completed" indicator is displayed
+      expect(find.text('Completed'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
 
-        // Verify the widget renders without errors
-        expect(find.byType(ActivityCard), findsOneWidget);
-      }
+      // Verify the widget renders without errors
+      expect(find.byType(ActivityCard), findsOneWidget);
     });
 
     testWidgets('should handle edge cases gracefully', (tester) async {
@@ -129,7 +121,6 @@ void main() {
       const activityCard = ActivityCard(
         name: '',
         time: '',
-        confidence: 0.0,
         dimension: '',
         source: '',
       );
@@ -145,7 +136,8 @@ void main() {
 
       // Assert - Should render without crashing
       expect(find.byType(ActivityCard), findsOneWidget);
-      expect(find.text('0%'), findsOneWidget);
+      // FT-089: Always shows "Completed" instead of confidence percentage
+      expect(find.text('Completed'), findsOneWidget);
     });
 
     testWidgets('should have proper visual structure', (tester) async {
@@ -154,7 +146,6 @@ void main() {
         code: 'SF1',
         name: 'Test Activity',
         time: '10:30',
-        confidence: 0.9,
         dimension: 'SF',
         source: 'Test',
       );
@@ -173,7 +164,7 @@ void main() {
       expect(
           find.byType(Icon),
           findsAtLeastNWidgets(
-              1)); // Should have dimension and confidence icons
+              1)); // Should have dimension and completion icons
       expect(find.byType(Container),
           findsAtLeastNWidgets(1)); // For styling containers
     });

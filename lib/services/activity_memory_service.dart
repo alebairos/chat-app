@@ -454,9 +454,8 @@ class ActivityMemoryService {
                 'name': activity.activityName,
                 'time': _formatTime(activity.completedAt),
                 'full_timestamp': activity.completedAt.toIso8601String(),
-                'confidence': activity.confidence != null
-                    ? double.tryParse(activity.confidence!) ?? 0.0
-                    : 0.0,
+                // FT-089: Fix confidence data bug - use confidenceScore field instead of parsing string
+                'confidence': activity.confidenceScore,
                 'dimension': activity.dimension,
                 'source': activity.source,
                 'notes': activity.notes,
