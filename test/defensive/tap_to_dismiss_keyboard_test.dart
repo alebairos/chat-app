@@ -48,6 +48,12 @@ class MockChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<List<ChatMessageModel>> getMessagesAfter(
+      {DateTime? after, int? limit}) async {
+    return _messages;
+  }
+
+  @override
   Future<void> saveMessage({
     required String text,
     required bool isUser,

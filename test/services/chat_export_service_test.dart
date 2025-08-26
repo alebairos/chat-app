@@ -36,10 +36,20 @@ void main() {
           ),
         ];
 
-        when(() => mockStorageService.getMessages(
+        // Mock the new forward pagination method
+        when(() => mockStorageService.getMessagesAfter(
+              after: any(named: 'after'),
               limit: any(named: 'limit'),
-              before: any(named: 'before'),
-            )).thenAnswer((_) async => testMessages);
+            )).thenAnswer((invocation) async {
+          final after = invocation.namedArguments[#after] as DateTime?;
+          if (after == null) {
+            // Return first batch of messages
+            return testMessages;
+          } else {
+            // Return empty list for subsequent batches (end of pagination)
+            return <ChatMessageModel>[];
+          }
+        });
 
         // Act
         final stats = await exportService.getExportStatistics();
@@ -74,10 +84,20 @@ void main() {
           ),
         ];
 
-        when(() => mockStorageService.getMessages(
+        // Mock the new forward pagination method
+        when(() => mockStorageService.getMessagesAfter(
+              after: any(named: 'after'),
               limit: any(named: 'limit'),
-              before: any(named: 'before'),
-            )).thenAnswer((_) async => testMessages);
+            )).thenAnswer((invocation) async {
+          final after = invocation.namedArguments[#after] as DateTime?;
+          if (after == null) {
+            // Return first batch of messages
+            return testMessages;
+          } else {
+            // Return empty list for subsequent batches (end of pagination)
+            return <ChatMessageModel>[];
+          }
+        });
 
         // Act
         final stats = await exportService.getExportStatistics();
@@ -102,10 +122,20 @@ void main() {
           ),
         ];
 
-        when(() => mockStorageService.getMessages(
+        // Mock the new forward pagination method
+        when(() => mockStorageService.getMessagesAfter(
+              after: any(named: 'after'),
               limit: any(named: 'limit'),
-              before: any(named: 'before'),
-            )).thenAnswer((_) async => testMessages);
+            )).thenAnswer((invocation) async {
+          final after = invocation.namedArguments[#after] as DateTime?;
+          if (after == null) {
+            // Return first batch of messages
+            return testMessages;
+          } else {
+            // Return empty list for subsequent batches (end of pagination)
+            return <ChatMessageModel>[];
+          }
+        });
 
         // Act
         final stats = await exportService.getExportStatistics();
@@ -136,13 +166,13 @@ void main() {
       });
 
       test('should sort messages chronologically', () async {
-        // Arrange - messages in reverse chronological order (as they come from storage)
+        // Arrange - messages in chronological order (as they come from forward pagination)
         final testMessages = [
           ChatMessageModel(
-            text: 'Latest message',
+            text: 'Earliest message',
             isUser: true,
             type: MessageType.text,
-            timestamp: DateTime(2025, 1, 15, 10, 35, 00),
+            timestamp: DateTime(2025, 1, 15, 10, 30, 00),
           ),
           ChatMessageModel(
             text: 'Middle message',
@@ -151,17 +181,27 @@ void main() {
             timestamp: DateTime(2025, 1, 15, 10, 32, 00),
           ),
           ChatMessageModel(
-            text: 'Earliest message',
+            text: 'Latest message',
             isUser: true,
             type: MessageType.text,
-            timestamp: DateTime(2025, 1, 15, 10, 30, 00),
+            timestamp: DateTime(2025, 1, 15, 10, 35, 00),
           ),
         ];
 
-        when(() => mockStorageService.getMessages(
+        // Mock the new forward pagination method
+        when(() => mockStorageService.getMessagesAfter(
+              after: any(named: 'after'),
               limit: any(named: 'limit'),
-              before: any(named: 'before'),
-            )).thenAnswer((_) async => testMessages);
+            )).thenAnswer((invocation) async {
+          final after = invocation.namedArguments[#after] as DateTime?;
+          if (after == null) {
+            // Return first batch of messages
+            return testMessages;
+          } else {
+            // Return empty list for subsequent batches (end of pagination)
+            return <ChatMessageModel>[];
+          }
+        });
 
         // Act
         final stats = await exportService.getExportStatistics();
@@ -201,10 +241,20 @@ void main() {
           ),
         ];
 
-        when(() => mockStorageService.getMessages(
+        // Mock the new forward pagination method
+        when(() => mockStorageService.getMessagesAfter(
+              after: any(named: 'after'),
               limit: any(named: 'limit'),
-              before: any(named: 'before'),
-            )).thenAnswer((_) async => testMessages);
+            )).thenAnswer((invocation) async {
+          final after = invocation.namedArguments[#after] as DateTime?;
+          if (after == null) {
+            // Return first batch of messages
+            return testMessages;
+          } else {
+            // Return empty list for subsequent batches (end of pagination)
+            return <ChatMessageModel>[];
+          }
+        });
 
         // Act
         final stats = await exportService.getExportStatistics();

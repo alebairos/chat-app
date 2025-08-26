@@ -94,6 +94,32 @@ class ChatStorageService {
     return messages;
   }
 
+  /// Get messages after a specific timestamp in chronological order (oldest to newest)
+  /// Used for forward pagination in chat exports to ensure all messages are retrieved
+  Future<List<ChatMessageModel>> getMessagesAfter({
+    DateTime? after,
+    int? limit,
+  }) async {
+    final isar = await db;
+
+    if (after != null) {
+      return await isar.chatMessageModels
+          .where()
+          .filter()
+          .timestampGreaterThan(after)
+          .sortByTimestamp() // Ascending order (oldest to newest)
+          .limit(limit ?? 50)
+          .findAll();
+    } else {
+      // Get oldest messages first when no 'after' timestamp specified
+      return await isar.chatMessageModels
+          .where()
+          .sortByTimestamp() // Ascending order
+          .limit(limit ?? 50)
+          .findAll();
+    }
+  }
+
   Future<void> deleteMessage(Id id) async {
     final isar = await db;
     await isar.writeTxn(() async {

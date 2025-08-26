@@ -100,22 +100,27 @@ class ChatExportService {
   }
 
   /// Get all messages in chronological order (oldest first)
+  /// Fixed pagination logic to ensure ALL messages are retrieved
   Future<List<ChatMessageModel>> _getAllMessagesChronological({
     DateTime? startDate,
     DateTime? endDate,
   }) async {
     final List<ChatMessageModel> allMessages = [];
-    DateTime? lastTimestamp;
+    DateTime? afterTimestamp;
     const int batchSize = 1000; // Process in batches for memory efficiency
 
-    // Keep fetching messages until we have them all
+    _logger.info('Starting forward pagination to retrieve all messages...');
+
+    // Use forward pagination to ensure we get ALL messages
     while (true) {
-      final batch = await _storageService.getMessages(
+      final batch = await _storageService.getMessagesAfter(
+        after: afterTimestamp,
         limit: batchSize,
-        before: lastTimestamp,
       );
 
       if (batch.isEmpty) break;
+
+      _logger.debug('Retrieved batch of ${batch.length} messages');
 
       // Filter by date range if specified
       final filteredBatch = batch.where((message) {
@@ -129,15 +134,18 @@ class ChatExportService {
       }).toList();
 
       allMessages.addAll(filteredBatch);
-      lastTimestamp = batch.last.timestamp;
+
+      // Update timestamp for next batch (get messages after the last one in this batch)
+      afterTimestamp = batch.last.timestamp;
 
       // If we got fewer messages than requested, we've reached the end
       if (batch.length < batchSize) break;
     }
 
-    // Sort in chronological order (oldest first)
-    allMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    _logger.info(
+        'Forward pagination complete. Retrieved ${allMessages.length} messages total');
 
+    // Messages are already in chronological order from the database query
     return allMessages;
   }
 
@@ -161,9 +169,16 @@ class ChatExportService {
     if (message.type == MessageType.text) {
       return '[$timestamp] $senderName: ${message.text}';
     } else {
-      // For audio/media messages, show attachment format
-      final attachmentText = _formatMediaAttachment(message);
-      return '‎[$timestamp] $senderName: ‎$attachmentText';
+      // For audio/media messages, check if there's text content
+      if (message.text.isNotEmpty && message.text != 'Transcribing...') {
+        // Show both text content and audio attachment
+        final attachmentText = _formatMediaAttachment(message);
+        return '[$timestamp] $senderName: ${message.text}\n‎[$timestamp] $senderName: ‎$attachmentText';
+      } else {
+        // Show only attachment format for pure audio messages
+        final attachmentText = _formatMediaAttachment(message);
+        return '‎[$timestamp] $senderName: ‎$attachmentText';
+      }
     }
   }
 
@@ -241,7 +256,7 @@ class ChatExportService {
 
     // Get file size for logging
     final fileSize = await file.length();
-    _logger.info('Sharing export file: ${fileSize} bytes');
+    _logger.info('Sharing export file: $fileSize bytes');
 
     // Share the file
     final xFile = XFile(filePath);

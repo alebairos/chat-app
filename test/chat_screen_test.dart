@@ -52,6 +52,20 @@ class FakeChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<List<ChatMessageModel>> getMessagesAfter(
+      {DateTime? after, int? limit}) async {
+    var messages = _isar._chatMessageModels._messages;
+
+    if (after != null) {
+      messages = messages.where((m) => m.timestamp.isAfter(after)).toList();
+    }
+
+    messages
+        .sort((a, b) => a.timestamp.compareTo(b.timestamp)); // ascending order
+    return messages.take(limit ?? 50).toList();
+  }
+
+  @override
   Future<void> saveMessage({
     required String text,
     required bool isUser,
