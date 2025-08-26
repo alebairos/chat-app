@@ -14,6 +14,11 @@ import '../services/chat_storage_service.dart';
 class SystemMCPService {
   final Logger _logger = Logger();
 
+  // FT-102: Time cache to prevent rate limiting
+  static String? _cachedTimeResponse;
+  static DateTime? _cacheTimestamp;
+  static const Duration CACHE_DURATION = Duration(seconds: 30);
+
   /// Processes MCP commands in JSON format
   ///
   /// Expected format: {"action": "function_name", "param": "value"}
@@ -74,7 +79,15 @@ class SystemMCPService {
 
   /// Gets current time in multiple formats
   String _getCurrentTime() {
-    _logger.info('SystemMCP: Getting current time');
+    // FT-102: Check cache validity to prevent rate limiting
+    if (_cachedTimeResponse != null &&
+        _cacheTimestamp != null &&
+        DateTime.now().difference(_cacheTimestamp!) < CACHE_DURATION) {
+      _logger.info('SystemMCP: Using cached time data');
+      return _cachedTimeResponse!;
+    }
+
+    _logger.info('SystemMCP: Getting fresh current time');
 
     try {
       final now = DateTime.now();
@@ -95,8 +108,12 @@ class SystemMCPService {
         },
       };
 
+      // FT-102: Cache the response
+      _cachedTimeResponse = json.encode(response);
+      _cacheTimestamp = DateTime.now();
+
       _logger.info('SystemMCP: Current time retrieved successfully');
-      return json.encode(response);
+      return _cachedTimeResponse!;
     } catch (e) {
       _logger.error('SystemMCP: Error getting current time: $e');
       return _errorResponse('Error getting current time: $e');

@@ -178,9 +178,7 @@ class ClaudeService {
 
       // Generate enhanced time-aware context (FT-060)
       final lastMessageTime = await _getLastMessageTimestamp();
-      final timeContext = await TimeContextService.generatePreciseTimeContext(
-        lastMessageTime,
-      );
+      await TimeContextService.generatePreciseTimeContext(lastMessageTime);
 
       // Debug logging for time context
       if (lastMessageTime != null) {
@@ -228,8 +226,7 @@ class ClaudeService {
           final dataInformedResponse =
               await _processDataRequiredQuery(message, assistantMessage);
 
-          // Background activity detection for data-informed responses
-          _performBackgroundActivityDetection(message, dataInformedResponse);
+          // Background activity detection handled in _processDataRequiredQuery
 
           return dataInformedResponse;
         }
@@ -237,20 +234,22 @@ class ClaudeService {
         // Regular conversation flow (no data required)
         _logger.debug('Regular conversation - no data required');
 
-        // FT-064: Two-pass semantic activity detection (background processing)
-        // Pass 1: Return immediate conversation response (no latency impact)
-        // Pass 2: Background semantic analysis for activity detection
-        _performBackgroundActivityDetection(message, assistantMessage);
+        // FT-104: Clean response to remove JSON commands before TTS
+        final cleanedResponse = _cleanResponseForUser(assistantMessage);
+
+        // Process background activities with qualification for regular flow
+        _processBackgroundActivitiesWithQualification(
+            message, assistantMessage);
 
         // Add assistant response to history (user message already added at line 163)
         _conversationHistory.add({
           'role': 'assistant',
           'content': [
-            {'type': 'text', 'text': assistantMessage},
+            {'type': 'text', 'text': cleanedResponse},
           ],
         });
 
-        return assistantMessage;
+        return cleanedResponse;
       } else {
         // Handle different HTTP status codes
         switch (response.statusCode) {
@@ -328,6 +327,23 @@ class ClaudeService {
         .toList();
   }
 
+  /// FT-098: Auto-correct common JSON malformation patterns
+  String _correctMalformedJson(String jsonCommand) {
+    String corrected = jsonCommand;
+
+    // Fix: Extra quote after number values: "days": 2"} → "days": 2}
+    corrected = corrected.replaceAllMapped(
+        RegExp(r'(\d+)"\}'), (match) => '${match.group(1)!}}');
+
+    // Log correction if changes were made
+    if (corrected != jsonCommand) {
+      _logger
+          .debug('🔧 FT-098: JSON auto-corrected: $jsonCommand → $corrected');
+    }
+
+    return corrected;
+  }
+
   /// Process data-required query using intelligent two-pass approach
   Future<String> _processDataRequiredQuery(
       String userMessage, String initialResponse) async {
@@ -343,7 +359,9 @@ class ClaudeService {
       String collectedData = '';
       for (final command in mcpCommands) {
         try {
-          final result = await _systemMCP!.processCommand(command);
+          // FT-098: Auto-correct common JSON malformation before execution
+          final correctedCommand = _correctMalformedJson(command);
+          final result = await _systemMCP!.processCommand(correctedCommand);
           final data = jsonDecode(result);
 
           if (data['status'] == 'success') {
@@ -354,12 +372,9 @@ class ClaudeService {
         }
       }
 
-      // Create enriched prompt for second pass
-      final enrichedPrompt = '''$userMessage
-
-System Data Available:$collectedData
-
-Please provide a natural response using this information while maintaining your persona and language style.''';
+      // Create enriched prompt for second pass with activity qualification
+      final enrichedPrompt =
+          _buildEnrichedPromptWithQualification(userMessage, collectedData);
 
       _logger.debug('Sending enriched prompt to Claude for final response');
       _logger.debug(
@@ -375,7 +390,8 @@ Please provide a natural response using this information while maintaining your 
           .debug('✅ FT-085: Delay completed, proceeding with second API call');
 
       // Second pass: Get data-informed response
-      final dataInformedResponse = await _callClaudeWithPrompt(enrichedPrompt);
+      final rawResponse = await _callClaudeWithPrompt(enrichedPrompt);
+      final dataInformedResponse = _cleanResponseForUser(rawResponse);
 
       // Add to conversation history
       _conversationHistory.add({
@@ -394,6 +410,11 @@ Please provide a natural response using this information while maintaining your 
 
       _logger
           .info('✅ FT-084: Successfully completed two-pass data integration');
+
+      // Process background activities with qualification using raw response
+      await _processBackgroundActivitiesWithQualification(
+          userMessage, rawResponse);
+
       return dataInformedResponse;
     } catch (e) {
       _logger.error('FT-084: Error in two-pass processing: $e');
@@ -437,9 +458,26 @@ Please provide a natural response using this information while maintaining your 
     // Add system MCP function documentation with enhanced temporal intelligence (FT-095)
     if (_systemMCP != null) {
       String mcpFunctions = '\n\nSystem Functions Available:\n'
-          'You can call system functions by using JSON format: {"action": "function_name"}\n'
+          'You can call system functions by using JSON format: {"action": "function_name"}\n\n'
+          '🎯 MANDATORY DATA QUERIES:\n'
+          'For ANY activity-related questions, you MUST generate fresh MCP commands:\n'
+          '- "o que eu fiz [tempo]" → {"action": "get_activity_stats"} REQUIRED\n'
+          '- "quantas/quanto [atividade]" → {"action": "get_activity_stats"} REQUIRED\n'
+          '- "como foi [dia/período]" → {"action": "get_activity_stats"} REQUIRED\n'
+          '- Activity comparisons → {"action": "get_activity_stats"} REQUIRED\n'
+          '- "quais atividades" → {"action": "get_activity_stats"} REQUIRED\n'
+          '- "meu desempenho" → {"action": "get_activity_stats"} REQUIRED\n'
+          '- Questions about specific days, counts, or activity summaries → ALWAYS query\n'
+          'NEVER rely on conversation memory for activity data - ALWAYS query fresh data.\n'
+          'Like a coach checking their notes: conversation memory may be imprecise, fresh data ensures accurate guidance.\n\n'
           'Available functions:\n'
-          '- get_current_time: Returns current date, time, and temporal information\n'
+          '- get_current_time: Returns ALL temporal information (date, day, time, day of week)\n'
+          '  ALWAYS use for temporal queries:\n'
+          '  • "que horas são?" / "what time?" → get_current_time\n'
+          '  • "que dia é hoje?" / "what day?" → get_current_time\n'
+          '  • "que data é hoje?" / "what date?" → get_current_time\n'
+          '  • "que dia da semana?" / "day of week?" → get_current_time\n'
+          '  Returns: timestamp, hour, minute, dayOfWeek, readableTime (PT-BR formatted)\n'
           '- get_device_info: Returns device platform, OS version, locale, and system info\n'
           '- get_activity_stats: Get precise activity tracking data from database\n'
           '  Usage: {"action": "get_activity_stats", "days": 0} for today\'s activities\n'
@@ -458,14 +496,30 @@ Please provide a natural response using this information while maintaining your 
           '- days: 7 = last week (7 days of data)\n'
           '- days: 14 = last 2 weeks (14 days of data)\n'
           '- days: 30 = last month (30 days of data)\n\n'
-          '**Smart Temporal Mapping**:\n'
-          '- Present/current references → days: 0\n'
-          '- Single past day references → days: 1, 2, 3, etc.\n'
-          '- Week period references → days: 7\n'
-          '- Multiple week references → days: 14, 21, etc.\n'
-          '- Month period references → days: 30\n\n'
-          'Trust your understanding of temporal expressions in any language. '
-          'Map user intent to appropriate days parameter based on natural temporal relationships.\n\n'
+          '**Context-Aware Temporal Mapping**:\n'
+          'Consider TODAY\'S context when interpreting temporal references:\n'
+          '- Today is: [check current day from time context]\n'
+          '- "hoje" (today) → days: 0\n'
+          '- "ontem" (yesterday) → days: 1\n'
+          '- Specific day names: Calculate days back from today\n'
+          '- "sábado", "segunda", etc. → Count days from current day\n'
+          '- Period references: "semana", "mês" → Use range parameters\n\n'
+          '**🎯 PRECISE DAY CALCULATION (FT-099):**\n'
+          'For SPECIFIC DAY queries, calculate exact days parameter:\n'
+          '- Monday asking about "sábado" (Saturday) → days: 3 (gets Saturday only)\n'
+          '- Tuesday asking about "domingo" (Sunday) → days: 2 (gets Sunday only)\n'
+          '- Wednesday asking about "segunda" (Monday) → days: 2 (gets Monday only)\n'
+          '- CRITICAL: Use days parameter that reaches the specific day, not ranges\n'
+          '- Single day name = single day data, not multi-day periods\n\n'
+          '**Query Specificity Intelligence**:\n'
+          '⚠️ CRITICAL: Distinguish between SPECIFIC DAYS vs PERIODS:\n'
+          '- Single day name ("sábado") → Calculate precise days to get ONLY that day\n'
+          '- Period reference ("esta semana") → Query the entire period range\n'
+          '- When user asks about a specific day, avoid multi-day ranges\n'
+          '- Use temporal context to calculate precise day offsets\n'
+          '- Example: Monday + "sábado" = days: 3 (not days: 2 which gives 2 days)\n\n'
+          'Trust your understanding of calendar relationships and user intent. '
+          'Map temporal expressions to ensure queries capture the exact timeframe requested.\n\n'
           '### Complex Query Processing\n'
           'For multi-part temporal queries, use structured approach:\n\n'
           '**Exclusion Queries ("além de X", "other than X"):**\n'
@@ -490,6 +544,17 @@ Please provide a natural response using this information while maintaining your 
           '- Never inflate or summarize numbers - report actual database counts\n'
           '- Include confidence scores and timestamps when relevant\n'
           '- Present data in natural, conversational language while being accurate\n\n'
+          '**Smart Data Filtering for Specific Day Queries**:\n'
+          'When user asks about a SPECIFIC DAY (e.g., "sábado", "terça-feira"):\n'
+          '- Check the "period" field to understand data scope (e.g., "last_2_days")\n'
+          '- If period covers multiple days but user wants one specific day:\n'
+          '  * Filter activities array by examining timestamps/dates\n'
+          '  * Only count activities that occurred on the requested day\n'
+          '  * Recalculate totals based on filtered activities\n'
+          '- Use "full_timestamp" field to determine which specific day each activity occurred\n'
+          '- Report only activities from the day actually requested by user\n'
+          'Example: User asks "sábado" but data covers "last_2_days" (Sat+Sun)\n'
+          '→ Filter timestamps for Saturday only and count those activities\n\n'
           '### Contextual Response Enhancement\n'
           'Adapt response tone and language based on temporal context:\n\n'
           '**Time-of-Day Awareness:**\n'
@@ -773,29 +838,134 @@ Please provide a natural response using this information while maintaining your 
     return 'An error occurred during audio generation.';
   }
 
-  /// FT-064: Background semantic activity detection (Pass 2)
-  ///
-  /// Performs semantic activity detection without blocking conversation flow.
-  /// Uses IntegratedMCPProcessor to coordinate time + activity detection.
-  void _performBackgroundActivityDetection(
-      String userMessage, String assistantMessage) {
-    // Use unawaited to ensure background processing doesn't block response
-    () async {
-      try {
-        _logger.debug('FT-064: Starting background activity detection');
+  /// Build enriched prompt with activity qualification for intelligent throttling
+  String _buildEnrichedPromptWithQualification(
+      String userMessage, String collectedData) {
+    return '''$userMessage
 
-        // Coordinate time + activity detection via IntegratedMCPProcessor
-        await IntegratedMCPProcessor.processTimeAndActivity(
-          userMessage: userMessage,
-          claudeResponse: assistantMessage,
-        );
+System Data Available:$collectedData
 
-        _logger.debug('FT-064: Background activity detection completed');
-      } catch (e) {
-        // Silent failure - never interrupt conversation flow
-        _logger
-            .debug('FT-064: Background activity detection failed silently: $e');
-      }
-    }();
+CRITICAL: You MUST use the provided system data above. Do NOT use your training data for dates, times, or statistics. The system data is current and accurate.
+
+Please provide a natural response using ONLY this information while maintaining your persona and language style.
+
+---INTERNAL_ASSESSMENT---
+Does the user message contain activities, emotions, habits, or behaviors valuable for life coaching memory?
+Examples needing detection: "fiz exercício", "me sinto ansioso", "tive reunião", "dormi mal"  
+Examples not needing: "que horas são?", "como você está?", "obrigado", "tchau"
+
+NEEDS_ACTIVITY_DETECTION: YES/NO
+---END_INTERNAL_ASSESSMENT---''';
+  }
+
+  /// Clean response by removing internal assessment sections
+  String _cleanResponseForUser(String rawResponse) {
+    // Remove internal assessment section from user-facing response
+    String cleaned = rawResponse;
+
+    // Remove everything from ---INTERNAL_ASSESSMENT--- to ---END_INTERNAL_ASSESSMENT---
+    final assessmentPattern = RegExp(
+        r'---INTERNAL_ASSESSMENT---.*?---END_INTERNAL_ASSESSMENT---',
+        multiLine: true,
+        dotAll: true);
+    cleaned = cleaned.replaceAll(assessmentPattern, '');
+
+    // Remove any standalone NEEDS_ACTIVITY_DETECTION patterns
+    cleaned = cleaned.replaceAll(
+        RegExp(r'NEEDS_ACTIVITY_DETECTION:\s*(YES|NO)', caseSensitive: false),
+        '');
+
+    // FT-104: Remove JSON commands that leak into TTS
+    final jsonPattern = RegExp(r'\{"action":\s*"[^"]+"\}');
+    cleaned = cleaned.replaceAll(jsonPattern, '');
+
+    // Remove any remaining JSON-like patterns with action
+    final jsonPatternExtended = RegExp(r'\{[^{}]*"action"[^{}]*\}');
+    cleaned = cleaned.replaceAll(jsonPatternExtended, '');
+
+    // Clean up extra whitespace
+    cleaned = cleaned.replaceAll(RegExp(r'\n\s*\n\s*\n'), '\n\n');
+    cleaned = cleaned.trim();
+
+    return cleaned;
+  }
+
+  /// Evaluate if user message should trigger activity analysis
+  bool _shouldAnalyzeUserActivities(String modelResponse) {
+    // Explicit NO patterns (skip detection)
+    final skipPatterns = [
+      'NEEDS_ACTIVITY_DETECTION: NO',
+      'ACTIVITY_DETECTION: NO',
+      'DETECTION: NO'
+    ];
+
+    // Safety-first: Default to true (run analysis) unless model explicitly says NO
+    return !skipPatterns.any((pattern) =>
+        modelResponse.toUpperCase().contains(pattern.toUpperCase()));
+  }
+
+  /// Calculate adaptive delay based on system state
+  Duration _calculateAdaptiveDelay() {
+    // More aggressive delay strategy to prevent rate limiting
+    if (_hasRecentRateLimit()) return Duration(seconds: 15);
+    if (_hasHighApiUsage()) return Duration(seconds: 8);
+    return Duration(seconds: 5);
+  }
+
+  /// Check if system recently encountered rate limiting
+  bool _hasRecentRateLimit() {
+    // Simple heuristic - can be enhanced with actual rate limit tracking
+    return false; // Placeholder for future implementation
+  }
+
+  /// Check if system is experiencing high API usage
+  bool _hasHighApiUsage() {
+    // Simple heuristic - can be enhanced with actual usage tracking
+    return false; // Placeholder for future implementation
+  }
+
+  /// Apply intelligent delay to prevent rate limiting
+  Future<void> _applyActivityAnalysisDelay() async {
+    final delayDuration = _calculateAdaptiveDelay();
+    _logger.debug(
+        'Activity analysis: Applying ${delayDuration.inSeconds}s throttling delay');
+    await Future.delayed(delayDuration);
+  }
+
+  /// Process background activities with model-driven qualification
+  Future<void> _processBackgroundActivitiesWithQualification(
+      String userMessage, String qualificationResponse) async {
+    // Use model intelligence to decide if analysis is needed
+    if (!_shouldAnalyzeUserActivities(qualificationResponse)) {
+      _logger.info('Activity analysis: Skipped - message not activity-focused');
+      return;
+    }
+
+    _logger.info(
+        'Activity analysis: Qualified for detection - proceeding with throttled analysis');
+
+    // Apply intelligent throttling to prevent rate limiting
+    await _applyActivityAnalysisDelay();
+
+    // Run existing activity detection with throttling protection
+    await _analyzeUserActivitiesWithContext(userMessage);
+  }
+
+  /// Analyze user activities with context (throttled version of background detection)
+  Future<void> _analyzeUserActivitiesWithContext(String userMessage) async {
+    try {
+      _logger.debug('Activity analysis: Starting semantic activity detection');
+
+      // Use existing integrated processor but with throttling
+      await IntegratedMCPProcessor.processTimeAndActivity(
+        userMessage: userMessage,
+        claudeResponse: '', // Empty response for background analysis
+      );
+
+      _logger.debug('Activity analysis: Successfully completed detection');
+    } catch (e) {
+      // Graceful degradation - log but don't impact main conversation
+      _logger.warning('Activity analysis: Detection failed gracefully: $e');
+    }
   }
 }
