@@ -2,7 +2,7 @@ name: ai_personas_app
 description: AI personas app
 publish_to: 'none'
 
-version: 1.1.0+13
+version: 1.1.0+14
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -28,6 +28,8 @@ dependencies:
   intl: ^0.18.1
   # File picker for chat import
   file_picker: ^8.1.2
+  # SharedPreferences for onboarding state
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

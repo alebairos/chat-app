@@ -1,6 +1,6 @@
 {
 
-  "defaultPersona": "ariWithOracle21",
+  "defaultPersona": "iThereWithOracle30",
   "personas": {
     "ariLifeCoach": {
       "enabled": true,
@@ -17,7 +17,7 @@
     "iThereClone": {
       "enabled": true,
       "displayName": "I-There",
-      "description": "Your AI clone from Clone Earth - has profound knowledge but still learning about you",
+      "description": "Your AI reflection from Mirror Realm - has profound knowledge but still learning about you",
       "configPath": "assets/config/i_there_config.json"
     },
     "ariWithOracle21": {
@@ -30,7 +30,7 @@
     "iThereWithOracle21": {
       "enabled": true,
       "displayName": "I-There 2.1",
-      "description": "AI clone with Oracle 2.1 knowledge base",
+      "description": "AI reflection with Oracle 2.1 knowledge base",
       "configPath": "assets/config/i_there_config.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md"
     },
@@ -40,6 +40,27 @@
       "description": "Energetic Roman gym bro coach! Time-traveling gladiator with ancient swagger, future wisdom, and hilarious motivation. Your pumped-up buddy for life gains! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md"
+    },
+    "ariWithOracle30": {
+      "enabled": true,
+      "displayName": "Aristos 3.0",
+      "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system.",
+      "configPath": "assets/config/ari_life_coach_config_2.0.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_v3.md"
+    },
+    "iThereWithOracle30": {
+      "enabled": true,
+      "displayName": "I-There 3.0",
+      "description": "AI reflection enhanced with Aristos 3.0 Life Management framework - your mirror realm guide with advanced behavioral science and habit transformation systems.",
+      "configPath": "assets/config/i_there_config.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_v3.md"
+    },
+    "sergeantOracleWithOracle30": {
+      "enabled": true,
+      "displayName": "Sergeant Oracle 3.0",
+      "description": "Time-traveling Roman gladiator coach powered by Aristos 3.0 framework! Ancient warrior wisdom meets cutting-edge behavioral science for epic life transformation! 💪🏛️⚡",
+      "configPath": "assets/config/sergeant_oracle_config.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_v3.md"
     }
   }
 } 

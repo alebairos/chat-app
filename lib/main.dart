@@ -4,6 +4,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'screens/chat_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/onboarding/onboarding_flow.dart';
+import 'services/onboarding_manager.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
@@ -45,7 +47,7 @@ class ChatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Character.ai Clone',
+      title: 'AI Personas da Lyfe',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
@@ -71,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen>
   final ConfigLoader _configLoader = ConfigLoader();
   late TabController _tabController;
   int _currentIndex = 0;
+  bool _isCheckingOnboarding = true;
 
   @override
   void initState() {
@@ -83,6 +86,25 @@ class _HomeScreenState extends State<HomeScreen>
         });
       }
     });
+    _checkAndShowOnboarding();
+  }
+
+  Future<void> _checkAndShowOnboarding() async {
+    final shouldShow = await OnboardingManager.shouldShowOnboarding();
+
+    setState(() {
+      _isCheckingOnboarding = false;
+    });
+
+    if (shouldShow && mounted) {
+      // Show onboarding flow
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const OnboardingFlow(),
+          fullscreenDialog: true,
+        ),
+      );
+    }
   }
 
   @override
@@ -93,6 +115,14 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingOnboarding) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: FutureBuilder<String>(

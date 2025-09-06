@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/config_loader.dart';
 import '../screens/persona_selection_screen.dart';
 import '../screens/settings/settings_hub_screen.dart';
+import '../screens/onboarding/onboarding_flow.dart';
 
 /// Profile screen with persona management and settings access
 class ProfileScreen extends StatefulWidget {
@@ -126,6 +127,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  ListTile(
+                    leading: const Icon(Icons.people),
+                    title: const Text('Personas da Lyfe'),
+                    subtitle: const Text('Conheça suas IA'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const OnboardingFlow(),
+                          fullscreenDialog: true,
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
                   ListTile(
                     leading: const Icon(Icons.manage_accounts_outlined),
                     title: const Text('Chat Management'),
