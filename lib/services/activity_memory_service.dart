@@ -3,6 +3,138 @@ import '../models/activity_model.dart';
 
 import '../services/oracle_activity_parser.dart';
 import '../utils/logger.dart';
+import 'integrated_mcp_processor.dart';
+
+/// FT-119: Activity request for queuing during rate limits
+class ActivityRequest {
+  final String userMessage;
+  final DateTime requestedAt;
+  final int retryCount;
+
+  ActivityRequest({
+    required this.userMessage,
+    required this.requestedAt,
+    this.retryCount = 0,
+  });
+
+  /// Create a copy with incremented retry count
+  ActivityRequest withRetry() {
+    return ActivityRequest(
+      userMessage: userMessage,
+      requestedAt: requestedAt,
+      retryCount: retryCount + 1,
+    );
+  }
+}
+
+/// FT-119: Activity queue for graceful degradation during rate limits
+class ActivityQueue {
+  static final List<ActivityRequest> _pendingActivities = [];
+  static final Logger _logger = Logger();
+  static const int _maxQueueSize = 20;
+  static const int _maxRetries = 3;
+
+  /// Queue an activity request for later processing
+  static void queueActivity(String userMessage, DateTime requestTime) {
+    // Prevent queue overflow
+    if (_pendingActivities.length >= _maxQueueSize) {
+      _logger.warning('FT-119: Activity queue full, removing oldest request');
+      _pendingActivities.removeAt(0);
+    }
+
+    final request = ActivityRequest(
+      userMessage: userMessage,
+      requestedAt: requestTime,
+    );
+
+    _pendingActivities.add(request);
+    _logger.info(
+        'FT-119: Queued activity request (queue size: ${_pendingActivities.length})');
+  }
+
+  /// Check if there are pending activities
+  static bool hasPendingActivities() {
+    return _pendingActivities.isNotEmpty;
+  }
+
+  /// Get number of pending activities
+  static int getPendingCount() {
+    return _pendingActivities.length;
+  }
+
+  /// Process the activity queue (attempt to process oldest request)
+  static Future<void> processQueue() async {
+    if (_pendingActivities.isEmpty) return;
+
+    final request = _pendingActivities.first;
+    _logger.debug(
+        'FT-119: Attempting to process queued activity (age: ${DateTime.now().difference(request.requestedAt).inMinutes}min)');
+
+    try {
+      // Try to process the activity
+      final success = await _tryProcessActivity(request);
+
+      if (success) {
+        _pendingActivities.removeAt(0);
+        _logger.info(
+            'FT-119: Successfully processed queued activity (${_pendingActivities.length} remaining)');
+      } else if (request.retryCount >= _maxRetries) {
+        _pendingActivities.removeAt(0);
+        _logger.warning(
+            'FT-119: Discarding activity after ${_maxRetries} retries');
+      } else {
+        // Update with retry count
+        _pendingActivities[0] = request.withRetry();
+        _logger.debug(
+            'FT-119: Activity processing failed, will retry (attempt ${request.retryCount + 1}/${_maxRetries})');
+      }
+    } catch (e) {
+      _logger.error('FT-119: Error processing activity queue: $e');
+    }
+  }
+
+  /// Try to process a single activity request
+  static Future<bool> _tryProcessActivity(ActivityRequest request) async {
+    try {
+      await IntegratedMCPProcessor.processTimeAndActivity(
+        userMessage: request.userMessage,
+        claudeResponse: '', // Empty response for queued processing
+      );
+
+      return true;
+    } catch (e) {
+      _logger.debug('FT-119: Activity processing failed: $e');
+      return false;
+    }
+  }
+
+  /// Get queue status for debugging
+  static Map<String, dynamic> getQueueStatus() {
+    return {
+      'pendingCount': _pendingActivities.length,
+      'maxQueueSize': _maxQueueSize,
+      'oldestRequest': _pendingActivities.isNotEmpty
+          ? _pendingActivities.first.requestedAt.toIso8601String()
+          : null,
+      'requests': _pendingActivities
+          .map((req) => {
+                'message': req.userMessage.length > 50
+                    ? '${req.userMessage.substring(0, 50)}...'
+                    : req.userMessage,
+                'requestedAt': req.requestedAt.toIso8601String(),
+                'retryCount': req.retryCount,
+              })
+          .toList(),
+    };
+  }
+
+  /// Clear the queue (for testing or manual intervention)
+  static void clearQueue() {
+    final count = _pendingActivities.length;
+    _pendingActivities.clear();
+    _logger.info('FT-119: Cleared activity queue ($count requests removed)');
+  }
+}
 
 /// Service for managing activity memory storage and retrieval
 class ActivityMemoryService {

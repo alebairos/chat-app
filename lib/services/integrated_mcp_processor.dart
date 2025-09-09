@@ -13,7 +13,32 @@ import 'oracle_context_manager.dart';
 /// - Precise activity timestamps using FT-060 infrastructure
 /// - Enhanced activity storage with time context
 /// - Graceful degradation when components fail
+/// - FT-119: Queue processing for rate limit recovery
 class IntegratedMCPProcessor {
+  static Timer? _queueProcessingTimer;
+
+  /// FT-119: Start background queue processing
+  static void startQueueProcessing() {
+    // Process queue every 3 minutes
+    _queueProcessingTimer?.cancel();
+    _queueProcessingTimer = Timer.periodic(Duration(minutes: 3), (_) async {
+      try {
+        await ActivityQueue.processQueue();
+      } catch (e) {
+        Logger().warning('FT-119: Queue processing error: $e');
+      }
+    });
+    Logger()
+        .info('FT-119: Started background queue processing (3min intervals)');
+  }
+
+  /// FT-119: Stop background queue processing
+  static void stopQueueProcessing() {
+    _queueProcessingTimer?.cancel();
+    _queueProcessingTimer = null;
+    Logger().info('FT-119: Stopped background queue processing');
+  }
+
   /// Process time and activity detection in coordinated workflow
   ///
   /// This is the main entry point for FT-064's two-pass processing:
@@ -68,6 +93,15 @@ class IntegratedMCPProcessor {
           'FT-064: ✅ Successfully processed ${detectedActivities.length} activities');
     } catch (e) {
       Logger().debug('FT-064: Integrated processing failed silently: $e');
+
+      // FT-119: Queue activity if failure is due to rate limiting
+      if (e.toString().contains('429') ||
+          e.toString().contains('rate_limit') ||
+          e.toString().contains('Rate limit')) {
+        ActivityQueue.queueActivity(userMessage, DateTime.now());
+        Logger().debug('FT-119: Activity queued due to rate limit');
+      }
+
       // Graceful degradation - conversation continues uninterrupted
     }
   }

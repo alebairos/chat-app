@@ -14,6 +14,7 @@ import '../config/config_loader.dart';
 
 import '../features/audio_assistant/tts_service.dart';
 import '../services/activity_memory_service.dart';
+import '../services/integrated_mcp_processor.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
@@ -76,6 +77,9 @@ class _ChatScreenState extends State<ChatScreen> {
       // Initialize ActivityMemoryService for Oracle activity tracking (FT-061)
       final isar = await _storageService.db;
       ActivityMemoryService.initialize(isar);
+
+      // FT-119: Start background queue processing for rate limit recovery
+      IntegratedMCPProcessor.startQueueProcessing();
 
       // Ensure audio is enabled in Claude service
       if (_claudeService is ClaudeService && !widget.testMode) {

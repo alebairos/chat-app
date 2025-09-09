@@ -37,6 +37,12 @@ A Flutter chat app with AI personas, voice features, and activity tracking.
 
 ## Recent Updates
 
+### FT-118: Oracle v3.0 Personas Implementation ✅
+- **Oracle v3.0 Integration**: Successfully implemented Oracle v3.0 personas with full activity detection
+- **JSON Configuration**: Generated missing `oracle_prompt_v3.json` for proper activity tracking
+- **Persona Compatibility**: All Oracle personas (1.0, 2.0, 2.1, 3.0) now fully functional
+- **Activity Detection Fix**: Resolved issue where 3.0 personas couldn't detect activities due to missing configuration
+
 ### FT-105: Plan Tab - Comprehensive Planning System 📝
 - **Proactive Planning**: Transform from reactive stats to intentional daily planning
 - **Calendar Navigation**: Swipeable days with today-focused interface
@@ -73,6 +79,6 @@ A Flutter chat app with AI personas, voice features, and activity tracking.
 
 ## Version
 
-Current: v1.0.37
+Current: v1.0.38
 
 For detailed changelog and technical docs, see `docs/` directory.
