@@ -71,6 +71,24 @@ class ValidationResult {
   ValidationResult(this.isValid, this.reason);
 }
 
+/// Public interface for rate limit tracking (FT-119)
+class RateLimitTracker {
+  /// Check if system recently encountered rate limiting
+  static bool hasRecentRateLimit() {
+    return _RateLimitTracker.hasRecentRateLimit();
+  }
+  
+  /// Check if system is experiencing high API usage
+  static bool hasHighApiUsage() {
+    return _RateLimitTracker.hasHighApiUsage();
+  }
+  
+  /// Get comprehensive status for monitoring
+  static Map<String, dynamic> getStatus() {
+    return _RateLimitTracker.getStatus();
+  }
+}
+
 class ClaudeService {
   static const String _baseUrl = 'https://api.anthropic.com/v1/messages';
   late final String _apiKey;

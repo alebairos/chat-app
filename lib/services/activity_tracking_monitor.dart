@@ -16,7 +16,7 @@ class ActivityTrackingMonitor {
 
     // Rate limit tracking status
     try {
-      final rateLimitStatus = _RateLimitTracker.getStatus();
+      final rateLimitStatus = RateLimitTracker.getStatus();
       buffer.writeln('📊 RATE LIMIT TRACKING:');
       buffer.writeln(
           '  Recent Rate Limit: ${rateLimitStatus['hasRecentRateLimit']}');
@@ -75,7 +75,7 @@ class ActivityTrackingMonitor {
     // Effectiveness assessment
     buffer.writeln('🎯 EFFECTIVENESS ASSESSMENT:');
     final hasQueuedActivities = ActivityQueue.hasPendingActivities();
-    final hasRecentRateLimit = _RateLimitTracker.hasRecentRateLimit();
+    final hasRecentRateLimit = RateLimitTracker.hasRecentRateLimit();
 
     if (!hasRecentRateLimit && !hasQueuedActivities) {
       buffer.writeln(
@@ -124,7 +124,7 @@ class ActivityTrackingMonitor {
   /// Get key metrics for dashboard/monitoring
   static Future<Map<String, dynamic>> getKeyMetrics() async {
     try {
-      final rateLimitStatus = _RateLimitTracker.getStatus();
+      final rateLimitStatus = RateLimitTracker.getStatus();
       final queueStatus = ActivityQueue.getQueueStatus();
       final todayStats = await ActivityMemoryService.getActivityStats(days: 0);
 
