@@ -77,12 +77,12 @@ class RateLimitTracker {
   static bool hasRecentRateLimit() {
     return _RateLimitTracker.hasRecentRateLimit();
   }
-  
+
   /// Check if system is experiencing high API usage
   static bool hasHighApiUsage() {
     return _RateLimitTracker.hasHighApiUsage();
   }
-  
+
   /// Get comprehensive status for monitoring
   static Map<String, dynamic> getStatus() {
     return _RateLimitTracker.getStatus();
