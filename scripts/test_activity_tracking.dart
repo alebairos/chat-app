@@ -1,7 +1,7 @@
 #!/usr/bin/env dart
 
 import 'dart:io';
-import '../lib/services/ft119_monitor.dart';
+import '../lib/services/activity_tracking_monitor.dart';
 import '../lib/services/activity_memory_service.dart';
 import '../lib/utils/logger.dart';
 
@@ -16,19 +16,19 @@ Future<void> main() async {
   try {
     // Generate status report
     print('\n📊 Generating status report...');
-    final report = await FT119Monitor.generateStatusReport();
+    final report = await ActivityTrackingMonitor.generateStatusReport();
     print(report);
 
     // Test key metrics
     print('\n📈 Key Metrics:');
-    final metrics = await FT119Monitor.getKeyMetrics();
+    final metrics = await ActivityTrackingMonitor.getKeyMetrics();
     metrics.forEach((key, value) {
       print('  $key: $value');
     });
 
     // Health check
     print('\n🏥 Health Check:');
-    final isHealthy = await FT119Monitor.isSystemHealthy();
+    final isHealthy = await ActivityTrackingMonitor.isSystemHealthy();
     print('  System Status: ${isHealthy ? '✅ Healthy' : '❌ Issues Detected'}');
 
     // Queue status

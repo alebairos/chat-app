@@ -111,7 +111,7 @@ FT-119: Background queue processing started - System startup
 
 ### Monitoring Tools
 
-**File:** `lib/services/ft119_monitor.dart`
+**File:** `lib/services/activity_tracking_monitor.dart`
 
 **Status Monitoring:**
 - `generateStatusReport()` - Comprehensive system status
@@ -119,7 +119,7 @@ FT-119: Background queue processing started - System startup
 - `isSystemHealthy()` - Overall health check
 - `getQueueAnalytics()` - Queue performance metrics
 
-**File:** `scripts/test_ft119.dart`
+**File:** `scripts/test_activity_tracking.dart`
 
 **Testing Script:**
 - Manual testing capabilities

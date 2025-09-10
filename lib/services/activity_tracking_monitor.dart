@@ -2,8 +2,8 @@ import '../utils/logger.dart';
 import 'activity_memory_service.dart';
 import 'claude_service.dart';
 
-/// FT-119: Simple monitoring utility to track implementation effectiveness
-class FT119Monitor {
+/// Activity tracking monitoring utility for degradation policy effectiveness
+class ActivityTrackingMonitor {
   static final Logger _logger = Logger();
 
   /// Generate a comprehensive status report for FT-119
