@@ -14,6 +14,7 @@ class CharacterVoiceConfig {
       'similarityBoost': 0.8,
       'style': 0.1,
       'speakerBoost': true,
+      'apply_text_normalization': 'auto', // FT-120: Enhanced number/date reading
       'description':
           'Masculine coach voice tuned for Portuguese (Brazil) and English',
     },
@@ -25,6 +26,7 @@ class CharacterVoiceConfig {
       'similarityBoost': 0.85, // Strong character presence
       'style': 0.3, // Add assertive character
       'speakerBoost': true,
+      'apply_text_normalization': 'auto', // FT-120: Enhanced number/date reading
       'description':
           'Authoritative military sergeant voice - disciplined, motivational, commanding',
     },
@@ -35,6 +37,7 @@ class CharacterVoiceConfig {
       'similarityBoost': 0.75, // Gentle but present
       'style': 0.0, // Neutral, peaceful tone
       'speakerBoost': true,
+      'apply_text_normalization': 'auto', // FT-120: Enhanced number/date reading
       'description':
           'Serene zen master voice - calm, wise, contemplative, peaceful',
     },
@@ -45,6 +48,7 @@ class CharacterVoiceConfig {
       'similarityBoost': 0.8,
       'style': 0.0,
       'speakerBoost': true,
+      'apply_text_normalization': 'auto', // FT-120: Enhanced number/date reading
       'description': 'Standard assistant voice',
     },
   };

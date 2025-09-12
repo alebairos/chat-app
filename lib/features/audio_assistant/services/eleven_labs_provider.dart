@@ -26,6 +26,7 @@ class ElevenLabsProvider implements TTSProvider {
       'style': 0.0,
       'speakerBoost': true,
       'useAuthFromEnv': true,
+      'apply_text_normalization': 'auto', // Default to auto mode for optimal balance
     };
   }
 
@@ -136,6 +137,7 @@ class ElevenLabsProvider implements TTSProvider {
         'text': processedText, // Use processed text instead of original
         'model_id': modelId,
         'voice_settings': voiceSettings,
+        'apply_text_normalization': _getTextNormalizationMode(), // FT-120: Text normalization
       };
 
       _logger.debug(
@@ -186,6 +188,23 @@ class ElevenLabsProvider implements TTSProvider {
           .error('Failed to update ElevenLabs TTS Provider configuration: $e');
       return false;
     }
+  }
+
+  /// Get text normalization mode based on configuration and model compatibility
+  String _getTextNormalizationMode() {
+    final configuredMode = _configuration['apply_text_normalization'] ?? 'auto';
+    final modelId = _configuration['modelId'] ?? '';
+    
+    // Flash v2.5 and Turbo v2.5 only support 'off' or 'auto'
+    if (modelId.contains('flash_v2_5') || modelId.contains('turbo_v2_5')) {
+      if (configuredMode == 'on') {
+        _logger.debug('Text normalization: Fallback to "auto" for model $modelId');
+        return 'auto';
+      }
+    }
+    
+    _logger.debug('Text normalization: Using mode "$configuredMode" for model $modelId');
+    return configuredMode;
   }
 
   @override
