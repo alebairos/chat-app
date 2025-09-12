@@ -130,7 +130,7 @@ class CharacterConfigManager {
     return null; // No Oracle config specified
   }
 
-  /// Load the system prompt for the active persona
+  /// Load the system prompt for the active persona with configurable audio formatting
   Future<String> loadSystemPrompt() async {
     try {
       // 1) Always try to load Oracle prompt first
@@ -177,13 +177,51 @@ class CharacterConfigManager {
         }
       }
 
-      // 3) Compose: Oracle (if loaded) + Persona prompt
-      if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
-        return '${oraclePrompt.trim()}\n\n${personaPrompt.trim()}';
+      // 3) NEW: Check if audio formatting is enabled for this persona
+      String audioInstructions = '';
+      try {
+        // Load personas config to check audio formatting settings
+        final String personasConfigString = await rootBundle.loadString(
+          'assets/config/personas_config.json'
+        );
+        final Map<String, dynamic> personasConfig = json.decode(personasConfigString);
+        
+        // Get current persona's audio formatting settings
+        final Map<String, dynamic>? personaData = personasConfig['personas'][_activePersonaKey];
+        final Map<String, dynamic>? audioSettings = personaData?['audioFormatting'];
+        
+        if (audioSettings?['enabled'] == true) {
+          // Load audio formatting config
+          final String audioConfigPath = personasConfig['audioFormattingConfig'] ?? 
+                                       'assets/config/audio_formatting_config.json';
+          final String audioConfigString = await rootBundle.loadString(audioConfigPath);
+          final Map<String, dynamic> audioConfig = json.decode(audioConfigString);
+          
+          audioInstructions = audioConfig['audio_formatting_instructions']['content'] as String;
+          print('✅ Audio formatting enabled for persona: $_activePersonaKey');
+        } else {
+          print('ℹ️ Audio formatting disabled for persona: $_activePersonaKey');
+        }
+      } catch (audioError) {
+        print('⚠️ Audio formatting config not found or disabled: $audioError');
       }
 
-      // 4) Fallback: return persona prompt only
-      return personaPrompt;
+      // 4) Compose: Oracle (if loaded) + Persona prompt + Audio Instructions (if enabled)
+      String finalPrompt = '';
+      
+      if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
+        finalPrompt = '${oraclePrompt.trim()}\n\n${personaPrompt.trim()}';
+      } else {
+        finalPrompt = personaPrompt.trim();
+      }
+      
+      // Append audio instructions if enabled for this persona
+      if (audioInstructions.isNotEmpty) {
+        finalPrompt = '$finalPrompt$audioInstructions';
+        print('✅ Audio formatting instructions appended to system prompt');
+      }
+      
+      return finalPrompt;
     } catch (e) {
       print('Error loading system prompt: $e');
       final displayName = await personaDisplayName;

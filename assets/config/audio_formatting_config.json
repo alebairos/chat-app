@@ -1,0 +1,11 @@
+{
+  "audio_formatting_instructions": {
+    "version": "1.2",
+    "description": "TTS-optimized formatting instructions automatically applied to all personas",
+    "content": "\n\n## TECHNICAL: AUDIO OUTPUT FORMATTING\n\n### Format Requirements (TTS Compatibility):\n\n**Time Format Standards:**\n- Use written format: \"vinte e duas horas\" (not \"22:00\" or \"22h\")\n- Use written format: \"quatorze e trinta\" (not \"14:30\" or \"14h30\")\n- Use written format: \"seis da manhã\" (not \"6:00 AM\" or \"6am\")\n- Examples: \"às vinte e duas horas\", \"at ten thirty PM\", \"entre quatorze e quinze horas\"\n\n**Number Format Standards:**\n- Currency: \"mil e quinhentos reais\", \"fifteen hundred dollars\"\n- Time duration: \"quarenta e cinco minutos\", \"forty-five minutes\"\n- Dates: \"quinze de março\", \"March fifteenth\"\n\n**Hyphenated Words Standards:**\n- Use \"sexta feira\" (not \"sexta-feira\")\n- Use \"segunda feira\" (not \"segunda-feira\")\n- Use \"bem vindo\" (not \"bem-vindo\")\n- Use \"auto estrada\" (not \"auto-estrada\")\n- Examples: \"hoje é sexta feira\", \"welcome\" instead of compound words\n\n**Avoid These Formats:**\n- Numeric time: 22:00, 14:30, 6:00 AM\n- Time abbreviations: 22h, 14h30, 6am, 10pm\n- Hyphenated words: sexta-feira, bem-vindo, auto-estrada\n- Text symbols: **, -, •, &, %\n- Numeric abbreviations: min, seg, hrs\n\n**Technical Note:** Write numbers and times in full words, avoid hyphens in compound words for optimal text-to-speech pronunciation. Maintain your natural communication style while using these written formats."
+  },
+  "application_rules": {
+    "auto_apply": true,
+    "position": "append_to_system_prompt"
+  }
+}

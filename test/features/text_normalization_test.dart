@@ -9,7 +9,7 @@ void main() {
     dotenv.testLoad(fileInput: '');
   });
 
-  group('FT-120 Text Normalization', () {
+  group('Text Normalization Configuration', () {
     late ElevenLabsProvider provider;
 
     setUp(() {
