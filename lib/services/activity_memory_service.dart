@@ -1015,6 +1015,87 @@ class ActivityMemoryService {
     }
   }
 
+  /// Get all activities with optional date filtering (for export)
+  static Future<List<ActivityModel>> getAllActivitiesForExport({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      // Check if database is available
+      final dbAvailable = await isDatabaseAvailable();
+      if (!dbAvailable) {
+        throw Exception('Activity database is not available');
+      }
+
+      // Build query with date filtering
+      List<ActivityModel> activities;
+      
+      if (startDate != null && endDate != null) {
+        activities = await _database.activityModels
+            .filter()
+            .completedAtBetween(startDate, endDate)
+            .sortByCompletedAt()
+            .findAll();
+      } else if (startDate != null) {
+        activities = await _database.activityModels
+            .filter()
+            .completedAtGreaterThan(startDate)
+            .sortByCompletedAt()
+            .findAll();
+      } else if (endDate != null) {
+        activities = await _database.activityModels
+            .filter()
+            .completedAtLessThan(endDate)
+            .sortByCompletedAt()
+            .findAll();
+      } else {
+        activities = await _database.activityModels
+            .where()
+            .sortByCompletedAt()
+            .findAll();
+      }
+      
+      _logger.info('Retrieved ${activities.length} activities for export');
+      return activities;
+    } catch (e) {
+      _logger.error('Failed to retrieve activities for export: $e');
+      return [];
+    }
+  }
+
+  /// Check if activity exists (for duplicate detection during import)
+  static Future<bool> activityExists({
+    required DateTime completedAt,
+    String? activityCode,
+    String? activityName,
+  }) async {
+    try {
+      // Check for existing activity with same timestamp and either same code or name
+      final existingQuery = _database.activityModels
+          .filter()
+          .completedAtEqualTo(completedAt);
+      
+      if (activityCode != null) {
+        // For Oracle activities, check by code
+        final existing = await existingQuery
+            .activityCodeEqualTo(activityCode)
+            .findFirst();
+        return existing != null;
+      } else if (activityName != null) {
+        // For custom activities, check by name
+        final existing = await existingQuery
+            .activityNameEqualTo(activityName)
+            .findFirst();
+        return existing != null;
+      }
+      
+      return false;
+    } catch (e) {
+      _logger.warning('Error checking if activity exists: $e');
+      return false; // If we can't check, allow import
+    }
+  }
+
   /// Helper method to get day of week name
   static String _getDayOfWeek(int weekday) {
     const days = [

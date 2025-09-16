@@ -7,6 +7,7 @@ import '../../models/chat_message_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/message_type.dart';
 import '../../widgets/chat_app_bar.dart';
+import '../../widgets/activity_export_dialog_utils.dart';
 
 class ChatManagementScreen extends StatelessWidget {
   final Function() onCharacterSelected;
@@ -28,6 +29,7 @@ class ChatManagementScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          // Chat Management Section
           _buildManagementCard(
             context,
             icon: Icons.download,
@@ -53,6 +55,30 @@ class ChatManagementScreen extends StatelessWidget {
             subtitle: 'Remove all messages (keeps activity data)',
             onTap: () => _clearChatHistory(context),
           ),
+
+          const SizedBox(height: 24), // Section separator
+
+          // Activity Data Management Section
+          _buildManagementCard(
+            context,
+            icon: Icons.file_download_outlined,
+            iconColor: Colors.purple,
+            title: 'Export Activity Data',
+            subtitle: 'Backup your activity tracking history',
+            onTap: () => ActivityExportDialogUtils.showExportDialog(context),
+          ),
+          _buildManagementCard(
+            context,
+            icon: Icons.file_upload_outlined,
+            iconColor: Colors.teal,
+            title: 'Import Activity Data',
+            subtitle: 'Restore activity history from backup',
+            onTap: () => ActivityExportDialogUtils.showImportDialog(context),
+          ),
+
+          const SizedBox(height: 24), // Section separator
+
+          // App Information
           _buildManagementCard(
             context,
             icon: Icons.info_outline,
@@ -390,7 +416,7 @@ class ChatManagementScreen extends StatelessWidget {
               Text('• Chat with AI personas for guidance and support'),
               Text('• Get personalized advice for life coaching'),
               Text('• Track your activities and personal development'),
-              Text('• Export and import your conversation history'),
+              Text('• Export and import conversation & activity history'),
               Text('• Switch between different AI guides'),
               SizedBox(height: 16),
               Text(
@@ -404,7 +430,8 @@ class ChatManagementScreen extends StatelessWidget {
               Text('• Voice messages and audio responses'),
               Text('• Activity detection and memory'),
               Text('• Time-aware conversations'),
-              Text('• Persistent chat history'),
+              Text('• Persistent chat & activity history'),
+              Text('• Data export/import for device migration'),
               Text('• Customizable AI personas'),
               SizedBox(height: 16),
               Text(
