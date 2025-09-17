@@ -1,0 +1,68 @@
+Pronto! Criei a versão 4.0 simplificada do prompt do Aristos. As principais mudanças implementadas foram:
+RESUMO DAS MUDANÇAS PRINCIPAIS:
+1. SIMPLIFICAÇÃO UNIVERSAL:
+TODAS as trilhas agora seguem o modelo flexível da LV1, onde cada trilha oferece um catálogo de hábitos organizados por categorias e o usuário escolhe:
+
+Básico: Máximo 3 hábitos
+Intermediário: Máximo 6 hábitos (total)
+Avançado: Máximo 9 hábitos (total)
+
+2. ESTRUTURA PADRONIZADA:
+Cada trilha agora tem:
+
+Nome da trilha
+Catálogo de hábitos organizados por categorias temáticas
+Flexibilidade de escolha baseada no nível do usuário
+
+3. EXEMPLOS DA NOVA ESTRUTURA:
+DM1 - Durma Melhor:
+
+Fundamentos do Sono: 4 hábitos básicos
+Ritual Noturno: 5 hábitos de preparação
+Controle de Estímulos: 4 hábitos de ambiente
+Bem-estar Mental: 4 hábitos contemplativos
+
+VG1 - Virtude Gratidão:
+
+Gratidão Básica: 3 hábitos fundamentais
+Expressão Criativa: 3 hábitos de manifestação
+Gratidão Profunda: 6 hábitos avançados
+
+SegF1 - Segurança Financeira:
+
+Avaliação e Planejamento: 4 hábitos
+Controle de Gastos: 5 hábitos
+Poupança e Emergência: 2 hábitos
+Renda Extra: 2 hábitos
+Hábitos de Compra: 3 hábitos
+Investimentos: 3 hábitos
+Controle Digital: 4 hábitos
+
+4. BENEFÍCIOS DA NOVA VERSÃO:
+Para o Usuário:
+
+Maior autonomia na escolha dos hábitos
+Flexibilidade para adaptar às suas necessidades
+Progressão natural conforme capacidade
+Menos sobrecarga cognitiva
+
+Para o Coach:
+
+Sistema mais simples de explicar
+Customização mais fácil
+Abordagem consistente em todas as trilhas
+Foco na escolha consciente do cliente
+
+Para Implementação:
+
+Menos complexidade de gerenciamento
+Escalabilidade para novos objetivos
+Consistência na experiência do usuário
+
+5. MANTIDO INALTERADO:
+
+Toda a fundamentação teórica
+Protocolos de onboarding
+Biblioteca completa de hábitos
+Ferramentas práticas
+Perguntas-chave para coaching
