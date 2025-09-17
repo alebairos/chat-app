@@ -61,7 +61,7 @@
     },
     "ariWithOracle30": {
       "enabled": true,
-      "displayName": "Aristos 3.0",
+      "displayName": "Aristios 3.0",
       "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system.",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_v3.md",

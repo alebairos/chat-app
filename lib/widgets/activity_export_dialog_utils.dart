@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/activity_export_service.dart';
@@ -36,6 +37,14 @@ class ActivityExportDialogUtils {
                   const Text(
                       'Export your activity tracking data for backup or transfer to another device.'),
                   const SizedBox(height: 16),
+                  if (stats.containsKey('database_error')) ...[
+                    const Text('⚠️ Database Issue:'),
+                    const SizedBox(height: 8),
+                    Text('${stats['database_error']}'),
+                    const SizedBox(height: 8),
+                    const Text('Please restart the app and try again.'),
+                    const SizedBox(height: 16),
+                  ],
                   const Text('📊 Export Summary:'),
                   const SizedBox(height: 8),
                   Text('• Total activities: ${stats['total_activities']}'),
@@ -46,7 +55,8 @@ class ActivityExportDialogUtils {
                     const SizedBox(height: 8),
                     const Text('📂 Activities by dimension:'),
                     ...(stats['dimensions'] as Map<String, int>).entries.map(
-                          (entry) => Text('  • ${_formatDimension(entry.key)}: ${entry.value}'),
+                          (entry) => Text(
+                              '  • ${_formatDimension(entry.key)}: ${entry.value}'),
                         ),
                   ],
                   if (stats['date_range'] != null) ...[
@@ -68,10 +78,12 @@ class ActivityExportDialogUtils {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context); // Close dialog
-                  await _performExport(context, exportService);
-                },
+                onPressed: stats.containsKey('database_error')
+                    ? null
+                    : () async {
+                        Navigator.pop(context); // Close dialog
+                        await _performExport(context, exportService);
+                      },
                 child: const Text('Export'),
               ),
             ],
@@ -103,6 +115,24 @@ class ActivityExportDialogUtils {
       if (result == null || result.files.isEmpty) return; // User cancelled
 
       final filePath = result.files.first.path!;
+
+      // DEBUG: Log file metadata immediately after selection
+      try {
+        final file = File(filePath);
+        if (await file.exists()) {
+          final stat = await file.stat();
+          print('🔍 FILE PICKER: Selected file metadata:');
+          print('   📄 Path: $filePath');
+          print('   📅 Modified: ${stat.modified}');
+          print('   👁️ Accessed: ${stat.accessed}');
+          print('   📏 Size: ${stat.size} bytes');
+        } else {
+          print(
+              '⚠️ FILE PICKER: Selected file does not exist at path: $filePath');
+        }
+      } catch (e) {
+        print('❌ FILE PICKER: Error reading file metadata: $e');
+      }
 
       // Show confirmation dialog
       final confirmed = await _showImportConfirmation(context);
@@ -232,7 +262,8 @@ class ActivityExportDialogUtils {
     return result ?? false;
   }
 
-  static Future<void> _performImport(BuildContext context, String filePath) async {
+  static Future<void> _performImport(
+      BuildContext context, String filePath) async {
     // Show import progress dialog
     bool isDialogShown = false;
 
@@ -293,8 +324,9 @@ class ActivityExportDialogUtils {
 
   static Future<void> _showImportResults(
       BuildContext context, ImportResult result) async {
-    final isSuccess = result.imported > 0 || (result.imported == 0 && result.skipped > 0 && result.errors == 0);
-    
+    final isSuccess = result.imported > 0 ||
+        (result.imported == 0 && result.skipped > 0 && result.errors == 0);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -313,7 +345,9 @@ class ActivityExportDialogUtils {
                 if (result.errorMessages.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   const Text('❌ Error details:'),
-                  ...result.errorMessages.take(3).map((error) => Text('  • $error')),
+                  ...result.errorMessages
+                      .take(3)
+                      .map((error) => Text('  • $error')),
                   if (result.errorMessages.length > 3)
                     Text('  • ... and ${result.errorMessages.length - 3} more'),
                 ],
@@ -351,7 +385,7 @@ class ActivityExportDialogUtils {
       'trabalho': 'Work',
       'custom': 'Custom',
     };
-    
+
     return dimensionNames[dimension] ?? dimension;
   }
 
@@ -367,7 +401,8 @@ class ActivityExportDialogUtils {
       final earliestDate = DateTime.parse(earliest);
       final latestDate = DateTime.parse(latest);
 
-      final format = earliestDate.year == latestDate.year ? 'MMM dd' : 'MMM dd, yyyy';
+      final format =
+          earliestDate.year == latestDate.year ? 'MMM dd' : 'MMM dd, yyyy';
 
       return '${_formatDate(earliestDate, format)} - ${_formatDate(latestDate, format)}';
     } catch (e) {
@@ -377,8 +412,18 @@ class ActivityExportDialogUtils {
 
   static String _formatDate(DateTime date, String format) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
 
     if (format == 'MMM dd') {

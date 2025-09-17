@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// A utility class for controlling logging throughout the app.
 class Logger {
@@ -12,6 +14,9 @@ class Logger {
 
   /// Whether to log startup events (data loading, initialization)
   bool _logStartupEvents = false;
+
+  /// Log file for persistent logging
+  File? _logFile;
 
   /// Enable or disable all logging
   void setLogging(bool enabled) {
@@ -32,6 +37,7 @@ class Logger {
   void log(String message) {
     if (_isEnabled) {
       print(message);
+      _writeToFile(message);
     }
   }
 
@@ -39,6 +45,7 @@ class Logger {
   void logStartup(String message) {
     if (_isEnabled && _logStartupEvents) {
       print('🚀 [STARTUP] $message');
+      _writeToFile('🚀 [STARTUP] $message');
     }
   }
 
@@ -46,6 +53,7 @@ class Logger {
   void error(String message) {
     if (_isEnabled) {
       print('❌ [ERROR] $message');
+      _writeToFile('❌ [ERROR] $message');
     }
   }
 
@@ -53,6 +61,7 @@ class Logger {
   void warning(String message) {
     if (_isEnabled) {
       print('⚠️ [WARNING] $message');
+      _writeToFile('⚠️ [WARNING] $message');
     }
   }
 
@@ -60,6 +69,7 @@ class Logger {
   void info(String message) {
     if (_isEnabled) {
       print('ℹ️ [INFO] $message');
+      _writeToFile('ℹ️ [INFO] $message');
     }
   }
 
@@ -67,6 +77,52 @@ class Logger {
   void debug(String message) {
     if (_isEnabled && kDebugMode) {
       print('🔍 [DEBUG] $message');
+      _writeToFile('🔍 [DEBUG] $message');
     }
+  }
+
+  /// Initialize the log file if not already done
+  Future<void> _initLogFile() async {
+    if (_logFile != null) return;
+
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final logsDir = Directory('${directory.path}/logs');
+
+      // Create logs directory if it doesn't exist
+      if (!await logsDir.exists()) {
+        await logsDir.create(recursive: true);
+      }
+
+      _logFile = File('${logsDir.path}/debug.log');
+    } catch (e) {
+      // Silently fail - don't crash the app if file operations fail
+      print('Failed to initialize log file: $e');
+    }
+  }
+
+  /// Get formatted timestamp for log entries
+  String _getTimestamp() {
+    final now = DateTime.now();
+    return '[${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} '
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}]';
+  }
+
+  /// Write message to log file with timestamp
+  void _writeToFile(String message) {
+    if (!_isEnabled) return;
+
+    // Initialize file if needed (async, but don't wait)
+    _initLogFile().then((_) {
+      if (_logFile != null) {
+        try {
+          final timestampedMessage = '${_getTimestamp()} $message\n';
+          _logFile!
+              .writeAsStringSync(timestampedMessage, mode: FileMode.append);
+        } catch (e) {
+          // Silently fail - don't crash the app if file operations fail
+        }
+      }
+    });
   }
 }

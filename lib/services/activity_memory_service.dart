@@ -4,6 +4,7 @@ import '../models/activity_model.dart';
 import '../services/oracle_activity_parser.dart';
 import '../utils/logger.dart';
 import 'integrated_mcp_processor.dart';
+import 'chat_storage_service.dart';
 
 /// FT-119: Activity request for queuing during rate limits
 class ActivityRequest {
@@ -159,16 +160,29 @@ class ActivityMemoryService {
   /// Check if the database is available and accessible
   static Future<bool> isDatabaseAvailable() async {
     try {
+      print('🔍 ActivityMemoryService: Checking database availability...');
+
       if (_isar == null) {
         print('❌ ActivityMemoryService: _isar is null');
         return false;
       }
+
+      print(
+          '🔍 ActivityMemoryService: _isar instance exists, checking if open...');
+      print('🔍 ActivityMemoryService: Isar name: ${_isar!.name}');
+      print('🔍 ActivityMemoryService: Isar directory: ${_isar!.directory}');
+
       // Try to access the database to see if it's still open
       final count = await _isar!.activityModels.count();
       print('✅ ActivityMemoryService: Database available, count: $count');
       return true;
     } catch (e) {
       print('❌ ActivityMemoryService: Database not available: $e');
+      print('🔍 ActivityMemoryService: Error type: ${e.runtimeType}');
+      if (_isar != null) {
+        print('🔍 ActivityMemoryService: Isar instance exists but threw error');
+        print('🔍 ActivityMemoryService: Isar name: ${_isar!.name}');
+      }
       _logger.warning('Database not available: $e');
       return false;
     }
@@ -176,19 +190,52 @@ class ActivityMemoryService {
 
   /// Reinitialize the database connection if needed
   static Future<bool> ensureDatabaseConnection() async {
-    if (await isDatabaseAvailable()) return true;
+    print('🔄 ActivityMemoryService: ensureDatabaseConnection() called');
+
+    if (await isDatabaseAvailable()) {
+      print(
+          '✅ ActivityMemoryService: Database already available, no reconnection needed');
+      return true;
+    }
 
     try {
-      // Try to reinitialize if we have a storage service reference
-      // This is a fallback for when the database connection is lost
+      // Try to reinitialize with a fresh database connection
+      print(
+          '🔄 ActivityMemoryService: Attempting to reestablish database connection...');
       _logger.info('Attempting to reestablish database connection...');
 
-      // For now, we can't reinitialize without the storage service
-      // This would require passing the storage service reference
+      // Create a new ChatStorageService to get a fresh database connection
+      print('🔄 ActivityMemoryService: Creating new ChatStorageService...');
+      final storageService = ChatStorageService();
+
+      print('🔄 ActivityMemoryService: Getting fresh database instance...');
+      final freshIsar = await storageService.db;
+
+      print('🔄 ActivityMemoryService: Fresh Isar instance obtained');
+      print('🔍 ActivityMemoryService: Fresh Isar name: ${freshIsar.name}');
       print(
-          '⚠️ ActivityMemoryService: Cannot reinitialize database without storage service reference');
-      return false;
+          '🔍 ActivityMemoryService: Fresh Isar directory: ${freshIsar.directory}');
+
+      // Reinitialize with the fresh connection
+      print(
+          '🔄 ActivityMemoryService: Reinitializing with fresh connection...');
+      _isar = freshIsar;
+
+      // Test the new connection
+      print('🔄 ActivityMemoryService: Testing new connection...');
+      final isAvailable = await isDatabaseAvailable();
+      if (isAvailable) {
+        print(
+            '✅ ActivityMemoryService: Successfully reestablished database connection');
+        return true;
+      } else {
+        print(
+            '❌ ActivityMemoryService: Failed to reestablish database connection');
+        return false;
+      }
     } catch (e) {
+      print('❌ ActivityMemoryService: Exception during reconnection: $e');
+      print('🔍 ActivityMemoryService: Exception type: ${e.runtimeType}');
       _logger.error('Failed to reestablish database connection: $e');
       return false;
     }
@@ -215,6 +262,36 @@ class ActivityMemoryService {
     } catch (e) {
       print(
           '❌ ActivityMemoryService: Error during database reinitialization: $e');
+      return false;
+    }
+  }
+
+  /// Ensure fresh database connection using proven Stats tab pattern
+  /// This is the reliable approach that always works
+  static Future<bool> ensureFreshConnection() async {
+    try {
+      print('🔄 ActivityMemoryService: Ensuring fresh database connection...');
+      _logger
+          .info('Ensuring fresh database connection using Stats tab pattern');
+
+      // Use the same robust approach as Stats tab
+      final storageService = ChatStorageService();
+      final freshIsar = await storageService.db;
+
+      print('✅ ActivityMemoryService: Fresh Isar instance obtained');
+      final success = await reinitializeDatabase(freshIsar);
+
+      if (success) {
+        print(
+            '✅ ActivityMemoryService: Fresh connection established successfully');
+        return true;
+      } else {
+        print('❌ ActivityMemoryService: Failed to establish fresh connection');
+        return false;
+      }
+    } catch (e) {
+      print('❌ ActivityMemoryService: Error ensuring fresh connection: $e');
+      _logger.error('Failed to ensure fresh connection: $e');
       return false;
     }
   }
@@ -1029,7 +1106,7 @@ class ActivityMemoryService {
 
       // Build query with date filtering
       List<ActivityModel> activities;
-      
+
       if (startDate != null && endDate != null) {
         activities = await _database.activityModels
             .filter()
@@ -1054,7 +1131,7 @@ class ActivityMemoryService {
             .sortByCompletedAt()
             .findAll();
       }
-      
+
       _logger.info('Retrieved ${activities.length} activities for export');
       return activities;
     } catch (e) {
@@ -1071,28 +1148,41 @@ class ActivityMemoryService {
   }) async {
     try {
       // Check for existing activity with same timestamp and either same code or name
-      final existingQuery = _database.activityModels
-          .filter()
-          .completedAtEqualTo(completedAt);
-      
+      final existingQuery =
+          _database.activityModels.filter().completedAtEqualTo(completedAt);
+
       if (activityCode != null) {
         // For Oracle activities, check by code
-        final existing = await existingQuery
-            .activityCodeEqualTo(activityCode)
-            .findFirst();
+        final existing =
+            await existingQuery.activityCodeEqualTo(activityCode).findFirst();
         return existing != null;
       } else if (activityName != null) {
         // For custom activities, check by name
-        final existing = await existingQuery
-            .activityNameEqualTo(activityName)
-            .findFirst();
+        final existing =
+            await existingQuery.activityNameEqualTo(activityName).findFirst();
         return existing != null;
       }
-      
+
       return false;
     } catch (e) {
       _logger.warning('Error checking if activity exists: $e');
       return false; // If we can't check, allow import
+    }
+  }
+
+  /// Import activity with preserved timestamps (FT-124 fix)
+  static Future<ActivityModel> importActivity(ActivityModel activity) async {
+    try {
+      await _database.writeTxn(() async {
+        await _database.activityModels.put(activity);
+      });
+
+      _logger.info(
+          'Imported activity: ${activity.description} at ${activity.formattedTime} (preserved timestamp)');
+      return activity;
+    } catch (e) {
+      _logger.error('Failed to import activity: $e');
+      rethrow;
     }
   }
 
