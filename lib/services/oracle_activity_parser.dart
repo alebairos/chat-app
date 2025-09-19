@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/services.dart';
 import '../utils/logger.dart';
 import '../config/character_config_manager.dart';
 
@@ -48,17 +48,9 @@ class OracleActivityParser {
   }
 
   static Future<OracleParseResult> _loadFromJSON(String jsonPath) async {
-    final file = File(jsonPath);
-
-    if (!await file.exists()) {
-      _logger.warning('Oracle JSON file not found: $jsonPath');
-      _logger.info(
-          'Hint: Run "python3 scripts/preprocess_oracle.py --all" to generate JSON files');
-      return OracleParseResult.empty();
-    }
-
     try {
-      final jsonContent = await file.readAsString();
+      _logger.debug('Loading Oracle JSON from assets: $jsonPath');
+      final jsonContent = await rootBundle.loadString(jsonPath);
       final data = jsonDecode(jsonContent) as Map<String, dynamic>;
 
       // Parse dimensions

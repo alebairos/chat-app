@@ -31,7 +31,7 @@
       }
     },
     "ariWithOracle21": {
-      "enabled": true,
+      "enabled": false,
       "displayName": "Ari 2.1",
       "description": "Life coach with Oracle 2.1 knowledge base",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
@@ -41,7 +41,7 @@
       }
     },
     "iThereWithOracle21": {
-      "enabled": true,
+      "enabled": false,
       "displayName": "I-There 2.1",
       "description": "AI reflection with Oracle 2.1 knowledge base",
       "configPath": "assets/config/i_there_config.json",
@@ -51,7 +51,7 @@
       }
     },
     "sergeantOracleWithOracle21": {
-      "enabled": true,
+      "enabled": false,
       "displayName": "Sergeant Oracle 2.1",
       "description": "Energetic Roman gym bro coach! Time-traveling gladiator with ancient swagger, future wisdom, and hilarious motivation. Your pumped-up buddy for life gains! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json",
@@ -65,7 +65,7 @@
       "displayName": "Aristios 3.0",
       "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system.",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0_optimized.md",
       "audioFormatting": {
         "enabled": true
       }
@@ -75,7 +75,7 @@
       "displayName": "I-There 3.0",
       "description": "AI reflection enhanced with Aristios 3.0 Life Management framework - your mirror realm guide with advanced behavioral science and habit transformation systems.",
       "configPath": "assets/config/i_there_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0_optimized.md",
       "audioFormatting": {
         "enabled": true
       }
@@ -85,37 +85,7 @@
       "displayName": "Sergeant Oracle 3.0",
       "description": "Time-traveling Roman gladiator coach powered by Aristos 3.0 framework! Ancient warrior wisdom meets cutting-edge behavioral science for epic life transformation! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0.md",
-      "audioFormatting": {
-        "enabled": true
-      }
-    },
-    "ariWithOracle40": {
-      "enabled": true,
-      "displayName": "Aristios 4.0",
-      "description": "AI reflection enhanced with Aristios 3.0 Life Management framework - your mirror realm guide with advanced behavioral science and habit transformation systems.",
-      "configPath": "assets/config/ari_life_coach_config_2.0.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.0.md",
-      "audioFormatting": {
-        "enabled": true
-      }
-    },
-    "iThereWithOracle40": {
-      "enabled": true,
-      "displayName": "I-There 4.0",
-      "description": "AI reflection enhanced with Aristos 4.0 Life Management framework and MCP Activity Tracking - your mirror realm guide with advanced behavioral science, real-time habit monitoring, and intelligent data insights.",
-      "configPath": "assets/config/i_there_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.0.md",
-      "audioFormatting": {
-        "enabled": true
-      }
-    },
-    "sergeantOracleWithOracle40": {
-      "enabled": true,
-      "displayName": "Sergeant Oracle 4.0",
-      "description": "Time-traveling Roman gladiator coach powered by Aristos 4.0 framework with MCP Activity Tracking! Ancient warrior wisdom meets cutting-edge behavioral science and real-time habit monitoring for epic life transformation! 💪🏛️⚡📊",
-      "configPath": "assets/config/sergeant_oracle_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.0.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0_optimized.md",
       "audioFormatting": {
         "enabled": true
       }
@@ -125,7 +95,7 @@
       "displayName": "Aristios 4.2",
       "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system - latest version with enhanced features.",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
       "audioFormatting": {
         "enabled": true
       }
@@ -133,9 +103,9 @@
     "iThereWithOracle42": {
       "enabled": true,
       "displayName": "I-There 4.2",
-      "description": "AI reflection enhanced with Aristos 4.2 Life Management framework and MCP Activity Tracking - your mirror realm guide with the most advanced behavioral science, real-time habit monitoring, and intelligent data insights.",
+      "description": "AI reflection enhanced with Aristos 4.2 Life Management framework - your mirror realm guide with the most advanced behavioral science, real-time habit monitoring, and intelligent data insights.",
       "configPath": "assets/config/i_there_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
       "audioFormatting": {
         "enabled": true
       }
@@ -143,9 +113,19 @@
     "sergeantOracleWithOracle42": {
       "enabled": true,
       "displayName": "Sergeant Oracle 4.2",
-      "description": "Time-traveling Roman gladiator coach powered by Aristos 4.2 framework with MCP Activity Tracking! Ancient warrior wisdom meets the most cutting-edge behavioral science and real-time habit monitoring for epic life transformation! 💪🏛️⚡📊✨",
+      "description": "Time-traveling Roman gladiator coach powered by Aristos 4.2 framework! Ancient warrior wisdom meets the most cutting-edge behavioral science and real-time habit monitoring for epic life transformation! 💪🏛️⚡📊✨",
       "configPath": "assets/config/sergeant_oracle_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
+      "audioFormatting": {
+        "enabled": true
+      }
+    },
+    "aryaWithOracle42": {
+      "enabled": true,
+      "displayName": "Arya 4.2",
+      "description": "Empowering female Life Management Coach combining Oracle 4.2 framework with feminine wisdom, emotional intelligence, and holistic approach to behavioral change and personal transformation.",
+      "configPath": "assets/config/arya_life_coach_config.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
       "audioFormatting": {
         "enabled": true
       }

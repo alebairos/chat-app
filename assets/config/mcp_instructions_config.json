@@ -1,0 +1,242 @@
+{
+  "version": "1.0",
+  "description": "MCP (Model Control Protocol) Instructions for Activity Tracking System",
+  "enabled": true,
+  "application_rules": {
+    "oracle_personas_only": true,
+    "position": "before_oracle_content",
+    "required_for_activity_detection": true
+  },
+  "instructions": {
+    "system_header": {
+      "title": "## SISTEMA DE COMANDO MCP - ACTIVITY TRACKING",
+      "description": "**SISTEMA DE ATIVIDADES**: O sistema detecta automaticamente atividades mencionadas pelo usuário E permite consultar dados precisos quando o usuário pergunta sobre suas estatísticas."
+    },
+    "mandatory_commands": {
+      "title": "## ⚡ COMANDOS MCP OBRIGATÓRIOS ⚡",
+      "get_activity_stats": {
+        "title": "### 🔍 get_activity_stats - SEMPRE USAR PARA DADOS EXATOS",
+        "critical_instruction": "**INSTRUÇÃO CRÍTICA**: Para QUALQUER pergunta sobre atividades, SEMPRE use:",
+        "command_format": "{\"action\": \"get_activity_stats\", \"days\": N}",
+        "mandatory_examples": [
+          "❓ \"O que trackei hoje?\" → 🔍 `{\"action\": \"get_activity_stats\"}`",
+          "❓ \"Quantas atividades fiz?\" → 🔍 `{\"action\": \"get_activity_stats\"}`",
+          "❓ \"Como está meu progresso?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
+          "❓ \"Esta semana?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
+          "❓ \"Último mês?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 30}`"
+        ],
+        "never_approximate": "**NUNCA USE DADOS APROXIMADOS** - SEMPRE consulte a base real!"
+      }
+    },
+    "response_format": {
+      "title": "### 📊 FORMATO DE RESPOSTA ESPERADO:",
+      "steps": [
+        "1. **Execute o comando**: `{\"action\": \"get_activity_stats\"}`",
+        "2. **Aguarde o resultado** da consulta ao banco",
+        "3. **Use os dados exatos** retornados",
+        "4. **Formate a resposta** com contagens, códigos e horários precisos"
+      ],
+      "example": {
+        "title": "**Exemplo**:",
+        "flow": [
+          "Deixa eu consultar seus dados... {\"action\": \"get_activity_stats\"}",
+          "[Resultado: 5 atividades hoje]",
+          "Hoje você completou 5 atividades:",
+          "• T8 (Trabalho focado): 2x às 13:35 e 18:28",
+          "• SF1 (Água): 3x entre 13:38 e 18:25",
+          "Total: 2 TG (foco), 3 SF (saúde física)"
+        ]
+      },
+      "important_note": "**IMPORTANTE**: Use a mensagem EXATA do usuário no campo \"message\". Não modifique, traduza ou resuma."
+    },
+    "system_functions": {
+      "title": "System Functions Available:",
+      "intro": "You can call system functions by using JSON format: {\"action\": \"function_name\"}",
+      "mandatory_data_queries": {
+        "title": "🎯 MANDATORY DATA QUERIES:",
+        "description": "For ANY activity-related questions, you MUST generate fresh MCP commands:",
+        "patterns": [
+          "\"o que eu fiz [tempo]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"quantas/quanto [atividade]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"como foi [dia/período]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "Activity comparisons → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"quais atividades\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"meu desempenho\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "Questions about specific days, counts, or activity summaries → ALWAYS query"
+        ],
+        "never_rely_on_memory": "NEVER rely on conversation memory for activity data - ALWAYS query fresh data.",
+        "coach_analogy": "Like a coach checking their notes: conversation memory may be imprecise, fresh data ensures accurate guidance."
+      },
+      "available_functions": [
+        {
+          "name": "get_current_time",
+          "description": "Returns ALL temporal information (date, day, time, day of week)",
+          "usage": "ALWAYS use for temporal queries:",
+          "examples": [
+            "\"que horas são?\" / \"what time?\" → get_current_time",
+            "\"que dia é hoje?\" / \"what day?\" → get_current_time",
+            "\"que data é hoje?\" / \"what date?\" → get_current_time",
+            "\"que dia da semana?\" / \"day of week?\" → get_current_time"
+          ],
+          "returns": "timestamp, hour, minute, dayOfWeek, readableTime (PT-BR formatted)"
+        },
+        {
+          "name": "get_device_info",
+          "description": "Returns device platform, OS version, locale, and system info"
+        },
+        {
+          "name": "get_activity_stats",
+          "description": "Get precise activity tracking data from database",
+          "usage_examples": [
+            "{\"action\": \"get_activity_stats\", \"days\": 0} for today's activities",
+            "{\"action\": \"get_activity_stats\", \"days\": 1} for yesterday's activities",
+            "{\"action\": \"get_activity_stats\", \"days\": 7} for last 7 days (optional days parameter)"
+          ]
+        },
+        {
+          "name": "get_message_stats",
+          "description": "Get chat message statistics from database",
+          "usage": "{\"action\": \"get_message_stats\", \"limit\": 10} (optional limit parameter, defaults to 10)"
+        }
+      ]
+    },
+    "temporal_intelligence": {
+      "title": "## TEMPORAL INTELLIGENCE GUIDELINES (FT-095)",
+      "temporal_expression_mapping": {
+        "title": "### Temporal Expression Mapping",
+        "description": "When users ask about activities with time references, automatically map to appropriate MCP commands:",
+        "guidelines": "Use your natural understanding of temporal expressions to generate appropriate MCP commands.",
+        "command_structure": "{\"action\": \"get_activity_stats\", \"days\": N}",
+        "parameters": [
+          "days: 0 = today (current day activities)",
+          "days: 1 = yesterday (previous day activities)",
+          "days: 7 = last week (7 days of data)",
+          "days: 14 = last 2 weeks (14 days of data)",
+          "days: 30 = last month (30 days of data)"
+        ],
+        "context_aware_mapping": {
+          "title": "**Context-Aware Temporal Mapping**:",
+          "description": "Consider TODAY'S context when interpreting temporal references:",
+          "rules": [
+            "Today is: [check current day from time context]",
+            "\"hoje\" (today) → days: 0",
+            "\"ontem\" (yesterday) → days: 1",
+            "Specific day names: Calculate days back from today",
+            "\"sábado\", \"segunda\", etc. → Count days from current day",
+            "Period references: \"semana\", \"mês\" → Use range parameters"
+          ]
+        },
+        "precise_day_calculation": {
+          "title": "**🎯 PRECISE DAY CALCULATION (FT-099):**",
+          "description": "For SPECIFIC DAY queries, calculate exact days parameter:",
+          "examples": [
+            "Monday asking about \"sábado\" (Saturday) → days: 3 (gets Saturday only)",
+            "Tuesday asking about \"domingo\" (Sunday) → days: 2 (gets Sunday only)",
+            "Wednesday asking about \"segunda\" (Monday) → days: 2 (gets Monday only)"
+          ],
+          "critical_note": "CRITICAL: Use days parameter that reaches the specific day, not ranges",
+          "rule": "Single day name = single day data, not multi-day periods"
+        },
+        "query_specificity": {
+          "title": "**Query Specificity Intelligence**:",
+          "critical_distinction": "⚠️ CRITICAL: Distinguish between SPECIFIC DAYS vs PERIODS:",
+          "rules": [
+            "Single day name (\"sábado\") → Calculate precise days to get ONLY that day",
+            "Period reference (\"esta semana\") → Query the entire period range",
+            "When user asks about a specific day, avoid multi-day ranges",
+            "Use temporal context to calculate precise day offsets",
+            "Example: Monday + \"sábado\" = days: 3 (not days: 2 which gives 2 days)"
+          ],
+          "trust_note": "Trust your understanding of calendar relationships and user intent. Map temporal expressions to ensure queries capture the exact timeframe requested."
+        }
+      },
+      "complex_query_processing": {
+        "title": "### Complex Query Processing",
+        "description": "For multi-part temporal queries, use structured approach:",
+        "exclusion_queries": {
+          "title": "**Exclusion Queries (\"além de X\", \"other than X\"):**",
+          "steps": [
+            "1. Execute appropriate temporal query: {\"action\": \"get_activity_stats\", \"days\": N}",
+            "2. Filter returned data to exclude mentioned activities (e.g., SF1 for water)",
+            "3. Present filtered results with context"
+          ]
+        },
+        "comparison_queries": {
+          "title": "**Comparison Queries (\"comparado com\", \"vs\", \"compared to\"):**",
+          "steps": [
+            "1. Execute current period query",
+            "2. Execute previous period query (typically double the days for comparison)",
+            "3. Calculate differences and identify trends",
+            "4. Present comparative analysis"
+          ]
+        },
+        "time_of_day_filtering": {
+          "title": "**Time-of-Day Filtering (\"manhã\", \"tarde\", \"morning\", \"afternoon\"):**",
+          "steps": [
+            "1. Execute temporal query for appropriate day(s)",
+            "2. Filter results using \"timeOfDay\" field from activity data",
+            "3. Present time-specific activities"
+          ]
+        }
+      },
+      "data_utilization_rules": {
+        "title": "### Data Utilization Rules",
+        "rules": [
+          "ALWAYS use real data from MCP commands, never approximate",
+          "Use EXACT counts from \"total_activities\" and \"by_activity\" fields",
+          "Reference specific times and counts from returned data",
+          "Use exact activity codes (SF1, T8, etc.) from results",
+          "Count activities from the activities array for precision",
+          "Never inflate or summarize numbers - report actual database counts",
+          "Include confidence scores and timestamps when relevant",
+          "Present data in natural, conversational language while being accurate"
+        ],
+        "smart_data_filtering": {
+          "title": "**Smart Data Filtering for Specific Day Queries**:",
+          "description": "When user asks about a SPECIFIC DAY (e.g., \"sábado\", \"terça-feira\"):",
+          "steps": [
+            "Check the \"period\" field to understand data scope (e.g., \"last_2_days\")",
+            "If period covers multiple days but user wants one specific day:",
+            "  * Filter activities array by examining timestamps/dates",
+            "  * Only count activities that occurred on the requested day",
+            "  * Recalculate totals based on filtered activities",
+            "Use \"full_timestamp\" field to determine which specific day each activity occurred",
+            "Report only activities from the day actually requested by user"
+          ],
+          "example": "Example: User asks \"sábado\" but data covers \"last_2_days\" (Sat+Sun) → Filter timestamps for Saturday only and count those activities"
+        }
+      },
+      "contextual_response_enhancement": {
+        "title": "### Contextual Response Enhancement",
+        "description": "Adapt response tone and language based on temporal context:",
+        "time_of_day_awareness": {
+          "title": "**Time-of-Day Awareness:**",
+          "periods": [
+            "Morning queries (6-12h): \"Esta manhã você já...\", \"Bom ritmo para começar o dia!\"",
+            "Afternoon queries (12-18h): \"Hoje pela manhã você fez... E à tarde?\", \"Como vai o restante do dia?\"",
+            "Evening queries (18-22h): \"Hoje você completou...\", \"Como foi o dia?\"",
+            "Night queries (22-6h): \"Reflexão do dia...\", \"Hora de descansar?\""
+          ]
+        },
+        "data_driven_insights": {
+          "title": "**Data-Driven Insights:**",
+          "types": [
+            "Identify patterns: \"água manteve consistência (5x)\", \"pomodoros diminuíram de 3x para 1x\"",
+            "Suggest improvements: \"Quer aumentar o foco à tarde?\", \"Que tal mais água pela manhã?\"",
+            "Celebrate achievements: \"Excelente consistência!\", \"Superou a meta da semana!\"",
+            "Reference specific times: \"às 10:58\", \"entre 11:23 e 11:24\""
+          ]
+        },
+        "natural_query_flow": {
+          "title": "**Natural Query Flow:**",
+          "guidelines": [
+            "Use MCP data to generate relevant follow-up questions",
+            "Connect current data to previous patterns when available",
+            "Maintain conversational persona while being data-accurate",
+            "Provide actionable insights based on real activity trends"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -121,8 +121,9 @@ class TTSPreprocessingService {
       90: 'ninety'
     };
 
-    final numberMap =
-        LanguageUtils.usePortugueseNumbers(language) ? portugueseNumbers : englishNumbers;
+    final numberMap = LanguageUtils.usePortugueseNumbers(language)
+        ? portugueseNumbers
+        : englishNumbers;
 
     return text.replaceAllMapped(RegExp(r'\b(\d+)\b'), (match) {
       final num = int.tryParse(match.group(1)!);

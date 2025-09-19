@@ -370,6 +370,7 @@ class AudioAssistantTTSService {
             'stability': 0.68,
             'similarityBoost': 0.8,
             'style': 0.08,
+            'detectedLanguage': language, // FT-132: Pass language for language_code parameter
           };
           _logger.debug('Configured TTS provider for Portuguese (Brazil)');
           break;
@@ -380,6 +381,7 @@ class AudioAssistantTTSService {
             'stability': 0.65,
             'similarityBoost': 0.8,
             'style': 0.05,
+            'detectedLanguage': language, // FT-132: Pass language for language_code parameter
           };
           _logger.debug(
               'Configured TTS provider for English (US) with multilingual model');

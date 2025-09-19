@@ -130,6 +130,214 @@ class CharacterConfigManager {
     return null; // No Oracle config specified
   }
 
+  /// Check if the active persona is Oracle-enabled (FT-130)
+  Future<bool> isOracleEnabled() async {
+    final oracleConfigPath = await getOracleConfigPath();
+    return oracleConfigPath != null;
+  }
+
+  /// Load MCP instructions configuration (FT-130)
+  Future<Map<String, dynamic>?> loadMcpInstructions() async {
+    try {
+      // Check if current persona is Oracle-enabled
+      if (!await isOracleEnabled()) {
+        return null; // MCP instructions only for Oracle personas
+      }
+
+      // Load MCP configuration
+      final String jsonString = await rootBundle
+          .loadString('assets/config/mcp_instructions_config.json');
+      final Map<String, dynamic> mcpConfig = json.decode(jsonString);
+
+      // Check if MCP is enabled in config
+      if (mcpConfig['enabled'] != true) {
+        return null;
+      }
+
+      // Validate application rules
+      final Map<String, dynamic> appRules =
+          mcpConfig['application_rules'] ?? {};
+      if (appRules['oracle_personas_only'] == true &&
+          !await isOracleEnabled()) {
+        return null; // Only apply to Oracle personas
+      }
+
+      return mcpConfig;
+    } catch (e) {
+      print('Error loading MCP instructions: $e');
+      return null;
+    }
+  }
+
+  /// Build MCP instructions text from configuration (FT-130)
+  Future<String> buildMcpInstructionsText() async {
+    final mcpConfig = await loadMcpInstructions();
+    if (mcpConfig == null) {
+      return '';
+    }
+
+    final StringBuffer buffer = StringBuffer();
+    final Map<String, dynamic> instructions = mcpConfig['instructions'] ?? {};
+
+    // System header
+    final systemHeader = instructions['system_header'] ?? {};
+    if (systemHeader['title'] != null) {
+      buffer.writeln(systemHeader['title']);
+      buffer.writeln();
+    }
+    if (systemHeader['description'] != null) {
+      buffer.writeln(systemHeader['description']);
+      buffer.writeln();
+    }
+
+    // Mandatory commands
+    final mandatoryCommands = instructions['mandatory_commands'] ?? {};
+    if (mandatoryCommands['title'] != null) {
+      buffer.writeln(mandatoryCommands['title']);
+      buffer.writeln();
+    }
+
+    // get_activity_stats command
+    final getActivityStats = mandatoryCommands['get_activity_stats'] ?? {};
+    if (getActivityStats['title'] != null) {
+      buffer.writeln(getActivityStats['title']);
+      buffer.writeln();
+    }
+    if (getActivityStats['critical_instruction'] != null) {
+      buffer.writeln(getActivityStats['critical_instruction']);
+    }
+    if (getActivityStats['command_format'] != null) {
+      buffer.writeln('```');
+      buffer.writeln(getActivityStats['command_format']);
+      buffer.writeln('```');
+      buffer.writeln();
+    }
+
+    // Mandatory examples
+    if (getActivityStats['mandatory_examples'] != null) {
+      buffer.writeln('**EXEMPLOS OBRIGATÓRIOS**:');
+      final List<dynamic> examples = getActivityStats['mandatory_examples'];
+      for (final example in examples) {
+        buffer.writeln('- $example');
+      }
+      buffer.writeln();
+    }
+
+    if (getActivityStats['never_approximate'] != null) {
+      buffer.writeln(getActivityStats['never_approximate']);
+      buffer.writeln();
+    }
+
+    // Response format
+    final responseFormat = instructions['response_format'] ?? {};
+    if (responseFormat['title'] != null) {
+      buffer.writeln(responseFormat['title']);
+      buffer.writeln();
+    }
+
+    if (responseFormat['steps'] != null) {
+      final List<dynamic> steps = responseFormat['steps'];
+      for (final step in steps) {
+        buffer.writeln(step);
+      }
+      buffer.writeln();
+    }
+
+    // Example
+    final example = responseFormat['example'] ?? {};
+    if (example['title'] != null) {
+      buffer.writeln(example['title']);
+      buffer.writeln('```');
+      if (example['flow'] != null) {
+        final List<dynamic> flow = example['flow'];
+        for (final line in flow) {
+          buffer.writeln(line);
+        }
+      }
+      buffer.writeln('```');
+      buffer.writeln();
+    }
+
+    if (responseFormat['important_note'] != null) {
+      buffer.writeln(responseFormat['important_note']);
+      buffer.writeln();
+    }
+
+    // System functions (FT-130: Include get_current_time and other system functions)
+    final systemFunctions = instructions['system_functions'] ?? {};
+    if (systemFunctions['title'] != null) {
+      buffer.writeln(systemFunctions['title']);
+      buffer.writeln();
+    }
+    if (systemFunctions['intro'] != null) {
+      buffer.writeln(systemFunctions['intro']);
+      buffer.writeln();
+    }
+
+    // Available functions
+    if (systemFunctions['available_functions'] != null) {
+      final List<dynamic> functions = systemFunctions['available_functions'];
+      for (final function in functions) {
+        if (function['name'] != null) {
+          buffer.writeln('**${function['name']}**:');
+        }
+        if (function['description'] != null) {
+          buffer.writeln('- ${function['description']}');
+        }
+        if (function['usage'] != null) {
+          buffer.writeln('- ${function['usage']}');
+        }
+        if (function['examples'] != null) {
+          final List<dynamic> examples = function['examples'];
+          for (final example in examples) {
+            buffer.writeln('  - $example');
+          }
+        }
+        if (function['usage_examples'] != null) {
+          final List<dynamic> usageExamples = function['usage_examples'];
+          for (final example in usageExamples) {
+            buffer.writeln('  - $example');
+          }
+        }
+        if (function['usage'] != null && function['usage'] is String) {
+          buffer.writeln('  - ${function['usage']}');
+        }
+        if (function['returns'] != null) {
+          buffer.writeln('- Returns: ${function['returns']}');
+        }
+        buffer.writeln();
+      }
+    }
+
+    // Mandatory data queries
+    final mandatoryDataQueries =
+        systemFunctions['mandatory_data_queries'] ?? {};
+    if (mandatoryDataQueries['title'] != null) {
+      buffer.writeln(mandatoryDataQueries['title']);
+      buffer.writeln();
+    }
+    if (mandatoryDataQueries['description'] != null) {
+      buffer.writeln(mandatoryDataQueries['description']);
+      buffer.writeln();
+    }
+    if (mandatoryDataQueries['patterns'] != null) {
+      final List<dynamic> patterns = mandatoryDataQueries['patterns'];
+      for (final pattern in patterns) {
+        buffer.writeln('- $pattern');
+      }
+      buffer.writeln();
+    }
+    if (mandatoryDataQueries['never_rely_on_memory'] != null) {
+      buffer.writeln('**${mandatoryDataQueries['never_rely_on_memory']}**');
+      buffer.writeln();
+    }
+
+    buffer.writeln('---');
+    buffer.writeln();
+
+    return buffer.toString();
+  }
+
   /// Load the system prompt for the active persona with configurable audio formatting
   Future<String> loadSystemPrompt() async {
     try {
@@ -181,23 +389,29 @@ class CharacterConfigManager {
       String audioInstructions = '';
       try {
         // Load personas config to check audio formatting settings
-        final String personasConfigString = await rootBundle.loadString(
-          'assets/config/personas_config.json'
-        );
-        final Map<String, dynamic> personasConfig = json.decode(personasConfigString);
-        
+        final String personasConfigString =
+            await rootBundle.loadString('assets/config/personas_config.json');
+        final Map<String, dynamic> personasConfig =
+            json.decode(personasConfigString);
+
         // Get current persona's audio formatting settings
-        final Map<String, dynamic>? personaData = personasConfig['personas'][_activePersonaKey];
-        final Map<String, dynamic>? audioSettings = personaData?['audioFormatting'];
-        
+        final Map<String, dynamic>? personaData =
+            personasConfig['personas'][_activePersonaKey];
+        final Map<String, dynamic>? audioSettings =
+            personaData?['audioFormatting'];
+
         if (audioSettings?['enabled'] == true) {
           // Load audio formatting config
-          final String audioConfigPath = personasConfig['audioFormattingConfig'] ?? 
-                                       'assets/config/audio_formatting_config.json';
-          final String audioConfigString = await rootBundle.loadString(audioConfigPath);
-          final Map<String, dynamic> audioConfig = json.decode(audioConfigString);
-          
-          audioInstructions = audioConfig['audio_formatting_instructions']['content'] as String;
+          final String audioConfigPath =
+              personasConfig['audioFormattingConfig'] ??
+                  'assets/config/audio_formatting_config.json';
+          final String audioConfigString =
+              await rootBundle.loadString(audioConfigPath);
+          final Map<String, dynamic> audioConfig =
+              json.decode(audioConfigString);
+
+          audioInstructions =
+              audioConfig['audio_formatting_instructions']['content'] as String;
           print('✅ Audio formatting enabled for persona: $_activePersonaKey');
         } else {
           print('ℹ️ Audio formatting disabled for persona: $_activePersonaKey');
@@ -206,21 +420,47 @@ class CharacterConfigManager {
         print('⚠️ Audio formatting config not found or disabled: $audioError');
       }
 
-      // 4) Compose: Oracle (if loaded) + Persona prompt + Audio Instructions (if enabled)
+      // 4) NEW (FT-130): Load MCP instructions for Oracle personas
+      String mcpInstructions = '';
+      try {
+        mcpInstructions = await buildMcpInstructionsText();
+        if (mcpInstructions.isNotEmpty) {
+          print(
+              '✅ MCP instructions loaded for Oracle persona: $_activePersonaKey');
+        }
+      } catch (mcpError) {
+        print('⚠️ MCP instructions not loaded: $mcpError');
+      }
+
+      // 5) Compose: MCP (if Oracle) + Oracle (if loaded) + Persona prompt + Audio Instructions (if enabled)
       String finalPrompt = '';
-      
+
+      // Add MCP instructions first (before Oracle content as per FT-130 spec)
+      if (mcpInstructions.isNotEmpty) {
+        finalPrompt = mcpInstructions.trim();
+      }
+
       if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
-        finalPrompt = '${oraclePrompt.trim()}\n\n${personaPrompt.trim()}';
+        if (finalPrompt.isNotEmpty) {
+          finalPrompt = '$finalPrompt\n\n${oraclePrompt.trim()}';
+        } else {
+          finalPrompt = oraclePrompt.trim();
+        }
+      }
+
+      // Add persona prompt
+      if (finalPrompt.isNotEmpty) {
+        finalPrompt = '$finalPrompt\n\n${personaPrompt.trim()}';
       } else {
         finalPrompt = personaPrompt.trim();
       }
-      
+
       // Append audio instructions if enabled for this persona
       if (audioInstructions.isNotEmpty) {
         finalPrompt = '$finalPrompt$audioInstructions';
         print('✅ Audio formatting instructions appended to system prompt');
       }
-      
+
       return finalPrompt;
     } catch (e) {
       print('Error loading system prompt: $e');

@@ -27,11 +27,10 @@ void main() {
       // Verify the system prompt is not empty
       expect(systemPrompt.isNotEmpty, isTrue);
 
-      // Verify audio formatting instructions are included
+      // Verify audio formatting instructions are included (FT-131 version 3.1 - Brazilian format)
       expect(
           systemPrompt.contains('TECHNICAL: AUDIO OUTPUT FORMATTING'), isTrue);
-      expect(systemPrompt.contains('Use written format: "vinte e duas horas"'),
-          isTrue);
+      expect(systemPrompt.contains('Use "20h30" format (not "20:30"'), isTrue);
       expect(systemPrompt.contains('Time Format Standards'), isTrue);
     });
 
@@ -66,10 +65,10 @@ void main() {
         expect(systemPrompt.isNotEmpty, isTrue,
             reason: 'Persona $persona should have a system prompt');
 
-        // If audio formatting is enabled, it should contain the formatting instructions
+        // If audio formatting is enabled, it should contain the formatting instructions (FT-131 version 3.0)
         if (systemPrompt.contains('TECHNICAL: AUDIO OUTPUT FORMATTING')) {
           expect(systemPrompt.contains('Time Format Standards'), isTrue);
-          expect(systemPrompt.contains('Number Format Standards'), isTrue);
+          expect(systemPrompt.contains('Number and Currency'), isTrue);
         }
       }
     });
@@ -97,21 +96,21 @@ void main() {
       final systemPrompt = await configManager.loadSystemPrompt();
 
       if (systemPrompt.contains('TECHNICAL: AUDIO OUTPUT FORMATTING')) {
-        // Verify specific formatting rules are present
+        // Verify specific formatting rules are present (FT-131 version 3.1 - Brazilian format)
         expect(
-            systemPrompt.contains('Use written format: "vinte e duas horas"'),
-            isTrue);
-        expect(systemPrompt.contains('Use written format: "quatorze e trinta"'),
-            isTrue);
-        expect(systemPrompt.contains('Use written format: "seis da manhã"'),
-            isTrue);
+            systemPrompt.contains('Use "20h30" format (not "20:30"'), isTrue);
+        expect(
+            systemPrompt.contains('Use "18h10" format (not "18:10"'), isTrue);
+        expect(
+            systemPrompt.contains('Use "14h00" format (not "14:00"'), isTrue);
 
-        // Verify examples are present
-        expect(systemPrompt.contains('às vinte e duas horas'), isTrue);
-        expect(systemPrompt.contains('at ten thirty PM'), isTrue);
+        // Verify examples are present (FT-131 version 3.1 - Brazilian format)
+        expect(systemPrompt.contains('às 20h30'), isTrue);
+        expect(systemPrompt.contains('18h10-18h50'), isTrue);
 
-        // Verify avoid list is present
-        expect(systemPrompt.contains('Numeric time: 22:00, 14:30, 6:00 AM'),
+        // Verify avoid list is present (FT-131 version 3.1 - International format avoided)
+        expect(
+            systemPrompt.contains('International time: 20:30, 14:30, 6:00'),
             isTrue);
         expect(
             systemPrompt.contains('Hyphenated words: sexta-feira, bem-vindo'),
@@ -126,13 +125,13 @@ void main() {
       final systemPrompt = await configManager.loadSystemPrompt();
 
       if (systemPrompt.contains('TECHNICAL: AUDIO OUTPUT FORMATTING')) {
-        // Verify the technical note about maintaining style is present
+        // Verify the technical note about maintaining style is present (FT-131 version 3.0)
         expect(
             systemPrompt.contains('Maintain your natural communication style'),
             isTrue);
         expect(
             systemPrompt.contains(
-                'Write numbers and times in full words, avoid hyphens in compound words for optimal text-to-speech'),
+                'Generate properly formatted text from the source rather than relying on post-processing'),
             isTrue);
       }
     });

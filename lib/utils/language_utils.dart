@@ -3,13 +3,13 @@ import 'logger.dart';
 /// Centralized language utilities for consistent language detection and mapping
 class LanguageUtils {
   static final Logger _logger = Logger();
-  
+
   /// Default fallback language
   static const String defaultLanguage = 'en_US';
   static const String defaultLanguageCode = 'en';
 
   /// Normalize language code to ElevenLabs-compatible format
-  /// 
+  ///
   /// Maps detected language codes to ElevenLabs API language codes.
   /// Returns null if language is not supported.
   static String? normalizeToLanguageCode(String? detectedLanguage) {
@@ -32,7 +32,8 @@ class LanguageUtils {
         return 'fr';
       default:
         // Conservative fallback to English for unknown languages
-        _logger.debug('LanguageUtils: Unknown language "$detectedLanguage", using fallback "$defaultLanguageCode"');
+        _logger.debug(
+            'LanguageUtils: Unknown language "$detectedLanguage", using fallback "$defaultLanguageCode"');
         return defaultLanguageCode;
     }
   }

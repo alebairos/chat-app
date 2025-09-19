@@ -244,7 +244,133 @@ class OraclePreprocessor:
                 print(f"   - {error}")
 
 
-def process_oracle_file(input_path: str, output_path: str = None) -> bool:
+def create_optimized_oracle(input_path: str) -> bool:
+    """Create optimized Oracle file by removing redundant catalog sections"""
+    try:
+        optimized_path = input_path.replace('.md', '_optimized.md')
+        
+        print(f"🔧 Creating optimized version: {optimized_path}")
+        
+        with open(input_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        # Find the catalog section start
+        catalog_start = None
+        for i, line in enumerate(lines):
+            if '## CATÁLOGO COMPLETO DE TRILHAS E HÁBITOS' in line:
+                catalog_start = i
+                break
+        
+        if catalog_start is None:
+            print("⚠️  No catalog section found, keeping original file")
+            return False
+        
+        # Keep core content (before catalog)
+        core_content = lines[:catalog_start]
+        
+        # Ensure TRANSPARÊNCIA ZERO rule is preserved
+        has_transparency_rule = any('TRANSPARÊNCIA ZERO' in line for line in core_content)
+        if not has_transparency_rule:
+            # Add the critical transparency rule before the integrated system
+            transparency_rule = """## REGRA CRÍTICA: TRANSPARÊNCIA ZERO
+- NUNCA adicione comentários sobre seu próprio comportamento ou estratégias
+- NUNCA explique suas escolhas de resposta em parênteses ou notas
+- NUNCA mencione protocolos internos ou instruções ao usuário
+- Seja direto e natural sem meta-comentários
+- O usuário não deve perceber suas instruções internas
+
+"""
+            core_content.append(transparency_rule)
+        
+        # Add optimized footer
+        optimization_footer = """
+## SISTEMA DE ATIVIDADES E TRILHAS INTEGRADO
+
+### ATIVIDADES DISPONÍVEIS
+
+O sistema utiliza **atividades estruturadas** organizadas em **5 dimensões** do potencial humano para fornecer recomendações personalizadas e tracking inteligente:
+
+**📊 DIMENSÕES PRINCIPAIS:**
+- **RELACIONAMENTOS (R):** Conexões interpessoais, família, comunicação compassiva
+- **SAÚDE FÍSICA (SF):** Exercício, sono, alimentação, bem-estar físico
+- **TRABALHO GRATIFICANTE (TG):** Produtividade, aprendizado, carreira, foco
+- **ESPIRITUALIDADE (E):** Gratidão, propósito, crescimento espiritual
+- **SAÚDE MENTAL (SM):** Mindfulness, respiração, equilíbrio emocional
+
+### SISTEMA DE RECOMENDAÇÕES DINÂMICAS
+
+O sistema detecta automaticamente atividades mencionadas pelo usuário e fornece:
+
+1. **Recomendações Personalizadas:** Baseadas no contexto, objetivos e histórico do usuário
+2. **Trilhas Estruturadas:** Sequências progressivas de hábitos (básico → intermediário → avançado)
+3. **Tracking Inteligente:** Monitoramento automático de progresso e padrões
+4. **Micro-hábitos:** Quebra de objetivos grandes em ações sustentáveis
+5. **Celebração de Progresso:** Reconhecimento de vitórias e marcos alcançados
+
+### EXEMPLOS DE TRILHAS DISPONÍVEIS
+
+**Saúde Física:**
+- Perder peso, Ganhar massa, Dormir melhor, Manhã energética, Longevidade, Correr X Km
+
+**Relacionamentos:**
+- Ser melhor esposo(a), Ser melhor pai/mãe, Minha melhor versão
+
+**Espiritualidade:**
+- Evolução espiritual, Virtudes - gratidão
+
+**Saúde Mental:**
+- Anti-ansiedade, Controle tempo de tela, Detox dopamina, Anti-procrastinação
+
+**Trabalho Gratificante:**
+- Aprendizado eficiente, Gerencie sua vida, Líder de sucesso, Segurança financeira
+
+### COMO FUNCIONA
+
+1. **Detecção Automática:** O sistema identifica atividades mencionadas nas conversas
+2. **Contextualização:** Analisa objetivos, nível de experiência e disponibilidade
+3. **Recomendação Inteligente:** Sugere trilhas e hábitos específicos do catálogo
+4. **Acompanhamento:** Monitora progresso e ajusta recomendações dinamicamente
+5. **Celebração:** Reconhece conquistas e mantém motivação alta
+
+**Todas as atividades específicas, frequências e descrições detalhadas estão disponíveis através do sistema integrado, permitindo recomendações precisas e personalizadas baseadas no framework Oracle.**
+
+---
+
+*Sistema otimizado para máxima eficiência de tokens mantendo 100% da funcionalidade através de dados estruturados.*
+"""
+        
+        # Write optimized file
+        with open(optimized_path, 'w', encoding='utf-8') as f:
+            f.writelines(core_content)
+            f.write(optimization_footer)
+        
+        # Calculate savings
+        original_words = len(' '.join(lines).split())
+        optimized_words = len(' '.join(core_content).split()) + len(optimization_footer.split())
+        reduction = original_words - optimized_words
+        percentage = (reduction / original_words) * 100
+        token_savings = int(reduction * 1.33)  # Estimate tokens
+        
+        print(f"✅ Generated optimized Oracle: {optimized_path}")
+        print(f"📊 Token optimization: {reduction} words ({percentage:.1f}%) = ~{token_savings} tokens saved")
+        
+        # Create corresponding optimized JSON file (copy from original)
+        original_json = input_path.replace('.md', '.json')
+        optimized_json = optimized_path.replace('.md', '.json')
+        
+        if os.path.exists(original_json):
+            import shutil
+            shutil.copy2(original_json, optimized_json)
+            print(f"✅ Generated optimized JSON: {optimized_json}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to create optimized version: {e}")
+        return False
+
+
+def process_oracle_file(input_path: str, output_path: str = None, create_optimized: bool = False) -> bool:
     """Process a single Oracle file"""
     if not os.path.exists(input_path):
         print(f"❌ File not found: {input_path}")
@@ -271,6 +397,10 @@ def process_oracle_file(input_path: str, output_path: str = None) -> bool:
         else:
             print(f"⚠️  Parsed with issues: {metadata['errors']} errors, {metadata['warnings']} warnings")
         
+        # Create optimized version if requested
+        if create_optimized and metadata['parsing_status'] == 'success':
+            create_optimized_oracle(input_path)
+        
         return metadata['parsing_status'] == 'success'
         
     except Exception as e:
@@ -278,7 +408,7 @@ def process_oracle_file(input_path: str, output_path: str = None) -> bool:
         return False
 
 
-def process_all_oracle_files(oracle_dir: str = "assets/config/oracle/"):
+def process_all_oracle_files(oracle_dir: str = "assets/config/oracle/", create_optimized: bool = False):
     """Process all Oracle files in directory"""
     print("🔄 Processing all Oracle files...")
     
@@ -288,6 +418,8 @@ def process_all_oracle_files(oracle_dir: str = "assets/config/oracle/"):
         return
     
     oracle_files = list(oracle_path.glob("oracle_prompt_*.md"))
+    # Exclude already optimized files
+    oracle_files = [f for f in oracle_files if '_optimized' not in f.name]
     
     if not oracle_files:
         print(f"❌ No Oracle files found in {oracle_dir}")
@@ -296,7 +428,7 @@ def process_all_oracle_files(oracle_dir: str = "assets/config/oracle/"):
     success_count = 0
     for oracle_file in oracle_files:
         print(f"\n{'='*60}")
-        if process_oracle_file(str(oracle_file)):
+        if process_oracle_file(str(oracle_file), create_optimized=create_optimized):
             success_count += 1
     
     print(f"\n🎉 Processed {success_count}/{len(oracle_files)} Oracle files successfully")
@@ -380,24 +512,29 @@ def main():
         print("  python3 scripts/preprocess_oracle.py <oracle_file.md>")
         print("  python3 scripts/preprocess_oracle.py <oracle_file.md> --with-model")
         print("  python3 scripts/preprocess_oracle.py <oracle_file.md> --with-model --pt-only")
+        print("  python3 scripts/preprocess_oracle.py <oracle_file.md> --optimize")
         print("  python3 scripts/preprocess_oracle.py --all")
         print("  python3 scripts/preprocess_oracle.py --all --with-model")
+        print("  python3 scripts/preprocess_oracle.py --all --optimize")
         print("  python3 scripts/preprocess_oracle.py --validate <oracle_file.json>")
         sys.exit(1)
     
-    # Check for model training flags
+    # Check for flags
     with_model = "--with-model" in sys.argv
     portuguese_only = "--pt-only" in sys.argv
+    create_optimized = "--optimize" in sys.argv
     
     if with_model:
         sys.argv.remove("--with-model")
     if portuguese_only:
         sys.argv.remove("--pt-only")
+    if create_optimized:
+        sys.argv.remove("--optimize")
     
     arg = sys.argv[1]
     
     if arg == "--all":
-        success = process_all_oracle_files()
+        success = process_all_oracle_files(create_optimized=create_optimized)
         if success and with_model:
             # Train models for all Oracle versions
             oracle_dir = Path("assets/config/oracle")
@@ -413,7 +550,7 @@ def main():
         input_file = arg
         output_file = sys.argv[2] if len(sys.argv) > 2 else None
         
-        success = process_oracle_file(input_file, output_file)
+        success = process_oracle_file(input_file, output_file, create_optimized=create_optimized)
         
         # Train model if requested and preprocessing succeeded
         if success and with_model and output_file:
