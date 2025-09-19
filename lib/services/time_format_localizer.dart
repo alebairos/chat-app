@@ -1,4 +1,5 @@
 import '../utils/logger.dart';
+import '../utils/language_utils.dart';
 
 /// Service for localizing time formats in text for better TTS pronunciation
 class TimeFormatLocalizer {
@@ -10,12 +11,12 @@ class TimeFormatLocalizer {
   /// [language] Target language code (e.g., 'pt_BR', 'en_US')
   /// Returns text with localized time formats
   static String localizeTimeFormats(String text, String language) {
-    if (language == 'en_US') {
-      // Keep English time formats as-is
+    // Use centralized language detection for consistency
+    if (!LanguageUtils.requiresTimeLocalization(language)) {
       return text;
     }
 
-    if (language == 'pt_BR') {
+    if (LanguageUtils.isPortuguese(language)) {
       return _localizeToPortuguese(text);
     }
 

@@ -1,4 +1,5 @@
 import '../utils/logger.dart';
+import '../utils/language_utils.dart';
 import 'time_format_localizer.dart';
 
 /// Service for preprocessing text before TTS generation to improve audio quality
@@ -121,7 +122,7 @@ class TTSPreprocessingService {
     };
 
     final numberMap =
-        language.startsWith('pt') ? portugueseNumbers : englishNumbers;
+        LanguageUtils.usePortugueseNumbers(language) ? portugueseNumbers : englishNumbers;
 
     return text.replaceAllMapped(RegExp(r'\b(\d+)\b'), (match) {
       final num = int.tryParse(match.group(1)!);
@@ -134,7 +135,7 @@ class TTSPreprocessingService {
 
   /// Expand abbreviations based on language
   static String _expandAbbreviations(String text, String language) {
-    if (language.startsWith('pt')) {
+    if (LanguageUtils.isPortuguese(language)) {
       return text
           .replaceAll(RegExp(r'\bmin\b'), 'minutos')
           .replaceAll(RegExp(r'\bhr\b'), 'horas');
@@ -275,29 +276,30 @@ class TTSPreprocessingService {
   }
 
   /// Clean quotes for better TTS pronunciation (FT-080)
-  /// 
+  ///
   /// Removes unnecessary quote escaping and wrapping that can cause
   /// pronunciation issues or audio artifacts in speech synthesis.
   static String _cleanQuotesForTTS(String text) {
     try {
       String cleaned = text.trim();
-      
+
       // Handle wrapped double quotes: "entire response"
       // Only remove if quotes wrap the entire response
-      if (cleaned.startsWith('"') && cleaned.endsWith('"') && 
+      if (cleaned.startsWith('"') &&
+          cleaned.endsWith('"') &&
           cleaned.indexOf('"', 1) == cleaned.length - 1) {
         cleaned = cleaned.substring(1, cleaned.length - 1);
       }
-      
+
       // Remove escape characters for TTS
       cleaned = cleaned.replaceAll('\\"', '"');
       cleaned = cleaned.replaceAll("\\'", "'");
-      
+
       // Remove all quotes entirely for cleaner speech
       // This prevents awkward pauses or pronunciation issues
       cleaned = cleaned.replaceAll('"', '');
       cleaned = cleaned.replaceAll("'", '');
-      
+
       return cleaned.trim();
     } catch (e) {
       _logger.error('Error cleaning quotes for TTS: $e');

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../../utils/logger.dart';
+import '../../../utils/language_utils.dart';
 import 'tts_provider.dart';
 import 'tts_text_processor.dart';
 import 'emotional_tone_mapper.dart';
@@ -140,6 +141,13 @@ class ElevenLabsProvider implements TTSProvider {
         'apply_text_normalization': _getTextNormalizationMode(), // FT-120: Text normalization
       };
 
+      // FT-132: Add language_code parameter for optimal TTS processing
+      final languageCode = _getLanguageCode();
+      if (languageCode != null) {
+        requestBody['language_code'] = languageCode;
+        _logger.debug('ElevenLabs: Using language_code: $languageCode');
+      }
+
       _logger.debug(
           'Generating speech with ElevenLabs: ${json.encode(requestBody)}');
 
@@ -205,6 +213,15 @@ class ElevenLabsProvider implements TTSProvider {
     
     _logger.debug('Text normalization: Using mode "$configuredMode" for model $modelId');
     return configuredMode;
+  }
+
+  /// Get language code for ElevenLabs API based on detected language
+  /// 
+  /// Uses centralized language mapping for consistency across services.
+  String? _getLanguageCode() {
+    final detectedLanguage = _configuration['detectedLanguage'] as String?;
+    // FT-132: Use centralized language code mapping
+    return LanguageUtils.normalizeToLanguageCode(detectedLanguage);
   }
 
   @override
