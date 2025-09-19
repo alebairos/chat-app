@@ -47,6 +47,18 @@ class OraclePreprocessor:
         # Parse activities from BIBLIOTECA section
         self._parse_biblioteca_activities(content)
         
+        # Parse objective codes (OPP1, OGM1, etc.)
+        self._parse_objective_codes(content)
+        
+        # Parse trilha level codes (VG1B, CX1A, etc.)
+        self._parse_trilha_level_codes(content)
+        
+        # Parse trilha sub-level codes (PR1IN, TT1CO, etc.)
+        self._parse_trilha_sublevel_codes(content)
+        
+        # Parse strategy framework codes (MEEDDS, PLOW, GLOWS)
+        self._parse_strategy_codes(content)
+        
         # Parse additional activities from trilhas
         self._parse_trilha_activities(content)
         
@@ -66,9 +78,12 @@ class OraclePreprocessor:
         dimension_patterns = [
             (r'####\s*RELACIONAMENTOS\s*\(R\)', 'R', 'RELACIONAMENTOS', 'Relacionamentos'),
             (r'####\s*SAÚDE FÍSICA\s*\(SF\)', 'SF', 'SAÚDE FÍSICA', 'Saúde Física'),
-            (r'####\s*TRABALHO GRATIFICANTE\s*\(TG\)', 'TG', 'TRABALHO GRATIFICANTE', 'Trabalho Gratificante'),
+            (r'####\s*TRABALHO GRATIFICANTE\s*\(T\)', 'TG', 'TRABALHO GRATIFICANTE', 'Trabalho Gratificante'),
             (r'####\s*ESPIRITUALIDADE\s*\(E\)', 'E', 'ESPIRITUALIDADE', 'Espiritualidade'),
             (r'####\s*SAÚDE MENTAL\s*\(SM\)', 'SM', 'SAÚDE MENTAL', 'Saúde Mental'),
+            (r'####\s*TEMPO DE TELA\s*\(TT\)', 'TT', 'TEMPO DE TELA', 'Tempo de Tela'),
+            (r'####\s*PROCRASTINAÇÃO\s*\(PR\)', 'PR', 'PROCRASTINAÇÃO', 'Procrastinação'),
+            (r'####\s*FINANÇAS\s*\(F\)', 'F', 'FINANÇAS', 'Finanças'),
         ]
         
         for pattern, code, full_name, display_name in dimension_patterns:
@@ -88,7 +103,7 @@ class OraclePreprocessor:
         print("📚 Parsing biblioteca activities...")
         
         # Find the biblioteca section
-        biblioteca_match = re.search(r'### BIBLIOTECA DE HÁBITOS POR DIMENSÃO(.*?)(?=\n### |\n## |\Z)', 
+        biblioteca_match = re.search(r'## BIBLIOTECA DE HÁBITOS POR DIMENSÃO(.*?)(?=\n### |\n## |\Z)', 
                                    content, re.DOTALL | re.IGNORECASE)
         
         if not biblioteca_match:
@@ -97,20 +112,20 @@ class OraclePreprocessor:
         
         biblioteca_content = biblioteca_match.group(1)
         
-        # Pattern for activity lines: - **CODE**: Description [scores]
-        activity_pattern = r'-\s*\*\*([A-Z]+\d+)\*\*:\s*([^[]+)\s*\[([^\]]+)\]'
+        # Pattern for activity lines: - **CODE**: Description (without scores in BIBLIOTECA)
+        activity_pattern = r'-\s*\*\*([A-Z]+\d+)\*\*:\s*([^\n]+)'
         
         activities = re.findall(activity_pattern, biblioteca_content)
         
-        for code, name, scores in activities:
+        for code, name in activities:
             # Clean up name
             name = name.strip()
             
             # Determine dimension from code prefix
             dimension_code = re.match(r'^([A-Z]+)', code).group(1)
             
-            # Handle TG dimension (T -> TG mapping)
-            if dimension_code == 'T':
+            # Handle TG dimension (T -> TG mapping, but preserve TT, PR, F)
+            if dimension_code == 'T' and not code.startswith(('TT', 'PR', 'F')):
                 dimension_code = 'TG'
             
             if dimension_code in self.dimensions:
@@ -118,7 +133,7 @@ class OraclePreprocessor:
                     'code': code,
                     'name': name,
                     'dimension': dimension_code,
-                    'scores': self._parse_scores(scores),
+                    'scores': {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0, 'TT': 0, 'PR': 0, 'F': 0},  # Default scores for BIBLIOTECA
                     'source': 'biblioteca'
                 }
                 print(f"✓ {code}: {name} [{dimension_code}]")
@@ -126,6 +141,233 @@ class OraclePreprocessor:
                 self.warnings.append(f"Unknown dimension for activity {code}: {dimension_code}")
         
         print(f"📚 Total biblioteca activities: {len([a for a in self.activities.values() if a['source'] == 'biblioteca'])}")
+    
+    def _parse_objective_codes(self, content: str):
+        """Parse objective codes like OPP1, OGM1, etc."""
+        print("🎯 Parsing objective codes...")
+        
+        # Pattern for objective codes: - **CODE**: Description → Trilha
+        objective_pattern = r'-\s*\*\*([A-Z]+\d+)\*\*:\s*([^→]+)→\s*Trilha\s*([A-Z0-9]+)'
+        
+        objectives = re.findall(objective_pattern, content)
+        
+        discovered = 0
+        for code, description, trilha_code in objectives:
+            if code not in self.activities:
+                # Determine dimension from objective code prefix
+                dimension_code = self._map_objective_to_dimension(code)
+                
+                if dimension_code and dimension_code in self.dimensions:
+                    self.activities[code] = {
+                        'code': code,
+                        'name': description.strip(),
+                        'dimension': dimension_code,
+                        'scores': {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0, 'TT': 0, 'PR': 0, 'F': 0},
+                        'source': 'objective',
+                        'trilha': trilha_code
+                    }
+                    discovered += 1
+                    print(f"✓ {code}: {description.strip()} [{dimension_code}] → {trilha_code}")
+        
+        print(f"🎯 Total objective codes discovered: {discovered}")
+    
+    def _parse_trilha_level_codes(self, content: str):
+        """Parse trilha level codes like VG1B, CX1A, etc."""
+        print("📋 Parsing trilha level codes...")
+        
+        # Pattern for trilha level codes: - **CODE** (Nível X): Description
+        trilha_level_pattern = r'-\s*\*\*([A-Z0-9]+)\*\*\s*\([^)]*\):\s*([^\n]+)'
+        
+        trilha_levels = re.findall(trilha_level_pattern, content)
+        
+        discovered = 0
+        for code, description in trilha_levels:
+            if code not in self.activities:
+                # Determine dimension from trilha code prefix
+                dimension_code = self._map_trilha_to_dimension(code)
+                
+                if dimension_code and dimension_code in self.dimensions:
+                    self.activities[code] = {
+                        'code': code,
+                        'name': description.strip(),
+                        'dimension': dimension_code,
+                        'scores': {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0, 'TT': 0, 'PR': 0, 'F': 0},
+                        'source': 'trilha_level'
+                    }
+                    discovered += 1
+                    print(f"✓ {code}: {description.strip()} [{dimension_code}]")
+        
+        print(f"📋 Total trilha level codes discovered: {discovered}")
+    
+    def _parse_trilha_sublevel_codes(self, content: str):
+        """Parse trilha sub-level codes like PR1IN, TT1CO, etc."""
+        print("🔧 Parsing trilha sub-level codes...")
+        
+        # Pattern for trilha sub-level codes: - **CODE** (Nível X): Description
+        sublevel_pattern = r'-\s*\*\*([A-Z0-9]+)\*\*\s*\([^)]*\):\s*([^\n]+)'
+        
+        sublevels = re.findall(sublevel_pattern, content)
+        
+        discovered = 0
+        for code, description in sublevels:
+            if code not in self.activities and len(code) > 4:  # Sub-level codes are longer
+                # Determine dimension from sublevel code prefix
+                dimension_code = self._map_sublevel_to_dimension(code)
+                
+                if dimension_code and dimension_code in self.dimensions:
+                    self.activities[code] = {
+                        'code': code,
+                        'name': description.strip(),
+                        'dimension': dimension_code,
+                        'scores': {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0, 'TT': 0, 'PR': 0, 'F': 0},
+                        'source': 'trilha_sublevel'
+                    }
+                    discovered += 1
+                    print(f"✓ {code}: {description.strip()} [{dimension_code}]")
+        
+        print(f"🔧 Total trilha sub-level codes discovered: {discovered}")
+    
+    def _map_sublevel_to_dimension(self, code: str) -> str:
+        """Map trilha sub-level codes to dimensions"""
+        sublevel_mapping = {
+            'TT1CO': 'TT',    # Tempo Tela 1 - Consciência
+            'TT2LI': 'TT',    # Tempo Tela 2 - Limites Iniciais
+            'TT2INT': 'TT',   # Tempo Tela 2 - Uso Intencional
+            'TT3SUB': 'TT',   # Tempo Tela 3 - Substituição Ativa
+            'PR1IN': 'PR',    # Procrastinação 1 - Início Imediato
+            'PR2FO': 'PR',    # Procrastinação 2 - Foco Estruturado
+            'PR2AM': 'PR',    # Procrastinação 2 - Ambiente Otimizado
+            'PR3SO': 'PR',    # Procrastinação 3 - Suporte e Organização
+            'MenE1B': 'SF',   # Manhã Energética 1 - Básico
+            'MenE1I': 'SF',   # Manhã Energética 1 - Intermediário
+            'MenE1A': 'SF',   # Manhã Energética 1 - Avançado
+        }
+        
+        if code in sublevel_mapping:
+            return sublevel_mapping[code]
+        
+        # Try prefix matching for patterns we might have missed
+        for prefix in ['TT', 'PR', 'MenE', 'SegF']:
+            if code.startswith(prefix):
+                if prefix == 'TT':
+                    return 'TT'
+                elif prefix == 'PR':
+                    return 'PR'
+                elif prefix == 'MenE':
+                    return 'SF'
+                elif prefix == 'SegF':
+                    return 'F'
+        
+        return None
+    
+    def _map_objective_to_dimension(self, code: str) -> str:
+        """Map objective codes to dimensions"""
+        objective_mapping = {
+            'OPP': 'SF',    # Perder peso
+            'OGM': 'SF',    # Ganhar massa
+            'ODM': 'SF',    # Dormir melhor
+            'OMMA': 'SF',   # Melhorar alimentação
+            'OME': 'SF',    # Manhã energética
+            'OLV': 'SF',    # Longevidade
+            'OCX': 'SF',    # Correr X Km
+            'OAE': 'TG',    # Aprender eficaz
+            'OSPM': 'TG',   # Gerenciar tempo/liderar
+            'OSF': 'F',     # Segurança financeira
+            'ORA': 'SM',    # Reduzir ansiedade
+            'OLM': 'TG',    # Ler mais
+            'OVG': 'E',     # Virtude gratidão
+            'OME2': 'R',    # Melhor esposo(a)
+            'OMF': 'R',     # Melhor pai/mãe
+            'ODE': 'E',     # Desenvolver espiritualidade
+            'OREQ': 'R',    # Relacionamento entes queridos
+        }
+        
+        for prefix, dimension in objective_mapping.items():
+            if code.startswith(prefix):
+                return dimension
+        return None
+    
+    def _map_trilha_to_dimension(self, code: str) -> str:
+        """Map trilha level codes to dimensions"""
+        trilha_mapping = {
+            'VG1': 'E',     # Virtude gratidão
+            'CX1': 'SF',    # Correr X Km
+            'SME1': 'R',    # Ser melhor esposo(a)
+            'SMP1': 'R',    # Ser melhor pai/mãe
+            'EE1': 'E',     # Evolução espiritual
+            'EE2': 'E',     # Evolução espiritual avançado
+            'MMV1': 'R',    # Minha melhor versão
+            'MMV2': 'R',    # Minha melhor versão avançado
+            'DTD1': 'SM',   # Detox dopamina
+            'DTD2': 'SM',   # Detox dopamina avançado
+            'DD1': 'SM',    # Domine dopamina
+            'ED1': 'SM',    # Eleve dopamina
+            'MenE1': 'SF',  # Manhã energética
+            'SegF1': 'F',   # Segurança financeira
+            'TempoTela1': 'TT',  # Tempo tela 1
+            'TempoTela2': 'TT',  # Tempo tela 2
+            'TempoTela3': 'TT',  # Tempo tela 3
+            'Procrastinação1': 'PR',  # Procrastinação 1
+            'Procrastinação2': 'PR',  # Procrastinação 2
+            'Procrastinação3': 'PR',  # Procrastinação 3
+        }
+        
+        for prefix, dimension in trilha_mapping.items():
+            if code.startswith(prefix):
+                return dimension
+        return None
+    
+    def _parse_strategy_codes(self, content: str):
+        """Parse strategy framework codes (MEEDDS, PLOW, GLOWS)"""
+        print("🎯 Parsing strategy framework codes...")
+        
+        # Pattern for strategy codes: **X** (Description): activities
+        strategy_pattern = r'\*\*([A-Z])\*\*([^:]+):\s*([^\n]+)'
+        
+        strategies = re.findall(strategy_pattern, content)
+        
+        discovered = 0
+        for code, description, activities_list in strategies:
+            if code not in self.activities and len(code) == 1:  # Single letter strategy codes
+                # Determine dimension from strategy code
+                dimension_code = self._map_strategy_to_dimension(code, description)
+                
+                if dimension_code and dimension_code in self.dimensions:
+                    self.activities[code] = {
+                        'code': code,
+                        'name': description.strip().replace('(', '').replace(')', ''),
+                        'dimension': dimension_code,
+                        'scores': {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0, 'TT': 0, 'PR': 0, 'F': 0},
+                        'source': 'strategy',
+                        'activities': activities_list.strip()
+                    }
+                    discovered += 1
+                    print(f"✓ {code}: {description.strip()} [{dimension_code}]")
+        
+        print(f"🎯 Total strategy codes discovered: {discovered}")
+    
+    def _map_strategy_to_dimension(self, code: str, description: str) -> str:
+        """Map strategy codes to dimensions based on context"""
+        strategy_mapping = {
+            'M': 'SM',  # Meditation -> Saúde Mental
+            'E': 'SF',  # Exercise/Eating -> Saúde Física  
+            'D': 'SF',  # Digital Detoxing/Deep Sleep -> Saúde Física (sleep) or TT (digital)
+            'S': 'SM',  # Stillness -> Saúde Mental
+            'P': 'TG',  # Planning -> Trabalho Gratificante
+            'L': 'TG',  # Learning -> Trabalho Gratificante
+            'O': 'TG',  # Orchestration -> Trabalho Gratificante
+            'W': 'TG',  # Work -> Trabalho Gratificante
+            'G': 'E',   # Gratitude -> Espiritualidade
+        }
+        
+        # Special handling for context-dependent codes
+        if code == 'D':
+            if 'Digital' in description:
+                return 'TT'  # Digital Detoxing -> Tempo de Tela
+            else:
+                return 'SF'  # Deep Sleep -> Saúde Física
+        
+        return strategy_mapping.get(code, 'SM')  # Default to Saúde Mental
     
     def _parse_trilha_activities(self, content: str):
         """Parse additional activities referenced in trilhas but not in biblioteca"""
@@ -142,8 +384,8 @@ class OraclePreprocessor:
                 # Determine dimension from code prefix
                 dimension_code = re.match(r'^([A-Z]+)', code).group(1)
                 
-                # Handle TG dimension (T -> TG mapping)
-                if dimension_code == 'T':
+                # Handle TG dimension (T -> TG mapping, but preserve TT, PR, F)
+                if dimension_code == 'T' and not code.startswith(('TT', 'PR', 'F')):
                     dimension_code = 'TG'
                 
                 if dimension_code in self.dimensions:
@@ -151,7 +393,7 @@ class OraclePreprocessor:
                         'code': code,
                         'name': description.strip(),
                         'dimension': dimension_code,
-                        'scores': {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0},  # Default scores
+                        'scores': {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0, 'TT': 0, 'PR': 0, 'F': 0},  # Default scores
                         'source': 'trilha'
                     }
                     self.trilha_activities.add(code)
@@ -169,9 +411,12 @@ class OraclePreprocessor:
                 'T': int(scores[1]),  # Will be mapped to TG
                 'SF': int(scores[2]),
                 'E': int(scores[3]),
-                'SM': int(scores[4])
+                'SM': int(scores[4]),
+                'TT': 0,
+                'PR': 0,
+                'F': 0
             }
-        return {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0}
+        return {'R': 0, 'T': 0, 'SF': 0, 'E': 0, 'SM': 0, 'TT': 0, 'PR': 0, 'F': 0}
     
     def _create_result(self, file_path: str) -> Dict:
         """Create structured JSON result"""
