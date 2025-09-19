@@ -1,0 +1,1506 @@
+{
+  "version": "4.0",
+  "source_file": "oracle_prompt_4.0.md",
+  "generated_at": "2025-09-18T03:01:18.862445+00:00",
+  "dimensions": {
+    "R": {
+      "code": "R",
+      "name": "RELACIONAMENTOS",
+      "display_name": "Relacionamentos",
+      "id": "r"
+    },
+    "SF": {
+      "code": "SF",
+      "name": "SAÚDE FÍSICA",
+      "display_name": "Saúde Física",
+      "id": "sf"
+    },
+    "TG": {
+      "code": "TG",
+      "name": "TRABALHO GRATIFICANTE",
+      "display_name": "Trabalho Gratificante",
+      "id": "tg"
+    },
+    "E": {
+      "code": "E",
+      "name": "ESPIRITUALIDADE",
+      "display_name": "Espiritualidade",
+      "id": "e"
+    },
+    "SM": {
+      "code": "SM",
+      "name": "SAÚDE MENTAL",
+      "display_name": "Saúde Mental",
+      "id": "sm"
+    }
+  },
+  "activities": {
+    "SM1": {
+      "code": "SM1",
+      "name": "Meditar/Mindfulness",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM2": {
+      "code": "SM2",
+      "name": "Respiração controlada",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF22": {
+      "code": "SF22",
+      "name": "Exposição luz natural manhã",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF4": {
+      "code": "SF4",
+      "name": "Escrever diário do sono",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF2": {
+      "code": "SF2",
+      "name": "Preparar o quarto",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF3": {
+      "code": "SF3",
+      "name": "Fazer ritual de relaxamento",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF6": {
+      "code": "SF6",
+      "name": "Evitar cafeína após 15:00",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF19": {
+      "code": "SF19",
+      "name": "Fazer 5 min de alongamento",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF1": {
+      "code": "SF1",
+      "name": "Beber água",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF8": {
+      "code": "SF8",
+      "name": "Comer fruta",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF11": {
+      "code": "SF11",
+      "name": "Comer legumes e salada",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF10": {
+      "code": "SF10",
+      "name": "Comer proteína nas refeições",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF9": {
+      "code": "SF9",
+      "name": "Comer carboidrato complexo",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF7": {
+      "code": "SF7",
+      "name": "Fazer diário alimentar",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF16": {
+      "code": "SF16",
+      "name": "Protocolo de sono otimizado",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF1813": {
+      "code": "SF1813",
+      "name": "Cardio avançado",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF12": {
+      "code": "SF12",
+      "name": "Fazer exercício de força",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF13": {
+      "code": "SF13",
+      "name": "Fazer exercício cardio/aeróbico",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF17": {
+      "code": "SF17",
+      "name": "Deixar roupa treino separada",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF5": {
+      "code": "SF5",
+      "name": "Dormir de 7 a 9 horas",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF1333": {
+      "code": "SF1333",
+      "name": "Cardio especializado",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF1233": {
+      "code": "SF1233",
+      "name": "Força elite",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF18": {
+      "code": "SF18",
+      "name": "Movimento básico",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF1812": {
+      "code": "SF1812",
+      "name": "Cardio intermediário",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF1422": {
+      "code": "SF1422",
+      "name": "Treino funcional",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM13": {
+      "code": "SM13",
+      "name": "Respiração avançada",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF1431": {
+      "code": "SF1431",
+      "name": "Treino de força",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T8": {
+      "code": "T8",
+      "name": "Sessão de trabalho focado (pomodoro)",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T1": {
+      "code": "T1",
+      "name": "Executar rotina da manhã",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T4": {
+      "code": "T4",
+      "name": "Planejamento mensal e semanal",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T3": {
+      "code": "T3",
+      "name": "Fazer e revisar planejamento anual",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T5": {
+      "code": "T5",
+      "name": "Planejar minha semana",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T7": {
+      "code": "T7",
+      "name": "Ativar modo \"foco\" no trabalho",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM7": {
+      "code": "SM7",
+      "name": "Tempo na natureza",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T11": {
+      "code": "T11",
+      "name": "Definir local de leitura livre de celular",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T14": {
+      "code": "T14",
+      "name": "Ler livro relacionado ao tema",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T10": {
+      "code": "T10",
+      "name": "Preparar ambiente de leitura",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM14": {
+      "code": "SM14",
+      "name": "Técnicas de grounding",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T18": {
+      "code": "T18",
+      "name": "Rever estratégia de aprendizado",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T6": {
+      "code": "T6",
+      "name": "Ampliar rede de contatos profissionais",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R1": {
+      "code": "R1",
+      "name": "Praticar escuta ativa",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM5": {
+      "code": "SM5",
+      "name": "Visualização positiva",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T13": {
+      "code": "T13",
+      "name": "Ler resumo de livro do tema",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T15": {
+      "code": "T15",
+      "name": "Escutar podcast ou TED talks",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T17": {
+      "code": "T17",
+      "name": "Fazer manutenção lista YouTube",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T9": {
+      "code": "T9",
+      "name": "Assistir vídeo educacional",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E5": {
+      "code": "E5",
+      "name": "Agradecer 1 coisa do meu dia",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM8": {
+      "code": "SM8",
+      "name": "Pausas regulares durante trabalho",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E6": {
+      "code": "E6",
+      "name": "Agradecer 3 coisas do meu dia",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM812": {
+      "code": "SM812",
+      "name": "Pausas mindful avançadas",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM11": {
+      "code": "SM11",
+      "name": "Exercícios de aceitação",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM9": {
+      "code": "SM9",
+      "name": "Praticar aceitação",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM4": {
+      "code": "SM4",
+      "name": "Praticar autocompaixão",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E2": {
+      "code": "E2",
+      "name": "Rezar",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM12": {
+      "code": "SM12",
+      "name": "Fechar olhos e pensar momento feliz",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E4": {
+      "code": "E4",
+      "name": "Fazer anotações de gratidão",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF15": {
+      "code": "SF15",
+      "name": "Caminhar 7000 passos",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E7": {
+      "code": "E7",
+      "name": "Ler a bíblia",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E1": {
+      "code": "E1",
+      "name": "Ir a celebração religiosa",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E3": {
+      "code": "E3",
+      "name": "Praticar ato de bondade",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R4": {
+      "code": "R4",
+      "name": "Expressar elogios e palavras de amor",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R3": {
+      "code": "R3",
+      "name": "Manter contato (Touchbase)",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R5": {
+      "code": "R5",
+      "name": "Jantar/almoçar com família sem celular",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM6": {
+      "code": "SM6",
+      "name": "Estabelecer limites saudáveis",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF23": {
+      "code": "SF23",
+      "name": "Beber 1 copo de água ao acordar",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF24": {
+      "code": "SF24",
+      "name": "Comer proteína no café da manhã",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF25": {
+      "code": "SF25",
+      "name": "Comer uma porção de frutas no café da manhã",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF26": {
+      "code": "SF26",
+      "name": "Comer uma porção de fibras no café da manhã",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF27": {
+      "code": "SF27",
+      "name": "Tomar 1 banho gelado",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "T20": {
+      "code": "T20",
+      "name": "Ler sem distrações",
+      "dimension": "TG",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF49": {
+      "code": "SF49",
+      "name": "Beber de 2 a 3L de água",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF50": {
+      "code": "SF50",
+      "name": "Seguir plano estruturado de corrida",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF28": {
+      "code": "SF28",
+      "name": "Dormir e acordar no mesmo horário",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF51": {
+      "code": "SF51",
+      "name": "Comer carboidrato pré corrida",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SF52": {
+      "code": "SF52",
+      "name": "Fazer treino de mobilidade",
+      "dimension": "SF",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E8": {
+      "code": "E8",
+      "name": "Agradecer pelas coisas boas da minha vida",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E9": {
+      "code": "E9",
+      "name": "Agradecer pela minha família",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E10": {
+      "code": "E10",
+      "name": "Tirar uma foto de algo que sou grato(a)",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E11": {
+      "code": "E11",
+      "name": "Agradecer pelo meu trabalho",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "SM16": {
+      "code": "SM16",
+      "name": "Fazer 1 meditação de gratidão",
+      "dimension": "SM",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E12": {
+      "code": "E12",
+      "name": "Escrever uma carta de gratidão",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E13": {
+      "code": "E13",
+      "name": "Mandar mensagem de obrigado a alguém",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E14": {
+      "code": "E14",
+      "name": "Ao acordar agradecer por mais um dia de vida",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E15": {
+      "code": "E15",
+      "name": "Ao ir dormir agradecer por mais um dia de vida",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E16": {
+      "code": "E16",
+      "name": "Recitar meu mantra de gratidão",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "E17": {
+      "code": "E17",
+      "name": "Enviar mensagem de gratidão para alguém importante",
+      "dimension": "E",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R18": {
+      "code": "R18",
+      "name": "Dar um abraço ao chegar em casa",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R19": {
+      "code": "R19",
+      "name": "Dar um abraço ao sair de casa",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R2": {
+      "code": "R2",
+      "name": "Fazer 1 refeição sem celular",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R20": {
+      "code": "R20",
+      "name": "Mandar uma mensagem carinhosa",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R21": {
+      "code": "R21",
+      "name": "Receber com um abraço quando chegar",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R22": {
+      "code": "R22",
+      "name": "Fazer pergunta sincera sobre como está",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R23": {
+      "code": "R23",
+      "name": "Validar sentimento antes de dar opinião",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R24": {
+      "code": "R24",
+      "name": "Dar bom dia",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R25": {
+      "code": "R25",
+      "name": "Dar boa noite",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R26": {
+      "code": "R26",
+      "name": "Não reagir de forma impulsiva",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R27": {
+      "code": "R27",
+      "name": "Levar para jantar",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R28": {
+      "code": "R28",
+      "name": "Dar um presente",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R29": {
+      "code": "R29",
+      "name": "Fazer uma surpresa",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R30": {
+      "code": "R30",
+      "name": "Dividir serviços domésticos",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R31": {
+      "code": "R31",
+      "name": "Fazer algo importante para o(a) esposo(a)",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R32": {
+      "code": "R32",
+      "name": "Dar um abraço no filho(a) ao chegar em casa",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R33": {
+      "code": "R33",
+      "name": "Dar um abraço no filho(a) ao sair de casa",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R34": {
+      "code": "R34",
+      "name": "Fazer 1 refeição com filho(a) sem celular",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R35": {
+      "code": "R35",
+      "name": "Escutar atentamente filho(a) sem interromper",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R36": {
+      "code": "R36",
+      "name": "Mandar uma mensagem para o filho(a)",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R37": {
+      "code": "R37",
+      "name": "Receber com um abraço filho(a) quando chegar",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R38": {
+      "code": "R38",
+      "name": "Fazer pergunta sincera sobre como filho(a) está",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R39": {
+      "code": "R39",
+      "name": "Validar sentimento do filho(a) antes de dar opinião",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R40": {
+      "code": "R40",
+      "name": "Dar bom dia para filho(a)",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R41": {
+      "code": "R41",
+      "name": "Dar boa noite para filho(a)",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    },
+    "R42": {
+      "code": "R42",
+      "name": "Não reagir de forma impulsiva com filho(a)",
+      "dimension": "R",
+      "scores": {
+        "R": 0,
+        "T": 0,
+        "SF": 0,
+        "E": 0,
+        "SM": 0
+      },
+      "source": "trilha"
+    }
+  },
+  "metadata": {
+    "total_activities": 112,
+    "biblioteca_activities": 0,
+    "trilha_activities": 112,
+    "total_dimensions": 5,
+    "parsing_status": "success",
+    "warnings": 0,
+    "errors": 0
+  },
+  "warnings": [],
+  "errors": []
+}
