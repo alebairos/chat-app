@@ -31,18 +31,20 @@ class OracleStaticCache {
     }
 
     try {
-      Logger().info('🧠 FT-140: Initializing Oracle static cache at app startup...');
+      Logger().info(
+          '🧠 FT-140: Initializing Oracle static cache at app startup...');
 
       // Load Oracle 4.2 data (one-time file I/O)
       final oracleContext = await _loadOracleContext();
       if (oracleContext == null) {
-        Logger().warning('FT-140: No Oracle context available - cache not initialized');
+        Logger().warning(
+            'FT-140: No Oracle context available - cache not initialized');
         return;
       }
 
       // Build compact LLM format with ALL 265 activities
       _compactOracleContext = _buildCompactLLMFormat(oracleContext);
-      
+
       // Build fast lookup structures
       _activityLookup = _buildActivityLookup(oracleContext);
       _dimensionLookup = _buildDimensionLookup(oracleContext);
@@ -52,12 +54,12 @@ class OracleStaticCache {
 
       Logger().info('✅ FT-140: Oracle cache initialized successfully');
       Logger().info('   📊 Total activities: $_totalActivities');
-      Logger().info('   📏 Compact format size: ${_compactOracleContext!.length} chars');
+      Logger().info(
+          '   📏 Compact format size: ${_compactOracleContext!.length} chars');
       Logger().info('   🔍 Fast lookup entries: ${_activityLookup!.length}');
 
-      // Validate Oracle methodology compliance
-      await _validateOracleCompliance();
-
+      // FT-141: Validate Oracle methodology compliance with 4.2 specifics
+      await _validateOracleCompliance(oracleContext);
     } catch (e) {
       Logger().error('FT-140: Failed to initialize Oracle static cache: $e');
       _isInitialized = false;
@@ -72,7 +74,8 @@ class OracleStaticCache {
   /// This format includes ALL 265 activities while minimizing token usage.
   static String getCompactOracleForLLM() {
     if (!_isInitialized || _compactOracleContext == null) {
-      throw StateError('FT-140: Oracle cache not initialized. Call initializeAtStartup() first.');
+      throw StateError(
+          'FT-140: Oracle cache not initialized. Call initializeAtStartup() first.');
     }
     return _compactOracleContext!;
   }
@@ -82,7 +85,8 @@ class OracleStaticCache {
   /// Fast O(1) lookup for activity details by code (e.g., "SF1", "R2")
   static OracleActivity? getActivityByCode(String code) {
     if (!_isInitialized || _activityLookup == null) {
-      Logger().warning('FT-140: Oracle cache not initialized for activity lookup');
+      Logger()
+          .warning('FT-140: Oracle cache not initialized for activity lookup');
       return null;
     }
     return _activityLookup![code.toUpperCase()];
@@ -105,7 +109,8 @@ class OracleStaticCache {
       }
     }
 
-    Logger().debug('FT-140: Retrieved ${activities.length} activities from ${codes.length} codes');
+    Logger().debug(
+        'FT-140: Retrieved ${activities.length} activities from ${codes.length} codes');
     return activities;
   }
 
@@ -123,16 +128,50 @@ class OracleStaticCache {
   /// Get total number of activities in cache
   static int get totalActivities => _totalActivities;
 
-  /// Get cache statistics for debugging
+  /// Get cache statistics for debugging (FT-141 enhanced)
   static Map<String, dynamic> getDebugInfo() {
-    return {
+    final debugInfo = {
       'initialized': _isInitialized,
       'totalActivities': _totalActivities,
       'compactFormatSize': _compactOracleContext?.length ?? 0,
       'activityLookupSize': _activityLookup?.length ?? 0,
       'dimensionLookupSize': _dimensionLookup?.length ?? 0,
-      'estimatedTokens': (_compactOracleContext?.length ?? 0) ~/ 4, // Rough estimate
+      'estimatedTokens':
+          (_compactOracleContext?.length ?? 0) ~/ 4, // Rough estimate
     };
+
+    // FT-141: Add Oracle 4.2 validation info if cache is initialized
+    if (_isInitialized && _dimensionLookup != null) {
+      final dimensions = _dimensionLookup!.keys.toSet();
+      final hasOracle42Dimensions = dimensions.contains('TT') &&
+          dimensions.contains('PR') &&
+          dimensions.contains('F');
+
+      debugInfo['oracle42Validation'] = {
+        'isOracle42': hasOracle42Dimensions,
+        'dimensionCount': dimensions.length,
+        'expectedDimensions': hasOracle42Dimensions ? 8 : 5,
+        'expectedActivities': hasOracle42Dimensions ? 265 : 150,
+        'actualActivities': _totalActivities,
+        'dimensionsPresent': dimensions.toList()..sort(),
+        'newDimensionsPresent': hasOracle42Dimensions ? ['TT', 'PR', 'F'] : [],
+        'validationStatus': hasOracle42Dimensions
+            ? (_totalActivities >= 265 && dimensions.length == 8
+                ? 'PASSED'
+                : 'FAILED')
+            : (_totalActivities >= 150 ? 'PASSED' : 'FAILED'),
+      };
+
+      // Add dimension-specific activity counts if available
+      if (_dimensionLookup != null) {
+        debugInfo['dimensionActivityCounts'] = {
+          for (final entry in _dimensionLookup!.entries)
+            entry.key: entry.value.activities.length
+        };
+      }
+    }
+
+    return debugInfo;
   }
 
   /// Load Oracle context using existing infrastructure
@@ -156,20 +195,24 @@ class OracleStaticCache {
     // Process all dimensions and activities
     for (final dimension in oracleContext.dimensions.values) {
       for (final activity in dimension.activities) {
+        // Escape commas in descriptions to prevent parsing issues
+        final escapedDescription = activity.description.replaceAll(',', ';');
         // Compact format: CODE:NAME
-        activities.add('${activity.code}:${activity.description}');
+        activities.add('${activity.code}:$escapedDescription');
       }
     }
 
     // Sort by code for consistency
     activities.sort();
 
-    Logger().debug('FT-140: Built compact format with ${activities.length} activities');
+    Logger().debug(
+        'FT-140: Built compact format with ${activities.length} activities');
     return activities.join(',');
   }
 
   /// Build fast activity lookup map
-  static Map<String, OracleActivity> _buildActivityLookup(OracleContext oracleContext) {
+  static Map<String, OracleActivity> _buildActivityLookup(
+      OracleContext oracleContext) {
     final lookup = <String, OracleActivity>{};
 
     for (final dimension in oracleContext.dimensions.values) {
@@ -178,61 +221,145 @@ class OracleStaticCache {
       }
     }
 
-    Logger().debug('FT-140: Built activity lookup with ${lookup.length} entries');
+    Logger()
+        .debug('FT-140: Built activity lookup with ${lookup.length} entries');
     return lookup;
   }
 
   /// Build fast dimension lookup map
-  static Map<String, OracleDimension> _buildDimensionLookup(OracleContext oracleContext) {
+  static Map<String, OracleDimension> _buildDimensionLookup(
+      OracleContext oracleContext) {
     final lookup = <String, OracleDimension>{};
 
     for (final dimension in oracleContext.dimensions.values) {
       lookup[dimension.code.toUpperCase()] = dimension;
     }
 
-    Logger().debug('FT-140: Built dimension lookup with ${lookup.length} entries');
+    Logger()
+        .debug('FT-140: Built dimension lookup with ${lookup.length} entries');
     return lookup;
   }
 
-  /// Validate Oracle methodology compliance
+  /// Validate Oracle methodology compliance (FT-141 enhanced)
   ///
-  /// Ensures all 265 activities are accessible and cache integrity
-  static Future<void> _validateOracleCompliance() async {
+  /// Ensures all 265 activities are accessible and Oracle 4.2 compliance
+  static Future<void> _validateOracleCompliance(
+      OracleContext oracleContext) async {
     try {
-      // Check total activity count
-      if (_totalActivities != 265) {
-        Logger().error('FT-140: Oracle compliance VIOLATION - Expected 265 activities, got $_totalActivities');
-        return;
-      }
+      // FT-141: Check if this is Oracle 4.2 based on dimensions
+      final dimensions = oracleContext.dimensions;
+      final hasOracle42Dimensions = dimensions.containsKey('TT') &&
+          dimensions.containsKey('PR') &&
+          dimensions.containsKey('F');
 
-      // Check compact format contains all activities
-      final compactActivityCount = _compactOracleContext!.split(',').length;
-      if (compactActivityCount != 265) {
-        Logger().error('FT-140: Compact format VIOLATION - Expected 265 activities, got $compactActivityCount');
-        return;
-      }
+      if (hasOracle42Dimensions) {
+        Logger().info('🔍 FT-141: Validating Oracle 4.2 compliance...');
 
-      // Check lookup table completeness
-      if (_activityLookup!.length != 265) {
-        Logger().error('FT-140: Lookup table VIOLATION - Expected 265 activities, got ${_activityLookup!.length}');
-        return;
-      }
+        // Validate 8 dimensions for Oracle 4.2
+        final expectedDimensions = {
+          'E',
+          'F',
+          'PR',
+          'R',
+          'SF',
+          'SM',
+          'TG',
+          'TT'
+        };
+        final actualDimensions = dimensions.keys.toSet();
 
-      // Validate sample activities exist
-      final sampleCodes = ['SF1', 'R1', 'E1', 'SM1', 'TG1', 'TT1', 'PR1', 'F1'];
-      for (final code in sampleCodes) {
-        if (_activityLookup![code] == null) {
-          Logger().warning('FT-140: Sample activity $code not found in cache');
+        if (actualDimensions.length != 8) {
+          throw Exception(
+              'FT-141: Oracle 4.2 cache validation failed - Expected 8 dimensions, got ${actualDimensions.length}');
+        }
+
+        final missingDimensions =
+            expectedDimensions.difference(actualDimensions);
+        if (missingDimensions.isNotEmpty) {
+          throw Exception(
+              'FT-141: Oracle 4.2 cache validation failed - Missing dimensions: ${missingDimensions.join(', ')}');
+        }
+
+        // Validate 265+ activities for Oracle 4.2
+        if (_totalActivities < 265) {
+          throw Exception(
+              'FT-141: Oracle 4.2 cache validation failed - Expected 265+ activities, got $_totalActivities');
+        }
+
+        // Validate new dimensions have activities
+        final ttActivities = dimensions['TT']?.activities.length ?? 0;
+        final prActivities = dimensions['PR']?.activities.length ?? 0;
+        final fActivities = dimensions['F']?.activities.length ?? 0;
+
+        if (ttActivities == 0) {
+          throw Exception(
+              'FT-141: Oracle 4.2 cache validation failed - TT dimension has no activities');
+        }
+        if (prActivities == 0) {
+          throw Exception(
+              'FT-141: Oracle 4.2 cache validation failed - PR dimension has no activities');
+        }
+        if (fActivities == 0) {
+          throw Exception(
+              'FT-141: Oracle 4.2 cache validation failed - F dimension has no activities');
+        }
+
+        Logger().info('✅ FT-141: Oracle 4.2 compliance VERIFIED');
+        Logger().info('   📊 8 dimensions: ${actualDimensions.join(', ')}');
+        Logger().info('   📋 ${_totalActivities} activities total');
+        Logger().info(
+            '   🆕 New dimensions: TT($ttActivities), PR($prActivities), F($fActivities)');
+      } else {
+        Logger().info('🔍 FT-141: Validating legacy Oracle compliance...');
+
+        // Legacy Oracle validation (non-4.2)
+        if (_totalActivities < 150) {
+          Logger().warning(
+              'FT-141: Legacy Oracle has fewer than expected activities: $_totalActivities');
         }
       }
 
-      Logger().info('✅ FT-140: Oracle methodology compliance VERIFIED');
-      Logger().info('   📋 All 265 activities accessible');
+      // Common validation for all Oracle versions
+      // Check compact format contains all activities
+      final compactActivityCount = _compactOracleContext!.split(',').length;
+      if (compactActivityCount != _totalActivities) {
+        throw Exception(
+            'FT-141: Compact format validation failed - Expected $_totalActivities activities, got $compactActivityCount');
+      }
+
+      // Check lookup table completeness
+      if (_activityLookup!.length != _totalActivities) {
+        throw Exception(
+            'FT-141: Lookup table validation failed - Expected $_totalActivities activities, got ${_activityLookup!.length}');
+      }
+
+      // Validate sample activities exist (Oracle 4.2 specific)
+      if (hasOracle42Dimensions) {
+        final oracle42SampleCodes = [
+          'SF1',
+          'R1',
+          'E1',
+          'SM1',
+          'TG1',
+          'TT1',
+          'PR1',
+          'F1'
+        ];
+        for (final code in oracle42SampleCodes) {
+          if (_activityLookup![code] == null) {
+            Logger().warning(
+                'FT-141: Oracle 4.2 sample activity $code not found in cache');
+          }
+        }
+      }
+
+      Logger().info('✅ FT-141: Oracle methodology compliance VERIFIED');
+      Logger().info('   📋 All $_totalActivities activities accessible');
       Logger().info('   🔍 Compact format complete');
       Logger().info('   ⚡ Fast lookup operational');
-
     } catch (e) {
-      Logger().error('FT-140: Oracle compliance validation failed: $e');
+      Logger().error('FT-141: Oracle compliance validation failed: $e');
+      throw e; // Re-throw to prevent initialization with invalid data
     }
   }
 

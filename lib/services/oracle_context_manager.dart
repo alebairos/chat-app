@@ -84,10 +84,10 @@ class OracleContextManager {
     return jsonDecode(jsonString) as Map<String, dynamic>;
   }
 
-  /// Load Oracle context from JSON file (FT-062 preprocessed format)
+  /// Load Oracle context from JSON file with FT-141 validation
   static Future<OracleContext?> _loadOracleFromPath(String jsonPath) async {
     try {
-      Logger().debug('FT-064: Loading Oracle JSON from: $jsonPath');
+      Logger().debug('FT-141: Loading Oracle JSON from: $jsonPath');
 
       final jsonString = await rootBundle.loadString(jsonPath);
       final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
@@ -136,14 +136,70 @@ class OracleContextManager {
         }
       }
 
-      return OracleContext(
+      final oracleContext = OracleContext(
         dimensions: dimensions,
         totalActivities: totalActivities,
       );
+
+      // FT-141: Validate Oracle 4.2 completeness if this is Oracle 4.2
+      if (jsonPath.contains('oracle_prompt_4.2')) {
+        await _validateOracle42Completeness(oracleContext, jsonPath);
+      }
+
+      return oracleContext;
     } catch (e) {
-      Logger().debug('FT-064: Failed to load Oracle JSON from $jsonPath: $e');
+      Logger().error('FT-141: Failed to load Oracle JSON from $jsonPath: $e');
       return null;
     }
+  }
+
+  /// FT-141: Validate Oracle 4.2 completeness (8 dimensions, 265+ activities)
+  static Future<void> _validateOracle42Completeness(
+      OracleContext context, String jsonPath) async {
+    final expectedDimensions = {'E', 'F', 'PR', 'R', 'SF', 'SM', 'TG', 'TT'};
+    final actualDimensions = context.dimensions.keys.toSet();
+
+    // Validate dimension count
+    if (actualDimensions.length != 8) {
+      throw Exception(
+          'FT-141: Oracle 4.2 validation failed - Expected 8 dimensions, got ${actualDimensions.length}');
+    }
+
+    // Validate specific dimensions
+    final missingDimensions = expectedDimensions.difference(actualDimensions);
+    if (missingDimensions.isNotEmpty) {
+      throw Exception(
+          'FT-141: Oracle 4.2 validation failed - Missing dimensions: ${missingDimensions.join(', ')}');
+    }
+
+    // Validate activity count
+    if (context.totalActivities < 265) {
+      throw Exception(
+          'FT-141: Oracle 4.2 validation failed - Expected 265+ activities, got ${context.totalActivities}');
+    }
+
+    // Validate critical new dimensions have activities
+    final ttActivities = context.dimensions['TT']?.activities.length ?? 0;
+    final prActivities = context.dimensions['PR']?.activities.length ?? 0;
+    final fActivities = context.dimensions['F']?.activities.length ?? 0;
+
+    if (ttActivities == 0) {
+      throw Exception(
+          'FT-141: Oracle 4.2 validation failed - TT (Tempo de Tela) dimension has no activities');
+    }
+    if (prActivities == 0) {
+      throw Exception(
+          'FT-141: Oracle 4.2 validation failed - PR (Procrastinação) dimension has no activities');
+    }
+    if (fActivities == 0) {
+      throw Exception(
+          'FT-141: Oracle 4.2 validation failed - F (Finanças) dimension has no activities');
+    }
+
+    Logger().info(
+        '✅ FT-141: Oracle 4.2 validation passed - 8 dimensions, ${context.totalActivities} activities');
+    Logger().info(
+        '   📊 New dimensions: TT($ttActivities), PR($prActivities), F($fActivities) activities');
   }
 
   /// Clear cache (useful for testing or persona switching)
@@ -184,12 +240,12 @@ class OracleContextManager {
     return dimension?.activities ?? [];
   }
 
-  /// Debug info about loaded Oracle context
+  /// Debug info about loaded Oracle context (FT-141 enhanced)
   static Future<Map<String, dynamic>> getDebugInfo() async {
     final context = await getForCurrentPersona();
     _configManager ??= CharacterConfigManager();
 
-    return {
+    final debugInfo = {
       'activePersona': _configManager!.activePersonaKey,
       'oracleLoaded': context != null,
       'totalActivities': context?.totalActivities ?? 0,
@@ -197,5 +253,39 @@ class OracleContextManager {
       'cacheSize': _cache.length,
       'cachedPersonas': _cache.keys.toList(),
     };
+
+    // FT-141: Add Oracle 4.2 specific validation info
+    if (context != null) {
+      final dimensions = context.dimensions;
+      debugInfo['dimensionDetails'] = {
+        for (final entry in dimensions.entries)
+          entry.key: {
+            'name': entry.value.name,
+            'activityCount': entry.value.activities.length,
+          }
+      };
+
+      // Check if this looks like Oracle 4.2
+      final hasOracle42Dimensions = dimensions.containsKey('TT') &&
+          dimensions.containsKey('PR') &&
+          dimensions.containsKey('F');
+      debugInfo['isOracle42'] = hasOracle42Dimensions;
+      debugInfo['oracle42Validation'] = {
+        'expectedDimensions': 8,
+        'actualDimensions': dimensions.length,
+        'expectedActivities': 265,
+        'actualActivities': context.totalActivities,
+        'hasNewDimensions': hasOracle42Dimensions,
+        'newDimensionCounts': hasOracle42Dimensions
+            ? {
+                'TT': dimensions['TT']?.activities.length ?? 0,
+                'PR': dimensions['PR']?.activities.length ?? 0,
+                'F': dimensions['F']?.activities.length ?? 0,
+              }
+            : null,
+      };
+    }
+
+    return debugInfo;
   }
 }

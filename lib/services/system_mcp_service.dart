@@ -7,6 +7,7 @@ import '../utils/logger.dart';
 import '../services/activity_memory_service.dart';
 import '../services/chat_storage_service.dart';
 import '../services/oracle_static_cache.dart';
+import '../services/oracle_context_manager.dart';
 import '../services/semantic_activity_detector.dart';
 
 /// Generic MCP (Model Context Protocol) service for system functions
@@ -73,6 +74,10 @@ class SystemMCPService {
 
         case 'oracle_get_compact_context':
           return await _getCompactOracleContext();
+
+        // FT-144: Oracle statistics command for precise data queries
+        case 'oracle_get_statistics':
+          return await _getOracleStatistics();
 
         // extract_activities removed - now handled by FT-064 semantic detection
 
@@ -301,7 +306,8 @@ class SystemMCPService {
   ///
   /// Detects Oracle activities using complete 265-activity context from static cache.
   /// Maintains Oracle methodology compliance by ensuring all activities are accessible.
-  Future<String> _oracleDetectActivities(Map<String, dynamic> parsedCommand) async {
+  Future<String> _oracleDetectActivities(
+      Map<String, dynamic> parsedCommand) async {
     try {
       _logger.debug('SystemMCP: Processing oracle_detect_activities command');
 
@@ -311,20 +317,17 @@ class SystemMCPService {
         return _errorResponse('Missing required parameter: message');
       }
 
-      // Check if Oracle cache is initialized
-      if (!OracleStaticCache.isInitialized) {
-        _logger.warning('SystemMCP: Oracle cache not initialized, attempting initialization');
-        await OracleStaticCache.initializeAtStartup();
-        
-        if (!OracleStaticCache.isInitialized) {
-          return _errorResponse('Oracle cache not available');
-        }
+      // Use shared Oracle initialization helper
+      final oracleContext = await _ensureOracleInitialized();
+      if (oracleContext == null) {
+        return _errorResponse('Oracle cache not available');
       }
 
       // Get compact Oracle context (ALL 265 activities)
       final compactOracle = OracleStaticCache.getCompactOracleForLLM();
-      
-      _logger.debug('SystemMCP: Using Oracle context with ${OracleStaticCache.totalActivities} activities');
+
+      _logger.debug(
+          'SystemMCP: Using Oracle context with ${OracleStaticCache.totalActivities} activities');
 
       // Build LLM prompt with complete Oracle context
       final prompt = '''
@@ -345,18 +348,21 @@ Return empty array if no completed activities detected.
       final claudeResponse = await _callClaude(prompt);
       final detectedActivities = _parseDetectionResults(claudeResponse);
 
-      _logger.info('SystemMCP: Oracle detection completed - ${detectedActivities.length} activities detected');
+      _logger.info(
+          'SystemMCP: Oracle detection completed - ${detectedActivities.length} activities detected');
 
       // Return MCP response
       return json.encode({
         'status': 'success',
         'data': {
-          'detected_activities': detectedActivities.map((a) => {
-            'code': a.oracleCode,
-            'confidence': a.confidence.toString(),
-            'description': a.userDescription,
-            'duration_minutes': a.durationMinutes,
-          }).toList(),
+          'detected_activities': detectedActivities
+              .map((a) => {
+                    'code': a.oracleCode,
+                    'confidence': a.confidence.toString(),
+                    'description': a.userDescription,
+                    'duration_minutes': a.durationMinutes,
+                  })
+              .toList(),
           'oracle_context_size': compactOracle.length,
           'total_activities_available': OracleStaticCache.totalActivities,
           'method': 'mcp_oracle_detection',
@@ -364,7 +370,6 @@ Return empty array if no completed activities detected.
         },
         'timestamp': DateTime.now().toIso8601String(),
       });
-
     } catch (e) {
       _logger.error('SystemMCP: Error in oracle_detect_activities: $e');
       return _errorResponse('Oracle activity detection failed: $e');
@@ -374,13 +379,15 @@ Return empty array if no completed activities detected.
   /// FT-140: Oracle activity query via MCP
   ///
   /// Allows querying specific Oracle activities by codes or semantic search
-  Future<String> _oracleQueryActivities(Map<String, dynamic> parsedCommand) async {
+  Future<String> _oracleQueryActivities(
+      Map<String, dynamic> parsedCommand) async {
     try {
       _logger.debug('SystemMCP: Processing oracle_query_activities command');
 
-      // Check if Oracle cache is initialized
-      if (!OracleStaticCache.isInitialized) {
-        return _errorResponse('Oracle cache not initialized');
+      // Use shared Oracle initialization helper
+      final oracleContext = await _ensureOracleInitialized();
+      if (oracleContext == null) {
+        return _errorResponse('Oracle cache not available');
       }
 
       final query = parsedCommand['query'] as String?;
@@ -392,12 +399,14 @@ Return empty array if no completed activities detected.
       if (codes != null && codes.isNotEmpty) {
         final stringCodes = codes.map((c) => c.toString()).toList();
         final activities = OracleStaticCache.getActivitiesByCodes(stringCodes);
-        
-        results = activities.map((activity) => {
-          'code': activity.code,
-          'name': activity.description,
-          'dimension': activity.dimension,
-        }).toList();
+
+        results = activities
+            .map((activity) => {
+                  'code': activity.code,
+                  'name': activity.description,
+                  'dimension': activity.dimension,
+                })
+            .toList();
       }
 
       // Semantic query (if query parameter provided)
@@ -421,7 +430,6 @@ Return empty array if no completed activities detected.
         },
         'timestamp': DateTime.now().toIso8601String(),
       });
-
     } catch (e) {
       _logger.error('SystemMCP: Error in oracle_query_activities: $e');
       return _errorResponse('Oracle query failed: $e');
@@ -435,13 +443,10 @@ Return empty array if no completed activities detected.
     try {
       _logger.debug('SystemMCP: Processing oracle_get_compact_context command');
 
-      // Check if Oracle cache is initialized
-      if (!OracleStaticCache.isInitialized) {
-        await OracleStaticCache.initializeAtStartup();
-        
-        if (!OracleStaticCache.isInitialized) {
-          return _errorResponse('Oracle cache not available');
-        }
+      // Use shared Oracle initialization helper
+      final oracleContext = await _ensureOracleInitialized();
+      if (oracleContext == null) {
+        return _errorResponse('Oracle cache not available');
       }
 
       final compactOracle = OracleStaticCache.getCompactOracleForLLM();
@@ -459,17 +464,87 @@ Return empty array if no completed activities detected.
         },
         'timestamp': DateTime.now().toIso8601String(),
       });
-
     } catch (e) {
       _logger.error('SystemMCP: Error in oracle_get_compact_context: $e');
       return _errorResponse('Failed to get Oracle context: $e');
     }
   }
 
+  /// FT-144: Get precise Oracle statistics
+  ///
+  /// Returns EXACT Oracle statistics from loaded data - NEVER approximates
+  Future<String> _getOracleStatistics() async {
+    try {
+      _logger.debug('SystemMCP: Processing oracle_get_statistics command');
+
+      // Use shared Oracle initialization helper (eliminates duplication)
+      final oracleContext = await _ensureOracleInitialized();
+      if (oracleContext == null) {
+        return _errorResponse('Oracle context not available');
+      }
+
+      // Build dimension breakdown
+      final dimensionBreakdown = <String, int>{};
+      for (final entry in oracleContext.dimensions.entries) {
+        dimensionBreakdown[entry.key] = entry.value.activities.length;
+      }
+
+      // Get enhanced debug info with Oracle validation details (no hardcoded logic)
+      final debugInfo = await OracleContextManager.getDebugInfo();
+      final oracle42Info =
+          debugInfo['oracle42Validation'] as Map<String, dynamic>?;
+
+      _logger.info(
+          'SystemMCP: Retrieved Oracle statistics - ${oracleContext.totalActivities} activities, ${oracleContext.dimensions.length} dimensions');
+
+      return jsonEncode({
+        'status': 'success',
+        'data': {
+          'total_activities': oracleContext.totalActivities,
+          'dimensions': oracleContext.dimensions.length,
+          'oracle_version': oracle42Info?['isOracle42'] == true
+              ? '4.2'
+              : (oracleContext.dimensions.length == 5 ? '2.1/3.0' : 'Unknown'),
+          'dimension_breakdown': dimensionBreakdown,
+          'dimensions_available': oracleContext.dimensions.keys.toList(),
+          'oracle_validation':
+              oracle42Info, // Dynamic validation info instead of hardcoded strings
+          'cache_status': OracleStaticCache.isInitialized
+              ? 'initialized'
+              : 'not_initialized',
+          'data_source': 'oracle_context_manager',
+        },
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      _logger.error('SystemMCP: Error in oracle_get_statistics: $e');
+      return _errorResponse('Failed to get Oracle statistics: $e');
+    }
+  }
+
+  /// Shared helper to ensure Oracle is initialized and return context
+  /// Eliminates duplication across Oracle MCP methods
+  Future<OracleContext?> _ensureOracleInitialized() async {
+    // Check if Oracle cache is initialized
+    if (!OracleStaticCache.isInitialized) {
+      _logger.warning(
+          'SystemMCP: Oracle cache not initialized, attempting initialization');
+      await OracleStaticCache.initializeAtStartup();
+
+      if (!OracleStaticCache.isInitialized) {
+        return null;
+      }
+    }
+
+    // Get Oracle context
+    return await OracleContextManager.getForCurrentPersona();
+  }
+
   /// Call Claude API for Oracle activity detection
   Future<String> _callClaude(String prompt) async {
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
-    final model = (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
+    final model =
+        (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
 
     if (apiKey.isEmpty) {
       throw Exception('Claude API key not configured');
@@ -496,7 +571,8 @@ Return empty array if no completed activities detected.
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Claude API error: ${response.statusCode} - ${response.body}');
+      throw Exception(
+          'Claude API error: ${response.statusCode} - ${response.body}');
     }
 
     final data = json.decode(response.body);
@@ -507,7 +583,8 @@ Return empty array if no completed activities detected.
   List<ActivityDetection> _parseDetectionResults(String claudeResponse) {
     try {
       // Extract JSON from Claude response
-      final jsonMatch = RegExp(r'\{.*\}', dotAll: true).firstMatch(claudeResponse);
+      final jsonMatch =
+          RegExp(r'\{.*\}', dotAll: true).firstMatch(claudeResponse);
       if (jsonMatch == null) {
         _logger.debug('SystemMCP: No JSON found in Claude response');
         return [];
@@ -519,7 +596,8 @@ Return empty array if no completed activities detected.
 
       return activities.map((activityData) {
         final code = activityData['code'] as String? ?? '';
-        final confidence = _parseConfidence(activityData['confidence'] as String? ?? 'medium');
+        final confidence =
+            _parseConfidence(activityData['confidence'] as String? ?? 'medium');
         final description = activityData['description'] as String? ?? '';
         final duration = activityData['duration_minutes'] as int? ?? 0;
 
@@ -533,7 +611,6 @@ Return empty array if no completed activities detected.
           durationMinutes: duration,
         );
       }).toList();
-
     } catch (e) {
       _logger.debug('SystemMCP: Failed to parse Claude response: $e');
       return [];

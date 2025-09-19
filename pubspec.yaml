@@ -54,3 +54,4 @@ flutter:
     # Note: LifePlan data assets removed
     - assets/config/
     - assets/config/oracle/
+    - assets/config/mcp_extensions/

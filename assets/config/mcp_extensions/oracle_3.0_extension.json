@@ -1,0 +1,72 @@
+{
+  "version": "3.0",
+  "description": "Oracle 3.0 Extension - Enhanced 5 Dimensions Framework",
+  "extends": "mcp_base_config.json",
+  "type": "oracle_extension",
+  "oracle_capabilities": {
+    "dimensions": 5,
+    "total_activities": "200+",
+    "dimensions_available": ["R", "SF", "TG", "SM", "E"],
+    "dimension_descriptions": {
+      "R": "Relacionamentos - Relationships, family, communication, social connections",
+      "SF": "Saúde Física - Physical health, exercise, sleep, nutrition, movement",
+      "TG": "Trabalho Gratificante - Productive work, learning, focus, career development",
+      "SM": "Saúde Mental - Mental health, meditation, stress management, mindfulness",
+      "E": "Espiritualidade - Spirituality, gratitude, purpose, meaning, faith"
+    },
+    "advanced_features": {
+      "enhanced_catalog": "Expanded activity library with advanced behavioral interventions",
+      "structured_onboarding": "Comprehensive habit formation protocols",
+      "behavioral_frameworks": "Integration of 9 scientific methodologies"
+    }
+  },
+  "additional_instructions": {
+    "oracle_header": {
+      "title": "## ORACLE 3.0 ADVANCED FRAMEWORK",
+      "description": "**ORACLE 3.0 ADVANCED**: Sistema avançado com 5 dimensões otimizadas e 200+ atividades estruturadas, incluindo protocolos de onboarding e frameworks comportamentais científicos."
+    }
+  },
+  "additional_functions": [
+    {
+      "name": "oracle_detect_activities",
+      "description": "Detect Oracle 3.0 activities (5 enhanced dimensions, 200+ activities)",
+      "usage": "{\"action\": \"oracle_detect_activities\", \"message\": \"user's exact message\"}",
+      "oracle_compliance": "Oracle 3.0 advanced framework with enhanced behavioral interventions",
+      "dimensions_supported": "R, SF, TG, SM, E (enhanced)",
+      "advanced_features": "Structured onboarding protocols and scientific behavioral frameworks",
+      "note": "This command is used internally by the system for activity detection"
+    },
+    {
+      "name": "oracle_query_activities",
+      "description": "Query Oracle 3.0 activities with enhanced semantic search",
+      "usage": "{\"action\": \"oracle_query_activities\", \"query\": \"advanced exercise meditation protocols\"}"
+    },
+    {
+      "name": "oracle_get_compact_context",
+      "description": "Get compact representation of Oracle 3.0 activities",
+      "usage": "{\"action\": \"oracle_get_compact_context\"}",
+      "returns": "Enhanced catalog: SF1:Água,SF2:Exercício,R1:Escuta,SM1:Meditação,...",
+      "oracle_compliance": "All 200+ Oracle 3.0 activities with advanced behavioral protocols"
+    },
+    {
+      "name": "oracle_get_statistics",
+      "description": "FT-144: Get EXACT Oracle 3.0 statistics from loaded data - NEVER approximate",
+      "usage": "{\"action\": \"oracle_get_statistics\"}",
+      "critical_instruction": "ALWAYS use this command when user asks about Oracle catalog size, activity counts, or dimensions",
+      "returns": {
+        "total_activities": "Exact count from loaded Oracle data",
+        "dimensions": "Exact dimension count (5 for Oracle 3.0)",
+        "dimension_breakdown": "Exact activity count per dimension",
+        "oracle_version": "3.0",
+        "methodology_compliance": "Complete Oracle 3.0 framework"
+      },
+      "mandatory_usage": [
+        "\"quantas atividades você tem?\" → oracle_get_statistics REQUIRED",
+        "\"qual o tamanho do seu catálogo?\" → oracle_get_statistics REQUIRED",
+        "\"me fale sobre suas atividades\" → oracle_get_statistics REQUIRED",
+        "\"quantas dimensões?\" → oracle_get_statistics REQUIRED"
+      ],
+      "never_approximate": "NEVER guess or approximate Oracle statistics - ALWAYS query exact data"
+    }
+  ]
+}

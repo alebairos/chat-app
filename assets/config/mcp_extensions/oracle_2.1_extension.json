@@ -1,0 +1,66 @@
+{
+  "version": "2.1",
+  "description": "Oracle 2.1 Extension - 5 Dimensions Framework",
+  "extends": "mcp_base_config.json",
+  "type": "oracle_extension",
+  "oracle_capabilities": {
+    "dimensions": 5,
+    "total_activities": "150+",
+    "dimensions_available": ["R", "SF", "TG", "SM", "E"],
+    "dimension_descriptions": {
+      "R": "Relacionamentos - Relationships, family, communication",
+      "SF": "Saúde Física - Physical health, exercise, sleep, nutrition",
+      "TG": "Trabalho Gratificante - Productive work, learning, focus",
+      "SM": "Saúde Mental - Mental health, meditation, stress management",
+      "E": "Espiritualidade - Spirituality, gratitude, purpose"
+    }
+  },
+  "additional_instructions": {
+    "oracle_header": {
+      "title": "## ORACLE 2.1 FRAMEWORK",
+      "description": "**ORACLE 2.1**: Sistema com 5 dimensões fundamentais e 150+ atividades estruturadas para desenvolvimento pessoal baseado em evidências científicas."
+    }
+  },
+  "additional_functions": [
+    {
+      "name": "oracle_detect_activities",
+      "description": "Detect Oracle 2.1 activities (5 dimensions, 150+ activities)",
+      "usage": "{\"action\": \"oracle_detect_activities\", \"message\": \"user's exact message\"}",
+      "oracle_compliance": "Oracle 2.1 framework with 5 core dimensions",
+      "dimensions_supported": "R, SF, TG, SM, E",
+      "note": "This command is used internally by the system for activity detection"
+    },
+    {
+      "name": "oracle_query_activities",
+      "description": "Query Oracle 2.1 activities by codes or semantic search",
+      "usage": "{\"action\": \"oracle_query_activities\", \"query\": \"exercise meditation\"}"
+    },
+    {
+      "name": "oracle_get_compact_context",
+      "description": "Get compact representation of Oracle 2.1 activities",
+      "usage": "{\"action\": \"oracle_get_compact_context\"}",
+      "returns": "Comma-separated list: SF1:Água,SF2:Exercício,R1:Escuta,...",
+      "oracle_compliance": "All 150+ Oracle 2.1 activities included"
+    },
+    {
+      "name": "oracle_get_statistics",
+      "description": "FT-144: Get EXACT Oracle 2.1 statistics from loaded data - NEVER approximate",
+      "usage": "{\"action\": \"oracle_get_statistics\"}",
+      "critical_instruction": "ALWAYS use this command when user asks about Oracle catalog size, activity counts, or dimensions",
+      "returns": {
+        "total_activities": "Exact count from loaded Oracle data",
+        "dimensions": "Exact dimension count (5 for Oracle 2.1)",
+        "dimension_breakdown": "Exact activity count per dimension",
+        "oracle_version": "2.1",
+        "methodology_compliance": "Complete Oracle 2.1 framework"
+      },
+      "mandatory_usage": [
+        "\"quantas atividades você tem?\" → oracle_get_statistics REQUIRED",
+        "\"qual o tamanho do seu catálogo?\" → oracle_get_statistics REQUIRED",
+        "\"me fale sobre suas atividades\" → oracle_get_statistics REQUIRED",
+        "\"quantas dimensões?\" → oracle_get_statistics REQUIRED"
+      ],
+      "never_approximate": "NEVER guess or approximate Oracle statistics - ALWAYS query exact data"
+    }
+  ]
+}

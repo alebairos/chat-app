@@ -1,13 +1,13 @@
 {
   "defaultPersona": "iThereWithOracle42",
   "audioFormattingConfig": "assets/config/audio_formatting_config.json",
-  "mcpInstructionsConfig": "assets/config/mcp_instructions_config.json",
   "personas": {
     "ariLifeCoach": {
       "enabled": false,
       "displayName": "Ari - Life Coach",
       "description": "TARS-inspired life coach combining 9 expert frameworks with intelligent brevity and adaptive engagement for evidence-based personal transformation.",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
       "audioFormatting": {
         "enabled": true
       }
@@ -17,6 +17,7 @@
       "displayName": "Sergeant Oracle",
       "description": "Energetic Roman gym bro coach! Time-traveling gladiator with ancient swagger, future wisdom, and hilarious motivation. Your pumped-up buddy for life gains! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
       "audioFormatting": {
         "enabled": true
       }
@@ -26,6 +27,7 @@
       "displayName": "I-There",
       "description": "Your AI reflection from Mirror Realm - has profound knowledge but still learning about you",
       "configPath": "assets/config/i_there_config.json",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
       "audioFormatting": {
         "enabled": true
       }
@@ -36,6 +38,8 @@
       "description": "Life coach with Oracle 2.1 knowledge base",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_2.1_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -46,6 +50,8 @@
       "description": "AI reflection with Oracle 2.1 knowledge base",
       "configPath": "assets/config/i_there_config.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_2.1_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -56,6 +62,8 @@
       "description": "Energetic Roman gym bro coach! Time-traveling gladiator with ancient swagger, future wisdom, and hilarious motivation. Your pumped-up buddy for life gains! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_2.1.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_2.1_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -66,6 +74,8 @@
       "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system.",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0_optimized.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_3.0_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -76,6 +86,8 @@
       "description": "AI reflection enhanced with Aristios 3.0 Life Management framework - your mirror realm guide with advanced behavioral science and habit transformation systems.",
       "configPath": "assets/config/i_there_config.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0_optimized.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_3.0_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -86,6 +98,8 @@
       "description": "Time-traveling Roman gladiator coach powered by Aristos 3.0 framework! Ancient warrior wisdom meets cutting-edge behavioral science for epic life transformation! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_3.0_optimized.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_3.0_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -95,7 +109,9 @@
       "displayName": "Aristios 4.2",
       "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system - latest version with enhanced features.",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -105,7 +121,9 @@
       "displayName": "I-There 4.2",
       "description": "AI reflection enhanced with Aristos 4.2 Life Management framework - your mirror realm guide with the most advanced behavioral science, real-time habit monitoring, and intelligent data insights.",
       "configPath": "assets/config/i_there_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -115,7 +133,9 @@
       "displayName": "Sergeant Oracle 4.2",
       "description": "Time-traveling Roman gladiator coach powered by Aristos 4.2 framework! Ancient warrior wisdom meets the most cutting-edge behavioral science and real-time habit monitoring for epic life transformation! 💪🏛️⚡📊✨",
       "configPath": "assets/config/sergeant_oracle_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],
       "audioFormatting": {
         "enabled": true
       }
@@ -125,7 +145,9 @@
       "displayName": "Arya 4.2",
       "description": "Empowering female Life Management Coach combining Oracle 4.2 framework with feminine wisdom, emotional intelligence, and holistic approach to behavioral change and personal transformation.",
       "configPath": "assets/config/arya_life_coach_config.json",
-      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],
       "audioFormatting": {
         "enabled": true
       }

@@ -136,36 +136,231 @@ class CharacterConfigManager {
     return oracleConfigPath != null;
   }
 
-  /// Load MCP instructions configuration (FT-130)
+  /// Get MCP config paths for current persona (FT-143 Base + Extensions)
+  Future<Map<String, dynamic>> getMcpConfigPaths() async {
+    try {
+      final String jsonString =
+          await rootBundle.loadString('assets/config/personas_config.json');
+      final Map<String, dynamic> config = json.decode(jsonString);
+      final Map<String, dynamic> personas = config['personas'] ?? {};
+
+      if (personas.containsKey(_activePersonaKey)) {
+        final persona = personas[_activePersonaKey] as Map<String, dynamic>?;
+
+        return {
+          'baseConfig': persona?['mcpBaseConfig'] as String?,
+          'extensions': persona?['mcpExtensions'] as List<dynamic>? ?? [],
+          'legacyConfig': persona?['mcpInstructionsConfig']
+              as String?, // Backward compatibility
+        };
+      }
+    } catch (e) {
+      print('Error loading MCP config paths: $e');
+    }
+    return {
+      'baseConfig': null,
+      'extensions': <String>[],
+      'legacyConfig': null,
+    };
+  }
+
+  /// Load persona-specific MCP instructions configuration (FT-143)
   Future<Map<String, dynamic>?> loadMcpInstructions() async {
     try {
-      // Check if current persona is Oracle-enabled
-      if (!await isOracleEnabled()) {
-        return null; // MCP instructions only for Oracle personas
+      // Get persona-specific MCP config paths
+      final configPaths = await getMcpConfigPaths();
+
+      // Check for legacy config first (backward compatibility)
+      if (configPaths['legacyConfig'] != null) {
+        print('🔄 Loading legacy MCP config for persona: $_activePersonaKey');
+        return await _loadLegacyMcpConfig(
+            configPaths['legacyConfig'] as String);
       }
 
-      // Load MCP configuration
-      final String jsonString = await rootBundle
-          .loadString('assets/config/mcp_instructions_config.json');
-      final Map<String, dynamic> mcpConfig = json.decode(jsonString);
+      // Load Base + Extensions architecture
+      final baseConfigPath = configPaths['baseConfig'] as String?;
+      final extensions = configPaths['extensions'] as List<dynamic>;
 
-      // Check if MCP is enabled in config
-      if (mcpConfig['enabled'] != true) {
+      if (baseConfigPath == null) {
+        print('No base MCP config for persona: $_activePersonaKey');
         return null;
       }
 
-      // Validate application rules
-      final Map<String, dynamic> appRules =
-          mcpConfig['application_rules'] ?? {};
-      if (appRules['oracle_personas_only'] == true &&
-          !await isOracleEnabled()) {
-        return null; // Only apply to Oracle personas
+      // Load base configuration
+      print('📄 Loading base MCP config: $baseConfigPath');
+      final String baseJsonString = await rootBundle.loadString(baseConfigPath);
+      final Map<String, dynamic> baseMcpConfig = json.decode(baseJsonString);
+
+      // Check if base MCP is enabled
+      if (baseMcpConfig['enabled'] != true) {
+        print('Base MCP disabled in config: $baseConfigPath');
+        return null;
       }
 
+      // Merge extensions if any
+      if (extensions.isNotEmpty) {
+        print('🔧 Loading ${extensions.length} MCP extensions...');
+        for (final extensionPath in extensions) {
+          await _mergeExtension(baseMcpConfig, extensionPath as String);
+        }
+      }
+
+      // Validate Oracle version compatibility if applicable
+      await _validateMergedOracleCompatibility(baseMcpConfig);
+
+      print('✅ Loaded Base + Extensions MCP config for: $_activePersonaKey');
+      return baseMcpConfig;
+    } catch (e) {
+      print('Error loading Base + Extensions MCP instructions: $e');
+      return null;
+    }
+  }
+
+  /// Validate Oracle version compatibility between MCP config and Oracle data (FT-143)
+  Future<void> _validateOracleVersionCompatibility(
+      Map<String, dynamic> mcpConfig) async {
+    final mcpOracleVersion = mcpConfig['oracle_version'] as String?;
+
+    if (mcpOracleVersion != null) {
+      final oracleConfigPath = await getOracleConfigPath();
+      if (oracleConfigPath != null) {
+        // Extract Oracle version from path (e.g., "oracle_prompt_4.2.md" → "4.2")
+        final oracleVersionMatch =
+            RegExp(r'oracle_prompt_(\d+\.\d+)').firstMatch(oracleConfigPath);
+        final actualOracleVersion = oracleVersionMatch?.group(1);
+
+        if (actualOracleVersion != mcpOracleVersion) {
+          throw Exception(
+              'Oracle version mismatch: MCP config expects $mcpOracleVersion, but Oracle data is $actualOracleVersion');
+        }
+
+        print('✅ Oracle version compatibility validated: $actualOracleVersion');
+      }
+    }
+  }
+
+  /// Get Oracle version for current persona (FT-143)
+  Future<String?> getOracleVersion() async {
+    final oracleConfigPath = await getOracleConfigPath();
+    if (oracleConfigPath != null) {
+      final versionMatch =
+          RegExp(r'oracle_prompt_(\d+\.\d+)').firstMatch(oracleConfigPath);
+      return versionMatch?.group(1);
+    }
+    return null;
+  }
+
+  /// Load legacy MCP config (backward compatibility)
+  Future<Map<String, dynamic>?> _loadLegacyMcpConfig(String configPath) async {
+    try {
+      final String jsonString = await rootBundle.loadString(configPath);
+      final Map<String, dynamic> mcpConfig = json.decode(jsonString);
+
+      if (mcpConfig['enabled'] != true) {
+        print('Legacy MCP disabled in config: $configPath');
+        return null;
+      }
+
+      await _validateOracleVersionCompatibility(mcpConfig);
+      print('✅ Loaded legacy MCP config: $configPath');
       return mcpConfig;
     } catch (e) {
-      print('Error loading MCP instructions: $e');
+      print('Error loading legacy MCP config: $e');
       return null;
+    }
+  }
+
+  /// Merge extension into base MCP config
+  Future<void> _mergeExtension(
+      Map<String, dynamic> baseConfig, String extensionPath) async {
+    try {
+      print('   🔧 Merging extension: $extensionPath');
+
+      final String extensionJsonString =
+          await rootBundle.loadString(extensionPath);
+      final Map<String, dynamic> extension = json.decode(extensionJsonString);
+
+      // Validate extension format
+      if (extension['extends'] != 'mcp_base_config.json') {
+        throw Exception(
+            'Extension $extensionPath does not extend mcp_base_config.json');
+      }
+
+      // Merge Oracle capabilities
+      if (extension.containsKey('oracle_capabilities')) {
+        baseConfig['oracle_capabilities'] = extension['oracle_capabilities'];
+      }
+
+      // Merge additional instructions
+      if (extension.containsKey('additional_instructions')) {
+        final additionalInstructions =
+            extension['additional_instructions'] as Map<String, dynamic>;
+        final baseInstructions =
+            baseConfig['instructions'] as Map<String, dynamic>;
+
+        for (final entry in additionalInstructions.entries) {
+          baseInstructions[entry.key] = entry.value;
+        }
+      }
+
+      // Merge additional functions
+      if (extension.containsKey('additional_functions')) {
+        final additionalFunctions =
+            extension['additional_functions'] as List<dynamic>;
+        final systemFunctions = baseConfig['instructions']['system_functions']
+            as Map<String, dynamic>;
+        final availableFunctions =
+            systemFunctions['available_functions'] as List<dynamic>;
+
+        availableFunctions.addAll(additionalFunctions);
+      }
+
+      // Add extension metadata
+      baseConfig['loaded_extensions'] =
+          (baseConfig['loaded_extensions'] as List<dynamic>? ?? [])
+            ..add({
+              'path': extensionPath,
+              'version': extension['version'],
+              'type': extension['type'],
+            });
+
+      print('   ✅ Extension merged successfully');
+    } catch (e) {
+      print('   ❌ Failed to merge extension $extensionPath: $e');
+      throw e;
+    }
+  }
+
+  /// Validate Oracle compatibility for merged config
+  Future<void> _validateMergedOracleCompatibility(
+      Map<String, dynamic> mergedConfig) async {
+    final oracleCapabilities =
+        mergedConfig['oracle_capabilities'] as Map<String, dynamic>?;
+
+    if (oracleCapabilities != null) {
+      final oracleConfigPath = await getOracleConfigPath();
+      if (oracleConfigPath != null) {
+        // Extract Oracle version from extension metadata
+        final loadedExtensions =
+            mergedConfig['loaded_extensions'] as List<dynamic>? ?? [];
+        if (loadedExtensions.isNotEmpty) {
+          final extensionVersion = loadedExtensions.first['version'] as String?;
+
+          // Extract Oracle version from path
+          final oracleVersionMatch =
+              RegExp(r'oracle_prompt_(\d+\.\d+)').firstMatch(oracleConfigPath);
+          final actualOracleVersion = oracleVersionMatch?.group(1);
+
+          if (extensionVersion != null &&
+              actualOracleVersion != extensionVersion) {
+            throw Exception(
+                'Oracle version mismatch: Extension expects $extensionVersion, but Oracle data is $actualOracleVersion');
+          }
+
+          print(
+              '✅ Oracle version compatibility validated: $actualOracleVersion');
+        }
+      }
     }
   }
 

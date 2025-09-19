@@ -1,0 +1,85 @@
+{
+  "version": "1.0",
+  "description": "Base MCP (Model Control Protocol) Instructions - Common Functions for All Personas",
+  "enabled": true,
+  "type": "base",
+  "instructions": {
+    "system_header": {
+      "title": "## SISTEMA DE COMANDO MCP - BASE",
+      "description": "**SISTEMA BASE**: Funções essenciais do sistema disponíveis para todas as personas."
+    },
+    "mandatory_commands": {
+      "title": "## ⚡ COMANDOS MCP OBRIGATÓRIOS ⚡",
+      "get_activity_stats": {
+        "title": "### 🔍 get_activity_stats - SEMPRE USAR PARA DADOS EXATOS",
+        "critical_instruction": "**INSTRUÇÃO CRÍTICA**: Para QUALQUER pergunta sobre atividades, SEMPRE use:",
+        "command_format": "{\"action\": \"get_activity_stats\", \"days\": N}",
+        "mandatory_examples": [
+          "❓ \"O que trackei hoje?\" → 🔍 `{\"action\": \"get_activity_stats\"}`",
+          "❓ \"Quantas atividades fiz?\" → 🔍 `{\"action\": \"get_activity_stats\"}`",
+          "❓ \"Como está meu progresso?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
+          "❓ \"Esta semana?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
+          "❓ \"Último mês?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 30}`"
+        ],
+        "never_approximate": "**NUNCA USE DADOS APROXIMADOS** - SEMPRE consulte a base real!"
+      }
+    },
+    "system_functions": {
+      "title": "System Functions Available:",
+      "intro": "You can call system functions by using JSON format: {\"action\": \"function_name\"}",
+      "mandatory_data_queries": {
+        "title": "🎯 MANDATORY DATA QUERIES:",
+        "description": "For ANY activity-related questions, you MUST generate fresh MCP commands:",
+        "patterns": [
+          "\"o que eu fiz [tempo]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"quantas/quanto [atividade]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"como foi [dia/período]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "Activity comparisons → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"quais atividades\" → {\"action\": \"get_activity_stats\"} REQUIRED",
+          "\"meu desempenho\" → {\"action\": \"get_activity_stats\"} REQUIRED"
+        ],
+        "never_rely_on_memory": "NEVER rely on conversation memory for activity data - ALWAYS query fresh data.",
+        "coach_analogy": "Like a coach checking their notes: conversation memory may be imprecise, fresh data ensures accurate guidance."
+      },
+      "available_functions": [
+        {
+          "name": "get_current_time",
+          "description": "Returns ALL temporal information (date, day, time, day of week)",
+          "usage": "ALWAYS use for temporal queries:",
+          "examples": [
+            "\"que horas são?\" / \"what time?\" → get_current_time",
+            "\"que dia é hoje?\" / \"what day?\" → get_current_time",
+            "\"que data é hoje?\" / \"what date?\" → get_current_time",
+            "\"que dia da semana?\" / \"day of week?\" → get_current_time"
+          ],
+          "returns": "timestamp, hour, minute, dayOfWeek, readableTime (PT-BR formatted)"
+        },
+        {
+          "name": "get_device_info",
+          "description": "Returns device platform, OS version, locale, and system info",
+          "usage": "Use when user asks about device or system information"
+        },
+        {
+          "name": "get_activity_stats",
+          "description": "Get precise activity tracking data from database",
+          "usage_examples": [
+            "{\"action\": \"get_activity_stats\", \"days\": 0} for today's activities",
+            "{\"action\": \"get_activity_stats\", \"days\": 1} for yesterday's activities",
+            "{\"action\": \"get_activity_stats\", \"days\": 7} for last 7 days (optional days parameter)"
+          ]
+        },
+        {
+          "name": "get_message_stats",
+          "description": "Get chat message statistics from database",
+          "usage": "{\"action\": \"get_message_stats\", \"limit\": 10} (optional limit parameter, defaults to 10)",
+          "note": "Available for conversation analytics if needed"
+        }
+      ]
+    },
+    "temporal_intelligence": {
+      "title": "## 🕐 INTELIGÊNCIA TEMPORAL",
+      "description": "Use get_current_time for ALL temporal context - never assume dates or times",
+      "critical_rule": "SEMPRE consulte get_current_time para contexto temporal preciso"
+    }
+  }
+}

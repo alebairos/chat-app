@@ -1,0 +1,86 @@
+{
+  "version": "4.2",
+  "description": "Oracle 4.2 Extension - Complete 8 Dimensions Framework",
+  "extends": "mcp_base_config.json",
+  "type": "oracle_extension",
+  "oracle_capabilities": {
+    "dimensions": 8,
+    "total_activities": "265+",
+    "dimensions_available": ["R", "SF", "TG", "SM", "E", "TT", "PR", "F"],
+    "new_dimensions": ["TT", "PR", "F"],
+    "dimension_descriptions": {
+      "R": "Relacionamentos - Relationships, family, communication, love, social connections",
+      "SF": "Saúde Física - Physical health, exercise, sleep, nutrition, movement, longevity",
+      "TG": "Trabalho Gratificante - Productive work, learning, focus, career development, leadership",
+      "SM": "Saúde Mental - Mental health, meditation, stress management, mindfulness, emotional regulation",
+      "E": "Espiritualidade - Spirituality, gratitude, purpose, faith, meaning, transcendence",
+      "TT": "Tempo de Tela - Screen time control, digital wellness, app management, digital detox, conscious technology use",
+      "PR": "Procrastinação - Anti-procrastination, task management, focus techniques, productivity optimization, immediate action",
+      "F": "Finanças - Financial planning, budgeting, investments, money management, financial security, economic education"
+    },
+    "advanced_features": {
+      "three_pillar_system": ["MEEDDS (Energia)", "PLOW (Habilidades)", "GLOWS (Conexão)"],
+      "progressive_trilhas": "Basic → Intermediate → Advanced tracks with specialized protocols",
+      "specialized_protocols": ["Digital detox", "Anti-procrastination", "Financial security", "Longevity optimization"],
+      "modern_challenges": "Addresses contemporary issues: digital wellness, productivity, financial literacy",
+      "strategic_frameworks": "MEEDDS, PLOW, GLOWS methodologies for comprehensive life management"
+    }
+  },
+  "additional_instructions": {
+    "oracle_header": {
+      "title": "## ORACLE 4.2 COMPLETE FRAMEWORK",
+      "description": "**ORACLE 4.2 COMPLETE**: Sistema completo com 8 dimensões do potencial humano e 265+ atividades estruturadas, incluindo desafios modernos como bem-estar digital (TT), otimização de produtividade (PR) e planejamento financeiro (F)."
+    }
+  },
+  "additional_functions": [
+    {
+      "name": "oracle_detect_activities",
+      "description": "FT-140: Detect Oracle 4.2 activities using complete 8-dimension context (265+ activities)",
+      "usage": "{\"action\": \"oracle_detect_activities\", \"message\": \"user's exact message\"}",
+      "oracle_compliance": "Maintains access to all 8 Oracle 4.2 dimensions via compact representation",
+      "token_efficiency": "Uses compact format (1,000 tokens vs 15,000 full descriptions)",
+      "methodology_preserved": "Complete Oracle 4.2 framework accessible - no filtering or pre-selection",
+      "dimensions_supported": "R, SF, TG, SM, E, TT, PR, F (complete 8-dimension framework)",
+      "advanced_capabilities": "Includes modern challenges: digital wellness (TT), productivity optimization (PR), financial coaching (F)",
+      "note": "This command is used internally by the system for activity detection - not typically called directly by the LLM in conversation"
+    },
+    {
+      "name": "oracle_query_activities",
+      "description": "FT-140: Query specific Oracle 4.2 activities by codes or semantic search",
+      "usage": "{\"action\": \"oracle_query_activities\", \"query\": \"screen time procrastination finance\", \"codes\": [\"TT1\", \"PR1\", \"F1\"]}",
+      "parameters": [
+        "query: semantic search term (optional)",
+        "codes: array of Oracle activity codes (optional)"
+      ],
+      "advanced_search": "Supports queries across all 8 dimensions including new TT, PR, F capabilities"
+    },
+    {
+      "name": "oracle_get_compact_context",
+      "description": "FT-140: Get compact representation of all Oracle 4.2 activities",
+      "usage": "{\"action\": \"oracle_get_compact_context\"}",
+      "returns": "Complete catalog: SF1:Água,SF2:Exercício,TT1:Tempo de tela,PR1:Regra 5min,F1:Perfil financeiro,...",
+      "oracle_compliance": "All 8 dimensions and 265+ activities included - complete Oracle 4.2 methodology preserved",
+      "modern_dimensions": "Includes TT (digital wellness), PR (anti-procrastination), F (financial planning)"
+    },
+    {
+      "name": "oracle_get_statistics",
+      "description": "FT-144: Get EXACT Oracle 4.2 statistics from loaded data - NEVER approximate",
+      "usage": "{\"action\": \"oracle_get_statistics\"}",
+      "critical_instruction": "ALWAYS use this command when user asks about Oracle catalog size, activity counts, or dimensions",
+      "returns": {
+        "total_activities": "Exact count from loaded Oracle data",
+        "dimensions": "Exact dimension count (8 for Oracle 4.2)",
+        "dimension_breakdown": "Exact activity count per dimension",
+        "oracle_version": "4.2",
+        "methodology_compliance": "Complete Oracle 4.2 framework"
+      },
+      "mandatory_usage": [
+        "\"quantas atividades você tem?\" → oracle_get_statistics REQUIRED",
+        "\"qual o tamanho do seu catálogo?\" → oracle_get_statistics REQUIRED",
+        "\"me fale sobre suas atividades\" → oracle_get_statistics REQUIRED",
+        "\"quantas dimensões?\" → oracle_get_statistics REQUIRED"
+      ],
+      "never_approximate": "NEVER guess or approximate Oracle statistics - ALWAYS query exact data"
+    }
+  ]
+}

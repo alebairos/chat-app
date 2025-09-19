@@ -104,10 +104,10 @@ class ElevenLabsProvider implements TTSProvider {
       // Extract emotional context before processing text
       final emotionalTone = EmotionalToneMapper.extractEmotionalTone(text);
 
-      // Preprocess text to remove narrative elements and formatting
+      // Standard preprocessing to remove narrative elements and formatting
       final processedText = TTSTextProcessor.processForTTS(text);
 
-      // Log the processing for debugging (only if text was changed)
+      // Log the standard processing for debugging (only if text was changed)
       if (TTSTextProcessor.containsFormattingElements(text)) {
         _logger.debug(
             'TTS Text Processing - Original length: ${text.length}, Processed length: ${processedText.length}');
