@@ -6,6 +6,7 @@ import 'screens/stats_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/onboarding/onboarding_flow.dart';
 import 'services/onboarding_manager.dart';
+import 'services/oracle_static_cache.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
@@ -35,6 +36,14 @@ Future<void> main() async {
   final configLoader = ConfigLoader();
   await configLoader.initialize();
   logger.info('✅ ConfigLoader and CharacterConfigManager initialized');
+
+  // FT-140: Initialize Oracle static cache at app startup
+  try {
+    await OracleStaticCache.initializeAtStartup();
+    logger.info('✅ Oracle static cache initialized successfully');
+  } catch (e) {
+    logger.warning('Failed to initialize Oracle static cache: $e');
+  }
 
   // Note: LifePlan service initialization removed
 

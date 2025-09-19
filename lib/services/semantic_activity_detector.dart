@@ -57,7 +57,8 @@ class SemanticActivityDetector {
   }) async {
     try {
       Logger().debug('FT-140: Starting optimized activity detection');
-      Logger().debug('FT-140: Using ${selectedActivities.length} pre-selected activities');
+      Logger().debug(
+          'FT-140: Using ${selectedActivities.length} pre-selected activities');
 
       final prompt = _buildOptimizedDetectionPrompt(
         userMessage: userMessage,
@@ -68,7 +69,8 @@ class SemanticActivityDetector {
       final claudeAnalysis = await _callClaude(prompt);
       final activities = _parseDetectionResults(claudeAnalysis);
 
-      Logger().info('FT-140: ✅ Detected ${activities.length} activities with optimized context');
+      Logger().info(
+          'FT-140: ✅ Detected ${activities.length} activities with optimized context');
       return activities;
     } catch (e) {
       Logger().debug('FT-140: Optimized detection failed silently: $e');
@@ -230,9 +232,10 @@ Return empty array if no completed activities detected.
   /// FT-140: Format selected activities for optimized prompt
   ///
   /// Groups activities by dimension for better organization
-  static String _formatSelectedActivities(List<OracleActivity> selectedActivities) {
+  static String _formatSelectedActivities(
+      List<OracleActivity> selectedActivities) {
     final buffer = StringBuffer();
-    
+
     // Group activities by dimension
     final dimensionGroups = <String, List<OracleActivity>>{};
     for (final activity in selectedActivities) {
@@ -243,8 +246,9 @@ Return empty array if no completed activities detected.
     for (final entry in dimensionGroups.entries) {
       final dimensionCode = entry.key;
       final activities = entry.value;
-      
-      buffer.writeln('**${_getDimensionName(dimensionCode)} ($dimensionCode)**:');
+
+      buffer
+          .writeln('**${_getDimensionName(dimensionCode)} ($dimensionCode)**:');
       for (final activity in activities) {
         buffer.writeln('- ${activity.code}: ${activity.description}');
       }
@@ -258,7 +262,7 @@ Return empty array if no completed activities detected.
   static String _getDimensionName(String code) {
     const dimensionNames = {
       'SF': 'Saúde Física',
-      'R': 'Relacionamentos', 
+      'R': 'Relacionamentos',
       'E': 'Espiritualidade',
       'SM': 'Saúde Mental',
       'TG': 'Trabalho Gratificante',

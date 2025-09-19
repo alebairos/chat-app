@@ -4,10 +4,13 @@
 **Priority:** High  
 **Category:** Architecture Refactoring  
 **Effort:** 2 days  
+**Status:** Canonical specification (supersedes archived FT-136)
 
 ## OVERVIEW
 
 Consolidate all voice configuration into the `audioFormatting` section of `personas_config.json`, creating a unified, maintainable system that eliminates scattered voice settings and enables persona-specific voice customization with language optimization.
+
+> **Note:** This specification consolidates and supersedes FT-136, which has been archived due to redundancy. FT-137 provides the comprehensive implementation approach for voice configuration consolidation.
 
 ## PROBLEM STATEMENT
 

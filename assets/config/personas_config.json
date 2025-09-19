@@ -121,7 +121,7 @@
       }
     },
     "aryaWithOracle42": {
-      "enabled": true,
+      "enabled": false,
       "displayName": "Arya 4.2",
       "description": "Empowering female Life Management Coach combining Oracle 4.2 framework with feminine wisdom, emotional intelligence, and holistic approach to behavioral change and personal transformation.",
       "configPath": "assets/config/arya_life_coach_config.json",

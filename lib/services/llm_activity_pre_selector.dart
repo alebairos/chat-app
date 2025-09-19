@@ -17,7 +17,8 @@ import 'semantic_activity_detector.dart';
 /// - Semantic caching for repeated queries
 class LLMActivityPreSelector {
   static const String _claudeApiUrl = 'https://api.anthropic.com/v1/messages';
-  static const double _selectionTemperature = 0.2; // Low temperature for consistent selection
+  static const double _selectionTemperature =
+      0.2; // Low temperature for consistent selection
 
   /// Pre-select most relevant Oracle activities for a user message
   ///
@@ -32,19 +33,23 @@ class LLMActivityPreSelector {
     int maxActivities = 25,
   }) async {
     try {
-      Logger().debug('FT-140: Starting LLM activity pre-selection for: "$userMessage"');
+      Logger().debug(
+          'FT-140: Starting LLM activity pre-selection for: "$userMessage"');
       Logger().debug('FT-140: Target selection: $maxActivities activities');
 
       // Get Oracle context for current persona
       final oracleContext = await OracleContextManager.getForCurrentPersona();
       if (oracleContext == null) {
-        Logger().debug('FT-140: No Oracle context available - returning empty selection');
+        Logger().debug(
+            'FT-140: No Oracle context available - returning empty selection');
         return [];
       }
 
       // Create ultra-compact activity representation
-      final compactActivities = _createCompactActivityRepresentation(oracleContext);
-      Logger().debug('FT-140: Compact representation: ${compactActivities.length} chars vs ${_estimateFullContextSize(oracleContext)} chars (${((1 - compactActivities.length / _estimateFullContextSize(oracleContext)) * 100).toInt()}% reduction)');
+      final compactActivities =
+          _createCompactActivityRepresentation(oracleContext);
+      Logger().debug(
+          'FT-140: Compact representation: ${compactActivities.length} chars vs ${_estimateFullContextSize(oracleContext)} chars (${((1 - compactActivities.length / _estimateFullContextSize(oracleContext)) * 100).toInt()}% reduction)');
 
       // Build selection prompt
       final selectionPrompt = _buildSelectionPrompt(
@@ -57,11 +62,13 @@ class LLMActivityPreSelector {
       final claudeResponse = await _callClaude(selectionPrompt);
       final selectedCodes = _parseSelectedCodes(claudeResponse);
 
-      Logger().info('FT-140: ✅ Selected ${selectedCodes.length} activities: ${selectedCodes.take(10).join(", ")}${selectedCodes.length > 10 ? "..." : ""}');
-      
+      Logger().info(
+          'FT-140: ✅ Selected ${selectedCodes.length} activities: ${selectedCodes.take(10).join(", ")}${selectedCodes.length > 10 ? "..." : ""}');
+
       return selectedCodes;
     } catch (e) {
-      Logger().debug('FT-140: Activity pre-selection failed, using fallback: $e');
+      Logger()
+          .debug('FT-140: Activity pre-selection failed, using fallback: $e');
       return _getFallbackSelection(maxActivities);
     }
   }
@@ -70,16 +77,17 @@ class LLMActivityPreSelector {
   ///
   /// Format: SF1:Água|R1:Escuta|E1:Celebração|...
   /// This reduces token usage by ~70% compared to full descriptions
-  static String _createCompactActivityRepresentation(OracleContext oracleContext) {
+  static String _createCompactActivityRepresentation(
+      OracleContext oracleContext) {
     final activities = <String>[];
-    
+
     for (final dimension in oracleContext.dimensions.values) {
       for (final activity in dimension.activities) {
         // Ultra-compact format: CODE:NAME
         activities.add('${activity.code}:${activity.description}');
       }
     }
-    
+
     return activities.join('|');
   }
 
@@ -131,23 +139,26 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
   static List<String> _parseSelectedCodes(String response) {
     // Extract codes from response (handle various formats)
     final cleanResponse = response.trim().replaceAll(RegExp(r'[^\w,]'), '');
-    
+
     if (cleanResponse.isEmpty) return [];
-    
+
     final codes = cleanResponse
         .split(',')
         .map((code) => code.trim().toUpperCase())
-        .where((code) => code.isNotEmpty && RegExp(r'^[A-Z]+\d+$').hasMatch(code))
+        .where(
+            (code) => code.isNotEmpty && RegExp(r'^[A-Z]+\d+$').hasMatch(code))
         .toList();
-    
-    Logger().debug('FT-140: Parsed ${codes.length} valid activity codes from response');
+
+    Logger().debug(
+        'FT-140: Parsed ${codes.length} valid activity codes from response');
     return codes;
   }
 
   /// Make Claude API call for activity selection
   static Future<String> _callClaude(String prompt) async {
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
-    final model = (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
+    final model =
+        (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
 
     if (apiKey.isEmpty) {
       throw Exception('Claude API key not configured');
@@ -174,7 +185,8 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Claude API error: ${response.statusCode} - ${response.body}');
+      throw Exception(
+          'Claude API error: ${response.statusCode} - ${response.body}');
     }
 
     final data = jsonDecode(response.body);
@@ -186,17 +198,19 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
   /// Returns a balanced selection across all dimensions
   static Future<List<String>> _getFallbackSelection(int maxActivities) async {
     Logger().debug('FT-140: Using fallback activity selection');
-    
+
     final oracleContext = await OracleContextManager.getForCurrentPersona();
     if (oracleContext == null) return [];
 
     final fallbackCodes = <String>[];
-    final activitiesPerDimension = (maxActivities / oracleContext.dimensions.length).ceil();
+    final activitiesPerDimension =
+        (maxActivities / oracleContext.dimensions.length).ceil();
 
     for (final dimension in oracleContext.dimensions.values) {
-      final dimensionActivities = dimension.activities.take(activitiesPerDimension);
+      final dimensionActivities =
+          dimension.activities.take(activitiesPerDimension);
       fallbackCodes.addAll(dimensionActivities.map((a) => a.code));
-      
+
       if (fallbackCodes.length >= maxActivities) break;
     }
 
@@ -209,7 +223,9 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
     for (final dimension in oracleContext.dimensions.values) {
       totalChars += dimension.name.length + 10; // Dimension header
       for (final activity in dimension.activities) {
-        totalChars += activity.code.length + activity.description.length + 5; // Activity line
+        totalChars += activity.code.length +
+            activity.description.length +
+            5; // Activity line
       }
     }
     return totalChars;
@@ -218,12 +234,13 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
   /// Get activities by codes from Oracle context
   ///
   /// Helper method to convert selected codes back to full activity objects
-  static Future<List<OracleActivity>> getActivitiesByCodes(List<String> codes) async {
+  static Future<List<OracleActivity>> getActivitiesByCodes(
+      List<String> codes) async {
     final oracleContext = await OracleContextManager.getForCurrentPersona();
     if (oracleContext == null) return [];
 
     final selectedActivities = <OracleActivity>[];
-    
+
     for (final code in codes) {
       for (final dimension in oracleContext.dimensions.values) {
         try {
@@ -239,7 +256,8 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
       }
     }
 
-    Logger().debug('FT-140: Retrieved ${selectedActivities.length} activities from ${codes.length} codes');
+    Logger().debug(
+        'FT-140: Retrieved ${selectedActivities.length} activities from ${codes.length} codes');
     return selectedActivities;
   }
 
@@ -247,7 +265,7 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
   static Future<String> getAllCompactCodes() async {
     final oracleContext = await OracleContextManager.getForCurrentPersona();
     if (oracleContext == null) return '';
-    
+
     return _createCompactActivityRepresentation(oracleContext);
   }
 
@@ -258,15 +276,17 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
       return {'error': 'No Oracle context available'};
     }
 
-    final compactSize = _createCompactActivityRepresentation(oracleContext).length;
+    final compactSize =
+        _createCompactActivityRepresentation(oracleContext).length;
     final fullSize = _estimateFullContextSize(oracleContext);
-    
+
     return {
       'totalActivities': oracleContext.totalActivities,
       'compactRepresentationSize': compactSize,
       'fullContextSize': fullSize,
       'compressionRatio': ((1 - compactSize / fullSize) * 100).toInt(),
-      'estimatedTokenSavings': '${((fullSize - compactSize) / 4).toInt()} tokens', // Rough token estimate
+      'estimatedTokenSavings':
+          '${((fullSize - compactSize) / 4).toInt()} tokens', // Rough token estimate
     };
   }
 }

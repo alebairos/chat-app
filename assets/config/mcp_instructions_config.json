@@ -97,6 +97,31 @@
           "name": "get_message_stats",
           "description": "Get chat message statistics from database",
           "usage": "{\"action\": \"get_message_stats\", \"limit\": 10} (optional limit parameter, defaults to 10)"
+        },
+        {
+          "name": "oracle_detect_activities",
+          "description": "FT-140: Detect Oracle activities using complete 265-activity context",
+          "usage": "{\"action\": \"oracle_detect_activities\", \"message\": \"user's exact message\"}",
+          "oracle_compliance": "Maintains access to all 265 Oracle activities via compact representation",
+          "token_efficiency": "Uses compact format (1,000 tokens vs 15,000 full descriptions)",
+          "methodology_preserved": "Complete Oracle 4.2 framework accessible - no filtering or pre-selection",
+          "note": "This command is used internally by the system for activity detection - not typically called directly by the LLM in conversation"
+        },
+        {
+          "name": "oracle_query_activities",
+          "description": "FT-140: Query specific Oracle activities by codes or semantic search",
+          "usage": "{\"action\": \"oracle_query_activities\", \"query\": \"exercise water\", \"codes\": [\"SF1\", \"SF2\"]}",
+          "parameters": [
+            "query: semantic search term (optional)",
+            "codes: array of Oracle activity codes (optional)"
+          ]
+        },
+        {
+          "name": "oracle_get_compact_context",
+          "description": "FT-140: Get compact representation of all Oracle activities",
+          "usage": "{\"action\": \"oracle_get_compact_context\"}",
+          "returns": "Comma-separated list: SF1:Água,SF2:Exercício,R1:Escuta,...",
+          "oracle_compliance": "All 265 activities included - complete Oracle methodology preserved"
         }
       ]
     },
