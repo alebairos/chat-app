@@ -46,6 +46,36 @@ class SemanticActivityDetector {
     }
   }
 
+  /// FT-140: Optimized activity detection with pre-selected activities
+  ///
+  /// Uses LLM-selected relevant activities instead of all 265 activities
+  /// Reduces token usage from 6,000+ to 1,200-2,400 tokens
+  static Future<List<ActivityDetection>> analyzeWithSelectedContext({
+    required String userMessage,
+    required List<OracleActivity> selectedActivities,
+    required Map<String, dynamic> timeContext,
+  }) async {
+    try {
+      Logger().debug('FT-140: Starting optimized activity detection');
+      Logger().debug('FT-140: Using ${selectedActivities.length} pre-selected activities');
+
+      final prompt = _buildOptimizedDetectionPrompt(
+        userMessage: userMessage,
+        selectedActivities: selectedActivities,
+        timeContext: timeContext,
+      );
+
+      final claudeAnalysis = await _callClaude(prompt);
+      final activities = _parseDetectionResults(claudeAnalysis);
+
+      Logger().info('FT-140: ✅ Detected ${activities.length} activities with optimized context');
+      return activities;
+    } catch (e) {
+      Logger().debug('FT-140: Optimized detection failed silently: $e');
+      return []; // Graceful degradation - never break conversation flow
+    }
+  }
+
   /// Build intent-first detection prompt with enhanced semantic understanding
   /// FT-091: Intent classification before activity detection to eliminate false positives
   static String _buildDetectionPrompt({
@@ -122,6 +152,65 @@ Return empty array if no completed activities detected.
 ''';
   }
 
+  /// FT-140: Build optimized detection prompt with pre-selected activities
+  ///
+  /// Uses only the most relevant activities instead of all 265 activities
+  static String _buildOptimizedDetectionPrompt({
+    required String userMessage,
+    required List<OracleActivity> selectedActivities,
+    required Map<String, dynamic> timeContext,
+  }) {
+    return '''
+# SEMANTIC ACTIVITY DETECTION (OPTIMIZED)
+
+## Selected Oracle Activities
+${_formatSelectedActivities(selectedActivities)}
+
+## User Message Analysis
+**Time Context**: ${timeContext['readableTime'] ?? 'Unknown'}
+**User Message**: "$userMessage"
+
+## Step 1: Intent Classification (CRITICAL FIRST STEP)
+FT-091: Determine the user's primary intent before any activity detection.
+
+**REPORTING**: User is telling you about activities they completed
+- Examples: "acabei de beber água", "fiz exercício", "terminei o pomodoro"
+- Indicators: Past tense completion statements, direct activity claims
+- Action: Proceed to Step 2 for activity detection
+
+**ASKING**: User is requesting information about past activities
+- Examples: "o que fiz hoje?", "além de beber água?", "what did I do?"
+- Indicators: Questions, requests for data, information seeking
+- Action: Return {"detected_activities": []} - NO DETECTION
+
+**DISCUSSING**: User is talking about activities in general context
+- Examples: "gosto de beber água", "quero fazer exercício", "planning to work out"
+- Indicators: Preferences, future plans, general discussion
+- Action: Return {"detected_activities": []} - NO DETECTION
+
+## Step 2: Activity Detection (ONLY for REPORTING intent)
+If intent is REPORTING, detect completed activities using semantic understanding:
+- MATCH semantically: "malhar" = "exercitar" = "treinar" = "workout"
+- EXTRACT duration when mentioned
+- BE CONFIDENT: only return activities you're certain about
+- Focus on past completions with high confidence
+
+## Output Format (JSON only)
+{
+  "detected_activities": [
+    {
+      "oracle_code": "SF1",
+      "confidence": "high",
+      "user_description": "bebeu água",
+      "duration_minutes": 0
+    }
+  ]
+}
+
+Return empty array if no completed activities detected.
+''';
+  }
+
   /// Format Oracle activities for prompt (simplified)
   static String _formatOracleActivities(OracleContext oracleContext) {
     final buffer = StringBuffer();
@@ -136,6 +225,48 @@ Return empty array if no completed activities detected.
     }
 
     return buffer.toString();
+  }
+
+  /// FT-140: Format selected activities for optimized prompt
+  ///
+  /// Groups activities by dimension for better organization
+  static String _formatSelectedActivities(List<OracleActivity> selectedActivities) {
+    final buffer = StringBuffer();
+    
+    // Group activities by dimension
+    final dimensionGroups = <String, List<OracleActivity>>{};
+    for (final activity in selectedActivities) {
+      dimensionGroups.putIfAbsent(activity.dimension, () => []).add(activity);
+    }
+
+    // Format each dimension group
+    for (final entry in dimensionGroups.entries) {
+      final dimensionCode = entry.key;
+      final activities = entry.value;
+      
+      buffer.writeln('**${_getDimensionName(dimensionCode)} ($dimensionCode)**:');
+      for (final activity in activities) {
+        buffer.writeln('- ${activity.code}: ${activity.description}');
+      }
+      buffer.writeln();
+    }
+
+    return buffer.toString();
+  }
+
+  /// Helper to get dimension name from code
+  static String _getDimensionName(String code) {
+    const dimensionNames = {
+      'SF': 'Saúde Física',
+      'R': 'Relacionamentos', 
+      'E': 'Espiritualidade',
+      'SM': 'Saúde Mental',
+      'TG': 'Trabalho Gratificante',
+      'TT': 'Tempo de Tela',
+      'PR': 'Procrastinação',
+      'F': 'Finanças',
+    };
+    return dimensionNames[code] ?? code;
   }
 
   /// Make Claude API call with minimal configuration
