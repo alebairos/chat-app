@@ -241,15 +241,144 @@ static String _buildFocusedMetadataPrompt({
 - **Claude API**: Natural language understanding capabilities
 - **ActivityModel**: JSON metadata storage (existing)
 
+## UI Implementation Strategy
+
+### Phase 1: Smart Display (2 hours)
+**Goal**: Show rich metadata intelligence to users
+
+#### Smart Summary Generation
+```dart
+Widget _buildSmartSummary() {
+  final insights = MetadataInsightGenerator.generateSummary(
+    activity.metadataMap
+  );
+  return Text('💡 ${insights.join(' • ')}');
+}
+```
+
+#### Progressive Disclosure UI
+```
+🏃‍♂️ Cardio • 13:00
+💡 Peak HR 179 → Zone 2 • 1km • Sophisticated training
+▼ Show insights (4 dimensions)
+
+📊 Performance
+• Distance: 1km
+• Peak HR: 179 bpm (Zone 5)
+• Finish: Zone 2 (aerobic)
+
+🧠 Behavioral Pattern
+• Training sophistication detected
+• Intentional intensity management
+• Habit stacking: exercise + hydration
+```
+
+### Phase 2: Quick Tap Editing (3 hours)
+**Goal**: Direct manipulation of key metadata fields
+
+#### Tappable Metadata Fields
+```dart
+Widget _buildTappableField(String key, String value) {
+  return GestureDetector(
+    onTap: () => _showQuickEdit(key, value),
+    child: Chip(label: Text('$key: $value')),
+  );
+}
+```
+
+#### Quick Correction Modal
+```
+[Distance: 1km] ← tap
+  ↓
+┌─────────────────┐
+│ Quick correct:  │
+│ • 1.5km        │
+│ • 2km          │
+│ • 2.5km        │
+│ • Custom...    │
+│ 💬 Tell me more │
+└─────────────────┘
+```
+
+### Phase 3: Conversational Editing (4 hours)
+**Goal**: Natural language metadata corrections and enhancements
+
+#### Chat-Based Corrections
+```
+User: "Actually I ran 2.5km and was listening to music"
+AI: "Got it! Updated distance to 2.5km and added music context. 
+    That's a 25% increase from your usual - great progress!"
+```
+
+#### Intelligent Correction Parsing
+```dart
+class MetadataEditHandler {
+  static void handleUserInput(String input, ActivityModel activity) {
+    if (_isSimpleCorrection(input)) {
+      // "2km not 1km" -> Direct field update
+      _handleDirectCorrection(input, activity);
+    } else if (_isAddition(input)) {
+      // "add that I was tired" -> Contextual addition
+      _handleContextualAddition(input, activity);
+    } else {
+      // Complex change -> Full AI reprocessing
+      _handleIntelligentUpdate(input, activity);
+    }
+  }
+}
+```
+
+## Hybrid Editing Strategy
+
+### Design Philosophy: "Chat-First with Smart Shortcuts"
+
+#### **Quick Taps For**:
+- ✅ Simple corrections (distance, time, quantity)
+- ✅ Common values (predefined options)
+- ✅ Fast fixes (one-tap corrections)
+- ✅ Obvious errors (clear, simple changes)
+
+#### **Chat For**:
+- ✅ Complex additions ("I felt energized and motivated")
+- ✅ Context ("It was raining but I pushed through")
+- ✅ Relationships ("This was easier than last week")
+- ✅ New dimensions (adding entirely new aspects)
+
+### Implementation Complexity
+
+#### **Phase 1: Display (2 hours)**
+- **Easy**: Show metadata in expandable cards
+- **Medium**: Smart summary generation from JSON
+- **Easy**: Basic tap-to-expand functionality
+
+#### **Phase 2: Quick Taps (3 hours)**
+- **Medium**: Detect tappable metadata fields
+- **Medium**: Modal with quick correction options
+- **Easy**: Update JSON and save to database
+- **Medium**: UI state management for edits
+
+#### **Phase 3: Chat Integration (4 hours)**
+- **Hard**: Parse user corrections from chat
+- **Medium**: Identify which activity to modify
+- **Hard**: Merge conversational updates with existing metadata
+- **Medium**: Re-run metadata extraction with corrections
+
+### Total Implementation Effort: 9 hours
+- **MVP Display**: 2 hours (independently valuable)
+- **Quick Editing**: +3 hours (5 total)
+- **Chat Integration**: +4 hours (9 total)
+
 ## Future Enhancements
 
 - **Confidence Scoring**: Track extraction confidence over time
 - **Pattern Analytics**: Automated insight generation from metadata
 - **User Feedback Loop**: Learn from user corrections to improve extraction
 - **Cross-Activity Correlations**: Identify relationships between different activities
+- **Smart Suggestions**: AI-driven metadata enhancement recommendations
+- **Adaptive UI**: Learn user preferences for metadata display and editing
 
 ---
 
-**Key Innovation**: This enhancement transforms FT-149 from a basic data extractor into a **universal behavioral intelligence engine** that captures the human story behind every activity, regardless of the specific habit type.
+**Key Innovation**: This enhancement transforms FT-149 from a basic data extractor into a **universal behavioral intelligence engine** with rich, editable UI that captures and displays the human story behind every activity.
 
-**Philosophy**: "Extract the human story behind every activity" through universal principles rather than habit-specific rules.
+**Philosophy**: "Extract the human story behind every activity" through universal principles, then make it beautifully accessible and editable through hybrid interaction patterns.
