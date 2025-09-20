@@ -1033,6 +1033,7 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
       await _logActivitiesWithPreciseTime(
         activities: activities,
         timeContext: timeData,
+        userMessage: userMessage, // FT-149: Pass user message for metadata extraction
       );
 
       _logger.info(
@@ -1123,6 +1124,7 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   Future<void> _logActivitiesWithPreciseTime({
     required List<ActivityDetection> activities,
     required Map<String, dynamic> timeContext,
+    String? userMessage, // FT-149: For metadata extraction context
   }) async {
     try {
       _logger.debug(
@@ -1143,6 +1145,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
                   : 0.4,
           durationMinutes: activity.durationMinutes,
           notes: 'Detected via LLM pre-selection optimization',
+          // FT-149: Pass context for metadata extraction
+          userMessage: userMessage,
+          oracleActivityName: activity.activityName,
         );
       }
 
