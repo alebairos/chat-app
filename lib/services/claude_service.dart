@@ -551,6 +551,11 @@ class ClaudeService {
     return systemPrompt;
   }
 
+  /// FT-149: Public method for focused metadata extraction
+  Future<String> callClaudeWithPrompt(String prompt) async {
+    return await _callClaudeWithPrompt(prompt);
+  }
+
   /// Helper method to call Claude with a specific prompt
   Future<String> _callClaudeWithPrompt(String prompt) async {
     // FT-119: Track API call for rate limiting
