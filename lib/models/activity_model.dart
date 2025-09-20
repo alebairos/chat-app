@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:isar/isar.dart';
 
 part 'activity_model.g.dart';
@@ -30,6 +31,10 @@ class ActivityModel {
   late String timeOfDay; // "morning", "afternoon", "evening", "night"
   int? durationMinutes; // Optional duration
   String? notes; // Optional user notes
+
+  // FT-149: Metadata Intelligence fields
+  String? metadata; // JSON string of extracted metadata
+  String? metadataTypes; // JSON string of metadata type information
 
   // Metadata
   late DateTime createdAt;
@@ -107,6 +112,40 @@ class ActivityModel {
     }
 
     return buffer.toString();
+  }
+
+  // FT-149: Metadata helper methods
+  /// Check if activity has metadata
+  bool get hasMetadata => metadata != null && metadata!.isNotEmpty;
+
+  /// Get metadata as Map (with safe parsing)
+  Map<String, dynamic>? get metadataMap {
+    if (metadata == null) return null;
+    try {
+      final decoded = json.decode(metadata!);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      } else if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Set metadata from Map
+  set metadataMap(Map<String, dynamic>? value) {
+    if (value == null) {
+      metadata = null;
+    } else {
+      try {
+        final safeMap = Map<String, dynamic>.from(value);
+        metadata = json.encode(safeMap);
+      } catch (e) {
+        metadata = null;
+      }
+    }
   }
 
   @override
