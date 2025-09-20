@@ -1,6 +1,7 @@
 {
   "defaultPersona": "iThereWithOracle42",
   "audioFormattingConfig": "assets/config/audio_formatting_config.json",
+  "coreRulesConfig": "assets/config/core_behavioral_rules.json",
   "personas": {
     "ariLifeCoach": {
       "enabled": false,

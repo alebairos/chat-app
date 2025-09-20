@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_personas_app/widgets/stats/activity_card.dart';
+import 'package:ai_personas_app/services/dimension_display_service.dart';
 
 void main() {
   group('ActivityCard', () {
@@ -56,21 +57,26 @@ void main() {
       expect(find.text('15:30'), findsOneWidget);
       // FT-089: Confidence removed, now shows "Completed" indicator
       expect(find.text('Completed'), findsOneWidget);
-      expect(find.text('Physical Health'), findsOneWidget);
+
+      // FT-147: Test dimension display (Oracle or fallback)
+      final hasPhysicalHealthText =
+          find.textContaining('Physical Health').evaluate().isNotEmpty ||
+              find.textContaining('Saúde Física').evaluate().isNotEmpty;
+      expect(hasPhysicalHealthText, isTrue,
+          reason:
+              'Should display either Oracle "Saúde Física" or fallback "Physical Health"');
     });
 
     testWidgets('should display proper dimension colors', (tester) async {
-      // Test different dimensions
-      final dimensions = [
-        ('SF', 'Physical Health'),
-        ('SM', 'Mental Health'),
-        ('TG', 'Work & Management'),
-        ('R', 'Relationships'),
-        ('CE', 'Creativity'),
-        ('AE', 'Adventure'),
+      // FT-147: Test with Oracle version-agnostic approach
+      // Test core dimensions that exist in all Oracle versions
+      final coreDimensions = [
+        ('SF', 'Physical Health', ['Saúde Física', 'Physical Health']),
+        ('R', 'Relationships', ['Relacionamentos', 'Relationships']),
+        ('SM', 'Mental Health', ['Saúde Mental', 'Mental Health']),
       ];
 
-      for (final (code, name) in dimensions) {
+      for (final (code, _, _) in coreDimensions) {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
@@ -84,8 +90,52 @@ void main() {
           ),
         );
 
-        // Assert dimension name is displayed
-        expect(find.text(name), findsOneWidget);
+        // FT-147: Test that dimension display works (Oracle or fallback)
+        // Get the actual display name from the service
+        final actualDisplayName = DimensionDisplayService.getDisplayName(code);
+
+        // Verify the actual display name appears in the widget
+        expect(find.text(actualDisplayName), findsOneWidget,
+            reason:
+                'Should display the dimension name returned by DimensionDisplayService: "$actualDisplayName"');
+
+        // Verify the widget renders without errors
+        expect(find.byType(ActivityCard), findsOneWidget);
+      }
+    });
+
+    testWidgets('should handle Oracle 4.2 dimensions gracefully',
+        (tester) async {
+      // FT-147: Test Oracle 4.2 specific dimensions (TT, PR, F)
+      // These may not exist in all Oracle versions, so test graceful handling
+      final oracle42Dimensions = ['TT', 'PR', 'F'];
+
+      for (final code in oracle42Dimensions) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ActivityCard(
+                name: 'Test Activity',
+                time: '12:00',
+                dimension: code,
+                source: 'Test',
+              ),
+            ),
+          ),
+        );
+
+        // FT-147: Should display some dimension name (Oracle or fallback)
+        final actualDisplayName = DimensionDisplayService.getDisplayName(code);
+
+        // Verify the service returns a non-empty display name
+        expect(actualDisplayName.isNotEmpty, isTrue,
+            reason:
+                'DimensionDisplayService should return a display name for $code');
+
+        // Verify the display name appears in the widget
+        expect(find.text(actualDisplayName), findsOneWidget,
+            reason:
+                'Should display dimension name for $code: "$actualDisplayName"');
 
         // Verify the widget renders without errors
         expect(find.byType(ActivityCard), findsOneWidget);

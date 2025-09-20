@@ -50,6 +50,8 @@ Future<void> main() async {
   try {
     await DimensionDisplayService.initialize();
     logger.info('✅ DimensionDisplayService initialized successfully');
+    // FT-147: Log service state for debugging
+    DimensionDisplayService.logServiceState();
   } catch (e) {
     logger.warning('Failed to initialize DimensionDisplayService: $e');
   }

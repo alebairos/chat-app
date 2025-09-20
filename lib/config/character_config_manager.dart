@@ -536,6 +536,28 @@ class CharacterConfigManager {
   /// Load the system prompt for the active persona with configurable audio formatting
   Future<String> loadSystemPrompt() async {
     try {
+      // 0) FT-148: Load core behavioral rules (highest priority)
+      String coreRules = '';
+      try {
+        final String personasConfigString =
+            await rootBundle.loadString('assets/config/personas_config.json');
+        final Map<String, dynamic> personasConfig =
+            json.decode(personasConfigString);
+        final String? coreRulesPath = personasConfig['coreRulesConfig'] as String?;
+        
+        if (coreRulesPath != null) {
+          final String coreRulesString = await rootBundle.loadString(coreRulesPath);
+          final Map<String, dynamic> coreRulesConfig = json.decode(coreRulesString);
+          
+          if (coreRulesConfig['enabled'] == true) {
+            coreRules = buildCoreRulesText(coreRulesConfig);
+            print('✅ Core behavioral rules loaded for all personas');
+          }
+        }
+      } catch (coreRulesError) {
+        print('⚠️ Core behavioral rules not found or disabled: $coreRulesError');
+      }
+
       // 1) Always try to load Oracle prompt first
       final String? oracleConfigPath = await getOracleConfigPath();
       const String defaultOraclePath =
@@ -627,12 +649,21 @@ class CharacterConfigManager {
         print('⚠️ MCP instructions not loaded: $mcpError');
       }
 
-      // 5) Compose: MCP (if Oracle) + Oracle (if loaded) + Persona prompt + Audio Instructions (if enabled)
+      // 5) Compose: Core Rules + MCP (if Oracle) + Oracle (if loaded) + Persona prompt + Audio Instructions (if enabled)
       String finalPrompt = '';
 
-      // Add MCP instructions first (before Oracle content as per FT-130 spec)
+      // Add core behavioral rules first (highest priority - FT-148)
+      if (coreRules.isNotEmpty) {
+        finalPrompt = coreRules.trim();
+      }
+
+      // Add MCP instructions (before Oracle content as per FT-130 spec)
       if (mcpInstructions.isNotEmpty) {
-        finalPrompt = mcpInstructions.trim();
+        if (finalPrompt.isNotEmpty) {
+          finalPrompt = '$finalPrompt\n\n${mcpInstructions.trim()}';
+        } else {
+          finalPrompt = mcpInstructions.trim();
+        }
       }
 
       if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
@@ -733,6 +764,48 @@ class CharacterConfigManager {
           'description': 'Default persona'
         }
       ];
+    }
+  }
+
+  /// FT-148: Build core behavioral rules text from configuration
+  String buildCoreRulesText(Map<String, dynamic> coreRulesConfig) {
+    final buffer = StringBuffer();
+    final applicationRules = coreRulesConfig['application_rules'] as Map<String, dynamic>?;
+    final separator = applicationRules?['separator'] as String? ?? '\n\n---\n\n';
+    
+    buffer.writeln('## CORE BEHAVIORAL RULES\n');
+    
+    final rules = coreRulesConfig['rules'] as Map<String, dynamic>;
+    for (final category in rules.entries) {
+      final categoryName = formatCategoryName(category.key);
+      buffer.writeln('### $categoryName');
+      
+      final categoryRules = category.value as Map<String, dynamic>;
+      for (final rule in categoryRules.entries) {
+        buffer.writeln('- **${rule.value}**');
+      }
+      buffer.writeln();
+    }
+    
+    buffer.write(separator);
+    return buffer.toString();
+  }
+
+  /// Helper method to format category names for display
+  String formatCategoryName(String categoryKey) {
+    switch (categoryKey) {
+      case 'transparency_constraints':
+        return 'Transparency Constraints';
+      case 'data_integrity':
+        return 'Data Integrity Rules';
+      case 'response_quality':
+        return 'Response Quality Standards';
+      default:
+        // Convert snake_case to Title Case
+        return categoryKey
+            .split('_')
+            .map((word) => word[0].toUpperCase() + word.substring(1))
+            .join(' ');
     }
   }
 }

@@ -674,13 +674,24 @@ Return empty array if NO COMPLETED activities detected.
     }
   }
 
-  /// Get dimension code from activity code (e.g., SF1 -> SF)
+  /// Get dimension code from activity code using Oracle lookup (e.g., T8 -> TG)
   String _getDimensionCode(String activityCode) {
     if (activityCode.isEmpty) return '';
     
-    // Extract dimension prefix (letters before numbers)
+    // First try Oracle lookup for accurate dimension mapping
+    if (OracleStaticCache.isInitialized) {
+      final oracleActivity = OracleStaticCache.getActivityByCode(activityCode);
+      if (oracleActivity != null) {
+        _logger.debug('FT-147: Found Oracle activity $activityCode -> dimension ${oracleActivity.dimension}');
+        return oracleActivity.dimension;
+      }
+    }
+    
+    // Fallback: Extract dimension prefix (letters before numbers) for non-Oracle activities
     final match = RegExp(r'^([A-Z]+)').firstMatch(activityCode);
-    return match?.group(1) ?? '';
+    final fallback = match?.group(1) ?? '';
+    _logger.debug('FT-147: Using fallback dimension extraction: $activityCode -> $fallback');
+    return fallback;
   }
 
 

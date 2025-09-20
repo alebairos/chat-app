@@ -4,80 +4,107 @@ import '../services/semantic_activity_detector.dart';
 import '../utils/logger.dart';
 
 /// FT-146: Oracle-based dimension display service
-/// 
+///
 /// Provides centralized dimension display logic using Oracle JSON as source of truth.
 /// Eliminates hardcoded dimension mappings and supports all Oracle versions.
 class DimensionDisplayService {
   static final Logger _logger = Logger();
   static OracleContext? _cachedContext;
   static bool _isInitialized = false;
-  
+
   /// Initialize with current Oracle context
   static Future<void> initialize() async {
     try {
-      _logger.debug('FT-146: Initializing DimensionDisplayService...');
+      _logger.info('FT-147: 🚀 Initializing DimensionDisplayService...');
       _cachedContext = await OracleContextManager.getForCurrentPersona();
       _isInitialized = true;
-      
+
       if (_cachedContext != null) {
-        _logger.info('FT-146: Initialized with ${_cachedContext!.dimensions.length} Oracle dimensions');
-        
+        _logger.info(
+            'FT-147: ✅ Initialized with ${_cachedContext!.dimensions.length} Oracle dimensions');
+
         // Log available dimensions for debugging
+        _logger.info(
+            'FT-147: Available dimension codes: ${_cachedContext!.dimensions.keys.toList()}');
         for (final dimension in _cachedContext!.dimensions.values) {
-          _logger.debug('FT-146: Dimension ${dimension.code}: "${dimension.displayName}"');
+          _logger.info(
+              'FT-147: Dimension ${dimension.code}: "${dimension.displayName}"');
         }
       } else {
-        _logger.warning('FT-146: No Oracle context available, using fallback behavior');
+        _logger.warning(
+            'FT-147: ❌ No Oracle context available, using fallback behavior');
       }
     } catch (e) {
-      _logger.error('FT-146: Failed to initialize DimensionDisplayService: $e');
+      _logger
+          .error('FT-147: ❌ Failed to initialize DimensionDisplayService: $e');
       _isInitialized = false;
     }
   }
-  
+
   /// Get display name from Oracle data
   static String getDisplayName(String dimensionCode) {
-    if (!_isInitialized) {
-      _logger.warning('FT-146: Service not initialized, using fallback for $dimensionCode');
-      return _getFallbackDisplayName(dimensionCode);
-    }
+    _logger.info('FT-147: 🔍 getDisplayName called with: "$dimensionCode"');
+    _logger.info('FT-147: Service initialized: $_isInitialized');
+    _logger.info('FT-147: Oracle context available: ${_cachedContext != null}');
     
-    final dimension = _cachedContext?.dimensions[dimensionCode.toUpperCase()];
+    if (!_isInitialized) {
+      _logger.warning(
+          'FT-147: ❌ Service not initialized, using fallback for $dimensionCode');
+      final fallback = _getFallbackDisplayName(dimensionCode);
+      _logger.warning('FT-147: Returning fallback: "$fallback"');
+      return fallback;
+    }
+
+    if (_cachedContext == null) {
+      _logger.warning(
+          'FT-147: ❌ No Oracle context available, using fallback for $dimensionCode');
+      final fallback = _getFallbackDisplayName(dimensionCode);
+      _logger.warning('FT-147: Returning fallback: "$fallback"');
+      return fallback;
+    }
+
+    final upperCode = dimensionCode.toUpperCase();
+    _logger.info('FT-147: Looking up dimension: "$upperCode"');
+    _logger.info('FT-147: Available dimensions: ${_cachedContext!.dimensions.keys.toList()}');
+    
+    final dimension = _cachedContext!.dimensions[upperCode];
     if (dimension != null) {
-      _logger.debug('FT-146: Using Oracle display name for $dimensionCode: "${dimension.displayName}"');
+      _logger.info('FT-147: ✅ Found Oracle dimension: "$upperCode" -> "${dimension.displayName}"');
       return dimension.displayName;
     }
-    
-    _logger.warning('FT-146: No Oracle data for dimension $dimensionCode, using fallback');
-    // Fallback for unknown dimensions
-    return _getFallbackDisplayName(dimensionCode);
+
+    _logger.warning(
+        'FT-147: ❌ No Oracle data for dimension $upperCode, using fallback');
+    final fallback = _getFallbackDisplayName(dimensionCode);
+    _logger.warning('FT-147: Returning fallback: "$fallback"');
+    return fallback;
   }
-  
+
   /// Get dimension color with smart defaults
   static Color getColor(String dimensionCode) {
     switch (dimensionCode.toUpperCase()) {
       case 'SF':
-        return Colors.green;      // Physical Health
+        return Colors.green; // Physical Health
       case 'SM':
-        return Colors.blue;       // Mental Health  
+        return Colors.blue; // Mental Health
       case 'TG':
       case 'T':
-        return Colors.orange;     // Work & Management
+        return Colors.orange; // Work & Management
       case 'R':
-        return Colors.pink;       // Relationships
+        return Colors.pink; // Relationships
       case 'E':
-        return Colors.purple;     // Spirituality
+        return Colors.purple; // Spirituality
       case 'TT':
-        return Colors.red;        // Screen Time
+        return Colors.red; // Screen Time
       case 'PR':
-        return Colors.amber;      // Anti-Procrastination
+        return Colors.amber; // Anti-Procrastination
       case 'F':
-        return Colors.teal;       // Finance
+        return Colors.teal; // Finance
       default:
         return Colors.grey;
     }
   }
-  
+
   /// Get dimension icon with smart defaults
   static IconData getIcon(String dimensionCode) {
     switch (dimensionCode.toUpperCase()) {
@@ -102,7 +129,7 @@ class DimensionDisplayService {
         return Icons.category;
     }
   }
-  
+
   /// Refresh context when persona changes
   static Future<void> refresh() async {
     _logger.debug('FT-146: Refreshing DimensionDisplayService...');
@@ -110,13 +137,13 @@ class DimensionDisplayService {
     _cachedContext = null;
     await initialize();
   }
-  
+
   /// Check if service is initialized
   static bool get isInitialized => _isInitialized;
-  
+
   /// Get cached Oracle context (for debugging)
   static OracleContext? get cachedContext => _cachedContext;
-  
+
   /// Fallback display names for when Oracle data is unavailable
   static String _getFallbackDisplayName(String dimensionCode) {
     switch (dimensionCode.toUpperCase()) {
@@ -141,7 +168,7 @@ class DimensionDisplayService {
         return dimensionCode;
     }
   }
-  
+
   /// Get debug information
   static Map<String, dynamic> getDebugInfo() {
     return {
@@ -150,5 +177,19 @@ class DimensionDisplayService {
       'dimensionCount': _cachedContext?.dimensions.length ?? 0,
       'availableDimensions': _cachedContext?.dimensions.keys.toList() ?? [],
     };
+  }
+
+  /// FT-147: Debug method to log current service state
+  static void logServiceState() {
+    _logger.info('FT-147: === DimensionDisplayService State ===');
+    _logger.info('FT-147: Initialized: $_isInitialized');
+    _logger.info('FT-147: Has Oracle Context: ${_cachedContext != null}');
+    if (_cachedContext != null) {
+      _logger.info(
+          'FT-147: Dimension Count: ${_cachedContext!.dimensions.length}');
+      _logger.info(
+          'FT-147: Available Codes: ${_cachedContext!.dimensions.keys.toList()}');
+    }
+    _logger.info('FT-147: =====================================');
   }
 }
