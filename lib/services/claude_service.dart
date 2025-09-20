@@ -934,7 +934,7 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
 
       // Use MCP command for Oracle activity detection with full 265-activity context
       await _mcpOracleActivityDetection(userMessage);
-      
+
       _logger.info('FT-140: ✅ Completed MCP Oracle activity detection');
     } catch (e) {
       _logger.warning('FT-140: MCP Oracle detection failed gracefully: $e');
@@ -953,7 +953,8 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
 
       // Ensure we have MCP service available
       if (_systemMCP == null) {
-        _logger.warning('FT-140: MCP service not available, falling back to original method');
+        _logger.warning(
+            'FT-140: MCP service not available, falling back to original method');
         await _analyzeUserActivitiesWithFullContext(userMessage);
         return;
       }
@@ -970,16 +971,18 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
 
       if (data['status'] == 'success') {
         final detectedActivities = data['data']['detected_activities'] as List;
-        _logger.info('FT-140: ✅ Detected ${detectedActivities.length} activities via MCP Oracle detection');
+        _logger.info(
+            'FT-140: ✅ Detected ${detectedActivities.length} activities via MCP Oracle detection');
 
         // Process detected activities using existing infrastructure
-        await _processDetectedActivitiesFromMCP(detectedActivities, userMessage);
+        await _processDetectedActivitiesFromMCP(
+            detectedActivities, userMessage);
       } else {
-        _logger.warning('FT-140: MCP Oracle detection returned error: ${data['message']}');
+        _logger.warning(
+            'FT-140: MCP Oracle detection returned error: ${data['message']}');
         // Fallback to original method
         await _analyzeUserActivitiesWithFullContext(userMessage);
       }
-
     } catch (e) {
       _logger.warning('FT-140: MCP Oracle detection failed: $e');
       // Graceful fallback to original method
@@ -993,7 +996,6 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   /// using existing activity logging infrastructure.
   Future<void> _processDetectedActivitiesFromMCP(
       List<dynamic> detectedActivities, String userMessage) async {
-    
     if (detectedActivities.isEmpty) {
       _logger.debug('FT-140: No activities detected via MCP Oracle detection');
       return;
@@ -1006,7 +1008,8 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
       // Convert MCP results to ActivityDetection objects
       final activities = detectedActivities.map((data) {
         final code = data['code'] as String? ?? '';
-        final confidence = _parseConfidenceFromString(data['confidence'] as String? ?? 'medium');
+        final confidence = _parseConfidenceFromString(
+            data['confidence'] as String? ?? 'medium');
         final description = data['description'] as String? ?? '';
         final duration = data['duration_minutes'] as int? ?? 0;
 
@@ -1027,8 +1030,8 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
         timeContext: timeData,
       );
 
-      _logger.info('FT-140: ✅ Successfully logged ${activities.length} activities via MCP Oracle detection');
-
+      _logger.info(
+          'FT-140: ✅ Successfully logged ${activities.length} activities via MCP Oracle detection');
     } catch (e) {
       _logger.error('FT-140: Failed to process MCP detection results: $e');
     }
@@ -1044,6 +1047,15 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
       default:
         return ConfidenceLevel.medium;
     }
+  }
+
+  /// Get dimension code from activity code (e.g., SF1 -> SF)
+  String _getDimensionCode(String activityCode) {
+    if (activityCode.isEmpty) return '';
+
+    // Extract dimension prefix (letters before numbers)
+    final match = RegExp(r'^([A-Z]+)').firstMatch(activityCode);
+    return match?.group(1) ?? '';
   }
 
   /// Fallback: Analyze user activities with full context (original behavior)
@@ -1116,7 +1128,8 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
         await ActivityMemoryService.logActivity(
           activityCode: activity.oracleCode,
           activityName: activity.userDescription,
-          dimension: 'oracle', // Oracle activities
+          dimension: _getDimensionCode(
+              activity.oracleCode), // Extract dimension from Oracle code
           source: 'FT-140 Optimized Detection',
           confidence: activity.confidence == ConfidenceLevel.high
               ? 1.0
