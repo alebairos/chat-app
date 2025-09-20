@@ -150,14 +150,16 @@ class MetadataInsightGenerator {
         }
       }
       
-      // Structure patterns
-      final structure = behavioralIndicators['structure'] as Map<String, dynamic>?;
-      if (structure != null) {
+      // Structure patterns (can be Map or String)
+      final structure = behavioralIndicators['structure'];
+      if (structure is Map<String, dynamic>) {
         final pattern = structure['pattern'] as String?;
         final planningLevel = structure['planning_level'] as String?;
         if (pattern != null) {
           insights.add('📋 ${_formatBehavioralInsight(pattern)}');
         }
+      } else if (structure is String) {
+        insights.add('📋 ${_formatBehavioralInsight(structure)}');
       }
       
       // Energy, variety, structure (flat structure - only if they are strings)
