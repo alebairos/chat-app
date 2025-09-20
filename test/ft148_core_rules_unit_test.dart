@@ -11,14 +11,22 @@ void main() {
 
     test('formatCategoryName should format category names correctly', () {
       // Test the helper method directly
-      expect(configManager.formatCategoryName('transparency_constraints'), 
-             equals('Transparency Constraints'));
-      expect(configManager.formatCategoryName('data_integrity'), 
-             equals('Data Integrity Rules'));
-      expect(configManager.formatCategoryName('response_quality'), 
-             equals('Response Quality Standards'));
-      expect(configManager.formatCategoryName('custom_category'), 
-             equals('Custom Category'));
+      expect(
+        configManager.formatCategoryName('transparency_constraints'),
+        equals('Transparency Constraints'),
+      );
+      expect(
+        configManager.formatCategoryName('data_integrity'),
+        equals('Data Integrity Rules'),
+      );
+      expect(
+        configManager.formatCategoryName('response_quality'),
+        equals('Response Quality Standards'),
+      );
+      expect(
+        configManager.formatCategoryName('custom_category'),
+        equals('Custom Category'),
+      );
     });
 
     test('buildCoreRulesText should format rules correctly', () {
@@ -26,15 +34,11 @@ void main() {
         'rules': {
           'transparency_constraints': {
             'no_internal_thoughts': 'CRITICAL: NO INTERNAL THOUGHTS',
-            'seamless_processing': 'Process everything seamlessly'
+            'seamless_processing': 'Process everything seamlessly',
           },
-          'data_integrity': {
-            'use_fresh_data': 'SEMPRE USAR PARA DADOS EXATOS'
-          }
+          'data_integrity': {'use_fresh_data': 'SEMPRE USAR PARA DADOS EXATOS'},
         },
-        'application_rules': {
-          'separator': '\n\n---\n\n'
-        }
+        'application_rules': {'separator': '\n\n---\n\n'},
       };
 
       final result = configManager.buildCoreRulesText(mockConfig);
@@ -49,15 +53,28 @@ void main() {
 
     test('Core rules configuration structure should be valid', () {
       // Test that our configuration structure makes sense
-      final expectedKeys = ['version', 'description', 'enabled', 'rules', 'application_rules'];
-      final expectedRuleCategories = ['transparency_constraints', 'data_integrity', 'response_quality'];
-      
+      final expectedKeys = [
+        'version',
+        'description',
+        'enabled',
+        'rules',
+        'application_rules',
+      ];
+      final expectedRuleCategories = [
+        'transparency_constraints',
+        'data_integrity',
+        'response_quality',
+      ];
+
       // This validates our design choices
       expect(expectedKeys.length, equals(5));
       expect(expectedRuleCategories.length, equals(3));
-      
+
       // Verify rule categories make logical sense
-      expect(expectedRuleCategories.contains('transparency_constraints'), isTrue);
+      expect(
+        expectedRuleCategories.contains('transparency_constraints'),
+        isTrue,
+      );
       expect(expectedRuleCategories.contains('data_integrity'), isTrue);
       expect(expectedRuleCategories.contains('response_quality'), isTrue);
     });

@@ -29,8 +29,9 @@ class CharacterConfigManager {
 
     try {
       // Load personas config to get defaultPersona
-      final String jsonString =
-          await rootBundle.loadString('assets/config/personas_config.json');
+      final String jsonString = await rootBundle.loadString(
+        'assets/config/personas_config.json',
+      );
       final Map<String, dynamic> config = json.decode(jsonString);
 
       // Check for defaultPersona in config
@@ -41,14 +42,17 @@ class CharacterConfigManager {
         if (personas.containsKey(defaultPersona)) {
           _activePersonaKey = defaultPersona;
           print(
-              '✅ CharacterConfigManager initialized with default persona: $defaultPersona');
+            '✅ CharacterConfigManager initialized with default persona: $defaultPersona',
+          );
         } else {
           print(
-              '⚠️ Default persona "$defaultPersona" not found in personas list, keeping current: $_activePersonaKey');
+            '⚠️ Default persona "$defaultPersona" not found in personas list, keeping current: $_activePersonaKey',
+          );
         }
       } else {
         print(
-            '⚠️ No defaultPersona specified in config, keeping current: $_activePersonaKey');
+          '⚠️ No defaultPersona specified in config, keeping current: $_activePersonaKey',
+        );
       }
 
       _isInitialized = true;
@@ -66,8 +70,9 @@ class CharacterConfigManager {
   Future<String> get configFilePath async {
     try {
       // Get configPath from personas_config.json
-      final String jsonString =
-          await rootBundle.loadString('assets/config/personas_config.json');
+      final String jsonString = await rootBundle.loadString(
+        'assets/config/personas_config.json',
+      );
       final Map<String, dynamic> config = json.decode(jsonString);
       final Map<String, dynamic> personas = config['personas'] ?? {};
 
@@ -89,8 +94,9 @@ class CharacterConfigManager {
   Future<String> get personaDisplayName async {
     try {
       // Get displayName from personas_config.json
-      final String jsonString =
-          await rootBundle.loadString('assets/config/personas_config.json');
+      final String jsonString = await rootBundle.loadString(
+        'assets/config/personas_config.json',
+      );
       final Map<String, dynamic> config = json.decode(jsonString);
       final Map<String, dynamic> personas = config['personas'] ?? {};
 
@@ -112,8 +118,9 @@ class CharacterConfigManager {
   Future<String?> getOracleConfigPath() async {
     try {
       // Get oracleConfigPath from personas_config.json
-      final String jsonString =
-          await rootBundle.loadString('assets/config/personas_config.json');
+      final String jsonString = await rootBundle.loadString(
+        'assets/config/personas_config.json',
+      );
       final Map<String, dynamic> config = json.decode(jsonString);
       final Map<String, dynamic> personas = config['personas'] ?? {};
 
@@ -139,8 +146,9 @@ class CharacterConfigManager {
   /// Get MCP config paths for current persona (FT-143 Base + Extensions)
   Future<Map<String, dynamic>> getMcpConfigPaths() async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('assets/config/personas_config.json');
+      final String jsonString = await rootBundle.loadString(
+        'assets/config/personas_config.json',
+      );
       final Map<String, dynamic> config = json.decode(jsonString);
       final Map<String, dynamic> personas = config['personas'] ?? {};
 
@@ -150,18 +158,15 @@ class CharacterConfigManager {
         return {
           'baseConfig': persona?['mcpBaseConfig'] as String?,
           'extensions': persona?['mcpExtensions'] as List<dynamic>? ?? [],
-          'legacyConfig': persona?['mcpInstructionsConfig']
-              as String?, // Backward compatibility
+          'legacyConfig':
+              persona?['mcpInstructionsConfig']
+                  as String?, // Backward compatibility
         };
       }
     } catch (e) {
       print('Error loading MCP config paths: $e');
     }
-    return {
-      'baseConfig': null,
-      'extensions': <String>[],
-      'legacyConfig': null,
-    };
+    return {'baseConfig': null, 'extensions': <String>[], 'legacyConfig': null};
   }
 
   /// Load persona-specific MCP instructions configuration (FT-143)
@@ -174,7 +179,8 @@ class CharacterConfigManager {
       if (configPaths['legacyConfig'] != null) {
         print('🔄 Loading legacy MCP config for persona: $_activePersonaKey');
         return await _loadLegacyMcpConfig(
-            configPaths['legacyConfig'] as String);
+          configPaths['legacyConfig'] as String,
+        );
       }
 
       // Load Base + Extensions architecture
@@ -218,20 +224,23 @@ class CharacterConfigManager {
 
   /// Validate Oracle version compatibility between MCP config and Oracle data (FT-143)
   Future<void> _validateOracleVersionCompatibility(
-      Map<String, dynamic> mcpConfig) async {
+    Map<String, dynamic> mcpConfig,
+  ) async {
     final mcpOracleVersion = mcpConfig['oracle_version'] as String?;
 
     if (mcpOracleVersion != null) {
       final oracleConfigPath = await getOracleConfigPath();
       if (oracleConfigPath != null) {
         // Extract Oracle version from path (e.g., "oracle_prompt_4.2.md" → "4.2")
-        final oracleVersionMatch =
-            RegExp(r'oracle_prompt_(\d+\.\d+)').firstMatch(oracleConfigPath);
+        final oracleVersionMatch = RegExp(
+          r'oracle_prompt_(\d+\.\d+)',
+        ).firstMatch(oracleConfigPath);
         final actualOracleVersion = oracleVersionMatch?.group(1);
 
         if (actualOracleVersion != mcpOracleVersion) {
           throw Exception(
-              'Oracle version mismatch: MCP config expects $mcpOracleVersion, but Oracle data is $actualOracleVersion');
+            'Oracle version mismatch: MCP config expects $mcpOracleVersion, but Oracle data is $actualOracleVersion',
+          );
         }
 
         print('✅ Oracle version compatibility validated: $actualOracleVersion');
@@ -243,8 +252,9 @@ class CharacterConfigManager {
   Future<String?> getOracleVersion() async {
     final oracleConfigPath = await getOracleConfigPath();
     if (oracleConfigPath != null) {
-      final versionMatch =
-          RegExp(r'oracle_prompt_(\d+\.\d+)').firstMatch(oracleConfigPath);
+      final versionMatch = RegExp(
+        r'oracle_prompt_(\d+\.\d+)',
+      ).firstMatch(oracleConfigPath);
       return versionMatch?.group(1);
     }
     return null;
@@ -272,18 +282,22 @@ class CharacterConfigManager {
 
   /// Merge extension into base MCP config
   Future<void> _mergeExtension(
-      Map<String, dynamic> baseConfig, String extensionPath) async {
+    Map<String, dynamic> baseConfig,
+    String extensionPath,
+  ) async {
     try {
       print('   🔧 Merging extension: $extensionPath');
 
-      final String extensionJsonString =
-          await rootBundle.loadString(extensionPath);
+      final String extensionJsonString = await rootBundle.loadString(
+        extensionPath,
+      );
       final Map<String, dynamic> extension = json.decode(extensionJsonString);
 
       // Validate extension format
       if (extension['extends'] != 'mcp_base_config.json') {
         throw Exception(
-            'Extension $extensionPath does not extend mcp_base_config.json');
+          'Extension $extensionPath does not extend mcp_base_config.json',
+        );
       }
 
       // Merge Oracle capabilities
@@ -307,8 +321,9 @@ class CharacterConfigManager {
       if (extension.containsKey('additional_functions')) {
         final additionalFunctions =
             extension['additional_functions'] as List<dynamic>;
-        final systemFunctions = baseConfig['instructions']['system_functions']
-            as Map<String, dynamic>;
+        final systemFunctions =
+            baseConfig['instructions']['system_functions']
+                as Map<String, dynamic>;
         final availableFunctions =
             systemFunctions['available_functions'] as List<dynamic>;
 
@@ -317,12 +332,11 @@ class CharacterConfigManager {
 
       // Add extension metadata
       baseConfig['loaded_extensions'] =
-          (baseConfig['loaded_extensions'] as List<dynamic>? ?? [])
-            ..add({
-              'path': extensionPath,
-              'version': extension['version'],
-              'type': extension['type'],
-            });
+          (baseConfig['loaded_extensions'] as List<dynamic>? ?? [])..add({
+            'path': extensionPath,
+            'version': extension['version'],
+            'type': extension['type'],
+          });
 
       print('   ✅ Extension merged successfully');
     } catch (e) {
@@ -333,7 +347,8 @@ class CharacterConfigManager {
 
   /// Validate Oracle compatibility for merged config
   Future<void> _validateMergedOracleCompatibility(
-      Map<String, dynamic> mergedConfig) async {
+    Map<String, dynamic> mergedConfig,
+  ) async {
     final oracleCapabilities =
         mergedConfig['oracle_capabilities'] as Map<String, dynamic>?;
 
@@ -347,18 +362,21 @@ class CharacterConfigManager {
           final extensionVersion = loadedExtensions.first['version'] as String?;
 
           // Extract Oracle version from path
-          final oracleVersionMatch =
-              RegExp(r'oracle_prompt_(\d+\.\d+)').firstMatch(oracleConfigPath);
+          final oracleVersionMatch = RegExp(
+            r'oracle_prompt_(\d+\.\d+)',
+          ).firstMatch(oracleConfigPath);
           final actualOracleVersion = oracleVersionMatch?.group(1);
 
           if (extensionVersion != null &&
               actualOracleVersion != extensionVersion) {
             throw Exception(
-                'Oracle version mismatch: Extension expects $extensionVersion, but Oracle data is $actualOracleVersion');
+              'Oracle version mismatch: Extension expects $extensionVersion, but Oracle data is $actualOracleVersion',
+            );
           }
 
           print(
-              '✅ Oracle version compatibility validated: $actualOracleVersion');
+            '✅ Oracle version compatibility validated: $actualOracleVersion',
+          );
         }
       }
     }
@@ -539,23 +557,32 @@ class CharacterConfigManager {
       // 0) FT-148: Load core behavioral rules (highest priority)
       String coreRules = '';
       try {
-        final String personasConfigString =
-            await rootBundle.loadString('assets/config/personas_config.json');
-        final Map<String, dynamic> personasConfig =
-            json.decode(personasConfigString);
-        final String? coreRulesPath = personasConfig['coreRulesConfig'] as String?;
-        
+        final String personasConfigString = await rootBundle.loadString(
+          'assets/config/personas_config.json',
+        );
+        final Map<String, dynamic> personasConfig = json.decode(
+          personasConfigString,
+        );
+        final String? coreRulesPath =
+            personasConfig['coreRulesConfig'] as String?;
+
         if (coreRulesPath != null) {
-          final String coreRulesString = await rootBundle.loadString(coreRulesPath);
-          final Map<String, dynamic> coreRulesConfig = json.decode(coreRulesString);
-          
+          final String coreRulesString = await rootBundle.loadString(
+            coreRulesPath,
+          );
+          final Map<String, dynamic> coreRulesConfig = json.decode(
+            coreRulesString,
+          );
+
           if (coreRulesConfig['enabled'] == true) {
             coreRules = buildCoreRulesText(coreRulesConfig);
             print('✅ Core behavioral rules loaded for all personas');
           }
         }
       } catch (coreRulesError) {
-        print('⚠️ Core behavioral rules not found or disabled: $coreRulesError');
+        print(
+          '⚠️ Core behavioral rules not found or disabled: $coreRulesError',
+        );
       }
 
       // 1) Always try to load Oracle prompt first
@@ -564,7 +591,8 @@ class CharacterConfigManager {
           'assets/config/oracle/oracle_prompt_1.0.md';
       final String oraclePathEnv =
           (dotenv.env['ORACLE_PROMPT_PATH'] ?? '').trim();
-      final String oraclePath = oracleConfigPath ??
+      final String oraclePath =
+          oracleConfigPath ??
           (oraclePathEnv.isNotEmpty ? oraclePathEnv : defaultOraclePath);
 
       String? oraclePrompt;
@@ -579,21 +607,24 @@ class CharacterConfigManager {
       final String personaConfigPath = await configFilePath;
 
       try {
-        final String jsonString =
-            await rootBundle.loadString(personaConfigPath);
+        final String jsonString = await rootBundle.loadString(
+          personaConfigPath,
+        );
         final Map<String, dynamic> jsonMap = json.decode(jsonString);
         personaPrompt = jsonMap['system_prompt']['content'] as String;
       } catch (jsonLoadError) {
         // Legacy fallback only for Ari
         if (_activePersonaKey == 'ariLifeCoach') {
           try {
-            final String jsonString = await rootBundle
-                .loadString('assets/config/ari_life_coach_config_1.0.json');
+            final String jsonString = await rootBundle.loadString(
+              'assets/config/ari_life_coach_config_1.0.json',
+            );
             final Map<String, dynamic> jsonMap = json.decode(jsonString);
             personaPrompt = jsonMap['system_prompt']['content'] as String;
           } catch (_) {
-            final String jsonString = await rootBundle
-                .loadString('assets/config/ari_life_coach_config.json');
+            final String jsonString = await rootBundle.loadString(
+              'assets/config/ari_life_coach_config.json',
+            );
             final Map<String, dynamic> jsonMap = json.decode(jsonString);
             personaPrompt = jsonMap['system_prompt']['content'] as String;
           }
@@ -606,10 +637,12 @@ class CharacterConfigManager {
       String audioInstructions = '';
       try {
         // Load personas config to check audio formatting settings
-        final String personasConfigString =
-            await rootBundle.loadString('assets/config/personas_config.json');
-        final Map<String, dynamic> personasConfig =
-            json.decode(personasConfigString);
+        final String personasConfigString = await rootBundle.loadString(
+          'assets/config/personas_config.json',
+        );
+        final Map<String, dynamic> personasConfig = json.decode(
+          personasConfigString,
+        );
 
         // Get current persona's audio formatting settings
         final Map<String, dynamic>? personaData =
@@ -621,11 +654,13 @@ class CharacterConfigManager {
           // Load audio formatting config
           final String audioConfigPath =
               personasConfig['audioFormattingConfig'] ??
-                  'assets/config/audio_formatting_config.json';
-          final String audioConfigString =
-              await rootBundle.loadString(audioConfigPath);
-          final Map<String, dynamic> audioConfig =
-              json.decode(audioConfigString);
+              'assets/config/audio_formatting_config.json';
+          final String audioConfigString = await rootBundle.loadString(
+            audioConfigPath,
+          );
+          final Map<String, dynamic> audioConfig = json.decode(
+            audioConfigString,
+          );
 
           audioInstructions =
               audioConfig['audio_formatting_instructions']['content'] as String;
@@ -643,7 +678,8 @@ class CharacterConfigManager {
         mcpInstructions = await buildMcpInstructionsText();
         if (mcpInstructions.isNotEmpty) {
           print(
-              '✅ MCP instructions loaded for Oracle persona: $_activePersonaKey');
+            '✅ MCP instructions loaded for Oracle persona: $_activePersonaKey',
+          );
         }
       } catch (mcpError) {
         print('⚠️ MCP instructions not loaded: $mcpError');
@@ -707,11 +743,13 @@ class CharacterConfigManager {
         // Legacy fallback only for Ari
         if (_activePersonaKey == 'ariLifeCoach') {
           try {
-            jsonString = await rootBundle
-                .loadString('assets/config/ari_life_coach_config_1.0.json');
+            jsonString = await rootBundle.loadString(
+              'assets/config/ari_life_coach_config_1.0.json',
+            );
           } catch (_) {
-            jsonString = await rootBundle
-                .loadString('assets/config/ari_life_coach_config.json');
+            jsonString = await rootBundle.loadString(
+              'assets/config/ari_life_coach_config.json',
+            );
           }
         } else {
           rethrow;
@@ -737,23 +775,27 @@ class CharacterConfigManager {
   /// Get a list of all available personas with their display names and descriptions
   Future<List<Map<String, dynamic>>> get availablePersonas async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('assets/config/personas_config.json');
+      final String jsonString = await rootBundle.loadString(
+        'assets/config/personas_config.json',
+      );
       final Map<String, dynamic> config = json.decode(jsonString);
       final Map<String, dynamic> personas = config['personas'] ?? {};
 
-      return personas.entries.where((entry) {
-        final persona = entry.value as Map<String, dynamic>?;
-        return persona != null && persona['enabled'] == true;
-      }).map((entry) {
-        final personaKey = entry.key;
-        final persona = entry.value as Map<String, dynamic>;
-        return {
-          'key': personaKey,
-          'displayName': persona['displayName'],
-          'description': persona['description']
-        };
-      }).toList();
+      return personas.entries
+          .where((entry) {
+            final persona = entry.value as Map<String, dynamic>?;
+            return persona != null && persona['enabled'] == true;
+          })
+          .map((entry) {
+            final personaKey = entry.key;
+            final persona = entry.value as Map<String, dynamic>;
+            return {
+              'key': personaKey,
+              'displayName': persona['displayName'],
+              'description': persona['description'],
+            };
+          })
+          .toList();
     } catch (e) {
       print('Error loading personas config: $e');
       // Minimal fallback
@@ -761,8 +803,8 @@ class CharacterConfigManager {
         {
           'key': 'ariLifeCoach',
           'displayName': 'Ari - Life Coach',
-          'description': 'Default persona'
-        }
+          'description': 'Default persona',
+        },
       ];
     }
   }
@@ -770,23 +812,25 @@ class CharacterConfigManager {
   /// FT-148: Build core behavioral rules text from configuration
   String buildCoreRulesText(Map<String, dynamic> coreRulesConfig) {
     final buffer = StringBuffer();
-    final applicationRules = coreRulesConfig['application_rules'] as Map<String, dynamic>?;
-    final separator = applicationRules?['separator'] as String? ?? '\n\n---\n\n';
-    
+    final applicationRules =
+        coreRulesConfig['application_rules'] as Map<String, dynamic>?;
+    final separator =
+        applicationRules?['separator'] as String? ?? '\n\n---\n\n';
+
     buffer.writeln('## CORE BEHAVIORAL RULES\n');
-    
+
     final rules = coreRulesConfig['rules'] as Map<String, dynamic>;
     for (final category in rules.entries) {
       final categoryName = formatCategoryName(category.key);
       buffer.writeln('### $categoryName');
-      
+
       final categoryRules = category.value as Map<String, dynamic>;
       for (final rule in categoryRules.entries) {
         buffer.writeln('- **${rule.value}**');
       }
       buffer.writeln();
     }
-    
+
     buffer.write(separator);
     return buffer.toString();
   }
