@@ -5,6 +5,7 @@ import '../services/oracle_activity_parser.dart';
 import '../utils/logger.dart';
 import 'integrated_mcp_processor.dart';
 import 'chat_storage_service.dart';
+import 'metadata_extraction_service.dart';
 
 /// FT-119: Activity request for queuing during rate limits
 class ActivityRequest {
@@ -305,6 +306,9 @@ class ActivityMemoryService {
     int? durationMinutes,
     String? notes,
     double confidence = 1.0,
+    // FT-149: Optional parameters for post-processing metadata extraction
+    String? userMessage,
+    String? oracleActivityName,
   }) async {
     try {
       // Get precise time data from FT-060
@@ -331,10 +335,50 @@ class ActivityMemoryService {
 
       _logger.info(
           'Logged activity: ${activity.description} at ${activity.formattedTime} (confidence: $confidence)');
+
+      // FT-149: Post-processing metadata extraction (if enabled and context available)
+      if (userMessage != null && oracleActivityName != null) {
+        await _extractAndStoreMetadata(activity, userMessage, oracleActivityName);
+      }
+
       return activity;
     } catch (e) {
       _logger.error('Failed to log activity: $e');
       rethrow;
+    }
+  }
+
+  /// FT-149: Extract and store metadata as post-processing step
+  static Future<void> _extractAndStoreMetadata(
+    ActivityModel activity,
+    String userMessage,
+    String oracleActivityName,
+  ) async {
+    try {
+      // Use existing ClaudeService for focused metadata extraction
+      final metadata = await MetadataExtractionService.extractMetadata(
+        userMessage: userMessage,
+        detectedActivity: activity,
+        oracleActivityName: oracleActivityName,
+      );
+
+      if (metadata != null && metadata.isNotEmpty) {
+        // Update activity with extracted metadata
+        activity.metadataMap = metadata;
+        
+        // Store updated activity
+        await _database.writeTxn(() async {
+          await _database.activityModels.put(activity);
+        });
+        
+        _logger.info('FT-149: ✅ Added ${metadata.keys.length} metadata fields to activity ${activity.activityName}');
+        _logger.debug('FT-149: Stored metadata: $metadata');
+      } else {
+        _logger.debug('FT-149: No metadata to store (metadata was null or empty)');
+      }
+    } catch (e) {
+      _logger.warning('FT-149: Metadata extraction post-processing failed gracefully: $e');
+      // Continue gracefully - activity is already stored
     }
   }
 
