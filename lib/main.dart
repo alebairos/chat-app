@@ -12,6 +12,7 @@ import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
 import 'config/metadata_config.dart';
+import 'services/metadata_extraction_queue.dart';
 
 Future<void> main() async {
   // Initialize logger with appropriate settings
@@ -63,6 +64,14 @@ Future<void> main() async {
     logger.info('✅ MetadataConfig initialized successfully');
   } catch (e) {
     logger.warning('Failed to initialize MetadataConfig: $e');
+  }
+
+  // FT-149: Initialize metadata extraction queue
+  try {
+    MetadataExtractionQueue.instance.initialize();
+    logger.info('✅ MetadataExtractionQueue initialized successfully');
+  } catch (e) {
+    logger.warning('Failed to initialize MetadataExtractionQueue: $e');
   }
 
   // Note: LifePlan service initialization removed

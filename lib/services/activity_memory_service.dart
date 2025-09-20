@@ -6,6 +6,7 @@ import '../utils/logger.dart';
 import 'integrated_mcp_processor.dart';
 import 'chat_storage_service.dart';
 import 'metadata_extraction_service.dart';
+import 'metadata_extraction_queue.dart';
 
 /// FT-119: Activity request for queuing during rate limits
 class ActivityRequest {
@@ -348,37 +349,53 @@ class ActivityMemoryService {
     }
   }
 
-  /// FT-149: Extract and store metadata as post-processing step
+  /// FT-149: Queue metadata extraction for an activity (post-processing)
   static Future<void> _extractAndStoreMetadata(
     ActivityModel activity,
     String userMessage,
     String oracleActivityName,
   ) async {
     try {
-      // Use existing ClaudeService for focused metadata extraction
-      final metadata = await MetadataExtractionService.extractMetadata(
+      // Queue the metadata extraction instead of immediate processing
+      await MetadataExtractionQueue.instance.queueMetadataExtraction(
+        activity: activity,
         userMessage: userMessage,
-        detectedActivity: activity,
         oracleActivityName: oracleActivityName,
+        priority: _getMetadataPriority(activity),
       );
-
-      if (metadata != null && metadata.isNotEmpty) {
-        // Update activity with extracted metadata
-        activity.metadataMap = metadata;
-        
-        // Store updated activity
-        await _database.writeTxn(() async {
-          await _database.activityModels.put(activity);
-        });
-        
-        _logger.info('FT-149: ✅ Added ${metadata.keys.length} metadata fields to activity ${activity.activityName}');
-        _logger.debug('FT-149: Stored metadata: $metadata');
-      } else {
-        _logger.debug('FT-149: No metadata to store (metadata was null or empty)');
-      }
+      
+      _logger.info('FT-149: ✅ Queued metadata extraction for activity ${activity.activityName}');
     } catch (e) {
-      _logger.warning('FT-149: Metadata extraction post-processing failed gracefully: $e');
+      _logger.warning('FT-149: Failed to queue metadata extraction: $e');
       // Continue gracefully - activity is already stored
+    }
+  }
+
+  /// Determine metadata extraction priority based on activity characteristics
+  static int _getMetadataPriority(ActivityModel activity) {
+    // Higher priority for activities that benefit most from rich metadata
+    switch (activity.dimension) {
+      case 'SF': // Physical health activities often have rich quantitative data
+        return 3;
+      case 'TG': // Work activities often have complex behavioral patterns
+        return 2;
+      case 'R': // Relationship activities have valuable qualitative insights
+        return 2;
+      default:
+        return 1;
+    }
+  }
+
+  /// FT-149: Update an existing activity (used by metadata queue)
+  static Future<void> updateActivity(ActivityModel activity) async {
+    try {
+      await _database.writeTxn(() async {
+        await _database.activityModels.put(activity);
+      });
+      _logger.debug('FT-149: Updated activity ${activity.id}');
+    } catch (e) {
+      _logger.error('FT-149: Failed to update activity: $e');
+      rethrow;
     }
   }
 
