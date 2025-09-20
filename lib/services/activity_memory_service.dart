@@ -339,7 +339,8 @@ class ActivityMemoryService {
 
       // FT-149: Post-processing metadata extraction (if enabled and context available)
       if (userMessage != null && oracleActivityName != null) {
-        await _extractAndStoreMetadata(activity, userMessage, oracleActivityName);
+        await _extractAndStoreMetadata(
+            activity, userMessage, oracleActivityName);
       }
 
       return activity;
@@ -363,8 +364,9 @@ class ActivityMemoryService {
         oracleActivityName: oracleActivityName,
         priority: _getMetadataPriority(activity),
       );
-      
-      _logger.info('FT-149: ✅ Queued metadata extraction for activity ${activity.activityName}');
+
+      _logger.info(
+          'FT-149: ✅ Queued metadata extraction for activity ${activity.activityName}');
     } catch (e) {
       _logger.warning('FT-149: Failed to queue metadata extraction: $e');
       // Continue gracefully - activity is already stored

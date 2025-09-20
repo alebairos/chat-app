@@ -10,20 +10,21 @@ import 'activity_memory_service.dart';
 class MetadataExtractionQueue {
   static final Logger _logger = Logger();
   static MetadataExtractionQueue? _instance;
-  static MetadataExtractionQueue get instance => _instance ??= MetadataExtractionQueue._();
-  
+  static MetadataExtractionQueue get instance =>
+      _instance ??= MetadataExtractionQueue._();
+
   MetadataExtractionQueue._();
 
   final Queue<MetadataExtractionTask> _queue = Queue<MetadataExtractionTask>();
   Timer? _processingTimer;
   bool _isProcessing = false;
-  
+
   // Rate limiting configuration
   static const int _maxRetriesPerTask = 3;
   static const Duration _baseRetryDelay = Duration(seconds: 2);
   static const Duration _processingInterval = Duration(seconds: 5);
   static const Duration _rateLimitCooldown = Duration(minutes: 1);
-  
+
   DateTime? _lastRateLimitError;
   int _consecutiveRateLimitErrors = 0;
 
@@ -31,6 +32,18 @@ class MetadataExtractionQueue {
   void initialize() {
     _logger.info('FT-149: Initializing metadata extraction queue');
     _startProcessing();
+  }
+
+  /// Debug method to log current queue status
+  void logQueueStatus() {
+    final status = getQueueStatus();
+    _logger.info('FT-149: Queue Status - ${status['queue_size']} total, ${status['ready_tasks']} ready, ${status['waiting_tasks']} waiting');
+    if (status['is_rate_limited'] == true) {
+      _logger.info('FT-149: Currently rate limited (${status['consecutive_rate_limit_errors']} consecutive errors)');
+    }
+    if (status['queue_size'] > 0) {
+      _logger.debug('FT-149: Queue details: ${status['next_retry_times']}');
+    }
   }
 
   /// Add a metadata extraction task to the queue
@@ -49,8 +62,9 @@ class MetadataExtractionQueue {
     );
 
     _queue.add(task);
-    _logger.info('FT-149: Queued metadata extraction for activity ${activity.activityName} (queue size: ${_queue.length})');
-    
+    _logger.info(
+        'FT-149: Queued metadata extraction for activity ${activity.activityName} (queue size: ${_queue.length})');
+
     // Try immediate processing if not rate limited
     if (!_isRateLimited()) {
       _processQueue();
@@ -74,17 +88,28 @@ class MetadataExtractionQueue {
     }
 
     _isProcessing = true;
-    _logger.info('FT-149: Processing metadata extraction queue (${_queue.length} tasks)');
+    _logger.info(
+        'FT-149: Processing metadata extraction queue (${_queue.length} tasks)');
 
     try {
-      // Process tasks in priority order
+      // Process tasks in priority order, but only if retry time has passed
       final sortedTasks = _queue.toList()
         ..sort((a, b) => b.priority.compareTo(a.priority));
+
+      final now = DateTime.now();
+      final readyTasks = sortedTasks.where((task) => 
+        task.nextRetryAt == null || now.isAfter(task.nextRetryAt!)
+      ).take(3); // Process max 3 ready tasks at a time
       
-      for (final task in sortedTasks.take(3)) { // Process max 3 at a time
+      if (readyTasks.isEmpty) {
+        _logger.debug('FT-149: No tasks ready for processing (${_queue.length} tasks waiting for retry time)');
+        return;
+      }
+      
+      for (final task in readyTasks) {
         _queue.remove(task);
         await _processTask(task);
-        
+
         // Add delay between tasks to avoid rate limiting
         if (_queue.isNotEmpty) {
           await Future.delayed(Duration(milliseconds: 500));
@@ -99,7 +124,8 @@ class MetadataExtractionQueue {
 
   /// Process a single metadata extraction task
   Future<void> _processTask(MetadataExtractionTask task) async {
-    _logger.debug('FT-149: Processing metadata task for ${task.activity.activityName}');
+    _logger.debug(
+        'FT-149: Processing metadata task for ${task.activity.activityName}');
 
     try {
       final metadata = await MetadataExtractionService.extractMetadata(
@@ -110,8 +136,9 @@ class MetadataExtractionQueue {
 
       if (metadata != null && metadata.isNotEmpty) {
         await _updateActivityWithMetadata(task.activity, metadata);
-        _logger.info('FT-149: ✅ Successfully extracted metadata for ${task.activity.activityName}');
-        
+        _logger.info(
+            'FT-149: ✅ Successfully extracted metadata for ${task.activity.activityName}');
+
         // Reset rate limit tracking on success
         _consecutiveRateLimitErrors = 0;
       } else {
@@ -123,9 +150,10 @@ class MetadataExtractionQueue {
   }
 
   /// Handle extraction errors with retry logic
-  Future<void> _handleExtractionError(MetadataExtractionTask task, dynamic error) async {
+  Future<void> _handleExtractionError(
+      MetadataExtractionTask task, dynamic error) async {
     final errorString = error.toString();
-    
+
     if (errorString.contains('429') || errorString.contains('rate limit')) {
       _handleRateLimitError(task);
     } else if (task.retryCount < _maxRetriesPerTask) {
@@ -133,7 +161,8 @@ class MetadataExtractionQueue {
       task.retryCount++;
       task.nextRetryAt = DateTime.now().add(_baseRetryDelay * task.retryCount);
       _queue.add(task);
-      _logger.warning('FT-149: Retrying metadata extraction for ${task.activity.activityName} (attempt ${task.retryCount})');
+      _logger.warning(
+          'FT-149: Retrying metadata extraction for ${task.activity.activityName} (attempt ${task.retryCount})');
     } else {
       await _handleFailedExtraction(task, errorString);
     }
@@ -143,34 +172,44 @@ class MetadataExtractionQueue {
   void _handleRateLimitError(MetadataExtractionTask task) {
     _lastRateLimitError = DateTime.now();
     _consecutiveRateLimitErrors++;
-    
+
     // Exponential backoff for rate limits
     final backoffMultiplier = _consecutiveRateLimitErrors.clamp(1, 8);
-    task.nextRetryAt = DateTime.now().add(_rateLimitCooldown * backoffMultiplier);
+    final retryDelay = _rateLimitCooldown * backoffMultiplier;
+    task.nextRetryAt = DateTime.now().add(retryDelay);
     task.retryCount++;
-    
+
     if (task.retryCount <= _maxRetriesPerTask) {
       _queue.add(task);
-      _logger.warning('FT-149: Rate limited - requeueing ${task.activity.activityName} for retry in ${_rateLimitCooldown * backoffMultiplier}');
+      _logger.warning(
+          'FT-149: Rate limited (${_consecutiveRateLimitErrors} consecutive) - requeueing ${task.activity.activityName} for retry in ${retryDelay.inMinutes}m ${retryDelay.inSeconds % 60}s');
     } else {
-      _handleFailedExtraction(task, 'Rate limit exceeded after ${_maxRetriesPerTask} retries');
+      _logger.error(
+          'FT-149: Rate limit exceeded after ${_maxRetriesPerTask} retries for ${task.activity.activityName} - applying fallback');
+      _handleFailedExtraction(
+          task, 'Rate limit exceeded after ${_maxRetriesPerTask} retries');
     }
   }
 
   /// Handle permanently failed extractions with fallback metadata
-  Future<void> _handleFailedExtraction(MetadataExtractionTask task, String reason) async {
-    _logger.warning('FT-149: Failed to extract metadata for ${task.activity.activityName}: $reason');
-    
+  Future<void> _handleFailedExtraction(
+      MetadataExtractionTask task, String reason) async {
+    _logger.warning(
+        'FT-149: Failed to extract metadata for ${task.activity.activityName}: $reason');
+
     // Generate fallback metadata
-    final fallbackMetadata = _generateFallbackMetadata(task.activity, task.userMessage);
+    final fallbackMetadata =
+        _generateFallbackMetadata(task.activity, task.userMessage);
     if (fallbackMetadata.isNotEmpty) {
       await _updateActivityWithMetadata(task.activity, fallbackMetadata);
-      _logger.info('FT-149: Applied fallback metadata for ${task.activity.activityName}');
+      _logger.info(
+          'FT-149: Applied fallback metadata for ${task.activity.activityName}');
     }
   }
 
   /// Update activity with extracted metadata
-  Future<void> _updateActivityWithMetadata(ActivityModel activity, Map<String, dynamic> metadata) async {
+  Future<void> _updateActivityWithMetadata(
+      ActivityModel activity, Map<String, dynamic> metadata) async {
     try {
       activity.metadataMap = metadata;
       await ActivityMemoryService.updateActivity(activity);
@@ -181,15 +220,18 @@ class MetadataExtractionQueue {
   }
 
   /// Generate fallback metadata when extraction fails
-  Map<String, dynamic> _generateFallbackMetadata(ActivityModel activity, String userMessage) {
+  Map<String, dynamic> _generateFallbackMetadata(
+      ActivityModel activity, String userMessage) {
     final fallback = <String, dynamic>{};
-    
+
     // Basic activity information
     fallback['extraction_status'] = 'fallback';
     fallback['extraction_reason'] = 'LLM extraction failed';
     fallback['activity_code'] = activity.activityCode;
-    fallback['user_context'] = userMessage.length > 100 ? '${userMessage.substring(0, 100)}...' : userMessage;
-    
+    fallback['user_context'] = userMessage.length > 100
+        ? '${userMessage.substring(0, 100)}...'
+        : userMessage;
+
     // Dimension-based fallback metadata
     switch (activity.dimension) {
       case 'SF': // Saúde Física
@@ -213,10 +255,10 @@ class MetadataExtractionQueue {
       default:
         fallback['category'] = 'general';
     }
-    
+
     fallback['confidence'] = 'low';
     fallback['generated_at'] = DateTime.now().toIso8601String();
-    
+
     return fallback;
   }
 
@@ -226,18 +268,40 @@ class MetadataExtractionQueue {
     
     final cooldownMultiplier = _consecutiveRateLimitErrors.clamp(1, 8);
     final cooldownPeriod = _rateLimitCooldown * cooldownMultiplier;
+    final timeSinceLastError = DateTime.now().difference(_lastRateLimitError!);
     
-    return DateTime.now().difference(_lastRateLimitError!) < cooldownPeriod;
+    final isLimited = timeSinceLastError < cooldownPeriod;
+    
+    if (isLimited) {
+      final remainingTime = cooldownPeriod - timeSinceLastError;
+      _logger.info('FT-149: Rate limited - ${remainingTime.inSeconds}s remaining (${_consecutiveRateLimitErrors} consecutive errors)');
+    } else if (_consecutiveRateLimitErrors > 0) {
+      _logger.info('FT-149: Rate limit cooldown expired - ready to process queue');
+    }
+    
+    return isLimited;
   }
 
   /// Get queue status for debugging
   Map<String, dynamic> getQueueStatus() {
+    final now = DateTime.now();
+    final readyTasks = _queue.where((task) => 
+      task.nextRetryAt == null || now.isAfter(task.nextRetryAt!)
+    ).length;
+    
     return {
       'queue_size': _queue.length,
+      'ready_tasks': readyTasks,
+      'waiting_tasks': _queue.length - readyTasks,
       'is_processing': _isProcessing,
       'is_rate_limited': _isRateLimited(),
       'consecutive_rate_limit_errors': _consecutiveRateLimitErrors,
       'last_rate_limit_error': _lastRateLimitError?.toIso8601String(),
+      'next_retry_times': _queue.map((task) => {
+        'activity': task.activity.activityName,
+        'retry_at': task.nextRetryAt?.toIso8601String(),
+        'retry_count': task.retryCount,
+      }).toList(),
     };
   }
 
@@ -256,7 +320,7 @@ class MetadataExtractionTask {
   final String oracleActivityName;
   final int priority;
   final DateTime createdAt;
-  
+
   int retryCount = 0;
   DateTime? nextRetryAt;
 
