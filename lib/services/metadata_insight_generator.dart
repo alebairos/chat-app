@@ -231,9 +231,9 @@ class MetadataInsightGenerator {
     }
     
     // Universal Framework: Context behavioral patterns
-    final context = metadata['context'] as Map<String, dynamic>?;
-    if (context != null) {
-      final energyState = context['energy_state'] as Map<String, dynamic>?;
+    final universalContext = metadata['context'] as Map<String, dynamic>?;
+    if (universalContext != null) {
+      final energyState = universalContext['energy_state'] as Map<String, dynamic>?;
       if (energyState != null) {
         final level = energyState['level'] as String?;
         if (level != null) {
@@ -241,7 +241,7 @@ class MetadataInsightGenerator {
         }
       }
       
-      final sessionType = context['session_type'] as String?;
+      final sessionType = universalContext['session_type'] as String?;
       if (sessionType != null) {
         insights.add('🎯 ${_formatBehavioralInsight(sessionType)}');
       }
