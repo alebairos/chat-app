@@ -1033,7 +1033,8 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
       await _logActivitiesWithPreciseTime(
         activities: activities,
         timeContext: timeData,
-        userMessage: userMessage, // FT-149: Pass user message for metadata extraction
+        userMessage:
+            userMessage, // FT-149: Pass user message for metadata extraction
       );
 
       _logger.info(

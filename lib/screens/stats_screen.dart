@@ -411,6 +411,9 @@ class _StatsScreenState extends State<StatsScreen> {
       // FT-089: Removed confidence parameter - now using simple "Completed" indicator
       dimension: activity['dimension'] as String? ?? '',
       source: activity['source'] as String? ?? '',
+      // FT-149: Pass metadata for smart display
+      dynamicMetadata: activity['metadata'] as String?,
+      dynamicHasMetadata: activity['hasMetadata'] as bool?,
     );
   }
 

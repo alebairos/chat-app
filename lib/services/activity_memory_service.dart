@@ -712,6 +712,9 @@ class ActivityMemoryService {
                 'dimension': activity.dimension,
                 'source': activity.source,
                 'notes': activity.notes,
+                // FT-149: Include metadata for UI display
+                'metadata': activity.metadata,
+                'hasMetadata': activity.hasMetadata,
               })
           .toList();
 
