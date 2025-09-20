@@ -53,40 +53,57 @@ class MetadataExtractionService {
     }
   }
 
-  /// Build focused metadata extraction prompt (50-100 tokens)
+  /// Build universal metadata extraction prompt (FT-149.1)
   static String _buildFocusedMetadataPrompt({
     required String userMessage,
     required String activityCode,
     required String activityName,
   }) {
     return '''
-# METADATA EXTRACTION (FT-149)
+You are extracting metadata to enrich human activity tracking. Your goal is to capture information that reveals patterns, progress, and engagement across any type of human behavior.
 
-## Context
-**User Message**: "$userMessage"
-**Detected Activity**: $activityName ($activityCode)
+**User said**: "$userMessage"
+**Activity**: $activityName
 
-## Task
-Extract relevant metadata from the user's message for this specific activity.
+## Universal Extraction Framework
 
-### Focus Areas by Activity Type:
-- **SF1 (Water)**: Volume (ml, L, cups, glasses), temperature, container type
-- **SF12 (Exercise)**: Duration, intensity, type, location, equipment
-- **TG8 (Work)**: Duration, task type, productivity level, tools used
-- **SM1 (Meditation)**: Duration, technique, location, guidance type
+Apply these high-level principles to extract meaningful metadata:
 
-### Portuguese Colloquialisms:
-- "copinho" → ~150ml, "copão" → ~300ml
-- "garrafinha" → ~500ml, "garrafa" → ~1L
-- "corridinha" → light jog, "voltinha" → short walk
+### Quantitative Dimensions
+Extract any measurable aspects mentioned or reasonably inferable:
+- **Scale/Magnitude**: How much, how many, how big, how far, how heavy
+- **Time**: Duration, frequency, timing, sequence, intervals
+- **Performance**: Speed, intensity, efficiency, accuracy, completion rate
 
-## Output (JSON only):
-Return ONLY a JSON object. If no metadata found, return {}.
+### Qualitative Dimensions  
+Capture descriptive and subjective information:
+- **Experience Quality**: How it felt, perceived difficulty, satisfaction level
+- **Method/Approach**: Technique, style, tools, process used
+- **Conditions**: Environment, circumstances, context, constraints
 
-Examples:
-- "bebi 300ml de água" → {"quantity": "300", "unit": "ml", "substance": "water"}
-- "fiz 20 flexões" → {"count": "20", "exercise_type": "push-ups"}
-- "corri 2km no parque" → {"distance": "2", "unit": "km", "location": "park"}
+### Relational Dimensions
+Identify connections and patterns:
+- **Comparison**: Better/worse than usual, first time, milestone, trend
+- **Causation**: What triggered it, what influenced it, what resulted
+- **Social**: Alone, with others, influenced by, competing with
+
+### Behavioral Dimensions
+Understand the human element:
+- **Motivation**: Why this happened, internal/external drivers
+- **State**: Physical/mental/emotional condition before/during/after  
+- **Intention**: Planned vs spontaneous, goal-oriented vs reactive
+
+## Extraction Guidelines
+
+1. **Think Human Patterns**: What would help understand this person's relationship with this activity?
+2. **Be Universally Relevant**: Focus on dimensions that apply to any human behavior
+3. **Preserve User Voice**: Keep subjective language that shows personal perspective
+4. **Infer Intelligently**: Use context and cultural understanding
+5. **Structure Meaningfully**: Organize information to reveal insights
+
+## Output Format
+Return JSON with clear, descriptive keys. Group related information logically.
+Use confidence indicators for inferences: "explicit", "inferred", "estimated"
 
 JSON:''';
   }
