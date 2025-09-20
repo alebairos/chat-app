@@ -29,6 +29,43 @@ class MetadataInsightGenerator {
   static List<String> _extractQuantitativeInsights(Map<String, dynamic> metadata) {
     final insights = <String>[];
     
+    // Legacy Format 1: Simple activity_code + substance
+    if (metadata.containsKey('activity_code') && metadata.containsKey('substance')) {
+      final substance = metadata['substance'] as String?;
+      if (substance != null) {
+        insights.add('💧 ${_capitalize(substance)}');
+      }
+    }
+    
+    // Legacy Format 2: Activity + context structure
+    final activity = metadata['activity'] as Map<String, dynamic>?;
+    if (activity != null) {
+      final type = activity['type'] as String?;
+      final specific = activity['specific'] as String?;
+      if (type != null) {
+        insights.add('🎯 ${_capitalize(type)}');
+      }
+      if (specific != null) {
+        insights.add('📋 ${_formatBehavioralInsight(specific)}');
+      }
+    }
+    
+    // Legacy Format 3: Associated metrics
+    final associatedMetrics = metadata['associated_metrics'] as Map<String, dynamic>?;
+    if (associatedMetrics != null) {
+      final running = associatedMetrics['running'] as Map<String, dynamic>?;
+      if (running != null) {
+        final distance = running['distance'] as Map<String, dynamic>?;
+        if (distance != null) {
+          final value = distance['value'];
+          final unit = distance['unit'];
+          if (value != null && unit != null) {
+            insights.add('🏃 $value $unit');
+          }
+        }
+      }
+    }
+    
     // Universal Framework: Core activity metrics
     final coreActivity = metadata['core_activity'] as Map<String, dynamic>?;
     if (coreActivity != null) {
@@ -136,6 +173,21 @@ class MetadataInsightGenerator {
   /// Extract behavioral insights (patterns, sophistication, awareness)
   static List<String> _extractBehavioralInsights(Map<String, dynamic> metadata) {
     final insights = <String>[];
+    
+    // Legacy Format: Context structure
+    final context = metadata['context'] as Map<String, dynamic>?;
+    if (context != null) {
+      final activityCluster = context['activity_cluster'] as Map<String, dynamic>?;
+      if (activityCluster != null) {
+        final primary = activityCluster['primary'] as String?;
+        final secondary = activityCluster['secondary'] as String?;
+        if (primary != null && secondary != null) {
+          insights.add('🔗 $primary + $secondary');
+        } else if (primary != null) {
+          insights.add('🎯 ${_capitalize(primary)}');
+        }
+      }
+    }
     
     // Universal Framework: Behavioral indicators
     final behavioralIndicators = metadata['behavioral_indicators'] as Map<String, dynamic>?;
