@@ -401,12 +401,14 @@ class OracleContext {
 
 class OracleDimension {
   final String code;
-  final String name;
+  final String name;           // "TEMPO DE TELA"
+  final String displayName;    // "Tempo de Tela"
   final List<OracleActivity> activities;
 
   OracleDimension({
     required this.code,
     required this.name,
+    required this.displayName,
     required this.activities,
   });
 }

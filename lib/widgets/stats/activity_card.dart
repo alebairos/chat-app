@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/dimension_display_service.dart';
 
 /// Widget for displaying individual activity information
 class ActivityCard extends StatelessWidget {
@@ -38,10 +39,10 @@ class ActivityCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: _getDimensionColor(dimension).withOpacity(0.1),
+                      color: DimensionDisplayService.getColor(dimension).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: _getDimensionColor(dimension).withOpacity(0.3),
+                        color: DimensionDisplayService.getColor(dimension).withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -50,7 +51,7 @@ class ActivityCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: _getDimensionColor(dimension),
+                        color: DimensionDisplayService.getColor(dimension),
                       ),
                     ),
                   ),
@@ -84,23 +85,23 @@ class ActivityCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: _getDimensionColor(dimension).withOpacity(0.1),
+                    color: DimensionDisplayService.getColor(dimension).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        _getDimensionIcon(dimension),
+                        DimensionDisplayService.getIcon(dimension),
                         size: 12,
-                        color: _getDimensionColor(dimension),
+                        color: DimensionDisplayService.getColor(dimension),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _getDimensionDisplayName(dimension),
+                        DimensionDisplayService.getDisplayName(dimension),
                         style: TextStyle(
                           fontSize: 11,
-                          color: _getDimensionColor(dimension),
+                          color: DimensionDisplayService.getColor(dimension),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -136,78 +137,4 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
-  Color _getDimensionColor(String dimension) {
-    switch (dimension.toUpperCase()) {
-      case 'SF': // Saúde Física
-      case 'SAUDE_FISICA':
-        return Colors.green;
-      case 'SM': // Saúde Mental
-      case 'SAUDE_MENTAL':
-        return Colors.blue;
-      case 'TG': // Trabalho & Gestão
-      case 'TRABALHO_GESTAO':
-        return Colors.orange;
-      case 'R': // Relacionamentos
-      case 'RELACIONAMENTOS':
-        return Colors.pink;
-      case 'CE': // Criatividade & Expressão
-      case 'CRIATIVIDADE_EXPRESSAO':
-        return Colors.purple;
-      case 'AE': // Aventura & Exploração
-      case 'AVENTURA_EXPLORACAO':
-        return Colors.indigo;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getDimensionIcon(String dimension) {
-    switch (dimension.toUpperCase()) {
-      case 'SF':
-      case 'SAUDE_FISICA':
-        return Icons.fitness_center;
-      case 'SM':
-      case 'SAUDE_MENTAL':
-        return Icons.psychology;
-      case 'TG':
-      case 'TRABALHO_GESTAO':
-        return Icons.work;
-      case 'R':
-      case 'RELACIONAMENTOS':
-        return Icons.people;
-      case 'CE':
-      case 'CRIATIVIDADE_EXPRESSAO':
-        return Icons.palette;
-      case 'AE':
-      case 'AVENTURA_EXPLORACAO':
-        return Icons.explore;
-      default:
-        return Icons.category;
-    }
-  }
-
-  String _getDimensionDisplayName(String dimension) {
-    switch (dimension.toUpperCase()) {
-      case 'SF':
-      case 'SAUDE_FISICA':
-        return 'Physical Health';
-      case 'SM':
-      case 'SAUDE_MENTAL':
-        return 'Mental Health';
-      case 'TG':
-      case 'TRABALHO_GESTAO':
-        return 'Work & Management';
-      case 'R':
-      case 'RELACIONAMENTOS':
-        return 'Relationships';
-      case 'CE':
-      case 'CRIATIVIDADE_EXPRESSAO':
-        return 'Creativity';
-      case 'AE':
-      case 'AVENTURA_EXPLORACAO':
-        return 'Adventure';
-      default:
-        return dimension;
-    }
-  }
 }

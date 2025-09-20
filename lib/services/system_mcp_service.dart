@@ -9,6 +9,7 @@ import '../services/chat_storage_service.dart';
 import '../services/oracle_static_cache.dart';
 import '../services/oracle_context_manager.dart';
 import '../services/semantic_activity_detector.dart';
+import '../services/dimension_display_service.dart';
 import '../config/character_config_manager.dart';
 
 /// Generic MCP (Model Context Protocol) service for system functions
@@ -370,10 +371,9 @@ Return empty array if NO COMPLETED activities detected.
       _logger.info(
           'SystemMCP: Oracle detection completed - ${detectedActivities.length} activities detected');
 
-      // Get current persona name and Oracle context for metadata
+      // Get current persona name for metadata
       final configManager = CharacterConfigManager();
       final personaName = _getPersonaDisplayName(configManager.activePersonaKey);
-      final oracleContextForMetadata = await _ensureOracleInitialized();
 
       // Return MCP response with enhanced metadata
       return json.encode({
@@ -386,7 +386,7 @@ Return empty array if NO COMPLETED activities detected.
                     'description': a.userDescription,
                     'duration_minutes': a.durationMinutes,
                     'persona_name': personaName,
-                    'dimension_name': _getDimensionDisplayName(a.oracleCode, oracleContextForMetadata),
+                    'dimension_name': DimensionDisplayService.getDisplayName(_getDimensionCode(a.oracleCode)),
                     'dimension_code': _getDimensionCode(a.oracleCode),
                   })
               .toList(),
@@ -683,39 +683,6 @@ Return empty array if NO COMPLETED activities detected.
     return match?.group(1) ?? '';
   }
 
-  /// Get human-readable dimension name from activity code
-  String _getDimensionDisplayName(String activityCode, OracleContext? oracleContext) {
-    final dimensionCode = _getDimensionCode(activityCode);
-    if (dimensionCode.isEmpty || oracleContext == null) return '';
-
-    final dimension = oracleContext.dimensions[dimensionCode];
-    if (dimension != null) {
-      return dimension.name;
-    }
-
-    // Fallback to English names for common dimensions
-    switch (dimensionCode) {
-      case 'SF':
-        return 'Physical Health';
-      case 'R':
-        return 'Relationships';
-      case 'TG':
-      case 'T':
-        return 'Work & Management';
-      case 'SM':
-        return 'Mental Health';
-      case 'E':
-        return 'Spirituality';
-      case 'TT':
-        return 'Screen Time';
-      case 'PR':
-        return 'Anti-Procrastination';
-      case 'F':
-        return 'Finance';
-      default:
-        return dimensionCode;
-    }
-  }
 
   /// Get display name for persona key
   String _getPersonaDisplayName(String personaKey) {

@@ -7,6 +7,7 @@ import 'screens/profile_screen.dart';
 import 'screens/onboarding/onboarding_flow.dart';
 import 'services/onboarding_manager.dart';
 import 'services/oracle_static_cache.dart';
+import 'services/dimension_display_service.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
@@ -43,6 +44,14 @@ Future<void> main() async {
     logger.info('✅ Oracle static cache initialized successfully');
   } catch (e) {
     logger.warning('Failed to initialize Oracle static cache: $e');
+  }
+
+  // FT-146: Initialize dimension display service
+  try {
+    await DimensionDisplayService.initialize();
+    logger.info('✅ DimensionDisplayService initialized successfully');
+  } catch (e) {
+    logger.warning('Failed to initialize DimensionDisplayService: $e');
   }
 
   // Note: LifePlan service initialization removed

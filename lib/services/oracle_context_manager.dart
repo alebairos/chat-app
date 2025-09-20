@@ -111,6 +111,9 @@ class OracleContextManager {
         dimensions[dimensionCode] = OracleDimension(
           code: dimensionCode,
           name: dimensionData['name'] as String? ?? dimensionCode,
+          displayName: dimensionData['display_name'] as String? ?? 
+                       dimensionData['name'] as String? ?? 
+                       dimensionCode,
           activities: activities,
         );
       }
