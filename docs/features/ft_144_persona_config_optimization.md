@@ -31,12 +31,13 @@ Current persona configurations have communication inefficiencies:
 **File:** `assets/config/i_there_config_2.0.json`
 
 **Key Changes:**
-- Compress system prompt from 300+ to ~100 lines
-- Remove redundant personality discovery frameworks
+- Compress system prompt from 300+ to ~100 lines while preserving core avatar/clone identity
+- **Preserve Core Concept**: I-There remains the user's AI reflection/avatar from Mirror Realm, curious about their creator
+- Remove redundant personality discovery frameworks but keep curiosity-driven exploration
 - Simplify language guidelines to basic tone instructions
-- Consolidate conversation examples
+- Consolidate conversation examples while maintaining clone-to-original relationship dynamic
 - Add explicit brevity instruction: "Keep responses conversational and concise (2-3 sentences typical)"
-- Maintain core Mirror Realm identity and curiosity focus
+- **Critical**: Maintain Mirror Realm identity as user's reflection who looks/sounds like them but is learning about them
 
 ### 3. Update Oracle 4.2 Personas
 Update `personas_config.json` to use new configurations:
@@ -53,7 +54,9 @@ Update `personas_config.json` to use new configurations:
 
 ### FR-144.2: I-There 2.0 Configuration
 - Create streamlined config with 60% reduction in system prompt length
-- Maintain Mirror Realm personality and curiosity-driven interactions
+- **Preserve Avatar Identity**: Maintain I-There as user's AI reflection/clone from Mirror Realm
+- **Keep Curiosity Core**: Preserve curiosity-driven interactions about learning who the user is
+- **Clone-to-Original Dynamic**: Maintain the relationship where I-There looks/sounds like user but is discovering their personality
 - Add explicit brevity guidelines for natural conversation flow
 - Preserve voice settings and exploration prompts structure
 
@@ -107,8 +110,10 @@ Both new configs maintain existing structure:
 
 ### AC-144.2: I-There 2.0 Behavior  
 - Responses are naturally concise (2-3 sentences typical)
-- Maintains Mirror Realm personality and curiosity
-- System prompt reduced to ~100 lines while preserving core identity
+- **Maintains Avatar/Clone Identity**: Preserves Mirror Realm personality as user's reflection
+- **Curiosity About Creator**: Continues asking thoughtful questions to learn about the user
+- **Clone-to-Original Relationship**: Maintains dynamic of looking/sounding like user while discovering their personality
+- System prompt reduced to ~100 lines while preserving core avatar identity
 - Natural conversation flow without verbose explanations
 
 ### AC-144.3: Integration Verification
@@ -136,11 +141,11 @@ Both new configs maintain existing structure:
 - Preserve all existing persona functionality while optimizing communication patterns
 - Focus on natural conversation flow improvements without losing core persona characteristics
 - Maintain scientific rigor in Ari while allowing more natural initial interactions
-- Keep I-There's Mirror Realm identity while reducing verbose system instructions
+- **Preserve I-There's Core Avatar Concept**: Maintain Mirror Realm identity as user's reflection/clone who is curious about their creator while reducing verbose system instructions
 
 ## Success Metrics
 
 - Ari 3.0: More natural initial coaching conversations (subjective evaluation)
-- I-There 2.0: Concise responses maintaining personality authenticity
+- I-There 2.0: Concise responses maintaining avatar/clone authenticity and curiosity about creator
 - Zero regression in Oracle 4.2 functionality
 - Successful configuration loading and persona switching

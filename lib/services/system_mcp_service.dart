@@ -332,16 +332,26 @@ class SystemMCPService {
       // Build LLM prompt with complete Oracle context
       final prompt = '''
 User message: "$userMessage"
-Oracle activities (ALL 265): $compactOracle
+Oracle activities: $compactOracle
 
-Analyze the user message semantically and identify completed activities.
-Use your understanding of Portuguese, English, Spanish, and other languages.
-Match activities based on meaning, not just keywords.
+MULTILINGUAL DETECTION RULES:
+1. ONLY COMPLETED activities (past tense in ANY language)
+2. Completion indicators:
+   - Portuguese: "fiz", "completei", "bebi", "caminhei", "terminei", "acabei", "realizei"
+   - English: "did", "completed", "finished", "drank", "walked", "exercised", "meditated"  
+   - Spanish: "hice", "completé", "bebí", "caminé", "terminé", "realicé", "medité"
+   - Past tense patterns: "-ed", "-ou", "-í", "-é" endings
+3. IGNORE future/planning in ALL languages:
+   - Portuguese: "vou fazer", "preciso", "quero", "planejo", "vai fazer"
+   - English: "will do", "going to", "need to", "want to", "plan to"
+   - Spanish: "voy a hacer", "necesito", "quiero", "planeo"
+4. Return EXACT Oracle catalog names, not custom descriptions
+5. Semantic understanding: detect meaning beyond keywords
 
-Return JSON format:
-{"activities": [{"code": "SF1", "confidence": "high", "description": "user's description"}]}
+Required JSON format:
+{"activities": [{"code": "SF1", "confidence": "high", "catalog_name": "Beber água"}]}
 
-Return empty array if no completed activities detected.
+Return empty array if NO COMPLETED activities detected.
 ''';
 
       // Call Claude for activity detection
@@ -598,15 +608,18 @@ Return empty array if no completed activities detected.
         final code = activityData['code'] as String? ?? '';
         final confidence =
             _parseConfidence(activityData['confidence'] as String? ?? 'medium');
-        final description = activityData['description'] as String? ?? '';
+        final catalogName = activityData['catalog_name'] as String? ?? '';
         final duration = activityData['duration_minutes'] as int? ?? 0;
+
+        // Use exact catalog name, fallback to code if not provided
+        final activityName = catalogName.isNotEmpty ? catalogName : code;
 
         return ActivityDetection(
           oracleCode: code,
-          activityName: description.isNotEmpty ? description : code,
-          userDescription: description,
+          activityName: activityName,
+          userDescription: activityName, // Use catalog name as description
           confidence: confidence,
-          reasoning: 'Detected via MCP Oracle detection',
+          reasoning: 'Detected via MCP Oracle detection (multilingual)',
           timestamp: DateTime.now(),
           durationMinutes: duration,
         );
