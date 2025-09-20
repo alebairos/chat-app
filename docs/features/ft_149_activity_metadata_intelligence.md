@@ -500,11 +500,50 @@ SF1  Beber água                    21:13
 - ✅ Test UI behavior in all three states
 
 ### **Step 4: Post-Processing Integration (1.5 hours)** 🔄 IN PROGRESS
-- [ ] Add metadata extraction hook after FT-140 Oracle detection
-- [ ] Implement `SemanticActivityDetector.extractMetadata()` method
-- [ ] Create metadata extraction prompt with Oracle activity context
-- [ ] Test post-processing behavior in Full Intelligence mode
-- [ ] Verify graceful degradation when extraction fails
+- [x] ✅ **Core Implementation Complete**: All FT-149 services implemented
+- [x] ✅ **MetadataExtractionService**: Focused Claude calls with Portuguese colloquialisms
+- [x] ✅ **ActivityModel**: JSON metadata fields with safe parsing
+- [x] ✅ **ActivityMemoryService**: Post-processing integration ready
+- [ ] ❌ **INTEGRATION GAP**: Missing context passing in `ClaudeService._logActivitiesWithPreciseTime()`
+  - **Issue**: Oracle detection not passing `userMessage` and `oracleActivityName` to metadata extraction
+  - **Fix Required**: Single method update to pass required parameters
+  - **Status**: Ready for implementation (surgical change)
+- [ ] **UI Integration**: Metadata display components not yet implemented
+  - **Current**: Metadata extracted and stored in database
+  - **Missing**: ActivityCard collapsible metadata section
+  - **Impact**: No visual feedback to users yet
+
+## 🚧 Current Implementation Status (September 2025)
+
+### **✅ Completed Components**
+- **MetadataConfig**: Feature flag system with 3-state management
+- **MetadataExtractionService**: Focused Claude API calls with Portuguese support
+- **ActivityModel**: JSON metadata storage with safe parsing helpers
+- **ActivityMemoryService**: Post-processing integration infrastructure
+- **ClaudeService**: Public `callClaudeWithPrompt()` method for focused calls
+
+### **❌ Integration Gap Identified**
+**Problem**: Oracle detection (FT-140) → Metadata extraction (FT-149) bridge incomplete
+
+**Root Cause**: `ClaudeService._logActivitiesWithPreciseTime()` not passing required context:
+```dart
+// Current (missing context)
+await ActivityMemoryService.logActivity(/* basic params only */);
+
+// Required (with FT-149 context)
+await ActivityMemoryService.logActivity(
+  // ... existing params
+  userMessage: userMessage,           // ❌ Missing
+  oracleActivityName: detected['activityName'], // ❌ Missing
+);
+```
+
+**Impact**: Metadata extraction never triggers (condition `userMessage != null && oracleActivityName != null` never met)
+
+### **🔧 Next Steps**
+1. **Integration Fix** (15 minutes): Update `ClaudeService._logActivitiesWithPreciseTime()` parameter passing
+2. **UI Implementation** (2-3 hours): ActivityCard metadata display components
+3. **End-to-End Testing**: Verify complete flow from user input → UI display
 
 ## Success Metrics
 
