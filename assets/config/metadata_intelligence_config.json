@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "description": "Activity Metadata Intelligence Configuration - FT-149",
+  "enabled": true,
+  "ai_extraction": true,
+  "features": {
+    "extraction": {
+      "description": "Extract metadata during semantic activity detection",
+      "target_activities": ["SF1", "SF12", "SF13", "TG8", "TG1"],
+      "confidence_threshold": "medium"
+    },
+    "ui_display": {
+      "description": "Show collapsible metadata sections in activity cards",
+      "default_collapsed": true
+    },
+    "user_editing": {
+      "description": "Allow users to edit metadata values",
+      "batch_reinterpretation": true,
+      "reinterpretation_threshold": 5
+    }
+  },
+  "performance": {
+    "max_token_increase": 300,
+    "extraction_timeout_ms": 5000
+  }
+}
