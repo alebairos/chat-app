@@ -160,15 +160,15 @@ class MetadataInsightGenerator {
         }
       }
       
-      // Energy, variety, structure (flat structure)
-      final energy = behavioralIndicators['energy'] as String?;
-      final variety = behavioralIndicators['variety'] as String?;
-      final structureFlat = behavioralIndicators['structure'] as String?;
+      // Energy, variety, structure (flat structure - only if they are strings)
+      final energy = behavioralIndicators['energy'];
+      final variety = behavioralIndicators['variety'];
+      final structureFlat = behavioralIndicators['structure'];
       
-      if (energy != null) {
+      if (energy is String) {
         insights.add('⚡ ${_capitalize(energy)}');
       }
-      if (variety != null) {
+      if (variety is String) {
         insights.add('🎯 ${_formatBehavioralInsight(variety)}');
       }
       if (structureFlat is String) {
