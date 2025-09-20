@@ -116,9 +116,11 @@ class ActivityModel {
 
   // FT-149: Metadata helper methods
   /// Check if activity has metadata
+  @ignore
   bool get hasMetadata => metadata != null && metadata!.isNotEmpty;
 
   /// Get metadata as Map (with safe parsing)
+  @ignore
   Map<String, dynamic>? get metadataMap {
     if (metadata == null) return null;
     try {
@@ -135,6 +137,7 @@ class ActivityModel {
   }
 
   /// Set metadata from Map
+  @ignore
   set metadataMap(Map<String, dynamic>? value) {
     if (value == null) {
       metadata = null;
