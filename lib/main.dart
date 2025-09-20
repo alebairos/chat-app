@@ -11,6 +11,7 @@ import 'services/dimension_display_service.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
+import 'config/metadata_config.dart';
 
 Future<void> main() async {
   // Initialize logger with appropriate settings
@@ -54,6 +55,14 @@ Future<void> main() async {
     DimensionDisplayService.logServiceState();
   } catch (e) {
     logger.warning('Failed to initialize DimensionDisplayService: $e');
+  }
+
+  // FT-149: Initialize metadata intelligence configuration
+  try {
+    await MetadataConfig.initialize();
+    logger.info('✅ MetadataConfig initialized successfully');
+  } catch (e) {
+    logger.warning('Failed to initialize MetadataConfig: $e');
   }
 
   // Note: LifePlan service initialization removed
