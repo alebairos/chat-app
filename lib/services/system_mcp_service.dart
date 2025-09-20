@@ -9,6 +9,7 @@ import '../services/chat_storage_service.dart';
 import '../services/oracle_static_cache.dart';
 import '../services/oracle_context_manager.dart';
 import '../services/semantic_activity_detector.dart';
+import '../config/character_config_manager.dart';
 
 /// Generic MCP (Model Context Protocol) service for system functions
 ///
@@ -347,21 +348,34 @@ MULTILINGUAL DETECTION RULES:
    - Spanish: "voy a hacer", "necesito", "quiero", "planeo"
 4. Return EXACT Oracle catalog names, not custom descriptions
 5. Semantic understanding: detect meaning beyond keywords
+6. CRITICAL: Use ONLY the exact activity names from the Oracle catalog
+7. NEVER create custom phrases like "vai fazer um pomodoro (will do a pomodoro session)"
+8. NEVER add translations or explanations in parentheses
 
 Required JSON format:
 {"activities": [{"code": "SF1", "confidence": "high", "catalog_name": "Beber água"}]}
+
+EXAMPLES:
+✅ CORRECT: {"code": "SF1", "catalog_name": "Beber água"}
+❌ WRONG: {"code": "SF1", "catalog_name": "bebeu um copo d'água (drank a glass of water)"}
+❌ WRONG: {"code": "T8", "catalog_name": "vai fazer um pomodoro (will do a pomodoro session)"}
 
 Return empty array if NO COMPLETED activities detected.
 ''';
 
       // Call Claude for activity detection
       final claudeResponse = await _callClaude(prompt);
-      final detectedActivities = _parseDetectionResults(claudeResponse);
+      final detectedActivities = await _parseDetectionResults(claudeResponse);
 
       _logger.info(
           'SystemMCP: Oracle detection completed - ${detectedActivities.length} activities detected');
 
-      // Return MCP response
+      // Get current persona name and Oracle context for metadata
+      final configManager = CharacterConfigManager();
+      final personaName = _getPersonaDisplayName(configManager.activePersonaKey);
+      final oracleContextForMetadata = await _ensureOracleInitialized();
+
+      // Return MCP response with enhanced metadata
       return json.encode({
         'status': 'success',
         'data': {
@@ -371,12 +385,16 @@ Return empty array if NO COMPLETED activities detected.
                     'confidence': a.confidence.toString(),
                     'description': a.userDescription,
                     'duration_minutes': a.durationMinutes,
+                    'persona_name': personaName,
+                    'dimension_name': _getDimensionDisplayName(a.oracleCode, oracleContextForMetadata),
+                    'dimension_code': _getDimensionCode(a.oracleCode),
                   })
               .toList(),
           'oracle_context_size': compactOracle.length,
           'total_activities_available': OracleStaticCache.totalActivities,
           'method': 'mcp_oracle_detection',
           'oracle_compliance': 'all_265_activities_accessible',
+          'persona_name': personaName,
         },
         'timestamp': DateTime.now().toIso8601String(),
       });
@@ -590,7 +608,7 @@ Return empty array if NO COMPLETED activities detected.
   }
 
   /// Parse Claude detection results into ActivityDetection objects
-  List<ActivityDetection> _parseDetectionResults(String claudeResponse) {
+  Future<List<ActivityDetection>> _parseDetectionResults(String claudeResponse) async {
     try {
       // Extract JSON from Claude response
       final jsonMatch =
@@ -604,6 +622,8 @@ Return empty array if NO COMPLETED activities detected.
       final data = json.decode(jsonStr) as Map<String, dynamic>;
       final activities = data['activities'] as List<dynamic>? ?? [];
 
+      // Oracle context is available from static cache for activity lookup
+      
       return activities.map((activityData) {
         final code = activityData['code'] as String? ?? '';
         final confidence =
@@ -611,13 +631,25 @@ Return empty array if NO COMPLETED activities detected.
         final catalogName = activityData['catalog_name'] as String? ?? '';
         final duration = activityData['duration_minutes'] as int? ?? 0;
 
-        // Use exact catalog name, fallback to code if not provided
-        final activityName = catalogName.isNotEmpty ? catalogName : code;
+        // Get exact catalog name from Oracle cache to ensure proper encoding
+        String activityName = catalogName;
+        if (code.isNotEmpty && OracleStaticCache.isInitialized) {
+          final oracleActivity = OracleStaticCache.getActivityByCode(code);
+          if (oracleActivity != null) {
+            // Use Oracle cache name to ensure proper UTF-8 encoding
+            activityName = oracleActivity.description;
+          }
+        }
+
+        // Fallback to code if no name found
+        if (activityName.isEmpty) {
+          activityName = code;
+        }
 
         return ActivityDetection(
           oracleCode: code,
           activityName: activityName,
-          userDescription: activityName, // Use catalog name as description
+          userDescription: activityName, // Use exact catalog name
           confidence: confidence,
           reasoning: 'Detected via MCP Oracle detection (multilingual)',
           timestamp: DateTime.now(),
@@ -639,6 +671,68 @@ Return empty array if NO COMPLETED activities detected.
         return ConfidenceLevel.low;
       default:
         return ConfidenceLevel.medium;
+    }
+  }
+
+  /// Get dimension code from activity code (e.g., SF1 -> SF)
+  String _getDimensionCode(String activityCode) {
+    if (activityCode.isEmpty) return '';
+    
+    // Extract dimension prefix (letters before numbers)
+    final match = RegExp(r'^([A-Z]+)').firstMatch(activityCode);
+    return match?.group(1) ?? '';
+  }
+
+  /// Get human-readable dimension name from activity code
+  String _getDimensionDisplayName(String activityCode, OracleContext? oracleContext) {
+    final dimensionCode = _getDimensionCode(activityCode);
+    if (dimensionCode.isEmpty || oracleContext == null) return '';
+
+    final dimension = oracleContext.dimensions[dimensionCode];
+    if (dimension != null) {
+      return dimension.name;
+    }
+
+    // Fallback to English names for common dimensions
+    switch (dimensionCode) {
+      case 'SF':
+        return 'Physical Health';
+      case 'R':
+        return 'Relationships';
+      case 'TG':
+      case 'T':
+        return 'Work & Management';
+      case 'SM':
+        return 'Mental Health';
+      case 'E':
+        return 'Spirituality';
+      case 'TT':
+        return 'Screen Time';
+      case 'PR':
+        return 'Anti-Procrastination';
+      case 'F':
+        return 'Finance';
+      default:
+        return dimensionCode;
+    }
+  }
+
+  /// Get display name for persona key
+  String _getPersonaDisplayName(String personaKey) {
+    switch (personaKey) {
+      case 'ariWithOracle42':
+        return 'Ari 4.2';
+      case 'iThereWithOracle42':
+        return 'I-There 4.2';
+      case 'ryoTzuWithOracle42':
+        return 'Ryo Tzu 4.2';
+      case 'ariLifeCoach':
+        return 'Ari - Life Coach';
+      case 'iThere':
+        return 'I-There';
+      default:
+        // Extract display name from persona key (fallback)
+        return personaKey.replaceAll(RegExp(r'([A-Z])'), ' \$1').trim();
     }
   }
 
