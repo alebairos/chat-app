@@ -16,7 +16,7 @@ class ActivityCard extends StatefulWidget {
   final String time;
   final String dimension;
   final String source;
-  
+
   // FT-149: New parameters for metadata support
   final ActivityModel? activityModel;
   final String? dynamicMetadata; // JSON string from ActivityMemoryService
@@ -48,7 +48,7 @@ class _ActivityCardState extends State<ActivityCard> {
     if (widget.activityModel?.metadataMap != null) {
       return widget.activityModel!.metadataMap;
     }
-    
+
     // Try dynamic metadata
     if (widget.dynamicMetadata != null) {
       try {
@@ -59,22 +59,23 @@ class _ActivityCardState extends State<ActivityCard> {
           return Map<String, dynamic>.from(decoded);
         }
       } catch (e) {
-        ActivityCard._logger.debug('FT-149: Failed to parse dynamic metadata: $e');
+        ActivityCard._logger
+            .debug('FT-149: Failed to parse dynamic metadata: $e');
       }
     }
-    
+
     return null;
   }
 
   /// Check if metadata should be displayed
   bool get _shouldShowMetadata {
     if (MetadataConfig.isDisabled) return false;
-    
+
     // Check if we have metadata
-    final hasMetadata = widget.dynamicHasMetadata ?? 
-                       widget.activityModel?.hasMetadata ?? 
-                       (_metadataMap?.isNotEmpty ?? false);
-    
+    final hasMetadata = widget.dynamicHasMetadata ??
+        widget.activityModel?.hasMetadata ??
+        (_metadataMap?.isNotEmpty ?? false);
+
     ActivityCard._logger.debug('FT-149: Should show metadata: $hasMetadata');
     return hasMetadata;
   }
@@ -82,14 +83,18 @@ class _ActivityCardState extends State<ActivityCard> {
   @override
   Widget build(BuildContext context) {
     // FT-147: Debug dimension display issue
-    ActivityCard._logger.info('FT-147: ActivityCard requesting display name for dimension: "${widget.dimension}"');
-    final displayName = DimensionDisplayService.getDisplayName(widget.dimension);
-    ActivityCard._logger.info('FT-147: ActivityCard received display name: "$displayName"');
-    
+    ActivityCard._logger.info(
+        'FT-147: ActivityCard requesting display name for dimension: "${widget.dimension}"');
+    final displayName =
+        DimensionDisplayService.getDisplayName(widget.dimension);
+    ActivityCard._logger
+        .info('FT-147: ActivityCard received display name: "$displayName"');
+
     // Log service state for debugging
     final debugInfo = DimensionDisplayService.getDebugInfo();
-    ActivityCard._logger.info('FT-147: Service state - initialized: ${debugInfo['initialized']}, hasContext: ${debugInfo['hasOracleContext']}');
-    
+    ActivityCard._logger.info(
+        'FT-147: Service state - initialized: ${debugInfo['initialized']}, hasContext: ${debugInfo['hasOracleContext']}');
+
     return Card(
       elevation: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -113,8 +118,9 @@ class _ActivityCardState extends State<ActivityCard> {
                           .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: DimensionDisplayService.getColor(widget.dimension)
-                            .withOpacity(0.3),
+                        color:
+                            DimensionDisplayService.getColor(widget.dimension)
+                                .withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -123,7 +129,8 @@ class _ActivityCardState extends State<ActivityCard> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: DimensionDisplayService.getColor(widget.dimension),
+                        color:
+                            DimensionDisplayService.getColor(widget.dimension),
                       ),
                     ),
                   ),
@@ -173,14 +180,16 @@ class _ActivityCardState extends State<ActivityCard> {
                       Icon(
                         DimensionDisplayService.getIcon(widget.dimension),
                         size: 12,
-                        color: DimensionDisplayService.getColor(widget.dimension),
+                        color:
+                            DimensionDisplayService.getColor(widget.dimension),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         displayName,
                         style: TextStyle(
                           fontSize: 11,
-                          color: DimensionDisplayService.getColor(widget.dimension),
+                          color: DimensionDisplayService.getColor(
+                              widget.dimension),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -262,7 +271,10 @@ class _ActivityCardState extends State<ActivityCard> {
 
   /// Build expandable insights section
   Widget _buildExpandableInsights() {
-    final sections = MetadataInsightGenerator.generateDetailedSections(_metadataMap);
+    final sections =
+        MetadataInsightGenerator.generateDetailedSections(_metadataMap);
+    ActivityCard._logger.debug(
+        'FT-149: Generated ${sections.length} detailed sections for metadata: ${_metadataMap?.keys}');
     if (sections.isEmpty) return const SizedBox.shrink();
 
     return GestureDetector(
@@ -289,7 +301,9 @@ class _ActivityCardState extends State<ActivityCard> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _isExpanded ? 'Hide insights' : 'Show insights (${sections.length})',
+                  _isExpanded
+                      ? 'Hide insights'
+                      : 'Show insights (${sections.length})',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -325,28 +339,28 @@ class _ActivityCardState extends State<ActivityCard> {
           ),
           const SizedBox(height: 4),
           ...section.items.map((item) => Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 2),
-            child: Row(
-              children: [
-                Text(
-                  '• ${item.key}: ',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    item.value,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.black87,
+                padding: const EdgeInsets.only(left: 8, bottom: 2),
+                child: Row(
+                  children: [
+                    Text(
+                      '• ${item.key}: ',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[700],
+                      ),
                     ),
-                  ),
+                    Expanded(
+                      child: Text(
+                        item.value,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );

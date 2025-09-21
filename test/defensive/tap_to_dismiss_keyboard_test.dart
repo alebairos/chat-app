@@ -36,6 +36,10 @@ class MockClaudeService implements ClaudeService {
 
   @override
   void setLogging(bool enable) {}
+
+  @override
+  Future<String> callClaudeWithPrompt(String prompt) async =>
+      'Mock prompt response';
 }
 
 class MockChatStorageService implements ChatStorageService {

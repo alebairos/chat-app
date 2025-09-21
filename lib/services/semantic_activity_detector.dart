@@ -369,6 +369,8 @@ class ActivityDetection {
   final ConfidenceLevel confidence;
   final String reasoning;
   final DateTime timestamp;
+  final Map<String, dynamic>?
+      metadata; // FT-149.6: Metadata from integrated detection
 
   ActivityDetection({
     required this.oracleCode,
@@ -378,6 +380,7 @@ class ActivityDetection {
     required this.confidence,
     required this.reasoning,
     required this.timestamp,
+    this.metadata, // FT-149.6: Optional metadata
   });
 
   @override
@@ -401,8 +404,8 @@ class OracleContext {
 
 class OracleDimension {
   final String code;
-  final String name;           // "TEMPO DE TELA"
-  final String displayName;    // "Tempo de Tela"
+  final String name; // "TEMPO DE TELA"
+  final String displayName; // "Tempo de Tela"
   final List<OracleActivity> activities;
 
   OracleDimension({

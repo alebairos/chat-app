@@ -249,6 +249,11 @@ class FakeClaudeService implements ClaudeService {
   void setLogging(bool enable) {
     // No-op for testing
   }
+
+  @override
+  Future<String> callClaudeWithPrompt(String prompt) async {
+    return _response;
+  }
 }
 
 // A simplified version of ChatScreen for testing

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'package:isar/isar.dart';
 import '../models/activity_model.dart';
 import '../utils/logger.dart';
 import 'metadata_extraction_service.dart';
@@ -19,11 +18,12 @@ class MetadataExtractionQueue {
   Timer? _processingTimer;
   bool _isProcessing = false;
 
-  // Rate limiting configuration
-  static const int _maxRetriesPerTask = 3;
+  // Rate limiting configuration - FT-149.3: Conservative settings for higher completeness
+  static const int _maxRetriesPerTask = 5; // Increased from 3 to 5
   static const Duration _baseRetryDelay = Duration(seconds: 2);
   static const Duration _processingInterval = Duration(seconds: 5);
-  static const Duration _rateLimitCooldown = Duration(minutes: 1);
+  static const Duration _rateLimitCooldown =
+      Duration(minutes: 2); // Increased from 1 to 2 minutes
 
   DateTime? _lastRateLimitError;
   int _consecutiveRateLimitErrors = 0;
@@ -37,9 +37,11 @@ class MetadataExtractionQueue {
   /// Debug method to log current queue status
   void logQueueStatus() {
     final status = getQueueStatus();
-    _logger.info('FT-149: Queue Status - ${status['queue_size']} total, ${status['ready_tasks']} ready, ${status['waiting_tasks']} waiting');
+    _logger.info(
+        'FT-149: Queue Status - ${status['queue_size']} total, ${status['ready_tasks']} ready, ${status['waiting_tasks']} waiting');
     if (status['is_rate_limited'] == true) {
-      _logger.info('FT-149: Currently rate limited (${status['consecutive_rate_limit_errors']} consecutive errors)');
+      _logger.info(
+          'FT-149: Currently rate limited (${status['consecutive_rate_limit_errors']} consecutive errors)');
     }
     if (status['queue_size'] > 0) {
       _logger.debug('FT-149: Queue details: ${status['next_retry_times']}');
@@ -97,22 +99,25 @@ class MetadataExtractionQueue {
         ..sort((a, b) => b.priority.compareTo(a.priority));
 
       final now = DateTime.now();
-      final readyTasks = sortedTasks.where((task) => 
-        task.nextRetryAt == null || now.isAfter(task.nextRetryAt!)
-      ).take(3); // Process max 3 ready tasks at a time
-      
+      final readyTasks = sortedTasks
+          .where((task) =>
+              task.nextRetryAt == null || now.isAfter(task.nextRetryAt!))
+          .take(1); // FT-149.3: Process 1 task at a time to avoid rate limits
+
       if (readyTasks.isEmpty) {
-        _logger.debug('FT-149: No tasks ready for processing (${_queue.length} tasks waiting for retry time)');
+        _logger.debug(
+            'FT-149: No tasks ready for processing (${_queue.length} tasks waiting for retry time)');
         return;
       }
-      
+
       for (final task in readyTasks) {
         _queue.remove(task);
         await _processTask(task);
 
-        // Add delay between tasks to avoid rate limiting
+        // FT-149.3: Increased delay between tasks to avoid rate limiting
         if (_queue.isNotEmpty) {
-          await Future.delayed(Duration(milliseconds: 500));
+          await Future.delayed(
+              Duration(seconds: 3)); // Increased from 500ms to 3s
         }
       }
     } catch (e) {
@@ -265,30 +270,33 @@ class MetadataExtractionQueue {
   /// Check if we're currently rate limited
   bool _isRateLimited() {
     if (_lastRateLimitError == null) return false;
-    
+
     final cooldownMultiplier = _consecutiveRateLimitErrors.clamp(1, 8);
     final cooldownPeriod = _rateLimitCooldown * cooldownMultiplier;
     final timeSinceLastError = DateTime.now().difference(_lastRateLimitError!);
-    
+
     final isLimited = timeSinceLastError < cooldownPeriod;
-    
+
     if (isLimited) {
       final remainingTime = cooldownPeriod - timeSinceLastError;
-      _logger.info('FT-149: Rate limited - ${remainingTime.inSeconds}s remaining (${_consecutiveRateLimitErrors} consecutive errors)');
+      _logger.info(
+          'FT-149: Rate limited - ${remainingTime.inSeconds}s remaining (${_consecutiveRateLimitErrors} consecutive errors)');
     } else if (_consecutiveRateLimitErrors > 0) {
-      _logger.info('FT-149: Rate limit cooldown expired - ready to process queue');
+      _logger
+          .info('FT-149: Rate limit cooldown expired - ready to process queue');
     }
-    
+
     return isLimited;
   }
 
   /// Get queue status for debugging
   Map<String, dynamic> getQueueStatus() {
     final now = DateTime.now();
-    final readyTasks = _queue.where((task) => 
-      task.nextRetryAt == null || now.isAfter(task.nextRetryAt!)
-    ).length;
-    
+    final readyTasks = _queue
+        .where((task) =>
+            task.nextRetryAt == null || now.isAfter(task.nextRetryAt!))
+        .length;
+
     return {
       'queue_size': _queue.length,
       'ready_tasks': readyTasks,
@@ -297,11 +305,13 @@ class MetadataExtractionQueue {
       'is_rate_limited': _isRateLimited(),
       'consecutive_rate_limit_errors': _consecutiveRateLimitErrors,
       'last_rate_limit_error': _lastRateLimitError?.toIso8601String(),
-      'next_retry_times': _queue.map((task) => {
-        'activity': task.activity.activityName,
-        'retry_at': task.nextRetryAt?.toIso8601String(),
-        'retry_count': task.retryCount,
-      }).toList(),
+      'next_retry_times': _queue
+          .map((task) => {
+                'activity': task.activity.activityName,
+                'retry_at': task.nextRetryAt?.toIso8601String(),
+                'retry_count': task.retryCount,
+              })
+          .toList(),
     };
   }
 

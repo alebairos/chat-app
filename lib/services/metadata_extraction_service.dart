@@ -1,13 +1,13 @@
 import 'dart:convert';
 import '../config/metadata_config.dart';
 import '../models/activity_model.dart';
-import '../services/claude_service.dart';
+import '../services/lean_claude_connector.dart';
 import '../utils/logger.dart';
 
 /// FT-149: Focused Metadata Extraction Service
-/// 
-/// Provides intelligent metadata extraction using existing ClaudeService
-/// infrastructure for optimal accuracy and minimal cost.
+///
+/// Provides intelligent metadata extraction using lean Claude connector
+/// for optimal speed, accuracy, and minimal cost overhead.
 class MetadataExtractionService {
   static final Logger _logger = Logger();
 
@@ -23,7 +23,8 @@ class MetadataExtractionService {
         return null;
       }
 
-      _logger.debug('FT-149: Starting focused metadata extraction for: $oracleActivityName');
+      _logger.debug(
+          'FT-149: Starting focused metadata extraction for: $oracleActivityName');
 
       // Build focused metadata extraction prompt
       final prompt = _buildFocusedMetadataPrompt(
@@ -32,19 +33,26 @@ class MetadataExtractionService {
         activityName: oracleActivityName,
       );
 
-      // Use existing ClaudeService infrastructure (optimal accuracy)
-      final claudeService = ClaudeService();
-      await claudeService.initialize();
-      final response = await claudeService.callClaudeWithPrompt(prompt);
-      
+      // Use lean Claude connector (optimal speed + cost efficiency)
+      final response = await LeanClaudeConnector.extractMetadata(
+        prompt: prompt,
+        maxTokens: 1000, // FT-149.5: Increased for complete JSON responses
+      );
+
       // Parse metadata from focused response
+      if (response == null) {
+        _logger.debug('FT-149: Lean extraction returned null response');
+        return null;
+      }
+
       final metadata = _parseMetadataResponse(response);
-      
+
       if (metadata != null && metadata.isNotEmpty) {
-        _logger.info('FT-149: ✅ Extracted ${metadata.keys.length} metadata fields');
+        _logger.info(
+            'FT-149: ✅ Lean extraction: ${metadata.keys.length} metadata fields');
         return metadata;
       } else {
-        _logger.debug('FT-149: No metadata extracted from response');
+        _logger.debug('FT-149: Lean extraction returned no metadata');
         return null;
       }
     } catch (e) {
@@ -111,17 +119,27 @@ JSON:''';
   /// Parse metadata from Claude response
   static Map<String, dynamic>? _parseMetadataResponse(String response) {
     try {
+      // First, try to find complete JSON blocks
       final jsonStart = response.indexOf('{');
       final jsonEnd = response.lastIndexOf('}');
-      
-      if (jsonStart == -1 || jsonEnd == -1) return null;
-      
+
+      if (jsonStart == -1 || jsonEnd == -1) {
+        _logger.debug('FT-149: No JSON braces found in response');
+        return null;
+      }
+
       final jsonStr = response.substring(jsonStart, jsonEnd + 1);
+
+      // FT-149.4: Trust Dart's JSON parser - no custom validation needed
       final parsed = json.decode(jsonStr);
-      
-      return parsed is Map<String, dynamic> && parsed.isNotEmpty ? parsed : null;
+
+      return parsed is Map<String, dynamic> && parsed.isNotEmpty
+          ? parsed
+          : null;
     } catch (e) {
       _logger.debug('FT-149: Failed to parse metadata response: $e');
+      _logger.debug(
+          'FT-149: Response preview: ${response.length > 200 ? response.substring(0, 200) + "..." : response}');
       return null;
     }
   }

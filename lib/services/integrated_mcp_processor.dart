@@ -87,6 +87,8 @@ class IntegratedMCPProcessor {
       await _logActivitiesWithPreciseTime(
         activities: detectedActivities,
         timeContext: timeData,
+        userMessage:
+            userMessage, // FT-149: Pass user message for metadata extraction
       );
 
       Logger().info(
@@ -150,6 +152,7 @@ class IntegratedMCPProcessor {
   static Future<void> _logActivitiesWithPreciseTime({
     required List<ActivityDetection> activities,
     required Map<String, dynamic> timeContext,
+    String? userMessage, // FT-149: For metadata extraction context
   }) async {
     try {
       Logger().debug(
@@ -193,6 +196,13 @@ class IntegratedMCPProcessor {
         activity.detectionMethod = 'semantic_ft064';
         activity.timeContext = timeContext['readableTime'] as String? ?? '';
 
+        // FT-149.6: Set metadata directly if available from integrated detection
+        if (detection.metadata != null) {
+          activity.metadataMap = detection.metadata;
+          Logger().debug(
+              'FT-149.6: ✅ Set integrated metadata for ${activity.activityName}: ${detection.metadata!.keys}');
+        }
+
         // Store using existing FT-061 ActivityMemoryService
         await ActivityMemoryService.logActivity(
           activityCode: activity.activityCode,
@@ -202,6 +212,10 @@ class IntegratedMCPProcessor {
           durationMinutes: activity.durationMinutes,
           notes: activity.notes,
           confidence: activity.confidenceScore,
+          // FT-149.6: Pass context for fallback metadata extraction (only if no integrated metadata)
+          userMessage: detection.metadata == null ? userMessage : null,
+          oracleActivityName:
+              detection.metadata == null ? oracleActivity.description : null,
         );
 
         Logger().info(
