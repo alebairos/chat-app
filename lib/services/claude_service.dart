@@ -14,57 +14,12 @@ import 'time_context_service.dart';
 import 'integrated_mcp_processor.dart';
 import 'activity_memory_service.dart';
 import 'semantic_activity_detector.dart';
+import 'shared_claude_rate_limiter.dart';
 
 import 'chat_storage_service.dart';
 
-/// FT-119: Rate limit state tracking for graceful degradation
-class _RateLimitTracker {
-  static DateTime? _lastRateLimit;
-  static final List<DateTime> _apiCallHistory = [];
-  static const int _maxCallsPerMinute = 8;
-  static const Duration _rateLimitMemory = Duration(minutes: 2);
-
-  /// Check if system recently encountered rate limiting
-  static bool hasRecentRateLimit() {
-    if (_lastRateLimit == null) return false;
-    return DateTime.now().difference(_lastRateLimit!) < _rateLimitMemory;
-  }
-
-  /// Record a rate limit event
-  static void recordRateLimit() {
-    _lastRateLimit = DateTime.now();
-  }
-
-  /// Check if system is experiencing high API usage
-  static bool hasHighApiUsage() {
-    _cleanOldCalls();
-    return _apiCallHistory.length > _maxCallsPerMinute;
-  }
-
-  /// Record an API call for usage tracking
-  static void recordApiCall() {
-    _apiCallHistory.add(DateTime.now());
-    _cleanOldCalls();
-  }
-
-  /// Clean old API calls from tracking (older than 1 minute)
-  static void _cleanOldCalls() {
-    final cutoff = DateTime.now().subtract(Duration(minutes: 1));
-    _apiCallHistory.removeWhere((call) => call.isBefore(cutoff));
-  }
-
-  /// Get current rate limit status for debugging
-  static Map<String, dynamic> getStatus() {
-    _cleanOldCalls();
-    return {
-      'hasRecentRateLimit': hasRecentRateLimit(),
-      'hasHighApiUsage': hasHighApiUsage(),
-      'lastRateLimit': _lastRateLimit?.toIso8601String(),
-      'apiCallsLastMinute': _apiCallHistory.length,
-      'maxCallsPerMinute': _maxCallsPerMinute,
-    };
-  }
-}
+/// FT-151: Rate limiting now handled by SharedClaudeRateLimiter
+/// Old _RateLimitTracker class removed to eliminate duplication
 
 // Helper class for validation results
 class ValidationResult {
@@ -75,20 +30,21 @@ class ValidationResult {
 }
 
 /// Public interface for rate limit tracking (FT-119)
+/// FT-151: Now delegates to SharedClaudeRateLimiter for consistency
 class RateLimitTracker {
   /// Check if system recently encountered rate limiting
   static bool hasRecentRateLimit() {
-    return _RateLimitTracker.hasRecentRateLimit();
+    return SharedClaudeRateLimiter.hasRecentRateLimit();
   }
 
   /// Check if system is experiencing high API usage
   static bool hasHighApiUsage() {
-    return _RateLimitTracker.hasHighApiUsage();
+    return SharedClaudeRateLimiter.hasHighApiUsage();
   }
 
   /// Get comprehensive status for monitoring
   static Map<String, dynamic> getStatus() {
-    return _RateLimitTracker.getStatus();
+    return SharedClaudeRateLimiter.getStatusStatic();
   }
 }
 
@@ -169,8 +125,8 @@ class ClaudeService {
             case 'overloaded_error':
               return 'Claude is currently experiencing high demand. Please try again in a moment.';
             case 'rate_limit_error':
-              _RateLimitTracker
-                  .recordRateLimit(); // FT-119: Track rate limit event
+              SharedClaudeRateLimiter()
+                  .recordRateLimit(); // FT-151: Track rate limit event
               return 'You\'ve reached the rate limit. Please wait a moment before sending more messages.';
             case 'authentication_error':
               return 'Authentication failed. Please check your API key.';
@@ -329,8 +285,8 @@ class ClaudeService {
           case 401:
             return 'Authentication failed. Please check your API key.';
           case 429:
-            _RateLimitTracker
-                .recordRateLimit(); // FT-119: Track rate limit event
+            SharedClaudeRateLimiter()
+                .recordRateLimit(); // FT-151: Track rate limit event
             return 'Rate limit exceeded. Please try again later.';
           case 500:
           case 502:
@@ -555,8 +511,8 @@ class ClaudeService {
 
   /// Helper method to call Claude with a specific prompt
   Future<String> _callClaudeWithPrompt(String prompt) async {
-    // FT-119: Track API call for rate limiting
-    _RateLimitTracker.recordApiCall();
+    // FT-151: Apply centralized rate limiting
+    await SharedClaudeRateLimiter().waitAndRecord();
 
     final messages = [
       {
@@ -891,12 +847,12 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
 
   /// Check if system recently encountered rate limiting
   bool _hasRecentRateLimit() {
-    return _RateLimitTracker.hasRecentRateLimit();
+    return SharedClaudeRateLimiter.hasRecentRateLimit();
   }
 
   /// Check if system is experiencing high API usage
   bool _hasHighApiUsage() {
-    return _RateLimitTracker.hasHighApiUsage();
+    return SharedClaudeRateLimiter.hasHighApiUsage();
   }
 
   /// Apply intelligent delay to prevent rate limiting

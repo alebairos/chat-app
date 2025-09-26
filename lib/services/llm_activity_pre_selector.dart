@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/logger.dart';
 import 'oracle_context_manager.dart';
 import 'semantic_activity_detector.dart';
+import 'shared_claude_rate_limiter.dart';
 
 /// FT-140: LLM-intelligent activity pre-selection for Oracle optimization
 ///
@@ -156,6 +157,9 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
 
   /// Make Claude API call for activity selection
   static Future<String> _callClaude(String prompt) async {
+    // FT-151: Apply centralized rate limiting
+    await SharedClaudeRateLimiter().waitAndRecord();
+    
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     final model =
         (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();

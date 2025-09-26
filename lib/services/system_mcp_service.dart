@@ -13,6 +13,7 @@ import '../services/semantic_activity_detector.dart';
 import '../services/flat_metadata_parser.dart';
 import '../services/dimension_display_service.dart';
 import '../config/character_config_manager.dart';
+import 'shared_claude_rate_limiter.dart';
 
 /// Generic MCP (Model Context Protocol) service for system functions
 ///
@@ -578,6 +579,9 @@ Return empty array if NO COMPLETED activities detected.
 
   /// Call Claude API for Oracle activity detection
   Future<String> _callClaude(String prompt) async {
+    // FT-151: Apply centralized rate limiting
+    await SharedClaudeRateLimiter().waitAndRecord();
+    
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     final model =
         (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
