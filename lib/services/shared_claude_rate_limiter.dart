@@ -20,23 +20,35 @@ class SharedClaudeRateLimiter {
 
   /// Apply rate limiting before API call - core coordination method
   /// Uses existing adaptive delay logic from ClaudeService
-  Future<void> waitAndRecord() async {
-    _logger
-        .debug('SharedClaudeRateLimiter: Checking rate limits before API call');
+  /// FT-152: Added isUserFacing parameter for differentiated delays
+  Future<void> waitAndRecord({bool isUserFacing = false}) async {
+    _logger.debug(
+        'SharedClaudeRateLimiter: Checking rate limits before API call (${isUserFacing ? "user-facing" : "background"})');
 
-    // Use existing adaptive delay logic from ClaudeService
+    Duration delay;
+
     if (_hasRecentRateLimit()) {
+      // Aggressive delay for rate limit recovery (unchanged for all)
+      delay = Duration(seconds: 15);
       _logger.debug(
-          'SharedClaudeRateLimiter: Recent rate limit detected, applying 15s delay');
-      await Future.delayed(Duration(seconds: 15));
+          'SharedClaudeRateLimiter: Recent rate limit detected, applying ${delay.inSeconds}s delay');
     } else if (_hasHighApiUsage()) {
+      // Differentiate based on user impact
+      delay = isUserFacing 
+        ? Duration(seconds: 2)    // Faster for users
+        : Duration(seconds: 8);   // Slower for background
       _logger.debug(
-          'SharedClaudeRateLimiter: High API usage detected, applying 8s delay');
-      await Future.delayed(Duration(seconds: 8));
+          'SharedClaudeRateLimiter: High API usage detected, applying ${delay.inSeconds}s delay for ${isUserFacing ? "user-facing" : "background"} request');
     } else {
-      _logger.debug('SharedClaudeRateLimiter: Normal usage, applying 5s delay');
-      await Future.delayed(Duration(seconds: 5));
+      // Normal usage - minimal delays for user-facing
+      delay = isUserFacing 
+        ? Duration(milliseconds: 500)  // Much faster for users
+        : Duration(seconds: 3);        // Standard for background
+      _logger.debug(
+          'SharedClaudeRateLimiter: Normal usage, applying ${delay.inMilliseconds}ms delay for ${isUserFacing ? "user-facing" : "background"} request');
     }
+
+    await Future.delayed(delay);
 
     // Record this API call
     _apiCallHistory.add(DateTime.now());

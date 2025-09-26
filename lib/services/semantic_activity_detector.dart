@@ -278,8 +278,8 @@ Return empty array if no completed activities detected.
 
   /// Make Claude API call with minimal configuration
   static Future<String> _callClaude(String prompt) async {
-    // FT-151: Apply centralized rate limiting
-    await SharedClaudeRateLimiter().waitAndRecord();
+    // FT-152: Apply centralized rate limiting for background processing
+    await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
     
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     final model =

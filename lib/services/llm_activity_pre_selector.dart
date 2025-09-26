@@ -157,8 +157,8 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
 
   /// Make Claude API call for activity selection
   static Future<String> _callClaude(String prompt) async {
-    // FT-151: Apply centralized rate limiting
-    await SharedClaudeRateLimiter().waitAndRecord();
+    // FT-152: Apply centralized rate limiting for background processing
+    await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
     
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     final model =

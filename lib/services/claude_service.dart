@@ -511,8 +511,8 @@ class ClaudeService {
 
   /// Helper method to call Claude with a specific prompt
   Future<String> _callClaudeWithPrompt(String prompt) async {
-    // FT-151: Apply centralized rate limiting
-    await SharedClaudeRateLimiter().waitAndRecord();
+    // FT-152: Apply centralized rate limiting with user-facing priority
+    await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: true);
 
     final messages = [
       {
