@@ -306,7 +306,7 @@ class OracleStaticCache {
 
         Logger().info('✅ FT-141: Oracle 4.2 compliance VERIFIED');
         Logger().info('   📊 8 dimensions: ${actualDimensions.join(', ')}');
-        Logger().info('   📋 ${_totalActivities} activities total');
+        Logger().info('   📋 $_totalActivities activities total');
         Logger().info(
             '   🆕 New dimensions: TT($ttActivities), PR($prActivities), F($fActivities)');
       } else {
@@ -359,7 +359,7 @@ class OracleStaticCache {
       Logger().info('   ⚡ Fast lookup operational');
     } catch (e) {
       Logger().error('FT-141: Oracle compliance validation failed: $e');
-      throw e; // Re-throw to prevent initialization with invalid data
+      rethrow; // Re-throw to prevent initialization with invalid data
     }
   }
 

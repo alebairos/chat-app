@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
 import '../services/activity_memory_service.dart';
 import '../services/chat_storage_service.dart';
 import '../services/oracle_static_cache.dart';
 import '../services/oracle_context_manager.dart';
 import '../services/semantic_activity_detector.dart';
+import '../services/flat_metadata_parser.dart';
 import '../services/dimension_display_service.dart';
 import '../config/character_config_manager.dart';
 
@@ -352,12 +354,14 @@ MULTILINGUAL DETECTION RULES:
 6. CRITICAL: Use ONLY the exact activity names from the Oracle catalog
 7. NEVER create custom phrases like "vai fazer um pomodoro (will do a pomodoro session)"
 8. NEVER add translations or explanations in parentheses
+9. EXTRACT quantitative data using flat keys: "quantitative_{type}_value" and "quantitative_{type}_unit"
 
 Required JSON format:
-{"activities": [{"code": "SF1", "confidence": "high", "catalog_name": "Beber água"}]}
+{"activities": [{"code": "SF1", "confidence": "high", "catalog_name": "Beber água", "quantitative_volume_value": 250, "quantitative_volume_unit": "ml"}]}
 
 EXAMPLES:
-✅ CORRECT: {"code": "SF1", "catalog_name": "Beber água"}
+✅ CORRECT: {"code": "SF1", "catalog_name": "Beber água", "quantitative_volume_value": 250, "quantitative_volume_unit": "ml"}
+✅ CORRECT: {"code": "SF15", "catalog_name": "Caminhar 7000 passos", "quantitative_distance_value": 432, "quantitative_distance_unit": "meters"}
 ❌ WRONG: {"code": "SF1", "catalog_name": "bebeu um copo d'água (drank a glass of water)"}
 ❌ WRONG: {"code": "T8", "catalog_name": "vai fazer um pomodoro (will do a pomodoro session)"}
 
@@ -373,7 +377,8 @@ Return empty array if NO COMPLETED activities detected.
 
       // Get current persona name for metadata
       final configManager = CharacterConfigManager();
-      final personaName = _getPersonaDisplayName(configManager.activePersonaKey);
+      final personaName =
+          _getPersonaDisplayName(configManager.activePersonaKey);
 
       // Return MCP response with enhanced metadata
       return json.encode({
@@ -386,8 +391,11 @@ Return empty array if NO COMPLETED activities detected.
                     'description': a.userDescription,
                     'duration_minutes': a.durationMinutes,
                     'persona_name': personaName,
-                    'dimension_name': DimensionDisplayService.getDisplayName(_getDimensionCode(a.oracleCode)),
+                    'dimension_name': DimensionDisplayService.getDisplayName(
+                        _getDimensionCode(a.oracleCode)),
                     'dimension_code': _getDimensionCode(a.oracleCode),
+                    // FT-149: include flat quantitative fields if present
+                    ...a.metadata,
                   })
               .toList(),
           'oracle_context_size': compactOracle.length,
@@ -608,8 +616,11 @@ Return empty array if NO COMPLETED activities detected.
   }
 
   /// Parse Claude detection results into ActivityDetection objects
-  Future<List<ActivityDetection>> _parseDetectionResults(String claudeResponse) async {
+  Future<List<ActivityDetection>> _parseDetectionResults(
+      String claudeResponse) async {
     try {
+      _logger.debug('🔍 [FT-149] Raw Claude response: $claudeResponse');
+
       // Extract JSON from Claude response
       final jsonMatch =
           RegExp(r'\{.*\}', dotAll: true).firstMatch(claudeResponse);
@@ -619,15 +630,16 @@ Return empty array if NO COMPLETED activities detected.
       }
 
       final jsonStr = jsonMatch.group(0)!;
+      _logger.debug('🔍 [FT-149] Extracted JSON: $jsonStr');
       final data = json.decode(jsonStr) as Map<String, dynamic>;
       final activities = data['activities'] as List<dynamic>? ?? [];
 
       // Oracle context is available from static cache for activity lookup
-      
+
       return activities.map((activityData) {
         final code = activityData['code'] as String? ?? '';
-        final confidence =
-            _parseConfidence(activityData['confidence'] as String? ?? 'medium');
+        final confidence = ActivityDetectionUtils.parseConfidence(
+            activityData['confidence'] as String? ?? 'medium');
         final catalogName = activityData['catalog_name'] as String? ?? '';
         final duration = activityData['duration_minutes'] as int? ?? 0;
 
@@ -646,6 +658,13 @@ Return empty array if NO COMPLETED activities detected.
           activityName = code;
         }
 
+        _logger.debug(
+            '🔍 [FT-149] SystemMCP activityData keys: ${activityData.keys}');
+        _logger.debug('🔍 [FT-149] SystemMCP activityData: $activityData');
+
+        final extractedMetadata =
+            FlatMetadataParser.extractRawQuantitative(activityData);
+
         return ActivityDetection(
           oracleCode: code,
           activityName: activityName,
@@ -654,6 +673,7 @@ Return empty array if NO COMPLETED activities detected.
           reasoning: 'Detected via MCP Oracle detection (multilingual)',
           timestamp: DateTime.now(),
           durationMinutes: duration,
+          metadata: extractedMetadata,
         );
       }).toList();
     } catch (e) {
@@ -663,37 +683,28 @@ Return empty array if NO COMPLETED activities detected.
   }
 
   /// Parse confidence level from string
-  ConfidenceLevel _parseConfidence(String confidenceStr) {
-    switch (confidenceStr.toLowerCase()) {
-      case 'high':
-        return ConfidenceLevel.high;
-      case 'low':
-        return ConfidenceLevel.low;
-      default:
-        return ConfidenceLevel.medium;
-    }
-  }
 
   /// Get dimension code from activity code using Oracle lookup (e.g., T8 -> TG)
   String _getDimensionCode(String activityCode) {
     if (activityCode.isEmpty) return '';
-    
+
     // First try Oracle lookup for accurate dimension mapping
     if (OracleStaticCache.isInitialized) {
       final oracleActivity = OracleStaticCache.getActivityByCode(activityCode);
       if (oracleActivity != null) {
-        _logger.debug('FT-147: Found Oracle activity $activityCode -> dimension ${oracleActivity.dimension}');
+        _logger.debug(
+            'FT-147: Found Oracle activity $activityCode -> dimension ${oracleActivity.dimension}');
         return oracleActivity.dimension;
       }
     }
-    
+
     // Fallback: Extract dimension prefix (letters before numbers) for non-Oracle activities
     final match = RegExp(r'^([A-Z]+)').firstMatch(activityCode);
     final fallback = match?.group(1) ?? '';
-    _logger.debug('FT-147: Using fallback dimension extraction: $activityCode -> $fallback');
+    _logger.debug(
+        'FT-147: Using fallback dimension extraction: $activityCode -> $fallback');
     return fallback;
   }
-
 
   /// Get display name for persona key
   String _getPersonaDisplayName(String personaKey) {

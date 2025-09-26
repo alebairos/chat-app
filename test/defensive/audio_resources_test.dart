@@ -17,7 +17,7 @@ void main() {
         (WidgetTester tester) async {
       // Create a widget with stateful counter
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: CounterWithAudioPage(),
         ),
       );

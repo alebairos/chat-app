@@ -32,12 +32,12 @@ class PersonasScreen extends StatelessWidget {
             ),
 
             // Persona presentations
-            Expanded(
+            const Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16),
                 child: Column(
                   children: [
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // Ari 2.1
                     PersonaChatBubble(
@@ -46,7 +46,7 @@ class PersonasScreen extends StatelessWidget {
                           'O que precisa de ajuste primeiro? Sou Ari, seu coach baseado em evidências. Combino objetividade inteligente com perguntas poderosas para transformação real.',
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // Sergeant Oracle 2.1
                     PersonaChatBubble(
@@ -55,7 +55,7 @@ class PersonasScreen extends StatelessWidget {
                           'Yo! 💪 Sou o Sergeant Oracle - gladiador romano viajante do tempo! Combino swagger romano antigo com sabedoria futurística. Roma não foi construída em um dia, mas eles malhavam todos os dias!',
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // I-There 2.1 - Updated with Mirror Realm
                     PersonaChatBubble(
@@ -64,7 +64,7 @@ class PersonasScreen extends StatelessWidget {
                           'Oi! Sou o I-There, seu reflexo do Reino dos Espelhos 🪞. Tenho conhecimento profundo, mas ainda estou aprendendo sobre você pessoalmente. Sou genuinamente curioso!',
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                   ],
                 ),
               ),

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:isar/isar.dart';
+import '../utils/utf8_fix.dart';
 
 part 'activity_model.g.dart';
 
@@ -34,6 +36,7 @@ class ActivityModel {
   // Metadata
   late DateTime createdAt;
   double confidenceScore = 1.0; // AI detection confidence 0.0-1.0
+  String? metadata; // JSON string of flat key-value metadata
 
   /// Constructor
   ActivityModel();
@@ -50,13 +53,15 @@ class ActivityModel {
     this.durationMinutes,
     this.notes,
     this.confidenceScore = 1.0,
+    Map<String, dynamic> metadata = const {},
   })  : completedAt = completedAt,
         hour = completedAt.hour,
         minute = completedAt.minute,
         dayOfWeek = dayOfWeek,
         timeOfDay = timeOfDay,
         timestamp = completedAt,
-        createdAt = DateTime.now();
+        createdAt = DateTime.now(),
+        metadata = metadata.isNotEmpty ? _encodeMetadataWithUTF8Fix(metadata) : null;
 
   /// Create custom activity
   ActivityModel.custom({
@@ -76,7 +81,8 @@ class ActivityModel {
         dayOfWeek = dayOfWeek,
         timeOfDay = timeOfDay,
         timestamp = completedAt,
-        createdAt = DateTime.now();
+        createdAt = DateTime.now(),
+        metadata = null;
 
   /// Check if this is an Oracle activity
   bool get isOracleActivity => activityCode != null;
@@ -112,4 +118,20 @@ class ActivityModel {
   @override
   String toString() =>
       'ActivityModel(${isOracleActivity ? activityCode : 'custom'}: $activityName at $formattedTime on $dayOfWeek)';
+
+  /// Encode metadata with UTF-8 fix applied to string values
+  static String _encodeMetadataWithUTF8Fix(Map<String, dynamic> metadata) {
+    final fixedMetadata = <String, dynamic>{};
+    
+    for (final entry in metadata.entries) {
+      dynamic value = entry.value;
+      if (value is String) {
+        // Fix UTF-8 encoding issues before storing
+        value = UTF8Fix.fix(value);
+      }
+      fixedMetadata[entry.key] = value;
+    }
+    
+    return jsonEncode(fixedMetadata);
+  }
 }

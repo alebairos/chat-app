@@ -12,7 +12,7 @@ Future<void> main(List<String> args) async {
       : 'docs/exports/restoration_data.json';
 
   // Hardcode the database path to match iOS simulator
-  final dbPath =
+  const dbPath =
       '/Users/alebairos/Library/Developer/CoreSimulator/Devices/A1CCDD4A-DC59-40CC-B78B-DF417AAC8A40/data/Containers/Data/Application/DE4AA9BB-B3AE-4903-A8E8-92554CD9F39A/Documents';
 
   print('🔄 Starting direct Isar restoration...');

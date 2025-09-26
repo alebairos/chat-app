@@ -170,14 +170,14 @@ class MockTTSProvider implements TTSProvider {
     header[27] = ((sampleRate >> 24) & 0xFF);
 
     // Byte rate
-    final byteRate = sampleRate * numChannels * (bitsPerSample ~/ 8);
+    const byteRate = sampleRate * numChannels * (bitsPerSample ~/ 8);
     header[28] = (byteRate & 0xFF);
     header[29] = ((byteRate >> 8) & 0xFF);
     header[30] = ((byteRate >> 16) & 0xFF);
     header[31] = ((byteRate >> 24) & 0xFF);
 
     // Block align
-    final blockAlign = numChannels * (bitsPerSample ~/ 8);
+    const blockAlign = numChannels * (bitsPerSample ~/ 8);
     header[32] = blockAlign;
     header[33] = 0;
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
-import '../../lib/services/activity_export_service.dart';
+import 'package:ai_personas_app/services/activity_export_service.dart';
 
 /// Basic tests for ActivityExportService to catch fundamental issues
 /// These tests focus on core functionality without complex dependencies
@@ -87,7 +87,7 @@ void main() {
 
     group('Error Handling', () {
       test('should handle malformed JSON gracefully', () {
-        final malformedJson = '{"invalid": json}';
+        const malformedJson = '{"invalid": json}';
 
         expect(() => json.decode(malformedJson), throwsFormatException);
       });
@@ -152,7 +152,7 @@ void main() {
 
     group('JSON Handling', () {
       test('should handle valid JSON parsing', () {
-        final validJson = '{"test": "value", "number": 123}';
+        const validJson = '{"test": "value", "number": 123}';
         final parsed = json.decode(validJson) as Map<String, dynamic>;
 
         expect(parsed['test'], equals('value'));

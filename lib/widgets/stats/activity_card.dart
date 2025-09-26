@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/dimension_display_service.dart';
+import '../../services/metadata_config.dart';
 import '../../utils/logger.dart';
+import 'metadata_insights.dart';
 
 /// Widget for displaying individual activity information
 class ActivityCard extends StatelessWidget {
@@ -11,6 +13,7 @@ class ActivityCard extends StatelessWidget {
   final String time;
   final String dimension;
   final String source;
+  final Map<String, dynamic> metadata;
 
   const ActivityCard({
     super.key,
@@ -19,19 +22,22 @@ class ActivityCard extends StatelessWidget {
     required this.time,
     required this.dimension,
     required this.source,
+    this.metadata = const {},
   });
 
   @override
   Widget build(BuildContext context) {
     // FT-147: Debug dimension display issue
-    _logger.info('FT-147: ActivityCard requesting display name for dimension: "$dimension"');
+    _logger.info(
+        'FT-147: ActivityCard requesting display name for dimension: "$dimension"');
     final displayName = DimensionDisplayService.getDisplayName(dimension);
     _logger.info('FT-147: ActivityCard received display name: "$displayName"');
-    
+
     // Log service state for debugging
     final debugInfo = DimensionDisplayService.getDebugInfo();
-    _logger.info('FT-147: Service state - initialized: ${debugInfo['initialized']}, hasContext: ${debugInfo['hasOracleContext']}');
-    
+    _logger.info(
+        'FT-147: Service state - initialized: ${debugInfo['initialized']}, hasContext: ${debugInfo['hasOracleContext']}');
+
     return Card(
       elevation: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -145,6 +151,25 @@ class ActivityCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+
+            // FT-149: Metadata insights (conditionally displayed)
+            FutureBuilder<bool>(
+              future: MetadataConfig.isEnabled(),
+              builder: (context, snapshot) {
+                _logger.debug(
+                    '🔍 [FT-149] ActivityCard metadata check: enabled=${snapshot.data}, hasMetadata=${metadata.isNotEmpty}, metadata=$metadata');
+                if (snapshot.hasData &&
+                    snapshot.data == true &&
+                    metadata.isNotEmpty) {
+                  _logger.debug(
+                      '🔍 [FT-149] ActivityCard showing MetadataInsights for: $metadata');
+                  return MetadataInsights(metadata: metadata);
+                }
+                _logger.debug(
+                    '🔍 [FT-149] ActivityCard hiding MetadataInsights - enabled=${snapshot.data}, hasMetadata=${metadata.isNotEmpty}');
+                return const SizedBox.shrink();
+              },
             ),
           ],
         ),

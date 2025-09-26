@@ -1,6 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ai_personas_app/models/chat_message_model.dart';
-import 'package:ai_personas_app/models/message_type.dart';
 
 void main() {
   group('FT-070 Chat Import Parsing Tests', () {

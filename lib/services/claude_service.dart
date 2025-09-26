@@ -4,7 +4,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ai_personas_app/config/config_loader.dart';
 
 import 'system_mcp_service.dart';
+import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
+import '../services/flat_metadata_parser.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
 import 'time_context_service.dart';
@@ -1008,10 +1010,14 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
       // Convert MCP results to ActivityDetection objects
       final activities = detectedActivities.map((data) {
         final code = data['code'] as String? ?? '';
-        final confidence = _parseConfidenceFromString(
+        final confidence = ActivityDetectionUtils.parseConfidence(
             data['confidence'] as String? ?? 'medium');
         final description = data['description'] as String? ?? '';
         final duration = data['duration_minutes'] as int? ?? 0;
+
+        // Extract flat metadata if present in MCP result
+        final extractedMetadata = FlatMetadataParser.extractRawQuantitative(
+            (data as Map).cast<String, dynamic>());
 
         return ActivityDetection(
           oracleCode: code,
@@ -1021,6 +1027,7 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
           reasoning: 'Detected via MCP Oracle detection',
           timestamp: DateTime.now(),
           durationMinutes: duration,
+          metadata: extractedMetadata,
         );
       }).toList();
 
@@ -1038,16 +1045,6 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// Parse confidence level from string (for MCP results)
-  ConfidenceLevel _parseConfidenceFromString(String confidenceStr) {
-    switch (confidenceStr.toLowerCase()) {
-      case 'high':
-        return ConfidenceLevel.high;
-      case 'low':
-        return ConfidenceLevel.low;
-      default:
-        return ConfidenceLevel.medium;
-    }
-  }
 
   /// Get dimension code from activity code (e.g., SF1 -> SF)
   String _getDimensionCode(String activityCode) {
@@ -1138,6 +1135,7 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
                   : 0.4,
           durationMinutes: activity.durationMinutes,
           notes: 'Detected via LLM pre-selection optimization',
+          metadata: activity.metadata,
         );
       }
 

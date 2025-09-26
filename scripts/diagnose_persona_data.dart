@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import '../lib/models/chat_message_model.dart';
-import '../lib/models/message_type.dart';
+import 'package:ai_personas_app/models/chat_message_model.dart';
+import 'package:ai_personas_app/models/message_type.dart';
 
 Future<void> main() async {
   print('🔍 Diagnosing persona data in chat messages...\n');

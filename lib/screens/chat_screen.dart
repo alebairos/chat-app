@@ -82,8 +82,8 @@ class _ChatScreenState extends State<ChatScreen> {
       IntegratedMCPProcessor.startQueueProcessing();
 
       // Ensure audio is enabled in Claude service
-      if (_claudeService is ClaudeService && !widget.testMode) {
-        (_claudeService as ClaudeService).audioEnabled = true;
+      if (!widget.testMode) {
+        (_claudeService).audioEnabled = true;
       }
 
       // Migrate any existing absolute paths to relative paths

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import '../services/activity_memory_service.dart';
 import '../services/chat_storage_service.dart';
 import '../widgets/stats/stats_summary.dart';
@@ -404,6 +405,23 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Widget _buildActivityCard(dynamic activity) {
+    // Parse metadata from JSON string if present
+    Map<String, dynamic> metadata = {};
+    final metadataStr = activity['metadata'] as String?;
+    print(
+        '🔍 [FT-149] StatsScreen _buildActivityCard: activity=${activity['code']}, metadataStr=$metadataStr');
+
+    if (metadataStr != null && metadataStr.isNotEmpty) {
+      try {
+        metadata = jsonDecode(metadataStr) as Map<String, dynamic>;
+        print('🔍 [FT-149] StatsScreen parsed metadata: $metadata');
+      } catch (e) {
+        print('Failed to parse metadata: $e');
+      }
+    } else {
+      print('🔍 [FT-149] StatsScreen no metadata to parse');
+    }
+
     return ActivityCard(
       code: activity['code'] as String?,
       name: activity['name'] as String? ?? 'Unknown Activity',
@@ -411,6 +429,7 @@ class _StatsScreenState extends State<StatsScreen> {
       // FT-089: Removed confidence parameter - now using simple "Completed" indicator
       dimension: activity['dimension'] as String? ?? '',
       source: activity['source'] as String? ?? '',
+      metadata: metadata,
     );
   }
 
