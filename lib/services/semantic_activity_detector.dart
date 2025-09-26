@@ -278,8 +278,9 @@ Return empty array if no completed activities detected.
 
   /// Make Claude API call with minimal configuration
   static Future<String> _callClaude(String prompt) async {
-    // FT-152: Apply centralized rate limiting for background processing
-    await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
+    try {
+      // FT-152: Apply centralized rate limiting for background processing
+      await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
     
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     final model =
@@ -314,8 +315,16 @@ Return empty array if no completed activities detected.
           'Claude API error: ${response.statusCode} - ${response.body}');
     }
 
-    final data = jsonDecode(response.body);
-    return data['content'][0]['text'] as String;
+      final data = jsonDecode(response.body);
+      return data['content'][0]['text'] as String;
+    } catch (e) {
+      // FT-153: Background services fail silently on rate limits
+      if (e.toString().contains('429') || e.toString().contains('rate_limit_error')) {
+        Logger().warning('FT-153: Background SemanticActivityDetector hit rate limit, failing silently');
+        return ''; // Silent failure for background processing
+      }
+      rethrow; // Re-throw non-rate-limit errors
+    }
   }
 
   /// Parse Claude's JSON response with graceful error handling

@@ -34,16 +34,16 @@ class SharedClaudeRateLimiter {
           'SharedClaudeRateLimiter: Recent rate limit detected, applying ${delay.inSeconds}s delay');
     } else if (_hasHighApiUsage()) {
       // Differentiate based on user impact
-      delay = isUserFacing 
-        ? Duration(seconds: 2)    // Faster for users
-        : Duration(seconds: 8);   // Slower for background
+      delay = isUserFacing
+          ? Duration(seconds: 2) // Faster for users
+          : Duration(seconds: 8); // Slower for background
       _logger.debug(
           'SharedClaudeRateLimiter: High API usage detected, applying ${delay.inSeconds}s delay for ${isUserFacing ? "user-facing" : "background"} request');
     } else {
       // Normal usage - minimal delays for user-facing
-      delay = isUserFacing 
-        ? Duration(milliseconds: 500)  // Much faster for users
-        : Duration(seconds: 3);        // Standard for background
+      delay = isUserFacing
+          ? Duration(milliseconds: 500) // Much faster for users
+          : Duration(seconds: 3); // Standard for background
       _logger.debug(
           'SharedClaudeRateLimiter: Normal usage, applying ${delay.inMilliseconds}ms delay for ${isUserFacing ? "user-facing" : "background"} request');
     }

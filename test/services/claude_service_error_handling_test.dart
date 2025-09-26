@@ -71,9 +71,10 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       final response = await service.sendMessage(message);
       print('📥 Service response received: $response');
 
-      expect(response, 'Rate limit exceeded. Please try again later.',
+      // FT-153: Verify graceful fallback message instead of technical error
+      expect(response, "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.",
           reason:
-              'Response should be a user-friendly overloaded error message');
+              'Response should be a graceful fallback message, not a technical error');
       print('✓ Test completed successfully');
     });
 
@@ -107,9 +108,10 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       final response = await service.sendMessage(message);
       print('📥 Service response received: $response');
 
-      expect(response, 'Rate limit exceeded. Please try again later.',
+      // FT-153: Verify graceful fallback message instead of technical error
+      expect(response, "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.",
           reason:
-              'Response should be a user-friendly rate limit error message');
+              'Response should be a graceful fallback message, not a technical error');
       print('✓ Test completed successfully');
     });
 

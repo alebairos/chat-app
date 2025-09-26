@@ -157,8 +157,9 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
 
   /// Make Claude API call for activity selection
   static Future<String> _callClaude(String prompt) async {
-    // FT-152: Apply centralized rate limiting for background processing
-    await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
+    try {
+      // FT-152: Apply centralized rate limiting for background processing
+      await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
     
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     final model =
@@ -193,8 +194,16 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
           'Claude API error: ${response.statusCode} - ${response.body}');
     }
 
-    final data = jsonDecode(response.body);
-    return data['content'][0]['text'] as String;
+      final data = jsonDecode(response.body);
+      return data['content'][0]['text'] as String;
+    } catch (e) {
+      // FT-153: Background services fail silently on rate limits
+      if (e.toString().contains('429') || e.toString().contains('rate_limit_error')) {
+        Logger().warning('FT-153: Background LLMActivityPreSelector hit rate limit, failing silently');
+        return ''; // Silent failure for background processing
+      }
+      rethrow; // Re-throw non-rate-limit errors
+    }
   }
 
   /// Get fallback selection when LLM selection fails

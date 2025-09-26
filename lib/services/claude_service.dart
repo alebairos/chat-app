@@ -64,6 +64,10 @@ class ClaudeService {
   final AudioAssistantTTSService? _ttsService;
   final ChatStorageService? _storageService;
   bool _audioEnabled = true;
+  
+  // FT-153: Invisible rate limiting with auto-retry
+  static const int _maxRetries = 3;
+  static const Duration _baseRetryDelay = Duration(seconds: 2);
 
   ClaudeService({
     http.Client? client,
@@ -92,6 +96,42 @@ class ClaudeService {
     _logger.setLogging(enable);
     // Also set logging for MCP service if available
     _systemMCP?.setLogging(enable);
+  }
+
+  // FT-153: Invisible rate limiting helper methods
+  bool _isRateLimitError(dynamic error) {
+    final errorStr = error.toString();
+    return errorStr.contains('429') || 
+           errorStr.contains('rate_limit_error') ||
+           errorStr.contains('Rate limit exceeded');
+  }
+
+  String _getGracefulFallbackResponse() {
+    return "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.";
+  }
+
+  Future<String> _retryWithBackoff(Future<String> Function() apiCall, {int attempt = 0}) async {
+    try {
+      return await apiCall();
+    } catch (e) {
+      if (_isRateLimitError(e) && attempt < _maxRetries) {
+        // Calculate exponential backoff: 2s, 4s, 8s
+        final delay = Duration(seconds: _baseRetryDelay.inSeconds * (1 << attempt));
+        
+        _logger.info('FT-153: Rate limit hit, retrying in ${delay.inSeconds}s (attempt ${attempt + 1}/$_maxRetries)');
+        
+        await Future.delayed(delay);
+        return await _retryWithBackoff(apiCall, attempt: attempt + 1);
+      }
+      
+      // If max retries exceeded, return graceful fallback
+      if (_isRateLimitError(e)) {
+        _logger.warning('FT-153: Max retries exceeded, returning graceful fallback');
+        return _getGracefulFallbackResponse();
+      }
+      
+      rethrow;
+    }
   }
 
   Future<bool> initialize() async {
@@ -127,7 +167,9 @@ class ClaudeService {
             case 'rate_limit_error':
               SharedClaudeRateLimiter()
                   .recordRateLimit(); // FT-151: Track rate limit event
-              return 'You\'ve reached the rate limit. Please wait a moment before sending more messages.';
+              // FT-153: Never show rate limit errors to users - this should not happen
+              // as we now use retry logic, but keeping as fallback
+              return _getGracefulFallbackResponse();
             case 'authentication_error':
               return 'Authentication failed. Please check your API key.';
             case 'invalid_request_error':
@@ -162,6 +204,11 @@ class ClaudeService {
   // System MCP functions are now called directly via JSON commands in user messages
 
   Future<String> sendMessage(String message) async {
+    // FT-153: Wrap entire sendMessage with invisible retry logic
+    return await _retryWithBackoff(() => _sendMessageInternal(message));
+  }
+
+  Future<String> _sendMessageInternal(String message) async {
     try {
       await initialize();
 
@@ -287,7 +334,9 @@ class ClaudeService {
           case 429:
             SharedClaudeRateLimiter()
                 .recordRateLimit(); // FT-151: Track rate limit event
-            return 'Rate limit exceeded. Please try again later.';
+            // FT-153: Never show rate limit errors to users - this should not happen
+            // as we now use retry logic, but keeping as fallback
+            return _getGracefulFallbackResponse();
           case 500:
           case 502:
           case 503:
@@ -692,7 +741,7 @@ class ClaudeService {
   // Add method to send message with audio
   Future<ClaudeAudioResponse> sendMessageWithAudio(String message) async {
     try {
-      // First get the text response
+      // First get the text response (already includes FT-153 retry logic)
       final textResponse = await sendMessage(message);
 
       // Return text-only response if TTS is disabled or unavailable
