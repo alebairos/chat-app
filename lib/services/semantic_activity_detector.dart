@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
 import '../services/flat_metadata_parser.dart';
+import 'shared_claude_rate_limiter.dart';
 
 /// Core FT-064 implementation: Two-pass Claude semantic activity detection
 ///
@@ -277,6 +278,9 @@ Return empty array if no completed activities detected.
 
   /// Make Claude API call with minimal configuration
   static Future<String> _callClaude(String prompt) async {
+    // FT-151: Apply centralized rate limiting
+    await SharedClaudeRateLimiter().waitAndRecord();
+    
     final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     final model =
         (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
