@@ -26,7 +26,7 @@ void main() {
       (WidgetTester tester) async {
     // Build ChatScreen with testMode enabled - uses real services but in test mode
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: ChatScreen(
             testMode: true,

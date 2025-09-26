@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
 import 'package:ai_personas_app/config/character_config_manager.dart';
 
 void main() {

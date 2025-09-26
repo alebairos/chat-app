@@ -183,15 +183,15 @@ class TimeContextService {
       switch (gap) {
         case TimeGap.thisWeek:
           final daysAgo = difference.inDays;
-          gapDetails = ' (${daysAgo} day${daysAgo == 1 ? '' : 's'} ago)';
+          gapDetails = ' ($daysAgo day${daysAgo == 1 ? '' : 's'} ago)';
           break;
         case TimeGap.lastWeek:
           final daysAgo = difference.inDays;
-          gapDetails = ' (${daysAgo} days ago)';
+          gapDetails = ' ($daysAgo days ago)';
           break;
         case TimeGap.longAgo:
           final weeksAgo = (difference.inDays / 7).floor();
-          gapDetails = ' (${weeksAgo} week${weeksAgo == 1 ? '' : 's'} ago)';
+          gapDetails = ' ($weeksAgo week${weeksAgo == 1 ? '' : 's'} ago)';
           break;
         default:
           // No additional details for shorter gaps

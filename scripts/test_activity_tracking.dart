@@ -1,9 +1,9 @@
 #!/usr/bin/env dart
 
 import 'dart:io';
-import '../lib/services/activity_tracking_monitor.dart';
-import '../lib/services/activity_memory_service.dart';
-import '../lib/utils/logger.dart';
+import 'package:ai_personas_app/services/activity_tracking_monitor.dart';
+import 'package:ai_personas_app/services/activity_memory_service.dart';
+import 'package:ai_personas_app/utils/logger.dart';
 
 /// Simple script to test FT-119 implementation effectiveness
 Future<void> main() async {

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/utils/language_utils.dart';
+import 'package:ai_personas_app/utils/language_utils.dart';
 
 void main() {
   group('LanguageUtils - FT-132 Tests', () {

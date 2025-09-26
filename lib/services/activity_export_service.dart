@@ -270,7 +270,7 @@ class ActivityExportService {
         onTimeout: () {
           _logger.warning('Share operation timed out after 30 seconds');
           // Return a default ShareResult to satisfy the return type
-          return ShareResult('', ShareResultStatus.unavailable);
+          return const ShareResult('', ShareResultStatus.unavailable);
         },
       );
 
@@ -338,11 +338,11 @@ class ActivityExportService {
 
       _logger.info('📊 METADATA COMPARISON:');
       _logger.info(
-          '   📅 Modified changed: $modifiedChanged ${modifiedChanged ? "(${originalModified} → ${finalModified})" : ""}');
+          '   📅 Modified changed: $modifiedChanged ${modifiedChanged ? "($originalModified → $finalModified)" : ""}');
       _logger.info(
-          '   👁️ Accessed changed: $accessedChanged ${accessedChanged ? "(${originalAccessed} → ${finalAccessed})" : ""}');
+          '   👁️ Accessed changed: $accessedChanged ${accessedChanged ? "($originalAccessed → $finalAccessed)" : ""}');
       _logger.info(
-          '   📏 Size changed: $sizeChanged ${sizeChanged ? "(${originalSize} → ${finalSize})" : ""}');
+          '   📏 Size changed: $sizeChanged ${sizeChanged ? "($originalSize → $finalSize)" : ""}');
 
       return data;
     } catch (e) {

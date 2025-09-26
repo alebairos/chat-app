@@ -105,9 +105,9 @@ class ExportDialogUtils {
       barrierDismissible: false,
       builder: (dialogContext) {
         isDialogShown = true;
-        return PopScope(
+        return const PopScope(
           canPop: false, // Prevent dismissal during export
-          child: const AlertDialog(
+          child: AlertDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

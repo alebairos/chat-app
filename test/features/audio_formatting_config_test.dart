@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../lib/config/character_config_manager.dart';
+import 'package:ai_personas_app/config/character_config_manager.dart';
 
 void main() {
   setUpAll(() async {
@@ -109,8 +109,7 @@ void main() {
         expect(systemPrompt.contains('18h10-18h50'), isTrue);
 
         // Verify avoid list is present (FT-131 version 3.1 - International format avoided)
-        expect(
-            systemPrompt.contains('International time: 20:30, 14:30, 6:00'),
+        expect(systemPrompt.contains('International time: 20:30, 14:30, 6:00'),
             isTrue);
         expect(
             systemPrompt.contains('Hyphenated words: sexta-feira, bem-vindo'),

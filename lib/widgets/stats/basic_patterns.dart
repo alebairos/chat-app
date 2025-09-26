@@ -27,15 +27,15 @@ class BasicPatterns extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.analytics,
                   size: 20,
                   color: Colors.purple,
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Patterns & Insights',
                   style: TextStyle(
                     fontSize: 18,

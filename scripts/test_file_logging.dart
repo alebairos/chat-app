@@ -1,5 +1,5 @@
 import 'dart:io';
-import '../lib/utils/logger.dart';
+import 'package:ai_personas_app/utils/logger.dart';
 
 /// Simple test script to verify file logging functionality
 void main() async {
@@ -22,7 +22,7 @@ void main() async {
   logger.logStartup('This is a startup message');
 
   // Wait a moment for async file operations
-  await Future.delayed(Duration(seconds: 2));
+  await Future.delayed(const Duration(seconds: 2));
 
   // Check if log file was created
   try {

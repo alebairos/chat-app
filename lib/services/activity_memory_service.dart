@@ -305,6 +305,7 @@ class ActivityMemoryService {
     int? durationMinutes,
     String? notes,
     double confidence = 1.0,
+    Map<String, dynamic> metadata = const {},
   }) async {
     try {
       // Get precise time data from FT-060
@@ -323,6 +324,7 @@ class ActivityMemoryService {
         durationMinutes: durationMinutes,
         notes: notes,
         confidenceScore: confidence,
+        metadata: metadata,
       );
 
       await _database.writeTxn(() async {
@@ -668,6 +670,7 @@ class ActivityMemoryService {
                 'dimension': activity.dimension,
                 'source': activity.source,
                 'notes': activity.notes,
+                'metadata': activity.metadata,
               })
           .toList();
 

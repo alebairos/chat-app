@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../lib/features/audio_assistant/services/eleven_labs_provider.dart';
-import '../../lib/features/audio_assistant/services/character_voice_config.dart';
+import 'package:ai_personas_app/features/audio_assistant/services/eleven_labs_provider.dart';
+import 'package:ai_personas_app/features/audio_assistant/services/character_voice_config.dart';
 
 void main() {
   setUpAll(() async {

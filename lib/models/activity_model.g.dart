@@ -102,43 +102,48 @@ const ActivityModelSchema = CollectionSchema(
       name: r'isOracleActivity',
       type: IsarType.bool,
     ),
-    r'minute': PropertySchema(
+    r'metadata': PropertySchema(
       id: 17,
+      name: r'metadata',
+      type: IsarType.string,
+    ),
+    r'minute': PropertySchema(
+      id: 18,
       name: r'minute',
       type: IsarType.long,
     ),
     r'notes': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'notes',
       type: IsarType.string,
     ),
     r'reasoning': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'reasoning',
       type: IsarType.string,
     ),
     r'source': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'source',
       type: IsarType.string,
     ),
     r'timeContext': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'timeContext',
       type: IsarType.string,
     ),
     r'timeOfDay': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'timeOfDay',
       type: IsarType.string,
     ),
     r'timestamp': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'timestamp',
       type: IsarType.dateTime,
     ),
     r'userDescription': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'userDescription',
       type: IsarType.string,
     )
@@ -194,6 +199,12 @@ int _activityModelEstimateSize(
   bytesCount += 3 + object.formattedDate.length * 3;
   bytesCount += 3 + object.formattedTime.length * 3;
   {
+    final value = object.metadata;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.notes;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -245,14 +256,15 @@ void _activityModelSerialize(
   writer.writeLong(offsets[14], object.hour);
   writer.writeBool(offsets[15], object.isCustomActivity);
   writer.writeBool(offsets[16], object.isOracleActivity);
-  writer.writeLong(offsets[17], object.minute);
-  writer.writeString(offsets[18], object.notes);
-  writer.writeString(offsets[19], object.reasoning);
-  writer.writeString(offsets[20], object.source);
-  writer.writeString(offsets[21], object.timeContext);
-  writer.writeString(offsets[22], object.timeOfDay);
-  writer.writeDateTime(offsets[23], object.timestamp);
-  writer.writeString(offsets[24], object.userDescription);
+  writer.writeString(offsets[17], object.metadata);
+  writer.writeLong(offsets[18], object.minute);
+  writer.writeString(offsets[19], object.notes);
+  writer.writeString(offsets[20], object.reasoning);
+  writer.writeString(offsets[21], object.source);
+  writer.writeString(offsets[22], object.timeContext);
+  writer.writeString(offsets[23], object.timeOfDay);
+  writer.writeDateTime(offsets[24], object.timestamp);
+  writer.writeString(offsets[25], object.userDescription);
 }
 
 ActivityModel _activityModelDeserialize(
@@ -275,14 +287,15 @@ ActivityModel _activityModelDeserialize(
   object.durationMinutes = reader.readLongOrNull(offsets[11]);
   object.hour = reader.readLong(offsets[14]);
   object.id = id;
-  object.minute = reader.readLong(offsets[17]);
-  object.notes = reader.readStringOrNull(offsets[18]);
-  object.reasoning = reader.readStringOrNull(offsets[19]);
-  object.source = reader.readString(offsets[20]);
-  object.timeContext = reader.readStringOrNull(offsets[21]);
-  object.timeOfDay = reader.readString(offsets[22]);
-  object.timestamp = reader.readDateTime(offsets[23]);
-  object.userDescription = reader.readStringOrNull(offsets[24]);
+  object.metadata = reader.readStringOrNull(offsets[17]);
+  object.minute = reader.readLong(offsets[18]);
+  object.notes = reader.readStringOrNull(offsets[19]);
+  object.reasoning = reader.readStringOrNull(offsets[20]);
+  object.source = reader.readString(offsets[21]);
+  object.timeContext = reader.readStringOrNull(offsets[22]);
+  object.timeOfDay = reader.readString(offsets[23]);
+  object.timestamp = reader.readDateTime(offsets[24]);
+  object.userDescription = reader.readStringOrNull(offsets[25]);
   return object;
 }
 
@@ -328,20 +341,22 @@ P _activityModelDeserializeProp<P>(
     case 16:
       return (reader.readBool(offset)) as P;
     case 17:
-      return (reader.readLong(offset)) as P;
-    case 18:
       return (reader.readStringOrNull(offset)) as P;
+    case 18:
+      return (reader.readLong(offset)) as P;
     case 19:
       return (reader.readStringOrNull(offset)) as P;
     case 20:
-      return (reader.readString(offset)) as P;
-    case 21:
       return (reader.readStringOrNull(offset)) as P;
-    case 22:
+    case 21:
       return (reader.readString(offset)) as P;
+    case 22:
+      return (reader.readStringOrNull(offset)) as P;
     case 23:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 24:
+      return (reader.readDateTime(offset)) as P;
+    case 25:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2258,6 +2273,160 @@ extension ActivityModelQueryFilter
   }
 
   QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'metadata',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'metadata',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'metadata',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'metadata',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'metadata',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'metadata',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'metadata',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'metadata',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'metadata',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'metadata',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'metadata',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      metadataIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'metadata',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
       minuteEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -3496,6 +3665,19 @@ extension ActivityModelQuerySortBy
     });
   }
 
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy> sortByMetadata() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'metadata', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      sortByMetadataDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'metadata', Sort.desc);
+    });
+  }
+
   QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy> sortByMinute() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'minute', Sort.asc);
@@ -3843,6 +4025,19 @@ extension ActivityModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy> thenByMetadata() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'metadata', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      thenByMetadataDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'metadata', Sort.desc);
+    });
+  }
+
   QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy> thenByMinute() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'minute', Sort.asc);
@@ -4069,6 +4264,13 @@ extension ActivityModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ActivityModel, ActivityModel, QDistinct> distinctByMetadata(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'metadata', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<ActivityModel, ActivityModel, QDistinct> distinctByMinute() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'minute');
@@ -4242,6 +4444,12 @@ extension ActivityModelQueryProperty
       isOracleActivityProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isOracleActivity');
+    });
+  }
+
+  QueryBuilder<ActivityModel, String?, QQueryOperations> metadataProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'metadata');
     });
   }
 

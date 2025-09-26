@@ -94,7 +94,7 @@ void main() {
     test('should handle 12-hour to 24-hour conversion logic', () {
       // Test PM conversion logic
       const pmHour = 2; // 2 PM should become 14
-      final convertedPM = pmHour + 12;
+      const convertedPM = pmHour + 12;
       expect(convertedPM, equals(14));
 
       // Test noon (12 PM stays 12)
@@ -107,7 +107,7 @@ void main() {
 
       // Test midnight (12 AM becomes 0)
       const midnightHour = 12; // 12 AM should become 0
-      final convertedMidnight = midnightHour == 12 ? 0 : midnightHour;
+      const convertedMidnight = midnightHour == 12 ? 0 : midnightHour;
       expect(convertedMidnight, equals(0));
     });
 

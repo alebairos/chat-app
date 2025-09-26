@@ -396,7 +396,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
       }
 
       // Always use text type for imported messages (audio files don't exist)
-      final messageType = MessageType.text;
+      const messageType = MessageType.text;
       String? mediaPath; // Always null for imported messages
 
       messages.add(ChatMessageModel(

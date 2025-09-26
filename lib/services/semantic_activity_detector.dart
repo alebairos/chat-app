@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
+import '../services/flat_metadata_parser.dart';
 
 /// Core FT-064 implementation: Two-pass Claude semantic activity detection
 ///
@@ -330,32 +332,22 @@ Return empty array if no completed activities detected.
 
       return activitiesJson.map((activityJson) {
         final activity = activityJson as Map<String, dynamic>;
+        final extracted = FlatMetadataParser.extractRawQuantitative(activity);
         return ActivityDetection(
           oracleCode: activity['oracle_code'] as String,
           activityName: activity['activity_name'] as String,
           userDescription: activity['user_description'] as String,
           durationMinutes: activity['duration_minutes'] as int?,
-          confidence: _parseConfidence(activity['confidence'] as String?),
+          confidence: ActivityDetectionUtils.parseConfidence(
+              activity['confidence'] as String?),
           reasoning: activity['reasoning'] as String? ?? '',
           timestamp: DateTime.now(),
+          metadata: extracted,
         );
       }).toList();
     } catch (e) {
       Logger().debug('FT-064: Failed to parse detection results: $e');
       return []; // Graceful degradation
-    }
-  }
-
-  static ConfidenceLevel _parseConfidence(String? confidence) {
-    switch (confidence?.toLowerCase()) {
-      case 'high':
-        return ConfidenceLevel.high;
-      case 'medium':
-        return ConfidenceLevel.medium;
-      case 'low':
-        return ConfidenceLevel.low;
-      default:
-        return ConfidenceLevel.medium;
     }
   }
 }
@@ -369,6 +361,7 @@ class ActivityDetection {
   final ConfidenceLevel confidence;
   final String reasoning;
   final DateTime timestamp;
+  final Map<String, dynamic> metadata;
 
   ActivityDetection({
     required this.oracleCode,
@@ -378,6 +371,7 @@ class ActivityDetection {
     required this.confidence,
     required this.reasoning,
     required this.timestamp,
+    this.metadata = const {},
   });
 
   @override
@@ -401,8 +395,8 @@ class OracleContext {
 
 class OracleDimension {
   final String code;
-  final String name;           // "TEMPO DE TELA"
-  final String displayName;    // "Tempo de Tela"
+  final String name; // "TEMPO DE TELA"
+  final String displayName; // "Tempo de Tela"
   final List<OracleActivity> activities;
 
   OracleDimension({

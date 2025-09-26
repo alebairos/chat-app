@@ -162,9 +162,9 @@ class ActivityExportDialogUtils {
       barrierDismissible: false,
       builder: (dialogContext) {
         isDialogShown = true;
-        return PopScope(
+        return const PopScope(
           canPop: false, // Prevent dismissal during export
-          child: const AlertDialog(
+          child: AlertDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -272,9 +272,9 @@ class ActivityExportDialogUtils {
       barrierDismissible: false,
       builder: (dialogContext) {
         isDialogShown = true;
-        return PopScope(
+        return const PopScope(
           canPop: false, // Prevent dismissal during import
-          child: const AlertDialog(
+          child: AlertDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -336,7 +336,7 @@ class ActivityExportDialogUtils {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('📊 Import Summary:'),
+              const Text('📊 Import Summary:'),
               const SizedBox(height: 8),
               Text('• Activities imported: ${result.imported}'),
               Text('• Activities skipped (duplicates): ${result.skipped}'),

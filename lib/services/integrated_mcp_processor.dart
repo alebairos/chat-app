@@ -16,6 +16,7 @@ import 'oracle_context_manager.dart';
 /// - FT-119: Queue processing for rate limit recovery
 class IntegratedMCPProcessor {
   static Timer? _queueProcessingTimer;
+  static final Logger _logger = Logger();
 
   /// FT-119: Start background queue processing
   static void startQueueProcessing() {
@@ -173,6 +174,8 @@ class IntegratedMCPProcessor {
         }
 
         // Create ActivityModel using proper constructor
+        _logger.debug(
+            '🔍 [FT-149] IntegratedMCP detection.metadata: ${detection.metadata}');
         final activity = ActivityModel.fromDetection(
           activityCode: detection.oracleCode,
           activityName: oracleActivity.description,
@@ -184,7 +187,10 @@ class IntegratedMCPProcessor {
           durationMinutes: detection.durationMinutes,
           notes: detection.reasoning,
           confidenceScore: _convertConfidenceToDouble(detection.confidence),
+          metadata: detection.metadata,
         );
+        _logger.debug(
+            '🔍 [FT-149] IntegratedMCP activity.metadata after creation: ${activity.metadata}');
 
         // Set FT-064 specific fields
         activity.userDescription = detection.userDescription;
@@ -202,6 +208,7 @@ class IntegratedMCPProcessor {
           durationMinutes: activity.durationMinutes,
           notes: activity.notes,
           confidence: activity.confidenceScore,
+          metadata: detection.metadata,
         );
 
         Logger().info(
