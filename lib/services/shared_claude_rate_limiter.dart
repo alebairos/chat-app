@@ -1,16 +1,17 @@
 import '../utils/logger.dart';
 
 /// FT-151: Centralized Claude API rate limiting using proven ClaudeService logic
-/// 
+///
 /// Extracts existing _RateLimitTracker functionality into a shared component
 /// to coordinate API calls across all services and prevent HTTP 429 errors.
 class SharedClaudeRateLimiter {
-  static final SharedClaudeRateLimiter _instance = SharedClaudeRateLimiter._internal();
+  static final SharedClaudeRateLimiter _instance =
+      SharedClaudeRateLimiter._internal();
   factory SharedClaudeRateLimiter() => _instance;
   SharedClaudeRateLimiter._internal();
 
   static final Logger _logger = Logger();
-  
+
   // Extracted from existing _RateLimitTracker (proven to work)
   static final List<DateTime> _apiCallHistory = [];
   static const int _maxCallsPerMinute = 8;
@@ -20,25 +21,29 @@ class SharedClaudeRateLimiter {
   /// Apply rate limiting before API call - core coordination method
   /// Uses existing adaptive delay logic from ClaudeService
   Future<void> waitAndRecord() async {
-    _logger.debug('SharedClaudeRateLimiter: Checking rate limits before API call');
-    
+    _logger
+        .debug('SharedClaudeRateLimiter: Checking rate limits before API call');
+
     // Use existing adaptive delay logic from ClaudeService
     if (_hasRecentRateLimit()) {
-      _logger.debug('SharedClaudeRateLimiter: Recent rate limit detected, applying 15s delay');
+      _logger.debug(
+          'SharedClaudeRateLimiter: Recent rate limit detected, applying 15s delay');
       await Future.delayed(Duration(seconds: 15));
     } else if (_hasHighApiUsage()) {
-      _logger.debug('SharedClaudeRateLimiter: High API usage detected, applying 8s delay');
+      _logger.debug(
+          'SharedClaudeRateLimiter: High API usage detected, applying 8s delay');
       await Future.delayed(Duration(seconds: 8));
     } else {
       _logger.debug('SharedClaudeRateLimiter: Normal usage, applying 5s delay');
       await Future.delayed(Duration(seconds: 5));
     }
-    
+
     // Record this API call
     _apiCallHistory.add(DateTime.now());
     _cleanOldCalls();
-    
-    _logger.debug('SharedClaudeRateLimiter: API call recorded, ${_apiCallHistory.length} calls in last minute');
+
+    _logger.debug(
+        'SharedClaudeRateLimiter: API call recorded, ${_apiCallHistory.length} calls in last minute');
   }
 
   /// Record rate limit event (for error handling)

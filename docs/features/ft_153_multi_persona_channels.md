@@ -1,6 +1,6 @@
-# FT-152: Multi-Persona Channels
+# FT-153: Multi-Persona Channels
 
-**Feature ID:** FT-152  
+**Feature ID:** FT-153  
 **Priority:** High  
 **Category:** Core Feature Enhancement  
 **Effort Estimate:** Medium (3-4 weeks)  
