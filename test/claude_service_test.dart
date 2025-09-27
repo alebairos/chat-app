@@ -162,7 +162,10 @@ void main() {
       final response = await service.sendMessage('Hello');
       print('📥 Error response received: $response');
 
-      expect(response, equals('Rate limit exceeded. Please try again later.'));
+      expect(
+          response,
+          equals(
+              "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment."));
 
       print(
           '📊 Conversation history length: ${service.conversationHistory.length}');
