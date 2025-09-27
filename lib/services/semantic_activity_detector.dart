@@ -5,6 +5,7 @@ import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
 import '../services/flat_metadata_parser.dart';
 import 'shared_claude_rate_limiter.dart';
+import 'activity_queue.dart' as ft154;
 
 /// Core FT-064 implementation: Two-pass Claude semantic activity detection
 ///
@@ -38,7 +39,7 @@ class SemanticActivityDetector {
         timeContext: timeContext,
       );
 
-      final claudeAnalysis = await _callClaude(prompt);
+      final claudeAnalysis = await _callClaude(prompt, userMessage: userMessage);
       final activities = _parseDetectionResults(claudeAnalysis);
 
       Logger().info('FT-064: Detected ${activities.length} activities');
@@ -277,51 +278,58 @@ Return empty array if no completed activities detected.
   }
 
   /// Make Claude API call with minimal configuration
-  static Future<String> _callClaude(String prompt) async {
+  static Future<String> _callClaude(String prompt,
+      {String? userMessage}) async {
     try {
       // FT-152: Apply centralized rate limiting for background processing
       await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
-    
-    final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
-    final model =
-        (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
 
-    if (apiKey.isEmpty) {
-      throw Exception('Claude API key not configured');
-    }
+      final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
+      final model =
+          (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022')
+              .trim();
 
-    final response = await http.post(
-      Uri.parse(_claudeApiUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: jsonEncode({
-        'model': model,
-        'max_tokens': 1000,
-        'temperature': _detectionTemperature,
-        'messages': [
-          {
-            'role': 'user',
-            'content': prompt,
-          }
-        ],
-      }),
-    );
+      if (apiKey.isEmpty) {
+        throw Exception('Claude API key not configured');
+      }
 
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Claude API error: ${response.statusCode} - ${response.body}');
-    }
+      final response = await http.post(
+        Uri.parse(_claudeApiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': model,
+          'max_tokens': 1000,
+          'temperature': _detectionTemperature,
+          'messages': [
+            {
+              'role': 'user',
+              'content': prompt,
+            }
+          ],
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Claude API error: ${response.statusCode} - ${response.body}');
+      }
 
       final data = jsonDecode(response.body);
       return data['content'][0]['text'] as String;
     } catch (e) {
-      // FT-153: Background services fail silently on rate limits
-      if (e.toString().contains('429') || e.toString().contains('rate_limit_error')) {
-        Logger().warning('FT-153: Background SemanticActivityDetector hit rate limit, failing silently');
-        return ''; // Silent failure for background processing
+      // FT-154: Background services queue activities instead of silent failure
+      if (e.toString().contains('429') ||
+          e.toString().contains('rate_limit_error')) {
+        Logger().warning(
+            'FT-154: Background SemanticActivityDetector hit rate limit, queuing activity');
+        if (userMessage != null) {
+          await ft154.ActivityQueue.queueActivity(userMessage, DateTime.now());
+        }
+        return ''; // Silent failure for UX, but activity preserved
       }
       rethrow; // Re-throw non-rate-limit errors
     }

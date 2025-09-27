@@ -14,6 +14,7 @@ import '../services/flat_metadata_parser.dart';
 import '../services/dimension_display_service.dart';
 import '../config/character_config_manager.dart';
 import 'shared_claude_rate_limiter.dart';
+import 'activity_queue.dart' as ft154;
 
 /// Generic MCP (Model Context Protocol) service for system functions
 ///
@@ -370,7 +371,8 @@ Return empty array if NO COMPLETED activities detected.
 ''';
 
       // Call Claude for activity detection
-      final claudeResponse = await _callClaude(prompt);
+      final claudeResponse =
+          await _callClaude(prompt, userMessage: userMessage);
       final detectedActivities = await _parseDetectionResults(claudeResponse);
 
       _logger.info(
@@ -578,51 +580,57 @@ Return empty array if NO COMPLETED activities detected.
   }
 
   /// Call Claude API for Oracle activity detection
-  Future<String> _callClaude(String prompt) async {
+  Future<String> _callClaude(String prompt, {String? userMessage}) async {
     try {
       // FT-152: Apply centralized rate limiting for background processing
       await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
-    
-    final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
-    final model =
-        (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
 
-    if (apiKey.isEmpty) {
-      throw Exception('Claude API key not configured');
-    }
+      final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
+      final model =
+          (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022')
+              .trim();
 
-    final response = await http.post(
-      Uri.parse('https://api.anthropic.com/v1/messages'),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: json.encode({
-        'model': model,
-        'max_tokens': 1024,
-        'temperature': 0.1, // Low temperature for consistent detection
-        'messages': [
-          {
-            'role': 'user',
-            'content': prompt,
-          }
-        ],
-      }),
-    );
+      if (apiKey.isEmpty) {
+        throw Exception('Claude API key not configured');
+      }
 
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Claude API error: ${response.statusCode} - ${response.body}');
-    }
+      final response = await http.post(
+        Uri.parse('https://api.anthropic.com/v1/messages'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: json.encode({
+          'model': model,
+          'max_tokens': 1024,
+          'temperature': 0.1, // Low temperature for consistent detection
+          'messages': [
+            {
+              'role': 'user',
+              'content': prompt,
+            }
+          ],
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Claude API error: ${response.statusCode} - ${response.body}');
+      }
 
       final data = json.decode(response.body);
       return data['content'][0]['text'] as String;
     } catch (e) {
-      // FT-153: Background services fail silently on rate limits
-      if (e.toString().contains('429') || e.toString().contains('rate_limit_error')) {
-        _logger.warning('FT-153: Background SystemMCP hit rate limit, failing silently');
-        return ''; // Silent failure for background processing
+      // FT-154: Background services queue activities instead of silent failure
+      if (e.toString().contains('429') ||
+          e.toString().contains('rate_limit_error')) {
+        _logger.warning(
+            'FT-154: Background SystemMCP hit rate limit, queuing activity');
+        if (userMessage != null) {
+          await ft154.ActivityQueue.queueActivity(userMessage, DateTime.now());
+        }
+        return ''; // Silent failure for UX, but activity preserved
       }
       rethrow; // Re-throw non-rate-limit errors
     }

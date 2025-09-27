@@ -28,10 +28,12 @@ class SharedClaudeRateLimiter {
     Duration delay;
 
     if (_hasRecentRateLimit()) {
-      // Aggressive delay for rate limit recovery (unchanged for all)
-      delay = Duration(seconds: 15);
+      // FT-154: Graduated recovery - faster for users, maintain protection for background
+      delay = isUserFacing
+          ? Duration(seconds: 3) // Faster user recovery
+          : Duration(seconds: 15); // Maintain background protection
       _logger.debug(
-          'SharedClaudeRateLimiter: Recent rate limit detected, applying ${delay.inSeconds}s delay');
+          'SharedClaudeRateLimiter: Recent rate limit detected, applying ${delay.inSeconds}s delay for ${isUserFacing ? "user-facing" : "background"} request');
     } else if (_hasHighApiUsage()) {
       // Differentiate based on user impact
       delay = isUserFacing

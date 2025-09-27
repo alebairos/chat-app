@@ -72,7 +72,8 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       print('📥 Service response received: $response');
 
       // FT-153: Verify graceful fallback message instead of technical error
-      expect(response, "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.",
+      expect(response,
+          "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.",
           reason:
               'Response should be a graceful fallback message, not a technical error');
       print('✓ Test completed successfully');
@@ -109,7 +110,8 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
       print('📥 Service response received: $response');
 
       // FT-153: Verify graceful fallback message instead of technical error
-      expect(response, "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.",
+      expect(response,
+          "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.",
           reason:
               'Response should be a graceful fallback message, not a technical error');
       print('✓ Test completed successfully');

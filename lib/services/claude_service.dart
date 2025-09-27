@@ -15,6 +15,7 @@ import 'integrated_mcp_processor.dart';
 import 'activity_memory_service.dart';
 import 'semantic_activity_detector.dart';
 import 'shared_claude_rate_limiter.dart';
+import 'activity_queue.dart' as ft154;
 
 import 'chat_storage_service.dart';
 
@@ -68,6 +69,9 @@ class ClaudeService {
   // FT-153: Invisible rate limiting with auto-retry
   static const int _maxRetries = 3;
   static const Duration _baseRetryDelay = Duration(seconds: 2);
+  
+  // FT-154: Contextual user feedback tracking
+  int _consecutiveFallbacks = 0;
 
   ClaudeService({
     http.Client? client,
@@ -107,7 +111,19 @@ class ClaudeService {
   }
 
   String _getGracefulFallbackResponse() {
-    return "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.";
+    _consecutiveFallbacks++;
+    
+    if (_consecutiveFallbacks == 1) {
+      return "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.";
+    } else if (_consecutiveFallbacks <= 3) {
+      return "I'm experiencing high demand right now. Your message is important to me - please give me a moment to respond thoughtfully.";
+    } else {
+      return "I'm working through a high volume of requests. I'll respond as soon as possible - thank you for your patience.";
+    }
+  }
+  
+  void _resetFallbackCounter() {
+    _consecutiveFallbacks = 0;
   }
 
   Future<String> _retryWithBackoff(Future<String> Function() apiCall, {int attempt = 0}) async {
@@ -289,6 +305,14 @@ class ClaudeService {
       );
 
       if (response.statusCode == 200) {
+        // FT-154: Reset fallback counter and process queued activities on success
+        _resetFallbackCounter();
+        
+        // Process any queued activities when system recovers
+        if (!SharedClaudeRateLimiter.hasRecentRateLimit()) {
+          ft154.ActivityQueue.processQueue();
+        }
+        
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         var assistantMessage = data['content'][0]['text'];
 
@@ -592,6 +616,14 @@ class ClaudeService {
     );
 
     if (response.statusCode == 200) {
+      // FT-154: Reset fallback counter and process queued activities on success
+      _resetFallbackCounter();
+      
+      // Process any queued activities when system recovers
+      if (!SharedClaudeRateLimiter.hasRecentRateLimit()) {
+        ft154.ActivityQueue.processQueue();
+      }
+      
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['content'][0]['text'];
     } else {
@@ -1176,8 +1208,8 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
 
   /// FT-119: Add activity status note to response when appropriate
   String _addActivityStatusNote(String response) {
-    if (ActivityQueue.hasPendingActivities()) {
-      final pendingCount = ActivityQueue.getPendingCount();
+    if (!ft154.ActivityQueue.isEmpty) {
+      final pendingCount = ft154.ActivityQueue.queueSize;
       return "$response\n\n_Note: Activity tracking temporarily delayed due to high usage ($pendingCount pending)._";
     }
     return response;

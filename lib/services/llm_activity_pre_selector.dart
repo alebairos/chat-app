@@ -5,6 +5,7 @@ import '../utils/logger.dart';
 import 'oracle_context_manager.dart';
 import 'semantic_activity_detector.dart';
 import 'shared_claude_rate_limiter.dart';
+import 'activity_queue.dart' as ft154;
 
 /// FT-140: LLM-intelligent activity pre-selection for Oracle optimization
 ///
@@ -60,7 +61,7 @@ class LLMActivityPreSelector {
       );
 
       // Call Claude for activity selection
-      final claudeResponse = await _callClaude(selectionPrompt);
+      final claudeResponse = await _callClaude(selectionPrompt, userMessage: userMessage);
       final selectedCodes = _parseSelectedCodes(claudeResponse);
 
       Logger().info(
@@ -156,7 +157,7 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
   }
 
   /// Make Claude API call for activity selection
-  static Future<String> _callClaude(String prompt) async {
+  static Future<String> _callClaude(String prompt, {String? userMessage}) async {
     try {
       // FT-152: Apply centralized rate limiting for background processing
       await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
@@ -197,10 +198,13 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
       final data = jsonDecode(response.body);
       return data['content'][0]['text'] as String;
     } catch (e) {
-      // FT-153: Background services fail silently on rate limits
+      // FT-154: Background services queue activities instead of silent failure
       if (e.toString().contains('429') || e.toString().contains('rate_limit_error')) {
-        Logger().warning('FT-153: Background LLMActivityPreSelector hit rate limit, failing silently');
-        return ''; // Silent failure for background processing
+        Logger().warning('FT-154: Background LLMActivityPreSelector hit rate limit, queuing activity');
+        if (userMessage != null) {
+          await ft154.ActivityQueue.queueActivity(userMessage, DateTime.now());
+        }
+        return ''; // Silent failure for UX, but activity preserved
       }
       rethrow; // Re-throw non-rate-limit errors
     }
