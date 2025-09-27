@@ -467,12 +467,18 @@ class _ChatScreenState extends State<ChatScreen> {
       final response = await _claudeService.sendMessageWithAudio(userMessage);
 
       // Check if the response contains an error message
-      final bool isErrorResponse = response.text.startsWith('Error:') ||
-          response.text.contains('Unable to connect') ||
-          response.text.contains('experiencing high demand') ||
-          response.text.contains('temporarily unavailable') ||
-          response.text.contains('rate limit') ||
-          response.text.contains('Authentication failed');
+      // FT-155: Exclude language-aware fallback responses from error detection
+      final bool isErrorResponse = (response.text.startsWith('Error:') ||
+              response.text.contains('Unable to connect') ||
+              response.text.contains('experiencing high demand') ||
+              response.text.contains('temporarily unavailable') ||
+              response.text.contains('rate limit') ||
+              response.text.contains('Authentication failed')) &&
+          // Don't treat language-aware overload responses as errors
+          !response.text
+              .contains('Entendi! Vou processar isso assim que possível') &&
+          !response.text
+              .contains("Got it! I'll process that as soon as possible");
 
       if (isErrorResponse) {
         // Display error message to user
@@ -598,12 +604,18 @@ class _ChatScreenState extends State<ChatScreen> {
       final response = await _claudeService.sendMessageWithAudio(transcription);
 
       // Check if the response contains an error message
-      final bool isErrorResponse = response.text.startsWith('Error:') ||
-          response.text.contains('Unable to connect') ||
-          response.text.contains('experiencing high demand') ||
-          response.text.contains('temporarily unavailable') ||
-          response.text.contains('rate limit') ||
-          response.text.contains('Authentication failed');
+      // FT-155: Exclude language-aware fallback responses from error detection
+      final bool isErrorResponse = (response.text.startsWith('Error:') ||
+              response.text.contains('Unable to connect') ||
+              response.text.contains('experiencing high demand') ||
+              response.text.contains('temporarily unavailable') ||
+              response.text.contains('rate limit') ||
+              response.text.contains('Authentication failed')) &&
+          // Don't treat language-aware overload responses as errors
+          !response.text
+              .contains('Entendi! Vou processar isso assim que possível') &&
+          !response.text
+              .contains("Got it! I'll process that as soon as possible");
 
       if (isErrorResponse) {
         // Display error message to user

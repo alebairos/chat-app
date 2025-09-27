@@ -61,7 +61,8 @@ class LLMActivityPreSelector {
       );
 
       // Call Claude for activity selection
-      final claudeResponse = await _callClaude(selectionPrompt, userMessage: userMessage);
+      final claudeResponse =
+          await _callClaude(selectionPrompt, userMessage: userMessage);
       final selectedCodes = _parseSelectedCodes(claudeResponse);
 
       Logger().info(
@@ -157,50 +158,58 @@ SF1,R2,E3,SM4,TT1,PR2,F1...
   }
 
   /// Make Claude API call for activity selection
-  static Future<String> _callClaude(String prompt, {String? userMessage}) async {
+  static Future<String> _callClaude(String prompt,
+      {String? userMessage}) async {
     try {
       // FT-152: Apply centralized rate limiting for background processing
       await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: false);
-    
-    final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
-    final model =
-        (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022').trim();
 
-    if (apiKey.isEmpty) {
-      throw Exception('Claude API key not configured');
-    }
+      final apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
+      final model =
+          (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022')
+              .trim();
 
-    final response = await http.post(
-      Uri.parse(_claudeApiUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: jsonEncode({
-        'model': model,
-        'max_tokens': 200, // Minimal tokens needed for activity codes
-        'temperature': _selectionTemperature,
-        'messages': [
-          {
-            'role': 'user',
-            'content': prompt,
-          }
-        ],
-      }),
-    );
+      if (apiKey.isEmpty) {
+        throw Exception('Claude API key not configured');
+      }
 
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Claude API error: ${response.statusCode} - ${response.body}');
-    }
+      final response = await http.post(
+        Uri.parse(_claudeApiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': model,
+          'max_tokens': 200, // Minimal tokens needed for activity codes
+          'temperature': _selectionTemperature,
+          'messages': [
+            {
+              'role': 'user',
+              'content': prompt,
+            }
+          ],
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Claude API error: ${response.statusCode} - ${response.body}');
+      }
 
       final data = jsonDecode(response.body);
       return data['content'][0]['text'] as String;
     } catch (e) {
       // FT-154: Background services queue activities instead of silent failure
-      if (e.toString().contains('429') || e.toString().contains('rate_limit_error')) {
-        Logger().warning('FT-154: Background LLMActivityPreSelector hit rate limit, queuing activity');
+      // FT-155: Handle both rate limits (429) and overload (529/overloaded)
+      if (e.toString().contains('429') ||
+          e.toString().contains('rate_limit_error') ||
+          e.toString().contains('529') ||
+          e.toString().contains('overloaded') ||
+          e.toString().contains('Claude overloaded')) {
+        Logger().warning(
+            'FT-154/155: Background LLMActivityPreSelector hit rate limit/overload, queuing activity');
         if (userMessage != null) {
           await ft154.ActivityQueue.queueActivity(userMessage, DateTime.now());
         }

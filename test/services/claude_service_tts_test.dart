@@ -154,11 +154,14 @@ void main() {
       // Send message
       final response = await claudeService.sendMessageWithAudio('user query');
 
-      // Verify error response
-      expect(response.text, 'Rate limit exceeded. Please try again later.');
+      // Verify graceful fallback response (FT-153: Rate limit fallback for 429 errors)
+      expect(response.text,
+          "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.");
       expect(response.audioPath, isNull);
       expect(response.audioDuration, isNull);
-      expect(response.error, isNull);
+      // TTS service was configured to fail, so expect the TTS error
+      expect(response.error,
+          'Failed to generate audio. Text response is still available.');
     });
   });
 }

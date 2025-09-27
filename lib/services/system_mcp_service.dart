@@ -623,10 +623,14 @@ Return empty array if NO COMPLETED activities detected.
       return data['content'][0]['text'] as String;
     } catch (e) {
       // FT-154: Background services queue activities instead of silent failure
+      // FT-155: Handle both rate limits (429) and overload (529/overloaded)
       if (e.toString().contains('429') ||
-          e.toString().contains('rate_limit_error')) {
+          e.toString().contains('rate_limit_error') ||
+          e.toString().contains('529') ||
+          e.toString().contains('overloaded') ||
+          e.toString().contains('Claude overloaded')) {
         _logger.warning(
-            'FT-154: Background SystemMCP hit rate limit, queuing activity');
+            'FT-154/155: Background SystemMCP hit rate limit/overload, queuing activity');
         if (userMessage != null) {
           await ft154.ActivityQueue.queueActivity(userMessage, DateTime.now());
         }

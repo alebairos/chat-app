@@ -65,11 +65,11 @@ class ClaudeService {
   final AudioAssistantTTSService? _ttsService;
   final ChatStorageService? _storageService;
   bool _audioEnabled = true;
-  
+
   // FT-153: Invisible rate limiting with auto-retry
   static const int _maxRetries = 3;
   static const Duration _baseRetryDelay = Duration(seconds: 2);
-  
+
   // FT-154: Contextual user feedback tracking
   int _consecutiveFallbacks = 0;
 
@@ -103,16 +103,37 @@ class ClaudeService {
   }
 
   // FT-153: Invisible rate limiting helper methods
+  // FT-155: Language-aware overload fallback response
+  String _getOverloadFallbackResponse() {
+    String detectedLanguage = 'pt_BR'; // Default fallback
+
+    if (_ttsService != null) {
+      try {
+        detectedLanguage = _ttsService!.detectedLanguage;
+      } catch (e) {
+        _logger.debug('Language detection fallback: $e');
+      }
+    }
+
+    switch (detectedLanguage) {
+      case 'en_US':
+        return "Got it! I'll process that as soon as possible. Keep telling me about your day! 😊";
+      case 'pt_BR':
+      default:
+        return "Entendi! Vou processar isso assim que possível. Continue me contando! 😊";
+    }
+  }
+
   bool _isRateLimitError(dynamic error) {
     final errorStr = error.toString();
-    return errorStr.contains('429') || 
-           errorStr.contains('rate_limit_error') ||
-           errorStr.contains('Rate limit exceeded');
+    return errorStr.contains('429') ||
+        errorStr.contains('rate_limit_error') ||
+        errorStr.contains('Rate limit exceeded');
   }
 
   String _getGracefulFallbackResponse() {
     _consecutiveFallbacks++;
-    
+
     if (_consecutiveFallbacks == 1) {
       return "I'm processing a lot of requests right now. Let me get back to you with a thoughtful response in just a moment.";
     } else if (_consecutiveFallbacks <= 3) {
@@ -121,31 +142,35 @@ class ClaudeService {
       return "I'm working through a high volume of requests. I'll respond as soon as possible - thank you for your patience.";
     }
   }
-  
+
   void _resetFallbackCounter() {
     _consecutiveFallbacks = 0;
   }
 
-  Future<String> _retryWithBackoff(Future<String> Function() apiCall, {int attempt = 0}) async {
+  Future<String> _retryWithBackoff(Future<String> Function() apiCall,
+      {int attempt = 0}) async {
     try {
       return await apiCall();
     } catch (e) {
       if (_isRateLimitError(e) && attempt < _maxRetries) {
         // Calculate exponential backoff: 2s, 4s, 8s
-        final delay = Duration(seconds: _baseRetryDelay.inSeconds * (1 << attempt));
-        
-        _logger.info('FT-153: Rate limit hit, retrying in ${delay.inSeconds}s (attempt ${attempt + 1}/$_maxRetries)');
-        
+        final delay =
+            Duration(seconds: _baseRetryDelay.inSeconds * (1 << attempt));
+
+        _logger.info(
+            'FT-153: Rate limit hit, retrying in ${delay.inSeconds}s (attempt ${attempt + 1}/$_maxRetries)');
+
         await Future.delayed(delay);
         return await _retryWithBackoff(apiCall, attempt: attempt + 1);
       }
-      
+
       // If max retries exceeded, return graceful fallback
       if (_isRateLimitError(e)) {
-        _logger.warning('FT-153: Max retries exceeded, returning graceful fallback');
+        _logger.warning(
+            'FT-153: Max retries exceeded, returning graceful fallback');
         return _getGracefulFallbackResponse();
       }
-      
+
       rethrow;
     }
   }
@@ -307,12 +332,12 @@ class ClaudeService {
       if (response.statusCode == 200) {
         // FT-154: Reset fallback counter and process queued activities on success
         _resetFallbackCounter();
-        
+
         // Process any queued activities when system recovers
         if (!SharedClaudeRateLimiter.hasRecentRateLimit()) {
           ft154.ActivityQueue.processQueue();
         }
-        
+
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         var assistantMessage = data['content'][0]['text'];
 
@@ -361,6 +386,10 @@ class ClaudeService {
             // FT-153: Never show rate limit errors to users - this should not happen
             // as we now use retry logic, but keeping as fallback
             return _getGracefulFallbackResponse();
+          case 529:
+            // FT-155: Claude overload protection
+            SharedClaudeRateLimiter.recordOverload();
+            return _getOverloadFallbackResponse();
           case 500:
           case 502:
           case 503:
@@ -377,7 +406,9 @@ class ClaudeService {
               final errorData = jsonDecode(errorBody);
               if (errorData['error'] != null &&
                   errorData['error']['type'] == 'overloaded_error') {
-                return 'Claude is currently experiencing high demand. Please try again in a moment.';
+                // FT-155: Handle overloaded_error in response body (backup for 529)
+                SharedClaudeRateLimiter.recordOverload();
+                return _getOverloadFallbackResponse();
               }
               return _getUserFriendlyErrorMessage(errorBody);
             } catch (e) {
@@ -618,12 +649,12 @@ class ClaudeService {
     if (response.statusCode == 200) {
       // FT-154: Reset fallback counter and process queued activities on success
       _resetFallbackCounter();
-      
+
       // Process any queued activities when system recovers
       if (!SharedClaudeRateLimiter.hasRecentRateLimit()) {
         ft154.ActivityQueue.processQueue();
       }
-      
+
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['content'][0]['text'];
     } else {
@@ -783,8 +814,18 @@ class ClaudeService {
       }
 
       // Check common error patterns; if detected, skip TTS and return text-only
+      // FT-155: Exclude language-aware fallback responses from error detection
       final lowerResponse = textResponse.toLowerCase();
-      if (lowerResponse.contains('issue with the request') ||
+
+      // Skip error detection for language-aware overload fallback responses
+      if (textResponse
+              .contains('Entendi! Vou processar isso assim que possível') ||
+          textResponse
+              .contains("Got it! I'll process that as soon as possible")) {
+        _logger.debug(
+            'Language-aware overload response detected, proceeding with TTS');
+        // Continue with TTS generation for these responses
+      } else if (lowerResponse.contains('issue with the request') ||
           lowerResponse.contains('rate limit') ||
           lowerResponse.contains('unable to') ||
           lowerResponse.contains('authentication failed') ||
