@@ -73,13 +73,44 @@
           "description": "Get chat message statistics from database",
           "usage": "{\"action\": \"get_message_stats\", \"limit\": 10} (optional limit parameter, defaults to 10)",
           "note": "Available for conversation analytics if needed"
+        },
+        {
+          "name": "get_conversation_context",
+          "description": "Get detailed conversation history with temporal context",
+          "usage": "{\"action\": \"get_conversation_context\", \"hours\": 24} (optional hours parameter, defaults to 24)",
+          "when_to_use": [
+            "User asks about patterns or themes in conversations",
+            "User references 'earlier today', 'this morning', 'yesterday'", 
+            "Complex coaching requiring session history",
+            "User asks 'what did I say about X?'"
+          ],
+          "note": "Use for deeper conversation context beyond recent messages in system prompt"
         }
       ]
     },
     "temporal_intelligence": {
       "title": "## 🕐 INTELIGÊNCIA TEMPORAL",
       "description": "Use get_current_time for ALL temporal context - never assume dates or times",
-      "critical_rule": "SEMPRE consulte get_current_time para contexto temporal preciso"
+      "critical_rule": "SEMPRE consulte get_current_time para contexto temporal preciso",
+      "conversation_memory": {
+        "title": "### 💭 CONVERSATION MEMORY - FT-157",
+        "principle": "Be aware of the timeline on every user interaction",
+        "hybrid_approach": {
+          "immediate_context": "Recent conversation provided in system prompt with natural temporal references",
+          "deep_context": "Use get_conversation_context MCP function for references beyond recent messages"
+        },
+        "when_to_use_mcp": [
+          "User asks about patterns or themes across multiple sessions",
+          "User references something from 'earlier today', 'this morning', 'yesterday'",
+          "Complex coaching requiring full conversation history",
+          "User asks 'what did I say about X?' and it's not in recent context"
+        ],
+        "natural_usage": "Reference recent conversations naturally using system prompt context, fetch deeper history only when needed",
+        "examples": [
+          "Recent context: 'A few minutes ago you mentioned hemi sync' (from system prompt)",
+          "Deep context: 'Let me check what you said about meditation this week' → use get_conversation_context"
+        ]
+      }
     }
   }
 }
