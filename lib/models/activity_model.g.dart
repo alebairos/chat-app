@@ -127,23 +127,33 @@ const ActivityModelSchema = CollectionSchema(
       name: r'source',
       type: IsarType.string,
     ),
-    r'timeContext': PropertySchema(
+    r'sourceMessageId': PropertySchema(
       id: 22,
+      name: r'sourceMessageId',
+      type: IsarType.string,
+    ),
+    r'sourceMessageText': PropertySchema(
+      id: 23,
+      name: r'sourceMessageText',
+      type: IsarType.string,
+    ),
+    r'timeContext': PropertySchema(
+      id: 24,
       name: r'timeContext',
       type: IsarType.string,
     ),
     r'timeOfDay': PropertySchema(
-      id: 23,
+      id: 25,
       name: r'timeOfDay',
       type: IsarType.string,
     ),
     r'timestamp': PropertySchema(
-      id: 24,
+      id: 26,
       name: r'timestamp',
       type: IsarType.dateTime,
     ),
     r'userDescription': PropertySchema(
-      id: 25,
+      id: 27,
       name: r'userDescription',
       type: IsarType.string,
     )
@@ -218,6 +228,18 @@ int _activityModelEstimateSize(
   }
   bytesCount += 3 + object.source.length * 3;
   {
+    final value = object.sourceMessageId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.sourceMessageText;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.timeContext;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -261,10 +283,12 @@ void _activityModelSerialize(
   writer.writeString(offsets[19], object.notes);
   writer.writeString(offsets[20], object.reasoning);
   writer.writeString(offsets[21], object.source);
-  writer.writeString(offsets[22], object.timeContext);
-  writer.writeString(offsets[23], object.timeOfDay);
-  writer.writeDateTime(offsets[24], object.timestamp);
-  writer.writeString(offsets[25], object.userDescription);
+  writer.writeString(offsets[22], object.sourceMessageId);
+  writer.writeString(offsets[23], object.sourceMessageText);
+  writer.writeString(offsets[24], object.timeContext);
+  writer.writeString(offsets[25], object.timeOfDay);
+  writer.writeDateTime(offsets[26], object.timestamp);
+  writer.writeString(offsets[27], object.userDescription);
 }
 
 ActivityModel _activityModelDeserialize(
@@ -292,10 +316,12 @@ ActivityModel _activityModelDeserialize(
   object.notes = reader.readStringOrNull(offsets[19]);
   object.reasoning = reader.readStringOrNull(offsets[20]);
   object.source = reader.readString(offsets[21]);
-  object.timeContext = reader.readStringOrNull(offsets[22]);
-  object.timeOfDay = reader.readString(offsets[23]);
-  object.timestamp = reader.readDateTime(offsets[24]);
-  object.userDescription = reader.readStringOrNull(offsets[25]);
+  object.sourceMessageId = reader.readStringOrNull(offsets[22]);
+  object.sourceMessageText = reader.readStringOrNull(offsets[23]);
+  object.timeContext = reader.readStringOrNull(offsets[24]);
+  object.timeOfDay = reader.readString(offsets[25]);
+  object.timestamp = reader.readDateTime(offsets[26]);
+  object.userDescription = reader.readStringOrNull(offsets[27]);
   return object;
 }
 
@@ -353,10 +379,14 @@ P _activityModelDeserializeProp<P>(
     case 22:
       return (reader.readStringOrNull(offset)) as P;
     case 23:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 24:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 25:
+      return (reader.readString(offset)) as P;
+    case 26:
+      return (reader.readDateTime(offset)) as P;
+    case 27:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2927,6 +2957,314 @@ extension ActivityModelQueryFilter
   }
 
   QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sourceMessageId',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sourceMessageId',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sourceMessageId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sourceMessageId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sourceMessageId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sourceMessageId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'sourceMessageId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'sourceMessageId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'sourceMessageId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'sourceMessageId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sourceMessageId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'sourceMessageId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sourceMessageText',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sourceMessageText',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sourceMessageText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sourceMessageText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sourceMessageText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sourceMessageText',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'sourceMessageText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'sourceMessageText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'sourceMessageText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'sourceMessageText',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sourceMessageText',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
+      sourceMessageTextIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'sourceMessageText',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterFilterCondition>
       timeContextIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -3727,6 +4065,34 @@ extension ActivityModelQuerySortBy
     });
   }
 
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      sortBySourceMessageId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      sortBySourceMessageIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      sortBySourceMessageText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      sortBySourceMessageTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageText', Sort.desc);
+    });
+  }
+
   QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy> sortByTimeContext() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timeContext', Sort.asc);
@@ -4087,6 +4453,34 @@ extension ActivityModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      thenBySourceMessageId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      thenBySourceMessageIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      thenBySourceMessageText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy>
+      thenBySourceMessageTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceMessageText', Sort.desc);
+    });
+  }
+
   QueryBuilder<ActivityModel, ActivityModel, QAfterSortBy> thenByTimeContext() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timeContext', Sort.asc);
@@ -4298,6 +4692,22 @@ extension ActivityModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ActivityModel, ActivityModel, QDistinct>
+      distinctBySourceMessageId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sourceMessageId',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ActivityModel, ActivityModel, QDistinct>
+      distinctBySourceMessageText({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sourceMessageText',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<ActivityModel, ActivityModel, QDistinct> distinctByTimeContext(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -4474,6 +4884,20 @@ extension ActivityModelQueryProperty
   QueryBuilder<ActivityModel, String, QQueryOperations> sourceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'source');
+    });
+  }
+
+  QueryBuilder<ActivityModel, String?, QQueryOperations>
+      sourceMessageIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sourceMessageId');
+    });
+  }
+
+  QueryBuilder<ActivityModel, String?, QQueryOperations>
+      sourceMessageTextProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sourceMessageText');
     });
   }
 

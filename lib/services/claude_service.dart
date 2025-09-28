@@ -16,6 +16,7 @@ import 'activity_memory_service.dart';
 import 'semantic_activity_detector.dart';
 import 'shared_claude_rate_limiter.dart';
 import 'activity_queue.dart' as ft154;
+import '../utils/message_id_generator.dart';
 
 import 'chat_storage_service.dart';
 
@@ -175,11 +176,58 @@ class ClaudeService {
     }
   }
 
+  /// FT-150-Simple: Load recent conversation history for cross-session memory
+  Future<void> _loadRecentHistory({int limit = 5}) async {
+    _logger.debug(
+        'FT-150-Simple: Starting to load conversation history (limit: $limit)');
+
+    if (_storageService == null) {
+      _logger.warning(
+          'FT-150-Simple: StorageService is null, skipping history load');
+      return;
+    }
+
+    try {
+      _logger.debug('FT-150-Simple: Calling getMessages...');
+      final recentMessages = await _storageService!.getMessages(limit: limit);
+      _logger.debug(
+          'FT-150-Simple: Retrieved ${recentMessages.length} messages from storage');
+
+      // Convert to conversation history format (newest first, so reverse)
+      for (final message in recentMessages.reversed) {
+        _conversationHistory.add({
+          'role': message.isUser ? 'user' : 'assistant',
+          'content': [
+            {'type': 'text', 'text': message.text}
+          ],
+          // FT-157: Removed timestamp field - Claude API doesn't accept extra fields
+        });
+      }
+
+      _logger.info(
+          'FT-150-Simple: ✅ Loaded ${recentMessages.length} messages for cross-session memory');
+      _logger.debug(
+          'FT-150-Simple: Conversation history now has ${_conversationHistory.length} total messages');
+    } catch (e) {
+      _logger
+          .warning('FT-150-Simple: ❌ Failed to load conversation history: $e');
+      // Graceful degradation - continue without history
+    }
+  }
+
   Future<bool> initialize() async {
     if (!_isInitialized) {
       try {
+        _logger.debug('FT-150-Simple: Initializing ClaudeService...');
         _systemPrompt = await _configLoader.loadSystemPrompt();
+
+        // FT-150-Simple: Load recent conversation history for context
+        _logger.debug('FT-150-Simple: About to load recent history...');
+        await _loadRecentHistory(limit: 5);
+        _logger.debug('FT-150-Simple: History loading completed');
+
         _isInitialized = true;
+        _logger.debug('FT-150-Simple: ClaudeService initialization completed');
       } catch (e) {
         _logger.error('Error initializing Claude service: $e');
         return false;
@@ -252,6 +300,11 @@ class ClaudeService {
   Future<String> _sendMessageInternal(String message) async {
     try {
       await initialize();
+
+      // FT-156: Generate unique message ID for activity linking
+      final messageId = MessageIdGenerator.generate();
+      _logger.debug(
+          'Generated message ID: $messageId for message: ${message.length > 50 ? message.substring(0, 50) + '...' : message}');
 
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
@@ -348,8 +401,9 @@ class ClaudeService {
         if (_containsMCPCommand(assistantMessage)) {
           _logger.info(
               '🧠 FT-084: Detected data request, switching to two-pass processing');
-          final dataInformedResponse =
-              await _processDataRequiredQuery(message, assistantMessage);
+          // FT-156: Pass message context for activity linking
+          final dataInformedResponse = await _processDataRequiredQuery(
+              message, assistantMessage, messageId);
 
           // Background activity detection handled in _processDataRequiredQuery
 
@@ -362,9 +416,9 @@ class ClaudeService {
         // FT-104: Clean response to remove JSON commands before TTS
         final cleanedResponse = _cleanResponseForUser(assistantMessage);
 
-        // Process background activities with qualification for regular flow
+        // FT-156: Process background activities with message context
         _processBackgroundActivitiesWithQualification(
-            message, assistantMessage);
+            message, assistantMessage, messageId);
 
         // Add assistant response to history (user message already added at line 163)
         _conversationHistory.add({
@@ -480,8 +534,9 @@ class ClaudeService {
   }
 
   /// Process data-required query using intelligent two-pass approach
+  /// FT-156: Added message context for activity linking
   Future<String> _processDataRequiredQuery(
-      String userMessage, String initialResponse) async {
+      String userMessage, String initialResponse, String messageId) async {
     try {
       _logger.info(
           '🧠 FT-084: Processing data-required query with two-pass approach');
@@ -547,8 +602,9 @@ class ClaudeService {
           .info('✅ FT-084: Successfully completed two-pass data integration');
 
       // Process background activities with qualification using raw response
+      // FT-156: Pass message context for activity linking
       await _processBackgroundActivitiesWithQualification(
-          userMessage, rawResponse);
+          userMessage, rawResponse, messageId);
 
       return dataInformedResponse;
     } catch (e) {
@@ -582,8 +638,16 @@ class ClaudeService {
       lastMessageTime,
     );
 
+    // FT-157: Add recent conversation context for temporal awareness
+    final conversationContext = await _buildRecentConversationContext();
+
     // Build enhanced system prompt with time context
     String systemPrompt = _systemPrompt ?? '';
+
+    // Add conversation context first for immediate temporal awareness
+    if (conversationContext.isNotEmpty) {
+      systemPrompt = '$conversationContext\n\n$systemPrompt';
+    }
 
     // Add time context at the beginning if available
     if (timeContext.isNotEmpty) {
@@ -611,6 +675,48 @@ class ClaudeService {
     }
 
     return systemPrompt;
+  }
+
+  /// FT-157: Build recent conversation context for temporal awareness
+  Future<String> _buildRecentConversationContext() async {
+    if (_storageService == null) return '';
+
+    try {
+      final messages = await _storageService!.getMessages(limit: 6);
+      if (messages.isEmpty) return '';
+
+      final now = DateTime.now();
+      final contextLines = <String>[];
+
+      for (final msg in messages.reversed) {
+        final timeDiff = now.difference(msg.timestamp);
+        final timeAgo = _formatNaturalTime(timeDiff);
+        final speaker = msg.isUser ? 'User' : 'You';
+        contextLines.add('$timeAgo: $speaker: "${msg.text}"');
+      }
+
+      return '''## RECENT CONVERSATION
+${contextLines.join('\n')}
+
+For deeper conversation history, use: {"action": "get_conversation_context", "hours": N}''';
+    } catch (e) {
+      _logger.debug('FT-157: Failed to build conversation context: $e');
+      return '';
+    }
+  }
+
+  /// FT-157: Format time difference in natural language
+  String _formatNaturalTime(Duration diff) {
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 2) return 'A minute ago';
+    if (diff.inMinutes < 10) return '${diff.inMinutes} minutes ago';
+    if (diff.inMinutes < 30) return 'About ${diff.inMinutes} minutes ago';
+    if (diff.inHours < 1) return 'About an hour ago';
+    if (diff.inHours < 2) return 'An hour ago';
+    if (diff.inHours < 6) return '${diff.inHours} hours ago';
+    if (diff.inDays < 1) return 'Earlier today';
+    if (diff.inDays == 1) return 'Yesterday';
+    return '${diff.inDays} days ago';
   }
 
   /// Helper method to call Claude with a specific prompt
@@ -986,8 +1092,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: Process background activities with model-driven qualification and LLM optimization
-  Future<void> _processBackgroundActivitiesWithQualification(
-      String userMessage, String qualificationResponse) async {
+  /// FT-156: Added message context for activity linking
+  Future<void> _processBackgroundActivitiesWithQualification(String userMessage,
+      String qualificationResponse, String messageId) async {
     // Use model intelligence to decide if analysis is needed
     if (!_shouldAnalyzeUserActivities(qualificationResponse)) {
       _logger.info('Activity analysis: Skipped - message not activity-focused');
@@ -1001,19 +1108,23 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
     await _applyActivityAnalysisDelay();
 
     // FT-140: Use progressive activity detection with LLM optimization
-    await _progressiveActivityDetection(userMessage);
+    // FT-156: Pass message context for activity linking
+    await _progressiveActivityDetection(userMessage, messageId);
   }
 
   /// FT-140: MCP-based Oracle activity detection (CORRECTED)
+  /// FT-156: Added message context for activity linking
   ///
   /// Uses oracle_detect_activities MCP command with complete 265-activity context.
   /// Maintains Oracle methodology compliance while achieving 83% token reduction.
-  Future<void> _progressiveActivityDetection(String userMessage) async {
+  Future<void> _progressiveActivityDetection(
+      String userMessage, String messageId) async {
     try {
       _logger.debug('FT-140: Starting MCP-based Oracle activity detection');
 
       // Use MCP command for Oracle activity detection with full 265-activity context
-      await _mcpOracleActivityDetection(userMessage);
+      // FT-156: Pass message context for activity linking
+      await _mcpOracleActivityDetection(userMessage, messageId);
 
       _logger.info('FT-140: ✅ Completed MCP Oracle activity detection');
     } catch (e) {
@@ -1024,10 +1135,12 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: MCP-based Oracle activity detection with full methodology compliance
+  /// FT-156: Added message context for activity linking
   ///
   /// Uses the oracle_detect_activities MCP command to detect activities while
   /// maintaining access to all 265 Oracle activities via compact representation.
-  Future<void> _mcpOracleActivityDetection(String userMessage) async {
+  Future<void> _mcpOracleActivityDetection(
+      String userMessage, String messageId) async {
     try {
       _logger.debug('FT-140: Starting MCP Oracle activity detection');
 
@@ -1055,8 +1168,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
             'FT-140: ✅ Detected ${detectedActivities.length} activities via MCP Oracle detection');
 
         // Process detected activities using existing infrastructure
+        // FT-156: Pass message context for activity linking
         await _processDetectedActivitiesFromMCP(
-            detectedActivities, userMessage);
+            detectedActivities, userMessage, messageId);
       } else {
         _logger.warning(
             'FT-140: MCP Oracle detection returned error: ${data['message']}');
@@ -1071,11 +1185,14 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: Process activities detected via MCP Oracle detection
+  /// FT-156: Added message context for activity linking
   ///
   /// Converts MCP detection results to ActivityDetection objects and logs them
   /// using existing activity logging infrastructure.
   Future<void> _processDetectedActivitiesFromMCP(
-      List<dynamic> detectedActivities, String userMessage) async {
+      List<dynamic> detectedActivities,
+      String userMessage,
+      String messageId) async {
     if (detectedActivities.isEmpty) {
       _logger.debug('FT-140: No activities detected via MCP Oracle detection');
       return;
@@ -1110,9 +1227,12 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
       }).toList();
 
       // Log activities using existing infrastructure
+      // FT-156: Pass message context for activity linking
       await _logActivitiesWithPreciseTime(
         activities: activities,
         timeContext: timeData,
+        messageId: messageId,
+        messageText: userMessage,
       );
 
       _logger.info(
@@ -1190,9 +1310,12 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: Store activities with precise time context
+  /// FT-156: Added message context for activity linking
   Future<void> _logActivitiesWithPreciseTime({
     required List<ActivityDetection> activities,
     required Map<String, dynamic> timeContext,
+    String? messageId,
+    String? messageText,
   }) async {
     try {
       _logger.debug(
@@ -1214,6 +1337,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
           durationMinutes: activity.durationMinutes,
           notes: 'Detected via LLM pre-selection optimization',
           metadata: activity.metadata,
+          // FT-156: Message linking for coaching memory
+          sourceMessageId: messageId,
+          sourceMessageText: messageText,
         );
       }
 

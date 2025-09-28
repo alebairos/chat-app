@@ -71,6 +71,11 @@ class SystemMCPService {
               parsedCommand['limit'] as int? ?? 10; // Default to last 10
           return await _getMessageStats(limit);
 
+        case 'get_conversation_context':
+          final hours =
+              parsedCommand['hours'] as int? ?? 24; // Default to last 24 hours
+          return await _getConversationContext(hours);
+
         // FT-140: Oracle-specific MCP commands
         case 'oracle_detect_activities':
           return await _oracleDetectActivities(parsedCommand);
@@ -304,6 +309,60 @@ class SystemMCPService {
       _logger.error('SystemMCP: Error getting message stats: $e');
       return _errorResponse('Error getting message stats: $e');
     }
+  }
+
+  /// FT-157: Gets conversation context with temporal information
+  Future<String> _getConversationContext(int hours) async {
+    _logger.info('SystemMCP: Getting conversation context (hours: $hours)');
+
+    try {
+      final storageService = ChatStorageService();
+      final cutoff = DateTime.now().subtract(Duration(hours: hours));
+      final messages = await storageService.getMessages(limit: 50);
+
+      // Filter messages within time range
+      final filteredMessages =
+          messages.where((msg) => msg.timestamp.isAfter(cutoff)).toList();
+
+      final now = DateTime.now();
+      final conversations = filteredMessages.map((msg) {
+        final timeDiff = now.difference(msg.timestamp);
+        final timeAgo = _formatDetailedTime(timeDiff);
+        final speaker = msg.isUser ? 'User' : 'Assistant';
+        return '[$timeAgo] $speaker: "${msg.text}"';
+      }).toList();
+
+      final response = {
+        'status': 'success',
+        'data': {
+          'conversation_history': conversations,
+          'total_messages': filteredMessages.length,
+          'time_span_hours': hours,
+          'current_time': now.toIso8601String(),
+          'oldest_message': filteredMessages.isNotEmpty
+              ? filteredMessages.last.timestamp.toIso8601String()
+              : null,
+        },
+      };
+
+      _logger.info(
+          'SystemMCP: ✅ Conversation context retrieved: ${filteredMessages.length} messages');
+      return json.encode(response);
+    } catch (e) {
+      _logger.error('SystemMCP: Error getting conversation context: $e');
+      return _errorResponse('Error getting conversation context: $e');
+    }
+  }
+
+  /// FT-157: Format time difference with detailed precision
+  String _formatDetailedTime(Duration diff) {
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 2) return '1 minute ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
+    if (diff.inHours < 2) return '1 hour ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+    if (diff.inDays == 1) return '1 day ago';
+    return '${diff.inDays} days ago';
   }
 
   // Legacy activity extraction methods removed - now handled by FT-064
