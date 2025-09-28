@@ -306,6 +306,9 @@ class ActivityMemoryService {
     String? notes,
     double confidence = 1.0,
     Map<String, dynamic> metadata = const {},
+    // FT-156: Message linking parameters
+    String? sourceMessageId,
+    String? sourceMessageText,
   }) async {
     try {
       // Get precise time data from FT-060
@@ -325,6 +328,9 @@ class ActivityMemoryService {
         notes: notes,
         confidenceScore: confidence,
         metadata: metadata,
+        // FT-156: Message linking
+        sourceMessageId: sourceMessageId,
+        sourceMessageText: sourceMessageText,
       );
 
       await _database.writeTxn(() async {

@@ -33,6 +33,10 @@ class ActivityModel {
   int? durationMinutes; // Optional duration
   String? notes; // Optional user notes
 
+  // FT-156: Message linking fields
+  String? sourceMessageId;     // Links to triggering message
+  String? sourceMessageText;   // What user actually said
+
   // Metadata
   late DateTime createdAt;
   double confidenceScore = 1.0; // AI detection confidence 0.0-1.0
@@ -54,6 +58,9 @@ class ActivityModel {
     this.notes,
     this.confidenceScore = 1.0,
     Map<String, dynamic> metadata = const {},
+    // FT-156: Message linking parameters
+    this.sourceMessageId,
+    this.sourceMessageText,
   })  : completedAt = completedAt,
         hour = completedAt.hour,
         minute = completedAt.minute,
@@ -73,6 +80,9 @@ class ActivityModel {
     this.durationMinutes,
     this.notes,
     this.confidenceScore = 1.0,
+    // FT-156: Message linking parameters
+    this.sourceMessageId,
+    this.sourceMessageText,
   })  : activityCode = null,
         source = 'Custom',
         completedAt = completedAt,
