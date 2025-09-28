@@ -16,6 +16,7 @@ import 'activity_memory_service.dart';
 import 'semantic_activity_detector.dart';
 import 'shared_claude_rate_limiter.dart';
 import 'activity_queue.dart' as ft154;
+import '../utils/message_id_generator.dart';
 
 import 'chat_storage_service.dart';
 
@@ -253,6 +254,10 @@ class ClaudeService {
     try {
       await initialize();
 
+      // FT-156: Generate unique message ID for activity linking
+      final messageId = MessageIdGenerator.generate();
+      _logger.debug('Generated message ID: $messageId for message: ${message.length > 50 ? message.substring(0, 50) + '...' : message}');
+
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
 
@@ -348,8 +353,9 @@ class ClaudeService {
         if (_containsMCPCommand(assistantMessage)) {
           _logger.info(
               '🧠 FT-084: Detected data request, switching to two-pass processing');
+          // FT-156: Pass message context for activity linking
           final dataInformedResponse =
-              await _processDataRequiredQuery(message, assistantMessage);
+              await _processDataRequiredQuery(message, assistantMessage, messageId);
 
           // Background activity detection handled in _processDataRequiredQuery
 
@@ -362,9 +368,9 @@ class ClaudeService {
         // FT-104: Clean response to remove JSON commands before TTS
         final cleanedResponse = _cleanResponseForUser(assistantMessage);
 
-        // Process background activities with qualification for regular flow
+        // FT-156: Process background activities with message context
         _processBackgroundActivitiesWithQualification(
-            message, assistantMessage);
+            message, assistantMessage, messageId);
 
         // Add assistant response to history (user message already added at line 163)
         _conversationHistory.add({
@@ -480,8 +486,9 @@ class ClaudeService {
   }
 
   /// Process data-required query using intelligent two-pass approach
+  /// FT-156: Added message context for activity linking
   Future<String> _processDataRequiredQuery(
-      String userMessage, String initialResponse) async {
+      String userMessage, String initialResponse, String messageId) async {
     try {
       _logger.info(
           '🧠 FT-084: Processing data-required query with two-pass approach');
@@ -547,8 +554,9 @@ class ClaudeService {
           .info('✅ FT-084: Successfully completed two-pass data integration');
 
       // Process background activities with qualification using raw response
+      // FT-156: Pass message context for activity linking
       await _processBackgroundActivitiesWithQualification(
-          userMessage, rawResponse);
+          userMessage, rawResponse, messageId);
 
       return dataInformedResponse;
     } catch (e) {
@@ -986,8 +994,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: Process background activities with model-driven qualification and LLM optimization
+  /// FT-156: Added message context for activity linking
   Future<void> _processBackgroundActivitiesWithQualification(
-      String userMessage, String qualificationResponse) async {
+      String userMessage, String qualificationResponse, String messageId) async {
     // Use model intelligence to decide if analysis is needed
     if (!_shouldAnalyzeUserActivities(qualificationResponse)) {
       _logger.info('Activity analysis: Skipped - message not activity-focused');
@@ -1001,19 +1010,22 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
     await _applyActivityAnalysisDelay();
 
     // FT-140: Use progressive activity detection with LLM optimization
-    await _progressiveActivityDetection(userMessage);
+    // FT-156: Pass message context for activity linking
+    await _progressiveActivityDetection(userMessage, messageId);
   }
 
   /// FT-140: MCP-based Oracle activity detection (CORRECTED)
+  /// FT-156: Added message context for activity linking
   ///
   /// Uses oracle_detect_activities MCP command with complete 265-activity context.
   /// Maintains Oracle methodology compliance while achieving 83% token reduction.
-  Future<void> _progressiveActivityDetection(String userMessage) async {
+  Future<void> _progressiveActivityDetection(String userMessage, String messageId) async {
     try {
       _logger.debug('FT-140: Starting MCP-based Oracle activity detection');
 
       // Use MCP command for Oracle activity detection with full 265-activity context
-      await _mcpOracleActivityDetection(userMessage);
+      // FT-156: Pass message context for activity linking
+      await _mcpOracleActivityDetection(userMessage, messageId);
 
       _logger.info('FT-140: ✅ Completed MCP Oracle activity detection');
     } catch (e) {
@@ -1024,10 +1036,11 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: MCP-based Oracle activity detection with full methodology compliance
+  /// FT-156: Added message context for activity linking
   ///
   /// Uses the oracle_detect_activities MCP command to detect activities while
   /// maintaining access to all 265 Oracle activities via compact representation.
-  Future<void> _mcpOracleActivityDetection(String userMessage) async {
+  Future<void> _mcpOracleActivityDetection(String userMessage, String messageId) async {
     try {
       _logger.debug('FT-140: Starting MCP Oracle activity detection');
 
@@ -1055,8 +1068,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
             'FT-140: ✅ Detected ${detectedActivities.length} activities via MCP Oracle detection');
 
         // Process detected activities using existing infrastructure
+        // FT-156: Pass message context for activity linking
         await _processDetectedActivitiesFromMCP(
-            detectedActivities, userMessage);
+            detectedActivities, userMessage, messageId);
       } else {
         _logger.warning(
             'FT-140: MCP Oracle detection returned error: ${data['message']}');
@@ -1071,11 +1085,12 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: Process activities detected via MCP Oracle detection
+  /// FT-156: Added message context for activity linking
   ///
   /// Converts MCP detection results to ActivityDetection objects and logs them
   /// using existing activity logging infrastructure.
   Future<void> _processDetectedActivitiesFromMCP(
-      List<dynamic> detectedActivities, String userMessage) async {
+      List<dynamic> detectedActivities, String userMessage, String messageId) async {
     if (detectedActivities.isEmpty) {
       _logger.debug('FT-140: No activities detected via MCP Oracle detection');
       return;
@@ -1110,9 +1125,12 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
       }).toList();
 
       // Log activities using existing infrastructure
+      // FT-156: Pass message context for activity linking
       await _logActivitiesWithPreciseTime(
         activities: activities,
         timeContext: timeData,
+        messageId: messageId,
+        messageText: userMessage,
       );
 
       _logger.info(
@@ -1190,9 +1208,12 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   }
 
   /// FT-140: Store activities with precise time context
+  /// FT-156: Added message context for activity linking
   Future<void> _logActivitiesWithPreciseTime({
     required List<ActivityDetection> activities,
     required Map<String, dynamic> timeContext,
+    String? messageId,
+    String? messageText,
   }) async {
     try {
       _logger.debug(
@@ -1214,6 +1235,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
           durationMinutes: activity.durationMinutes,
           notes: 'Detected via LLM pre-selection optimization',
           metadata: activity.metadata,
+          // FT-156: Message linking for coaching memory
+          sourceMessageId: messageId,
+          sourceMessageText: messageText,
         );
       }
 
