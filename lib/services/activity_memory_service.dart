@@ -677,6 +677,9 @@ class ActivityMemoryService {
                 'source': activity.source,
                 'notes': activity.notes,
                 'metadata': activity.metadata,
+                // FT-156: Message linking for coaching memory
+                'source_message_id': activity.sourceMessageId,
+                'source_message_text': activity.sourceMessageText,
               })
           .toList();
 
