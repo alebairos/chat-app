@@ -1221,7 +1221,7 @@ class ActivityMemoryService {
           'FT-161: Deleted $countBefore activities, $countAfter remaining');
     } catch (e) {
       _logger.error('FT-161: Failed to delete all activities: $e');
-      
+
       // FT-125: Try one more time with fresh connection on failure
       try {
         _logger.info('FT-161: Retrying deletion with fresh connection...');
@@ -1236,7 +1236,7 @@ class ActivityMemoryService {
       } catch (retryError) {
         _logger.error('FT-161: Retry deletion also failed: $retryError');
       }
-      
+
       rethrow;
     }
   }

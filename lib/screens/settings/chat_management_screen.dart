@@ -430,7 +430,7 @@ class ChatManagementScreen extends StatelessWidget {
       final freshChatStorage = ChatStorageService();
       final freshIsar = await freshChatStorage.db;
       final finalMessageCount = await freshIsar.chatMessageModels.count();
-      
+
       if (finalMessageCount != messageCount) {
         throw Exception('Chat messages were not preserved during clear');
       }
@@ -450,7 +450,8 @@ class ChatManagementScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Clear failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
+            content: Text(
+                '❌ Clear failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -494,10 +495,11 @@ class ChatManagementScreen extends StatelessWidget {
 
       // Get initial counts for logging (use fresh connections)
       final initialMessageCount = await isar.chatMessageModels.count();
-      
+
       // FT-125: Ensure fresh connection for activity count
       await ActivityMemoryService.ensureFreshConnection();
-      final initialActivityCount = await ActivityMemoryService.getTotalActivityCount();
+      final initialActivityCount =
+          await ActivityMemoryService.getTotalActivityCount();
 
       // Clear messages (safe even if already empty)
       await isar.writeTxn(() async {
@@ -514,7 +516,8 @@ class ChatManagementScreen extends StatelessWidget {
       final freshChatStorage = ChatStorageService();
       final freshIsar = await freshChatStorage.db;
       final finalMessageCount = await freshIsar.chatMessageModels.count();
-      final finalActivityCount = await ActivityMemoryService.getTotalActivityCount();
+      final finalActivityCount =
+          await ActivityMemoryService.getTotalActivityCount();
 
       // 3. Refresh UI and show success
       onCharacterSelected();
@@ -522,8 +525,7 @@ class ChatManagementScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '✅ All data cleared - $initialMessageCount messages and $initialActivityCount activities removed'
-            ),
+                '✅ All data cleared - $initialMessageCount messages and $initialActivityCount activities removed'),
             backgroundColor: Colors.green,
           ),
         );
@@ -533,7 +535,8 @@ class ChatManagementScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Clear operation failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
+            content: Text(
+                '❌ Clear operation failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
