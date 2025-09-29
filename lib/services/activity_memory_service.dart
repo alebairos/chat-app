@@ -1198,6 +1198,49 @@ class ActivityMemoryService {
     }
   }
 
+  /// FT-161: Delete all activities from the database
+  static Future<void> deleteAllActivities() async {
+    try {
+      _logger.info('FT-161: Starting to delete all activities');
+
+      // FT-125: Use reliable fresh connection pattern to avoid closed Isar instances
+      final success = await ensureFreshConnection();
+      if (!success) {
+        throw Exception('Failed to establish database connection for deletion');
+      }
+
+      // Get count before deletion for logging
+      final countBefore = await _database.activityModels.count();
+
+      await _database.writeTxn(() async {
+        await _database.activityModels.clear();
+      });
+
+      final countAfter = await _database.activityModels.count();
+      _logger.info(
+          'FT-161: Deleted $countBefore activities, $countAfter remaining');
+    } catch (e) {
+      _logger.error('FT-161: Failed to delete all activities: $e');
+
+      // FT-125: Try one more time with fresh connection on failure
+      try {
+        _logger.info('FT-161: Retrying deletion with fresh connection...');
+        final retrySuccess = await ensureFreshConnection();
+        if (retrySuccess) {
+          await _database.writeTxn(() async {
+            await _database.activityModels.clear();
+          });
+          _logger.info('FT-161: Retry deletion successful');
+          return;
+        }
+      } catch (retryError) {
+        _logger.error('FT-161: Retry deletion also failed: $retryError');
+      }
+
+      rethrow;
+    }
+  }
+
   /// Helper method to get day of week name
   static String _getDayOfWeek(int weekday) {
     const days = [

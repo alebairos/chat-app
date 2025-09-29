@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
 import '../../services/chat_storage_service.dart';
+import '../../services/activity_memory_service.dart';
 import '../../models/chat_message_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/message_type.dart';
@@ -74,6 +75,27 @@ class ChatManagementScreen extends StatelessWidget {
             title: 'Import Activity Data',
             subtitle: 'Restore activity history from backup',
             onTap: () => ActivityExportDialogUtils.showImportDialog(context),
+          ),
+          // FT-161: Clear Activity Data
+          _buildManagementCard(
+            context,
+            icon: Icons.delete_sweep_outlined,
+            iconColor: Colors.orange,
+            title: 'Clear Activity Data',
+            subtitle: 'Remove all activity tracking data (keeps chat messages)',
+            onTap: () => _clearActivityData(context),
+          ),
+
+          const SizedBox(height: 16), // Reduced spacing for combined section
+
+          // FT-162: Combined Clear Operation
+          _buildManagementCard(
+            context,
+            icon: Icons.delete_forever_outlined,
+            iconColor: Colors.red,
+            title: 'Clear Messages and Activities',
+            subtitle: 'Remove ALL data - chat messages and activity tracking',
+            onTap: () => _clearMessagesAndActivities(context),
           ),
 
           const SizedBox(height: 24), // Section separator
@@ -385,6 +407,167 @@ class ChatManagementScreen extends StatelessWidget {
       print('⚠️ Audio file cleanup warning: $e');
       // Don't throw - audio cleanup is secondary to message clearing
     }
+  }
+
+  // FT-161: Clear Activity Data functionality
+  Future<void> _clearActivityData(BuildContext context) async {
+    // 1. Show confirmation dialog
+    final confirm = await _showClearActivityConfirmation(context);
+    if (confirm != true) return;
+
+    try {
+      // 2. Clear activity database using reliable connection pattern
+      final chatStorage = ChatStorageService();
+      final isar = await chatStorage.db;
+
+      // Preserve message count for verification
+      final messageCount = await isar.chatMessageModels.count();
+
+      // FT-125: Clear activities using ActivityMemoryService with reliable connection handling
+      await ActivityMemoryService.deleteAllActivities();
+
+      // Verify messages preserved using fresh connection
+      final freshChatStorage = ChatStorageService();
+      final freshIsar = await freshChatStorage.db;
+      final finalMessageCount = await freshIsar.chatMessageModels.count();
+
+      if (finalMessageCount != messageCount) {
+        throw Exception('Chat messages were not preserved during clear');
+      }
+
+      // 3. Refresh UI and show success
+      onCharacterSelected();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Activity data cleared (chat messages preserved)'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // 4. Show error with more context
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                '❌ Clear failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool?> _showClearActivityConfirmation(BuildContext context) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Activity Data'),
+        content: const Text(
+          'This will remove all activity tracking data but keep your chat messages. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // FT-162: Clear Messages and Activities functionality
+  Future<void> _clearMessagesAndActivities(BuildContext context) async {
+    // 1. Show comprehensive confirmation dialog
+    final confirm = await _showClearAllConfirmation(context);
+    if (confirm != true) return;
+
+    try {
+      // 2. Execute both clear operations sequentially with reliable connections
+      final chatStorage = ChatStorageService();
+      final isar = await chatStorage.db;
+
+      // Get initial counts for logging (use fresh connections)
+      final initialMessageCount = await isar.chatMessageModels.count();
+
+      // FT-125: Ensure fresh connection for activity count
+      await ActivityMemoryService.ensureFreshConnection();
+      final initialActivityCount =
+          await ActivityMemoryService.getTotalActivityCount();
+
+      // Clear messages (safe even if already empty)
+      await isar.writeTxn(() async {
+        await isar.chatMessageModels.clear();
+      });
+
+      // Clear audio files (safe operation)
+      await _clearAudioFiles();
+
+      // FT-125: Clear activities using reliable connection handling
+      await ActivityMemoryService.deleteAllActivities();
+
+      // Verify final state with fresh connections
+      final freshChatStorage = ChatStorageService();
+      final freshIsar = await freshChatStorage.db;
+      final finalMessageCount = await freshIsar.chatMessageModels.count();
+      final finalActivityCount =
+          await ActivityMemoryService.getTotalActivityCount();
+
+      // 3. Refresh UI and show success
+      onCharacterSelected();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                '✅ All data cleared - $initialMessageCount messages and $initialActivityCount activities removed'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // 4. Show error with more details and context
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                '❌ Clear operation failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool?> _showClearAllConfirmation(BuildContext context) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Messages and Activities'),
+        content: const Text(
+          'This will remove ALL chat messages AND activity data. This action cannot be undone. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAboutApp(BuildContext context) {
