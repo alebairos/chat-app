@@ -416,18 +416,21 @@ class ChatManagementScreen extends StatelessWidget {
     if (confirm != true) return;
 
     try {
-      // 2. Clear activity database
+      // 2. Clear activity database using reliable connection pattern
       final chatStorage = ChatStorageService();
       final isar = await chatStorage.db;
 
       // Preserve message count for verification
       final messageCount = await isar.chatMessageModels.count();
 
-      // Clear activities only using ActivityMemoryService
+      // FT-125: Clear activities using ActivityMemoryService with reliable connection handling
       await ActivityMemoryService.deleteAllActivities();
 
-      // Verify messages preserved
-      final finalMessageCount = await isar.chatMessageModels.count();
+      // Verify messages preserved using fresh connection
+      final freshChatStorage = ChatStorageService();
+      final freshIsar = await freshChatStorage.db;
+      final finalMessageCount = await freshIsar.chatMessageModels.count();
+      
       if (finalMessageCount != messageCount) {
         throw Exception('Chat messages were not preserved during clear');
       }
@@ -443,12 +446,13 @@ class ChatManagementScreen extends StatelessWidget {
         );
       }
     } catch (e) {
-      // 4. Show error
+      // 4. Show error with more context
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Clear failed: $e'),
+            content: Text('❌ Clear failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -484,13 +488,16 @@ class ChatManagementScreen extends StatelessWidget {
     if (confirm != true) return;
 
     try {
-      // 2. Execute both clear operations sequentially
+      // 2. Execute both clear operations sequentially with reliable connections
       final chatStorage = ChatStorageService();
       final isar = await chatStorage.db;
 
-      // Get initial counts for logging
+      // Get initial counts for logging (use fresh connections)
       final initialMessageCount = await isar.chatMessageModels.count();
-      final initialActivityCount = await isar.activityModels.count();
+      
+      // FT-125: Ensure fresh connection for activity count
+      await ActivityMemoryService.ensureFreshConnection();
+      final initialActivityCount = await ActivityMemoryService.getTotalActivityCount();
 
       // Clear messages (safe even if already empty)
       await isar.writeTxn(() async {
@@ -500,12 +507,14 @@ class ChatManagementScreen extends StatelessWidget {
       // Clear audio files (safe operation)
       await _clearAudioFiles();
 
-      // Clear activities (safe even if already empty)
+      // FT-125: Clear activities using reliable connection handling
       await ActivityMemoryService.deleteAllActivities();
 
-      // Verify final state
-      final finalMessageCount = await isar.chatMessageModels.count();
-      final finalActivityCount = await isar.activityModels.count();
+      // Verify final state with fresh connections
+      final freshChatStorage = ChatStorageService();
+      final freshIsar = await freshChatStorage.db;
+      final finalMessageCount = await freshIsar.chatMessageModels.count();
+      final finalActivityCount = await ActivityMemoryService.getTotalActivityCount();
 
       // 3. Refresh UI and show success
       onCharacterSelected();
@@ -513,18 +522,18 @@ class ChatManagementScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '✅ All data cleared - ${initialMessageCount} messages and ${initialActivityCount} activities removed'
+              '✅ All data cleared - $initialMessageCount messages and $initialActivityCount activities removed'
             ),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
-      // 4. Show error with more details
+      // 4. Show error with more details and context
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Clear operation failed: $e'),
+            content: Text('❌ Clear operation failed: ${e.toString().contains('closed') ? 'Database connection issue - please try again' : e}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
