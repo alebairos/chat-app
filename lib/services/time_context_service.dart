@@ -353,10 +353,16 @@ class TimeContextService {
     Map<String, dynamic> timeData,
   ) {
     try {
+      // Use the full readableTime from MCP which includes the complete date
+      final readableTime = timeData['readableTime'] as String?;
+      if (readableTime != null && readableTime.isNotEmpty) {
+        return 'Current context: Today is $readableTime.';
+      }
+      
+      // Fallback to basic format if readableTime is not available
       final dayOfWeek = timeData['dayOfWeek'] as String;
       final hour = timeData['hour'] as int;
       final minute = timeData['minute'] as int;
-      final timeOfDay = timeData['timeOfDay'] as String;
 
       // Format as "It is Wednesday at 2:47 PM."
       final timeString = _formatTime12Hour(hour, minute);
