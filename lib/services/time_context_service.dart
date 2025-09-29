@@ -358,7 +358,7 @@ class TimeContextService {
       if (readableTime != null && readableTime.isNotEmpty) {
         return 'Current context: Today is $readableTime.';
       }
-      
+
       // Fallback to basic format if readableTime is not available
       final dayOfWeek = timeData['dayOfWeek'] as String;
       final hour = timeData['hour'] as int;
