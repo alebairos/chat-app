@@ -221,10 +221,11 @@ class ClaudeService {
         _logger.debug('FT-150-Simple: Initializing ClaudeService...');
         _systemPrompt = await _configLoader.loadSystemPrompt();
 
-        // FT-150-Simple: Load recent conversation history for context
-        _logger.debug('FT-150-Simple: About to load recent history...');
-        await _loadRecentHistory(limit: 5);
-        _logger.debug('FT-150-Simple: History loading completed');
+        // FT-150-Enhanced: Load recent conversation history for context
+        _logger.debug('FT-150-Enhanced: About to load recent history...');
+        await _loadRecentHistory(
+            limit: 25); // Enhanced: Handle complex conversations
+        _logger.debug('FT-150-Enhanced: History loading completed');
 
         _isInitialized = true;
         _logger.debug('FT-150-Simple: ClaudeService initialization completed');
@@ -682,7 +683,8 @@ class ClaudeService {
     if (_storageService == null) return '';
 
     try {
-      final messages = await _storageService!.getMessages(limit: 6);
+      final messages = await _storageService!
+          .getMessages(limit: 30); // FT-157-Enhanced: Extended context
       if (messages.isEmpty) return '';
 
       final now = DateTime.now();
