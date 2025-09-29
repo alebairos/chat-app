@@ -107,7 +107,7 @@ void main() {
 
         expect(systemPrompt,
             contains('Conversation resuming after a short break'));
-        expect(systemPrompt, contains('Current context: It is'));
+        expect(systemPrompt, contains('Current context: Today is'));
         expect(systemPrompt, contains('Test system prompt'));
       });
 
@@ -148,7 +148,7 @@ void main() {
         final requestBody = jsonDecode(capturedCall);
         final systemPrompt = requestBody['system'] as String;
 
-        expect(systemPrompt, contains('Current context: It is'));
+        expect(systemPrompt, contains('Current context: Today is'));
         expect(systemPrompt, isNot(contains('resuming')));
         expect(systemPrompt, contains('Test system prompt'));
       });
@@ -189,7 +189,7 @@ void main() {
         final requestBody = jsonDecode(capturedCall);
         final systemPrompt = requestBody['system'] as String;
 
-        expect(systemPrompt, contains('Current context: It is'));
+        expect(systemPrompt, contains('Current context: Today is'));
       });
 
       test('should work without storage service dependency', () async {
@@ -232,7 +232,7 @@ void main() {
         final requestBody = jsonDecode(capturedCall);
         final systemPrompt = requestBody['system'] as String;
 
-        expect(systemPrompt, contains('Current context: It is'));
+        expect(systemPrompt, contains('Current context: Today is'));
         expect(systemPrompt, isNot(contains('resuming')));
       });
 
@@ -281,7 +281,7 @@ void main() {
         final systemPrompt = requestBody['system'] as String;
 
         expect(systemPrompt, contains('Conversation resuming from yesterday'));
-        expect(systemPrompt, contains('Current context: It is'));
+        expect(systemPrompt, contains('Current context: Today is'));
       });
 
       test('should preserve MCP data integration with time context', () async {
@@ -330,7 +330,7 @@ void main() {
         // Should have time context at the beginning
         expect(systemPrompt,
             contains('Conversation resuming after a short break'));
-        expect(systemPrompt, contains('Current context: It is'));
+        expect(systemPrompt, contains('Current context: Today is'));
         // Should have system prompt in the middle
         expect(systemPrompt, contains('Test system prompt'));
         // Should not have MCP data for non-MCP messages
@@ -381,7 +381,7 @@ void main() {
         final systemPrompt = requestBody['system'] as String;
 
         // Should only include current time context (no gap context for invalid timestamp)
-        expect(systemPrompt, contains('Current context: It is'));
+        expect(systemPrompt, contains('Current context: Today is'));
         expect(systemPrompt, isNot(contains('resuming')));
       });
     });

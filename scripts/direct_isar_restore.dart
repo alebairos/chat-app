@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:isar/isar.dart';
 
 /// Direct Isar database restoration script
 /// Bypasses Flutter entirely and connects directly to Isar

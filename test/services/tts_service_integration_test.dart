@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_personas_app/features/audio_assistant/tts_service.dart';
 import 'package:ai_personas_app/services/tts_preprocessing_service.dart';
-import 'package:ai_personas_app/services/language_detection_service.dart';
 
 void main() {
   group('TTS Service Integration Tests', () {

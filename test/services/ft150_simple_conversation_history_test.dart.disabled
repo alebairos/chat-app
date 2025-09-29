@@ -28,7 +28,8 @@ class MockPathProvider
   @override
   Future<List<String>?> getExternalStoragePaths({
     StorageDirectory? type,
-  }) async => ['.'];
+  }) async =>
+      ['.'];
 
   @override
   Future<String?> getLibraryPath() async => '.';
@@ -54,28 +55,24 @@ void main() {
     setUp(() async {
       // Initialize storage service
       storageService = ChatStorageService();
-      
+
       // Clear any existing messages
       await storageService.deleteAllMessages();
     });
 
-    testWidgets('loads recent conversation history on initialization', (tester) async {
+    testWidgets('loads recent conversation history on initialization',
+        (tester) async {
       // Setup: Add messages to storage
       await storageService.saveMessage(
-        text: 'Acabei de beber água', 
-        isUser: true, 
-        type: MessageType.text
-      );
+          text: 'Acabei de beber água', isUser: true, type: MessageType.text);
       await storageService.saveMessage(
-        text: 'Ótimo! Continue assim!', 
-        isUser: false, 
-        type: MessageType.text
-      );
+          text: 'Ótimo! Continue assim!',
+          isUser: false,
+          type: MessageType.text);
       await storageService.saveMessage(
-        text: 'Como está minha hidratação?', 
-        isUser: true, 
-        type: MessageType.text
-      );
+          text: 'Como está minha hidratação?',
+          isUser: true,
+          type: MessageType.text);
 
       // Test: Initialize service with storage
       claudeService = ClaudeService(
@@ -84,23 +81,26 @@ void main() {
         storageService: storageService,
         audioEnabled: false,
       );
-      
+
       await claudeService.initialize();
 
       // Verify: History loaded (should have 3 messages in reverse order)
       expect(claudeService.conversationHistory.length, equals(3));
-      
+
       // Check first message (oldest)
       expect(claudeService.conversationHistory[0]['role'], equals('user'));
-      expect(claudeService.conversationHistory[0]['content'][0]['text'], equals('Acabei de beber água'));
-      
+      expect(claudeService.conversationHistory[0]['content'][0]['text'],
+          equals('Acabei de beber água'));
+
       // Check second message
       expect(claudeService.conversationHistory[1]['role'], equals('assistant'));
-      expect(claudeService.conversationHistory[1]['content'][0]['text'], equals('Ótimo! Continue assim!'));
-      
+      expect(claudeService.conversationHistory[1]['content'][0]['text'],
+          equals('Ótimo! Continue assim!'));
+
       // Check third message (newest)
       expect(claudeService.conversationHistory[2]['role'], equals('user'));
-      expect(claudeService.conversationHistory[2]['content'][0]['text'], equals('Como está minha hidratação?'));
+      expect(claudeService.conversationHistory[2]['content'][0]['text'],
+          equals('Como está minha hidratação?'));
     });
 
     testWidgets('handles empty message history gracefully', (tester) async {
@@ -111,7 +111,7 @@ void main() {
         storageService: storageService,
         audioEnabled: false,
       );
-      
+
       await claudeService.initialize();
 
       // Verify: Empty history handled gracefully
@@ -122,10 +122,7 @@ void main() {
       // Setup: Add 7 messages to storage
       for (int i = 1; i <= 7; i++) {
         await storageService.saveMessage(
-          text: 'Message $i', 
-          isUser: i % 2 == 1, 
-          type: MessageType.text
-        );
+            text: 'Message $i', isUser: i % 2 == 1, type: MessageType.text);
       }
 
       // Test: Initialize service
@@ -135,15 +132,17 @@ void main() {
         storageService: storageService,
         audioEnabled: false,
       );
-      
+
       await claudeService.initialize();
 
       // Verify: Only 5 most recent messages loaded
       expect(claudeService.conversationHistory.length, equals(5));
-      
+
       // Check that we got the 5 most recent messages (3, 4, 5, 6, 7)
-      expect(claudeService.conversationHistory[0]['content'][0]['text'], equals('Message 3'));
-      expect(claudeService.conversationHistory[4]['content'][0]['text'], equals('Message 7'));
+      expect(claudeService.conversationHistory[0]['content'][0]['text'],
+          equals('Message 3'));
+      expect(claudeService.conversationHistory[4]['content'][0]['text'],
+          equals('Message 7'));
     });
 
     testWidgets('works without storage service', (tester) async {
@@ -154,7 +153,7 @@ void main() {
         storageService: null, // No storage service
         audioEnabled: false,
       );
-      
+
       await claudeService.initialize();
 
       // Verify: Graceful degradation - no crash, empty history

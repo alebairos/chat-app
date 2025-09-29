@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/config/character_config_manager.dart';
+import 'package:ai_personas_app/config/character_config_manager.dart';
 
 void main() {
   group('FT-148: Core Behavioral Rules Unit Tests', () {

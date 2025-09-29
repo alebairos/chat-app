@@ -6,7 +6,6 @@ import 'package:share_plus/share_plus.dart';
 import '../models/activity_model.dart';
 import '../utils/logger.dart';
 import 'activity_memory_service.dart';
-import 'chat_storage_service.dart';
 
 /// Result of an import operation
 class ImportResult {

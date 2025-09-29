@@ -158,9 +158,8 @@ class CharacterConfigManager {
         return {
           'baseConfig': persona?['mcpBaseConfig'] as String?,
           'extensions': persona?['mcpExtensions'] as List<dynamic>? ?? [],
-          'legacyConfig':
-              persona?['mcpInstructionsConfig']
-                  as String?, // Backward compatibility
+          'legacyConfig': persona?['mcpInstructionsConfig']
+              as String?, // Backward compatibility
         };
       }
     } catch (e) {
@@ -321,9 +320,8 @@ class CharacterConfigManager {
       if (extension.containsKey('additional_functions')) {
         final additionalFunctions =
             extension['additional_functions'] as List<dynamic>;
-        final systemFunctions =
-            baseConfig['instructions']['system_functions']
-                as Map<String, dynamic>;
+        final systemFunctions = baseConfig['instructions']['system_functions']
+            as Map<String, dynamic>;
         final availableFunctions =
             systemFunctions['available_functions'] as List<dynamic>;
 
@@ -332,16 +330,17 @@ class CharacterConfigManager {
 
       // Add extension metadata
       baseConfig['loaded_extensions'] =
-          (baseConfig['loaded_extensions'] as List<dynamic>? ?? [])..add({
-            'path': extensionPath,
-            'version': extension['version'],
-            'type': extension['type'],
-          });
+          (baseConfig['loaded_extensions'] as List<dynamic>? ?? [])
+            ..add({
+              'path': extensionPath,
+              'version': extension['version'],
+              'type': extension['type'],
+            });
 
       print('   ✅ Extension merged successfully');
     } catch (e) {
       print('   ❌ Failed to merge extension $extensionPath: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -547,7 +546,8 @@ class CharacterConfigManager {
 
     // FT-159: Proactive memory triggers
     final temporalIntelligence = instructions['temporal_intelligence'] ?? {};
-    final proactiveMemory = temporalIntelligence['proactive_memory_triggers'] ?? {};
+    final proactiveMemory =
+        temporalIntelligence['proactive_memory_triggers'] ?? {};
     if (proactiveMemory.isNotEmpty) {
       if (proactiveMemory['title'] != null) {
         buffer.writeln(proactiveMemory['title']);
@@ -566,7 +566,8 @@ class CharacterConfigManager {
         buffer.writeln();
       }
       if (proactiveMemory['cross_persona_rule'] != null) {
-        buffer.writeln('**Cross-Persona Rule:** ${proactiveMemory['cross_persona_rule']}');
+        buffer.writeln(
+            '**Cross-Persona Rule:** ${proactiveMemory['cross_persona_rule']}');
         buffer.writeln();
       }
     }
@@ -617,8 +618,7 @@ class CharacterConfigManager {
           'assets/config/oracle/oracle_prompt_1.0.md';
       final String oraclePathEnv =
           (dotenv.env['ORACLE_PROMPT_PATH'] ?? '').trim();
-      final String oraclePath =
-          oracleConfigPath ??
+      final String oraclePath = oracleConfigPath ??
           (oraclePathEnv.isNotEmpty ? oraclePathEnv : defaultOraclePath);
 
       String? oraclePrompt;
@@ -680,7 +680,7 @@ class CharacterConfigManager {
           // Load audio formatting config
           final String audioConfigPath =
               personasConfig['audioFormattingConfig'] ??
-              'assets/config/audio_formatting_config.json';
+                  'assets/config/audio_formatting_config.json';
           final String audioConfigString = await rootBundle.loadString(
             audioConfigPath,
           );
@@ -807,21 +807,18 @@ class CharacterConfigManager {
       final Map<String, dynamic> config = json.decode(jsonString);
       final Map<String, dynamic> personas = config['personas'] ?? {};
 
-      return personas.entries
-          .where((entry) {
-            final persona = entry.value as Map<String, dynamic>?;
-            return persona != null && persona['enabled'] == true;
-          })
-          .map((entry) {
-            final personaKey = entry.key;
-            final persona = entry.value as Map<String, dynamic>;
-            return {
-              'key': personaKey,
-              'displayName': persona['displayName'],
-              'description': persona['description'],
-            };
-          })
-          .toList();
+      return personas.entries.where((entry) {
+        final persona = entry.value as Map<String, dynamic>?;
+        return persona != null && persona['enabled'] == true;
+      }).map((entry) {
+        final personaKey = entry.key;
+        final persona = entry.value as Map<String, dynamic>;
+        return {
+          'key': personaKey,
+          'displayName': persona['displayName'],
+          'description': persona['description'],
+        };
+      }).toList();
     } catch (e) {
       print('Error loading personas config: $e');
       // Minimal fallback

@@ -305,7 +305,7 @@ class ClaudeService {
       // FT-156: Generate unique message ID for activity linking
       final messageId = MessageIdGenerator.generate();
       _logger.debug(
-          'Generated message ID: $messageId for message: ${message.length > 50 ? message.substring(0, 50) + '...' : message}');
+          'Generated message ID: $messageId for message: ${message.length > 50 ? '${message.substring(0, 50)}...' : message}');
 
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
@@ -571,12 +571,12 @@ class ClaudeService {
       _logger.debug(
           '🔍 [DATA DEBUG] Raw collected data length: ${collectedData.length} chars');
       _logger.debug(
-          '🔍 [DATA DEBUG] Collected data preview: ${collectedData.length > 500 ? collectedData.substring(0, 500) + "..." : collectedData}');
+          '🔍 [DATA DEBUG] Collected data preview: ${collectedData.length > 500 ? "${collectedData.substring(0, 500)}..." : collectedData}');
 
       // FT-085: Smart delay to prevent API rate limiting bursts
       // 500ms delay is imperceptible to users but prevents 429 errors
       _logger.debug('🕐 FT-085: Applying 500ms delay to prevent rate limiting');
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 500));
       _logger
           .debug('✅ FT-085: Delay completed, proceeding with second API call');
 
@@ -1070,9 +1070,9 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   /// Calculate adaptive delay based on system state
   Duration _calculateAdaptiveDelay() {
     // More aggressive delay strategy to prevent rate limiting
-    if (_hasRecentRateLimit()) return Duration(seconds: 15);
-    if (_hasHighApiUsage()) return Duration(seconds: 8);
-    return Duration(seconds: 5);
+    if (_hasRecentRateLimit()) return const Duration(seconds: 15);
+    if (_hasHighApiUsage()) return const Duration(seconds: 8);
+    return const Duration(seconds: 5);
   }
 
   /// Check if system recently encountered rate limiting

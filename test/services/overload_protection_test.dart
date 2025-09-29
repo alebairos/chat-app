@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/services/shared_claude_rate_limiter.dart';
+import 'package:ai_personas_app/services/shared_claude_rate_limiter.dart';
 
 /// FT-155 Overload Protection Tests: Verify Claude overload handling
 ///

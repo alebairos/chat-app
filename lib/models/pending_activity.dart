@@ -33,6 +33,6 @@ class PendingActivity {
 
   @override
   String toString() {
-    return 'PendingActivity(message: "${message.length > 50 ? message.substring(0, 50) + "..." : message}", timestamp: $timestamp)';
+    return 'PendingActivity(message: "${message.length > 50 ? "${message.substring(0, 50)}..." : message}", timestamp: $timestamp)';
   }
 }

@@ -50,12 +50,12 @@ class SharedClaudeRateLimiter {
       // FT-154: Graduated recovery - faster for users, maintain protection for background
       if (_testingMode) {
         delay = isUserFacing
-            ? Duration(milliseconds: 1) // Testing: 1ms instead of 3s
-            : Duration(milliseconds: 2); // Testing: 2ms instead of 15s
+            ? const Duration(milliseconds: 1) // Testing: 1ms instead of 3s
+            : const Duration(milliseconds: 2); // Testing: 2ms instead of 15s
       } else {
         delay = isUserFacing
-            ? Duration(seconds: 3) // Faster user recovery
-            : Duration(seconds: 15); // Maintain background protection
+            ? const Duration(seconds: 3) // Faster user recovery
+            : const Duration(seconds: 15); // Maintain background protection
       }
       _logger.debug(
           'SharedClaudeRateLimiter: Recent rate limit detected, applying ${_testingMode ? "${delay.inMilliseconds}ms" : "${delay.inSeconds}s"} delay for ${isUserFacing ? "user-facing" : "background"} request');
@@ -63,12 +63,12 @@ class SharedClaudeRateLimiter {
       // Differentiate based on user impact
       if (_testingMode) {
         delay = isUserFacing
-            ? Duration(microseconds: 500) // Testing: 0.5ms instead of 2s
-            : Duration(milliseconds: 1); // Testing: 1ms instead of 8s
+            ? const Duration(microseconds: 500) // Testing: 0.5ms instead of 2s
+            : const Duration(milliseconds: 1); // Testing: 1ms instead of 8s
       } else {
         delay = isUserFacing
-            ? Duration(seconds: 2) // Faster for users
-            : Duration(seconds: 8); // Slower for background
+            ? const Duration(seconds: 2) // Faster for users
+            : const Duration(seconds: 8); // Slower for background
       }
       _logger.debug(
           'SharedClaudeRateLimiter: High API usage detected, applying ${_testingMode ? "${delay.inMilliseconds}ms" : "${delay.inSeconds}s"} delay for ${isUserFacing ? "user-facing" : "background"} request');
@@ -76,12 +76,13 @@ class SharedClaudeRateLimiter {
       // Normal usage - minimal delays for user-facing
       if (_testingMode) {
         delay = isUserFacing
-            ? Duration(microseconds: 100) // Testing: 0.1ms instead of 500ms
-            : Duration(microseconds: 200); // Testing: 0.2ms instead of 3s
+            ? const Duration(
+                microseconds: 100) // Testing: 0.1ms instead of 500ms
+            : const Duration(microseconds: 200); // Testing: 0.2ms instead of 3s
       } else {
         delay = isUserFacing
-            ? Duration(milliseconds: 500) // Much faster for users
-            : Duration(seconds: 3); // Standard for background
+            ? const Duration(milliseconds: 500) // Much faster for users
+            : const Duration(seconds: 3); // Standard for background
       }
       _logger.debug(
           'SharedClaudeRateLimiter: Normal usage, applying ${delay.inMilliseconds}ms delay for ${isUserFacing ? "user-facing" : "background"} request');
@@ -120,7 +121,7 @@ class SharedClaudeRateLimiter {
 
   /// Clean old API calls from tracking (older than 1 minute)
   void _cleanOldCalls() {
-    final cutoff = DateTime.now().subtract(Duration(minutes: 1));
+    final cutoff = DateTime.now().subtract(const Duration(minutes: 1));
     _apiCallHistory.removeWhere((call) => call.isBefore(cutoff));
   }
 
@@ -210,12 +211,10 @@ class SharedClaudeRateLimiter {
       'isOverloaded': _claudeOverloaded,
       'lastOverloadTime': _lastOverloadTime?.toIso8601String(),
       'overloadCount': _overloadCount,
-      'nextRecoveryCheck': _lastOverloadTime != null
-          ? _lastOverloadTime!
-              .add(Duration(
-                  seconds: min(300, pow(2, _overloadCount).toInt() * 30)))
-              .toIso8601String()
-          : null,
+      'nextRecoveryCheck': _lastOverloadTime
+          ?.add(
+              Duration(seconds: min(300, pow(2, _overloadCount).toInt() * 30)))
+          .toIso8601String(),
     };
   }
 }

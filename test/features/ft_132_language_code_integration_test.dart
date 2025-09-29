@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_personas_app/features/audio_assistant/services/eleven_labs_provider.dart';
-import 'package:ai_personas_app/utils/logger.dart';
 
 void main() {
   group('FT-132 Language Code Integration Tests', () {
