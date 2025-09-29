@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2025-09-29
+
+### Added
+- **FT-160**: Message Timestamps Display
+  - Added Discord-style timestamps below each chat message
+  - Format: `YYYY/MM/DD, HH:MM` (24-hour format) for better conversation context
+  - Lightweight implementation using existing `ChatMessageModel.timestamp` field
+  - Consistent styling: 11px font, gray color, left-aligned with 4px padding
+  - Works for both user and AI messages, text and audio messages
+
+### Enhanced
+- Chat conversation context with visible message timing
+- Debugging capabilities for conversation flow analysis
+- User experience with better temporal awareness in chat history
+
+### Technical
+- Modified `lib/widgets/chat_message.dart` to display timestamps
+- Updated `lib/screens/chat_screen.dart` to pass timestamp data
+- Zero performance impact on message rendering
+- Utilizes existing `intl` package for date formatting
+
 ## [1.7.1] - 2025-09-29
 
 ### Added

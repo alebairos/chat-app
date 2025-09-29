@@ -1198,6 +1198,27 @@ class ActivityMemoryService {
     }
   }
 
+  /// FT-161: Delete all activities from the database
+  static Future<void> deleteAllActivities() async {
+    try {
+      _logger.info('FT-161: Starting to delete all activities');
+      
+      // Get count before deletion for logging
+      final countBefore = await _database.activityModels.count();
+      
+      await _database.writeTxn(() async {
+        await _database.activityModels.clear();
+      });
+      
+      final countAfter = await _database.activityModels.count();
+      _logger.info('FT-161: Deleted $countBefore activities, $countAfter remaining');
+      
+    } catch (e) {
+      _logger.error('FT-161: Failed to delete all activities: $e');
+      rethrow;
+    }
+  }
+
   /// Helper method to get day of week name
   static String _getDayOfWeek(int weekday) {
     const days = [
