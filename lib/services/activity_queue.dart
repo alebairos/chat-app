@@ -2,6 +2,7 @@ import '../models/pending_activity.dart';
 import '../utils/logger.dart';
 import 'semantic_activity_detector.dart';
 import 'oracle_context_manager.dart';
+import 'activity_memory_service.dart';
 
 /// FT-154: Activity Queue System for Rate Limit Recovery
 ///
@@ -104,12 +105,37 @@ class ActivityQueue {
         timeContext: timeContext,
       );
 
-      // For now, just log the detected activities
-      // TODO: Integrate with proper activity storage when method names are resolved
+      // FT-163: Save detected activities to database
       if (detectedActivities.isNotEmpty) {
         _logger.info('FT-154: Processed queued activity - ${detectedActivities.length} activities detected');
-        for (final activity in detectedActivities) {
-          _logger.debug('FT-154: Detected activity: ${activity.oracleCode} - ${activity.activityName}');
+        
+        for (final detection in detectedActivities) {
+          try {
+            _logger.debug('FT-154: Saving detected activity: ${detection.oracleCode} - ${detection.activityName}');
+            
+            // Get Oracle activity details for proper dimension
+            final oracleActivity = await OracleContextManager.getActivityByCode(detection.oracleCode);
+            if (oracleActivity == null) {
+              _logger.warning('FT-154: Oracle activity not found for code: ${detection.oracleCode}');
+              continue;
+            }
+            
+            // Save activity using ActivityMemoryService.logActivity
+            await ActivityMemoryService.logActivity(
+              activityCode: detection.oracleCode,
+              activityName: oracleActivity.description,
+              dimension: oracleActivity.dimension,
+              source: 'Oracle FT-154 Queue',
+              confidence: _convertConfidenceToDouble(detection.confidence),
+              durationMinutes: detection.durationMinutes,
+              notes: detection.reasoning,
+              metadata: detection.metadata,
+            );
+            
+            _logger.info('FT-154: ✅ Successfully saved queued activity: ${detection.oracleCode}');
+          } catch (e) {
+            _logger.error('FT-154: Failed to save detected activity ${detection.oracleCode}: $e');
+          }
         }
       } else {
         _logger.debug('FT-154: No activities detected in queued message');
@@ -172,4 +198,16 @@ class ActivityQueue {
 
   /// Check if queue is empty
   static bool get isEmpty => _queue.isEmpty;
+
+  /// FT-163: Convert confidence level to numeric score
+  static double _convertConfidenceToDouble(ConfidenceLevel confidence) {
+    switch (confidence) {
+      case ConfidenceLevel.high:
+        return 0.9;
+      case ConfidenceLevel.medium:
+        return 0.7;
+      case ConfidenceLevel.low:
+        return 0.5;
+    }
+  }
 }
