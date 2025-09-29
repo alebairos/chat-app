@@ -22,7 +22,8 @@ class IntegratedMCPProcessor {
   static void startQueueProcessing() {
     // Process queue every 3 minutes
     _queueProcessingTimer?.cancel();
-    _queueProcessingTimer = Timer.periodic(Duration(minutes: 3), (_) async {
+    _queueProcessingTimer =
+        Timer.periodic(const Duration(minutes: 3), (_) async {
       try {
         await ActivityQueue.processQueue();
       } catch (e) {

@@ -27,11 +27,11 @@ void main() {
       // Verify the system prompt is not empty
       expect(systemPrompt.isNotEmpty, isTrue);
 
-      // Verify audio formatting instructions are included (FT-131 version 3.1 - Brazilian format)
+      // Verify audio formatting instructions are included (FT-131 version 3.3 - Natural language format)
       expect(
           systemPrompt.contains('TECHNICAL: AUDIO OUTPUT FORMATTING'), isTrue);
-      expect(systemPrompt.contains('Use "20h30" format (not "20:30"'), isTrue);
-      expect(systemPrompt.contains('Time Format Standards'), isTrue);
+      expect(systemPrompt.contains('Time Format Standards (Portuguese TTS Optimized)'), isTrue);
+      expect(systemPrompt.contains('"21h" → "nove da noite"'), isTrue);
     });
 
     test('should handle personas without audio formatting configuration',
@@ -96,19 +96,16 @@ void main() {
       final systemPrompt = await configManager.loadSystemPrompt();
 
       if (systemPrompt.contains('TECHNICAL: AUDIO OUTPUT FORMATTING')) {
-        // Verify specific formatting rules are present (FT-131 version 3.1 - Brazilian format)
-        expect(
-            systemPrompt.contains('Use "20h30" format (not "20:30"'), isTrue);
-        expect(
-            systemPrompt.contains('Use "18h10" format (not "18:10"'), isTrue);
-        expect(
-            systemPrompt.contains('Use "14h00" format (not "14:00"'), isTrue);
+        // Verify specific formatting rules are present (FT-131 version 3.3 - Natural language format)
+        expect(systemPrompt.contains('"21h" → "nove da noite"'), isTrue);
+        expect(systemPrompt.contains('"14h" → "duas da tarde"'), isTrue);
+        expect(systemPrompt.contains('"8h" → "oito da manhã"'), isTrue);
 
-        // Verify examples are present (FT-131 version 3.1 - Brazilian format)
-        expect(systemPrompt.contains('às 20h30'), isTrue);
-        expect(systemPrompt.contains('18h10-18h50'), isTrue);
+        // Verify examples are present (FT-131 version 3.3 - Natural language format)
+        expect(systemPrompt.contains('encontro às nove da noite'), isTrue);
+        expect(systemPrompt.contains('alarme para sete da manhã'), isTrue);
 
-        // Verify avoid list is present (FT-131 version 3.1 - International format avoided)
+        // Verify avoid list is present (FT-131 version 3.3 - International format avoided)
         expect(systemPrompt.contains('International time: 20:30, 14:30, 6:00'),
             isTrue);
         expect(
@@ -124,9 +121,9 @@ void main() {
       final systemPrompt = await configManager.loadSystemPrompt();
 
       if (systemPrompt.contains('TECHNICAL: AUDIO OUTPUT FORMATTING')) {
-        // Verify the technical note about maintaining style is present (FT-131 version 3.0)
+        // Verify the technical note about maintaining style is present (FT-131 version 3.3)
         expect(
-            systemPrompt.contains('Maintain your natural communication style'),
+            systemPrompt.contains('Internal Oracle codes and markdown formatting create unnatural speech patterns'),
             isTrue);
         expect(
             systemPrompt.contains(

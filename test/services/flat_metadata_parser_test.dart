@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/services/flat_metadata_parser.dart';
+import 'package:ai_personas_app/services/flat_metadata_parser.dart';
 
 void main() {
   group('FlatMetadataParser', () {

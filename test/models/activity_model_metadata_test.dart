@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/models/activity_model.dart';
+import 'package:ai_personas_app/models/activity_model.dart';
 
 /// FT-149: Test ActivityModel metadata storage and retrieval
 void main() {

@@ -81,13 +81,13 @@ class ActivityQueue {
             'FT-119: Successfully processed queued activity (${_pendingActivities.length} remaining)');
       } else if (request.retryCount >= _maxRetries) {
         _pendingActivities.removeAt(0);
-        _logger.warning(
-            'FT-119: Discarding activity after ${_maxRetries} retries');
+        _logger
+            .warning('FT-119: Discarding activity after $_maxRetries retries');
       } else {
         // Update with retry count
         _pendingActivities[0] = request.withRetry();
         _logger.debug(
-            'FT-119: Activity processing failed, will retry (attempt ${request.retryCount + 1}/${_maxRetries})');
+            'FT-119: Activity processing failed, will retry (attempt ${request.retryCount + 1}/$_maxRetries)');
       }
     } catch (e) {
       _logger.error('FT-119: Error processing activity queue: $e');
@@ -645,7 +645,7 @@ class ActivityMemoryService {
       } else {
         // Query previous days (exclude today)
         startDate = today.subtract(Duration(days: days));
-        final endDate = today.subtract(Duration(days: 1));
+        final endDate = today.subtract(const Duration(days: 1));
         queryEndDate =
             DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999);
         print(

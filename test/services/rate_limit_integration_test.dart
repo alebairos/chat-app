@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/services/shared_claude_rate_limiter.dart';
+import 'package:ai_personas_app/services/shared_claude_rate_limiter.dart';
 
 /// FT-154 Integration Test: Real SharedClaudeRateLimiter with zero delays
 ///

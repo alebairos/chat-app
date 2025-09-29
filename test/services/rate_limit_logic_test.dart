@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/services/shared_claude_rate_limiter.dart';
+import 'package:ai_personas_app/services/shared_claude_rate_limiter.dart';
 
 /// FT-154 Core Logic Tests: Essential rate limiting logic validation
 ///
@@ -39,7 +39,7 @@ void main() {
       final firstRateLimit = DateTime.parse(firstStatus['lastRateLimit']);
 
       // Wait a tiny bit and record again
-      await Future.delayed(Duration(milliseconds: 1));
+      await Future.delayed(const Duration(milliseconds: 1));
       rateLimiter.recordRateLimit();
       final secondStatus = rateLimiter.getStatus();
       final secondRateLimit = DateTime.parse(secondStatus['lastRateLimit']);

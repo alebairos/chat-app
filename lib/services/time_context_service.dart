@@ -238,11 +238,11 @@ class TimeContextService {
         return _generatePreciseGapContext(lastMessageTime, currentTimeData);
       }
 
-      // Fall back to existing behavior for short gaps
+      // Use enhanced context even for short gaps to ensure full date is included
       _logger.debug(
-        'FT-060: 📝 Using BASIC time context for gap: $gap (< 4 hours)',
+        'FT-060: 📝 Using ENHANCED time context for gap: $gap (< 4 hours)',
       );
-      return generateTimeContext(lastMessageTime);
+      return _formatEnhancedCurrentTimeContext(currentTimeData);
     } catch (e) {
       _logger.error('FT-060: Error generating precise time context: $e');
       return generateTimeContext(lastMessageTime); // Safe fallback
@@ -353,10 +353,16 @@ class TimeContextService {
     Map<String, dynamic> timeData,
   ) {
     try {
+      // Use the full readableTime from MCP which includes the complete date
+      final readableTime = timeData['readableTime'] as String?;
+      if (readableTime != null && readableTime.isNotEmpty) {
+        return 'Current context: Today is $readableTime.';
+      }
+
+      // Fallback to basic format if readableTime is not available
       final dayOfWeek = timeData['dayOfWeek'] as String;
       final hour = timeData['hour'] as int;
       final minute = timeData['minute'] as int;
-      final timeOfDay = timeData['timeOfDay'] as String;
 
       // Format as "It is Wednesday at 2:47 PM."
       final timeString = _formatTime12Hour(hour, minute);
