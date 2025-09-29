@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'audio_message.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../features/audio_assistant/widgets/assistant_audio_message.dart';
@@ -14,6 +15,7 @@ class ChatMessage extends StatelessWidget {
   final Function(String)? onEdit;
   final String? personaKey;
   final String? personaDisplayName;
+  final DateTime? timestamp;
 
   const ChatMessage({
     required this.text,
@@ -25,6 +27,7 @@ class ChatMessage extends StatelessWidget {
     this.onEdit,
     this.personaKey,
     this.personaDisplayName,
+    this.timestamp,
     super.key,
   });
 
@@ -176,38 +179,55 @@ class ChatMessage extends StatelessWidget {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: audioPath != null
-                ? isUser
-                    ? AudioMessage(
-                        audioPath: audioPath!,
-                        isUser: isUser,
-                        transcription: text,
-                        duration: duration ?? Duration.zero,
-                      )
-                    : AssistantAudioMessage(
-                        audioPath: audioPath!,
-                        transcription: text,
-                        duration: duration ?? Duration.zero,
-                        messageId: key.toString(),
-                      )
-                : Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: isUser ? Colors.blue : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: MarkdownBody(
-                      data: text,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(
-                          color: isUser ? Colors.white : Colors.black,
-                          fontSize: 16,
-                          height: 1.4,
+            child: Column(
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                audioPath != null
+                    ? isUser
+                        ? AudioMessage(
+                            audioPath: audioPath!,
+                            isUser: isUser,
+                            transcription: text,
+                            duration: duration ?? Duration.zero,
+                          )
+                        : AssistantAudioMessage(
+                            audioPath: audioPath!,
+                            transcription: text,
+                            duration: duration ?? Duration.zero,
+                            messageId: key.toString(),
+                          )
+                    : Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isUser ? Colors.blue : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(20),
                         ),
+                        child: MarkdownBody(
+                          data: text,
+                          styleSheet: MarkdownStyleSheet(
+                            p: TextStyle(
+                              color: isUser ? Colors.white : Colors.black,
+                              fontSize: 16,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                // FT-160: Add timestamp display
+                if (timestamp != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      DateFormat('yyyy/MM/dd, HH:mm').format(timestamp!),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[600],
                       ),
                     ),
                   ),
+              ],
+            ),
           ),
           const SizedBox(width: 8),
           Container(

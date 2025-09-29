@@ -382,6 +382,7 @@ class _ChatScreenState extends State<ChatScreen> {
       duration: model.duration,
       personaKey: model.personaKey,
       personaDisplayName: model.personaDisplayName,
+      timestamp: model.timestamp, // FT-160: Add timestamp
       onDelete: () => _deleteMessage(model.id),
       onEdit: model.isUser
           ? (text) {
