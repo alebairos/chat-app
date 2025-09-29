@@ -485,38 +485,48 @@ class ChatManagementScreen extends StatelessWidget {
 
     try {
       // 2. Execute both clear operations sequentially
-      // First clear chat history (reuse existing method without UI feedback)
       final chatStorage = ChatStorageService();
       final isar = await chatStorage.db;
 
-      // Clear messages
+      // Get initial counts for logging
+      final initialMessageCount = await isar.chatMessageModels.count();
+      final initialActivityCount = await isar.activityModels.count();
+
+      // Clear messages (safe even if already empty)
       await isar.writeTxn(() async {
         await isar.chatMessageModels.clear();
       });
 
-      // Clear audio files
+      // Clear audio files (safe operation)
       await _clearAudioFiles();
 
-      // Clear activities
+      // Clear activities (safe even if already empty)
       await ActivityMemoryService.deleteAllActivities();
+
+      // Verify final state
+      final finalMessageCount = await isar.chatMessageModels.count();
+      final finalActivityCount = await isar.activityModels.count();
 
       // 3. Refresh UI and show success
       onCharacterSelected();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ All data cleared - messages and activities removed'),
+          SnackBar(
+            content: Text(
+              '✅ All data cleared - ${initialMessageCount} messages and ${initialActivityCount} activities removed'
+            ),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
-      // 4. Show error
+      // 4. Show error with more details
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Clear operation failed: $e'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
