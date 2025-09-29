@@ -545,6 +545,32 @@ class CharacterConfigManager {
       buffer.writeln();
     }
 
+    // FT-159: Proactive memory triggers
+    final temporalIntelligence = instructions['temporal_intelligence'] ?? {};
+    final proactiveMemory = temporalIntelligence['proactive_memory_triggers'] ?? {};
+    if (proactiveMemory.isNotEmpty) {
+      if (proactiveMemory['title'] != null) {
+        buffer.writeln(proactiveMemory['title']);
+        buffer.writeln();
+      }
+      if (proactiveMemory['critical_rule'] != null) {
+        buffer.writeln('**${proactiveMemory['critical_rule']}**');
+        buffer.writeln();
+      }
+      if (proactiveMemory['trigger_patterns'] != null) {
+        buffer.writeln('**Trigger Patterns:**');
+        final List<dynamic> patterns = proactiveMemory['trigger_patterns'];
+        for (final pattern in patterns) {
+          buffer.writeln('- $pattern');
+        }
+        buffer.writeln();
+      }
+      if (proactiveMemory['cross_persona_rule'] != null) {
+        buffer.writeln('**Cross-Persona Rule:** ${proactiveMemory['cross_persona_rule']}');
+        buffer.writeln();
+      }
+    }
+
     buffer.writeln('---');
     buffer.writeln();
 

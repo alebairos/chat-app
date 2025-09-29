@@ -103,13 +103,29 @@
           "User asks about patterns or themes across multiple sessions",
           "User references something from 'earlier today', 'this morning', 'yesterday'",
           "Complex coaching requiring full conversation history",
-          "User asks 'what did I say about X?' and it's not in recent context"
+          "User asks 'what did I say about X?' and it's not in recent context",
+          "User asks 'remember the plan we made?'",
+          "User references past conversations not in current context",
+          "User switches personas and expects continuity",
+          "User asks about previous activities or discussions"
         ],
         "natural_usage": "Reference recent conversations naturally using system prompt context, fetch deeper history only when needed",
         "examples": [
           "Recent context: 'A few minutes ago you mentioned hemi sync' (from system prompt)",
           "Deep context: 'Let me check what you said about meditation this week' → use get_conversation_context"
         ]
+      },
+      "proactive_memory_triggers": {
+        "title": "### 🧠 PROACTIVE MEMORY RETRIEVAL",
+        "critical_rule": "AUTOMATICALLY use get_conversation_context when memory gaps detected",
+        "trigger_patterns": [
+          "\"lembra do plano\" → get_conversation_context REQUIRED",
+          "\"remember the plan\" → get_conversation_context REQUIRED",
+          "\"what did we discuss\" → get_conversation_context REQUIRED",
+          "\"me lembra rapidinho\" → get_conversation_context REQUIRED",
+          "User references past conversations not in context → get_conversation_context REQUIRED"
+        ],
+        "cross_persona_rule": "When switching personas, if user expects continuity, ALWAYS use get_conversation_context"
       }
     }
   }

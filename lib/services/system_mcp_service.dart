@@ -69,7 +69,8 @@ class SystemMCPService {
         case 'get_message_stats':
           final limit =
               parsedCommand['limit'] as int? ?? 10; // Default to last 10
-          return await _getMessageStats(limit);
+          final fullText = parsedCommand['full_text'] as bool? ?? false;
+          return await _getMessageStats(limit, fullText: fullText);
 
         case 'get_conversation_context':
           final hours =
@@ -257,8 +258,8 @@ class SystemMCPService {
   }
 
   /// Gets chat message statistics from the database
-  Future<String> _getMessageStats(int limit) async {
-    _logger.info('SystemMCP: Getting message stats (limit: $limit)');
+  Future<String> _getMessageStats(int limit, {bool fullText = false}) async {
+    _logger.info('SystemMCP: Getting message stats (limit: $limit, fullText: $fullText)');
 
     try {
       final storageService = ChatStorageService();
@@ -267,9 +268,11 @@ class SystemMCPService {
       final messagesData = messages
           .map((message) => {
                 'id': message.id,
-                'text': message.text.length > 100
-                    ? '${message.text.substring(0, 100)}...'
-                    : message.text,
+                'text': fullText 
+                    ? message.text
+                    : (message.text.length > 100
+                        ? '${message.text.substring(0, 100)}...'
+                        : message.text),
                 'is_user': message.isUser,
                 'timestamp': message.timestamp.toIso8601String(),
                 'time': _formatTime(message.timestamp),
@@ -318,7 +321,7 @@ class SystemMCPService {
     try {
       final storageService = ChatStorageService();
       final cutoff = DateTime.now().subtract(Duration(hours: hours));
-      final messages = await storageService.getMessages(limit: 50);
+      final messages = await storageService.getMessages(limit: 200);
 
       // Filter messages within time range
       final filteredMessages =
