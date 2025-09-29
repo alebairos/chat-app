@@ -95,6 +95,193 @@ static double _convertConfidenceToDouble(ConfidenceLevel confidence) {
 - Stats screen shows queued activities after processing
 - Logs show "✅ Successfully saved queued activity" messages
 
+## Testing Strategy
+
+### Unit Tests (No External Services)
+
+**Test File:** `test/services/activity_queue_storage_test.dart`
+
+```dart
+void main() {
+  group('FT-163: Activity Queue Storage Fix', () {
+    late TestWidgetsFlutterBinding binding;
+    
+    setUp(() {
+      binding = TestWidgetsFlutterBinding.ensureInitialized();
+      // Initialize test database
+    });
+
+    testWidgets('should save detected activities to database', (tester) async {
+      // Arrange: Mock ActivityDetection objects (no Claude needed)
+      final mockDetections = [
+        ActivityDetection(
+          oracleCode: 'SF1',
+          activityName: 'Beber água',
+          userDescription: 'Bebi 100ml de água',
+          confidence: ConfidenceLevel.high,
+          reasoning: 'User explicitly mentioned drinking water',
+          timestamp: DateTime.now(),
+          metadata: {'volume': 100, 'unit': 'ml'},
+        ),
+      ];
+      
+      // Mock OracleContextManager.getActivityByCode (no Oracle service)
+      when(() => OracleContextManager.getActivityByCode('SF1'))
+          .thenAnswer((_) async => OracleActivity(
+            code: 'SF1',
+            description: 'Beber água',
+            dimension: 'SF',
+          ));
+      
+      // Act: Process queue with mock detection
+      await ActivityQueue._processActivityDetection('test message', DateTime.now());
+      
+      // Assert: Verify database save was called
+      final activities = await ActivityMemoryService.getRecentActivities(1);
+      expect(activities.length, 1);
+      expect(activities.first.activityCode, 'SF1');
+      expect(activities.first.source, 'Oracle FT-154 Queue');
+    });
+
+    testWidgets('should handle missing Oracle activity gracefully', (tester) async {
+      // Arrange: Mock detection with invalid code
+      final mockDetections = [
+        ActivityDetection(
+          oracleCode: 'INVALID',
+          activityName: 'Invalid Activity',
+          userDescription: 'Test',
+          confidence: ConfidenceLevel.high,
+          reasoning: 'Test',
+          timestamp: DateTime.now(),
+        ),
+      ];
+      
+      // Mock OracleContextManager to return null
+      when(() => OracleContextManager.getActivityByCode('INVALID'))
+          .thenAnswer((_) async => null);
+      
+      // Act: Process queue
+      await ActivityQueue._processActivityDetection('test message', DateTime.now());
+      
+      // Assert: No activities saved, no crash
+      final activities = await ActivityMemoryService.getRecentActivities(1);
+      expect(activities.length, 0);
+    });
+
+    testWidgets('should convert confidence levels correctly', (tester) async {
+      // Test confidence conversion helper
+      expect(ActivityQueue._convertConfidenceToDouble(ConfidenceLevel.high), 0.9);
+      expect(ActivityQueue._convertConfidenceToDouble(ConfidenceLevel.medium), 0.7);
+      expect(ActivityQueue._convertConfidenceToDouble(ConfidenceLevel.low), 0.5);
+    });
+  });
+}
+```
+
+### Integration Tests (Mock External Services)
+
+**Test File:** `test/integration/activity_queue_integration_test.dart`
+
+```dart
+void main() {
+  group('FT-163: Queue Integration Tests', () {
+    testWidgets('full queue cycle without external services', (tester) async {
+      // Arrange: Mock SemanticActivityDetector to return test data
+      when(() => SemanticActivityDetector.analyzeWithTimeContext(
+        userMessage: any(named: 'userMessage'),
+        oracleContext: any(named: 'oracleContext'),
+        timeContext: any(named: 'timeContext'),
+      )).thenAnswer((_) async => [
+        ActivityDetection(
+          oracleCode: 'SF1',
+          activityName: 'Beber água',
+          userDescription: 'Bebi água',
+          confidence: ConfidenceLevel.high,
+          reasoning: 'Test detection',
+          timestamp: DateTime.now(),
+        ),
+      ]);
+      
+      // Act: Queue activity and process
+      await ActivityQueue.queueActivity('Bebi 100ml de água', DateTime.now());
+      expect(ActivityQueue.queueSize, 1);
+      
+      await ActivityQueue.processQueue();
+      
+      // Assert: Queue empty, activity saved
+      expect(ActivityQueue.queueSize, 0);
+      final activities = await ActivityMemoryService.getRecentActivities(1);
+      expect(activities.length, 1);
+      expect(activities.first.activityCode, 'SF1');
+    });
+  });
+}
+```
+
+### Manual Testing (Development Environment)
+
+**Test Scenario 1: Rate Limit Simulation**
+```dart
+// Add to existing test app or debug screen
+Future<void> testQueueStorage() async {
+  // 1. Manually queue an activity
+  await ActivityQueue.queueActivity('Bebi 200ml de água', DateTime.now());
+  print('Queue size: ${ActivityQueue.queueSize}');
+  
+  // 2. Check database before processing
+  final beforeCount = await ActivityMemoryService.getTotalActivityCount();
+  print('Activities before: $beforeCount');
+  
+  // 3. Process queue
+  await ActivityQueue.processQueue();
+  
+  // 4. Check database after processing
+  final afterCount = await ActivityMemoryService.getTotalActivityCount();
+  print('Activities after: $afterCount');
+  
+  // 5. Verify increase
+  assert(afterCount > beforeCount, 'Activity should be saved');
+  print('✅ FT-163 test passed: Activity saved from queue');
+}
+```
+
+**Test Scenario 2: Log Verification**
+```
+Expected logs after fix:
+✅ FT-154: Processing 1 queued activities
+✅ FT-154: Saving detected activity: SF1 - Beber água  
+✅ FT-154: ✅ Successfully saved queued activity: SF1
+✅ FT-154: All queued activities processed successfully
+```
+
+**Test Scenario 3: Stats Screen Validation**
+1. Clear all activities
+2. Queue activity: `ActivityQueue.queueActivity('Bebi água', DateTime.now())`
+3. Process queue: `ActivityQueue.processQueue()`
+4. Check Stats screen - should show 1 activity
+5. Verify activity details match queued message
+
+### Automated Validation
+
+**Database State Checks:**
+```dart
+// Before fix: Activities detected but not saved
+expect(detectedActivities.length, greaterThan(0));
+expect(await ActivityMemoryService.getTotalActivityCount(), 0); // ❌ Bug
+
+// After fix: Activities detected and saved
+expect(detectedActivities.length, greaterThan(0));
+expect(await ActivityMemoryService.getTotalActivityCount(), greaterThan(0)); // ✅ Fixed
+```
+
+**Success Criteria:**
+- ✅ Queue processing increases database activity count
+- ✅ Logs show "Successfully saved queued activity" messages
+- ✅ Stats screen reflects queued activities after processing
+- ✅ No external service calls needed for core functionality test
+- ✅ Graceful handling of Oracle lookup failures
+- ✅ Proper confidence level conversion
+
 ## Risk Assessment
 
 **Low Risk:** Uses existing ActivityMemoryService patterns, maintains all queue logic, only completes incomplete TODO.
