@@ -86,7 +86,8 @@ class ActivityQueue {
       // Get Oracle context for current persona
       final oracleContext = await OracleContextManager.getForCurrentPersona();
       if (oracleContext == null) {
-        _logger.debug('FT-154: No Oracle context available for queued activity processing');
+        _logger.debug(
+            'FT-154: No Oracle context available for queued activity processing');
         return;
       }
 
@@ -99,7 +100,8 @@ class ActivityQueue {
       };
 
       // Use semantic activity detector with time context
-      final detectedActivities = await SemanticActivityDetector.analyzeWithTimeContext(
+      final detectedActivities =
+          await SemanticActivityDetector.analyzeWithTimeContext(
         userMessage: message,
         oracleContext: oracleContext,
         timeContext: timeContext,
@@ -107,19 +109,23 @@ class ActivityQueue {
 
       // FT-163: Save detected activities to database
       if (detectedActivities.isNotEmpty) {
-        _logger.info('FT-154: Processed queued activity - ${detectedActivities.length} activities detected');
-        
+        _logger.info(
+            'FT-154: Processed queued activity - ${detectedActivities.length} activities detected');
+
         for (final detection in detectedActivities) {
           try {
-            _logger.debug('FT-154: Saving detected activity: ${detection.oracleCode} - ${detection.activityName}');
-            
+            _logger.debug(
+                'FT-154: Saving detected activity: ${detection.oracleCode} - ${detection.activityName}');
+
             // Get Oracle activity details for proper dimension
-            final oracleActivity = await OracleContextManager.getActivityByCode(detection.oracleCode);
+            final oracleActivity = await OracleContextManager.getActivityByCode(
+                detection.oracleCode);
             if (oracleActivity == null) {
-              _logger.warning('FT-154: Oracle activity not found for code: ${detection.oracleCode}');
+              _logger.warning(
+                  'FT-154: Oracle activity not found for code: ${detection.oracleCode}');
               continue;
             }
-            
+
             // Save activity using ActivityMemoryService.logActivity
             await ActivityMemoryService.logActivity(
               activityCode: detection.oracleCode,
@@ -131,10 +137,12 @@ class ActivityQueue {
               notes: detection.reasoning,
               metadata: detection.metadata,
             );
-            
-            _logger.info('FT-154: ✅ Successfully saved queued activity: ${detection.oracleCode}');
+
+            _logger.info(
+                'FT-154: ✅ Successfully saved queued activity: ${detection.oracleCode}');
           } catch (e) {
-            _logger.error('FT-154: Failed to save detected activity ${detection.oracleCode}: $e');
+            _logger.error(
+                'FT-154: Failed to save detected activity ${detection.oracleCode}: $e');
           }
         }
       } else {
@@ -153,7 +161,15 @@ class ActivityQueue {
 
   /// Get day of week name
   static String _getDayOfWeek(int weekday) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
     return days[weekday - 1];
   }
 
