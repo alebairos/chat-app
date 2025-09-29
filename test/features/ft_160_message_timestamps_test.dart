@@ -11,7 +11,7 @@ void main() {
       // Arrange
       final timestamp = DateTime(2025, 9, 29, 13, 30, 0);
       const messageText = 'Hello, how are you?';
-      
+
       // Act
       await tester.pumpWidget(
         MaterialApp(
@@ -34,7 +34,7 @@ void main() {
       // Arrange
       final timestamp = DateTime(2025, 9, 29, 14, 45, 30);
       const messageText = 'I am doing well, thank you!';
-      
+
       // Act
       await tester.pumpWidget(
         MaterialApp(
@@ -58,7 +58,7 @@ void main() {
     testWidgets('should not display timestamp when null', (tester) async {
       // Arrange
       const messageText = 'Message without timestamp';
-      
+
       // Act
       await tester.pumpWidget(
         MaterialApp(
@@ -79,7 +79,8 @@ void main() {
       expect(find.textContaining('/'), findsNothing);
     });
 
-    testWidgets('should format timestamp correctly for different times', (tester) async {
+    testWidgets('should format timestamp correctly for different times',
+        (tester) async {
       // Test different timestamp formats
       final testCases = [
         {
@@ -112,16 +113,17 @@ void main() {
 
         // Assert
         expect(find.text(testCase['expected'] as String), findsOneWidget);
-        
+
         // Clean up for next test
         await tester.pumpWidget(Container());
       }
     });
 
-    testWidgets('should display timestamp with correct styling', (tester) async {
+    testWidgets('should display timestamp with correct styling',
+        (tester) async {
       // Arrange
       final timestamp = DateTime(2025, 9, 29, 13, 30, 0);
-      
+
       // Act
       await tester.pumpWidget(
         MaterialApp(
@@ -138,7 +140,7 @@ void main() {
       // Assert - Find the timestamp text widget
       final timestampFinder = find.text('2025/09/29, 13:30');
       expect(timestampFinder, findsOneWidget);
-      
+
       // Check styling
       final timestampWidget = tester.widget<Text>(timestampFinder);
       expect(timestampWidget.style?.fontSize, equals(11));
@@ -148,7 +150,7 @@ void main() {
     testWidgets('should work with audio messages', (tester) async {
       // Arrange
       final timestamp = DateTime(2025, 9, 29, 15, 20, 0);
-      
+
       // Act
       await tester.pumpWidget(
         MaterialApp(
@@ -171,19 +173,20 @@ void main() {
     test('DateFormat should match expected format', () {
       // Arrange
       final timestamp = DateTime(2025, 9, 29, 13, 30, 45);
-      
+
       // Act
       final formatted = DateFormat('yyyy/MM/dd, HH:mm').format(timestamp);
-      
+
       // Assert
       expect(formatted, equals('2025/09/29, 13:30'));
     });
   });
 
   group('FT-160: ChatMessage Integration', () {
-    testWidgets('should display timestamp when created from ChatMessageModel', (tester) async {
+    testWidgets('should display timestamp when created from ChatMessageModel',
+        (tester) async {
       // This test ensures the integration with ChatMessageModel works correctly
-      
+
       // Arrange
       final timestamp = DateTime(2025, 9, 29, 16, 45, 0);
       final model = ChatMessageModel(

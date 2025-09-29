@@ -6,10 +6,12 @@ import 'package:ai_personas_app/widgets/chat_message.dart';
 
 void main() {
   group('FT-160: ChatScreen Timestamp Integration', () {
-    testWidgets('should create ChatMessage with timestamp from ChatMessageModel', (tester) async {
+    testWidgets(
+        'should create ChatMessage with timestamp from ChatMessageModel',
+        (tester) async {
       // This test verifies the integration pattern used in _createChatMessage
       // by testing the same widget creation logic
-      
+
       // Arrange
       final timestamp = DateTime(2025, 9, 29, 14, 30, 0);
       final model = ChatMessageModel(
@@ -44,7 +46,7 @@ void main() {
 
     testWidgets('should handle null timestamp in integration', (tester) async {
       // Test the integration when timestamp is null
-      
+
       // Arrange
       final model = ChatMessageModel(
         text: 'Message without timestamp',
