@@ -70,7 +70,7 @@
       }
     },
     "ariWithOracle30": {
-      "enabled": true,
+      "enabled": false,
       "displayName": "Aristios 3.0",
       "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system.",
       "configPath": "assets/config/ari_life_coach_config_2.0.json",
@@ -82,7 +82,7 @@
       }
     },
     "iThereWithOracle30": {
-      "enabled": true,
+      "enabled": false,
       "displayName": "I-There 3.0",
       "description": "AI reflection enhanced with Aristios 3.0 Life Management framework - your mirror realm guide with advanced behavioral science and habit transformation systems.",
       "configPath": "assets/config/i_there_config.json",
@@ -94,7 +94,7 @@
       }
     },
     "sergeantOracleWithOracle30": {
-      "enabled": true,
+      "enabled": false,
       "displayName": "Sergeant Oracle 3.0",
       "description": "Time-traveling Roman gladiator coach powered by Aristios 3.0 framework! Ancient warrior wisdom meets cutting-edge behavioral science for epic life transformation! 💪🏛️⚡",
       "configPath": "assets/config/sergeant_oracle_config.json",
