@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2025-09-29
+
+### Added
+- **FT-163**: Activity Queue Storage Fix
+  - Fixed critical bug where Activity Queue System detected activities but never saved them to database
+  - Completed FT-154 implementation by replacing logging-only code with actual database saves
+  - Added proper ActivityMemoryService.logActivity() integration for queued activities
+  - Enhanced error handling and Oracle activity validation in queue processing
+  - Implemented comprehensive testing with manual test utilities
+
+- **FT-162**: Clear Messages and Activities
+  - Added "Clear Messages and Activities" shortcut button for complete database reset
+  - Combines FT-071 (Clear Chat History) and FT-161 (Delete Activities) in single action
+  - Provides comprehensive confirmation dialog explaining full scope of operation
+  - Implements atomic behavior - both operations succeed or both fail with rollback
+  - No code duplication - leverages existing clear methods
+
+- **FT-161**: Delete Activities
+  - Added "Clear Activity Data" functionality for granular data management
+  - Enables selective deletion of activity tracking data while preserving chat messages
+  - Provides independent control over activity history vs chat history
+  - Includes comprehensive confirmation dialogs following FT-071 patterns
+  - Auto-updates UI stats to reflect empty state after clearing
+
+### Fixed
+- Critical data loss bug in Activity Queue System during rate limit scenarios
+- 100% activity detection loss where activities were detected but never persisted
+- Incomplete TODO implementation in ActivityQueue._processActivityDetection()
+
+### Enhanced
+- Data management capabilities with granular control options
+- User experience with convenient single-action database clearing
+- Activity queue reliability with proper database persistence
+- Testing workflows with clean database state preparation
+
+### Technical
+- Enhanced ActivityQueue with proper ActivityMemoryService integration
+- Added comprehensive error handling in queue processing workflow
+- Implemented atomic operations for combined data clearing
+- Added manual testing utilities for activity queue validation
+
 ## [1.8.0] - 2025-09-29
 
 ### Added
