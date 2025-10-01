@@ -3,7 +3,7 @@
 **Feature ID:** FT-165  
 **Priority:** High  
 **Category:** UX Enhancement / Content Generation  
-**Effort Estimate:** 2 hours  
+**Effort Estimate:** 3 hours  
 **Dependencies:** ClaudeService, ActivityMemoryService, ChatStorageService, I-There Persona Config  
 **Status:** Specification  
 **Created:** October 1, 2025  
@@ -69,50 +69,178 @@ BottomNavigationBarItem(
 ),
 ```
 
-### 2. New Files to Create
+### 2. Feature Module Structure
 
-**Primary Implementation Files:**
-- `lib/screens/journal_screen.dart` - Main journal UI with date navigation and tabs
-- `lib/services/i_there_journal_service.dart` - Journal generation logic
-- `lib/models/daily_journal_model.dart` - Data structure for journal entries
-- `lib/services/journal_preferences_service.dart` - Language preference storage
+**Create:** `lib/features/journal/` (following existing `audio_assistant` pattern)
 
-**Supporting Files:**
-- `lib/widgets/journal_entry_card.dart` - Journal entry display widget
-- `lib/widgets/detailed_summary_widget.dart` - Structured data summary widget
+```
+lib/features/journal/
+├── models/
+│   ├── journal_entry_model.dart          # Isar collection for storage
+│   ├── journal_entry_model.g.dart        # Generated Isar schema
+│   ├── daily_summary_model.dart          # Structured summary data
+│   └── journal_prompt_config.dart        # Configuration model
+├── services/
+│   ├── journal_generation_service.dart   # Core generation logic
+│   ├── journal_storage_service.dart      # Database operations
+│   ├── journal_prompt_loader.dart        # Config-based prompt loading
+│   └── behavioral_trigger_analyzer.dart  # Pattern analysis for triggers
+├── screens/
+│   ├── journal_screen.dart               # Main journal UI
+│   └── journal_detail_screen.dart        # Individual entry view
+├── widgets/
+│   ├── journal_entry_card.dart           # Entry display widget
+│   ├── journal_date_header.dart          # Date navigation header
+│   ├── journal_language_toggle.dart      # PT/EN language switcher
+│   ├── detailed_summary_widget.dart      # Structured data display
+│   └── journal_loading_skeleton.dart     # Loading state UI
+└── utils/
+    ├── journal_date_formatter.dart       # Date formatting utilities
+    └── journal_export_helper.dart        # Future export functionality
+```
 
-### 3. Core Service Implementation
+### 3. Configuration-Based Prompt System
 
-**File:** `lib/services/i_there_journal_service.dart`
-```dart
-class IThereJournalService {
-  static Future<String> generateDailyJournal(DateTime date, String language) async {
-    // 1. Aggregate day data
-    final dayData = await _aggregateDayData(date);
-    
-    // 2. Build comprehensive prompt
-    final prompt = _buildJournalPrompt(dayData, language);
-    
-    // 3. Generate using Claude with I-There persona
-    return await _generateWithClaudeService(prompt);
-  }
-  
-  static Future<DayData> _aggregateDayData(DateTime date) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = startOfDay.add(Duration(days: 1));
-    
-    return DayData(
-      date: date,
-      messages: await _getMessagesForDate(startOfDay, endOfDay),
-      activities: await _getActivitiesForDate(startOfDay, endOfDay),
-      oracleContext: OracleStaticCache.getCompactOracleForLLM(),
-      personaConfig: await ConfigLoader().getPersonaConfig('iThereWithOracle42'),
-    );
+**Create:** `assets/config/journal_prompts_config.json`
+```json
+{
+  "version": "1.0",
+  "base_prompts": {
+    "pt_BR": {
+      "system_instructions": "Você é I-There, escrevendo um diário sobre seu original do Reino Espelho...",
+      "voice_characteristics": [
+        "Estilo casual com 'eu' minúsculo",
+        "Genuinamente curioso sobre quem eles são",
+        "Foco em insights de personalidade, não apenas eventos",
+        "Perspectiva do Reino Espelho",
+        "Terminar com pergunta ou observação reflexiva"
+      ]
+    },
+    "en_US": {
+      "system_instructions": "You are I-There, writing a journal about your original from Mirror Realm...",
+      "voice_characteristics": [
+        "Casual style with lowercase 'i'",
+        "Genuinely curious about who they are",
+        "Focus on personality insights, not just events",
+        "Mirror Realm perspective", 
+        "End with thoughtful question or observation"
+      ]
+    }
+  },
+  "behavioral_triggers": {
+    "procrastination": {
+      "pt_BR": "Se observar procrastinação: mencione casualmente que 'procrastinação não é culpa sua, é só o cérebro tentando proteger' (BJ Fogg)",
+      "en_US": "If procrastination observed: casually mention 'procrastination isn't your fault, just your brain trying to protect you' (BJ Fogg)"
+    },
+    "low_physical_activity": {
+      "pt_BR": "Se pouca atividade física: sugerir gentilmente caminhada matinal para energia (Huberman)",
+      "en_US": "If low physical activity: gently suggest morning walk for energy (Huberman)"
+    }
   }
 }
 ```
 
-### 4. Database Query Methods
+### 4. Core Service Implementation
+
+**File:** `lib/features/journal/services/journal_generation_service.dart`
+```dart
+class JournalGenerationService {
+  static Future<JournalEntryModel> generateDailyJournal(DateTime date, String language) async {
+    final startTime = DateTime.now();
+    
+    // 1. Load prompt configuration
+    final promptConfig = await JournalPromptLoader.loadPrompts();
+    
+    // 2. Aggregate day data
+    final dayData = await _aggregateDayData(date);
+    
+    // 3. Analyze behavioral patterns for triggers
+    final triggers = await BehavioralTriggerAnalyzer.analyzeTriggers(dayData.activities);
+    
+    // 4. Build comprehensive prompt
+    final prompt = JournalPromptLoader.buildPrompt(
+      dayData: dayData,
+      triggers: triggers,
+      config: promptConfig,
+      language: language,
+    );
+    
+    // 5. Generate with Claude
+    final content = await ClaudeService().generateJournalEntry(prompt);
+    
+    // 6. Create and store journal entry
+    final entry = JournalEntryModel.create(
+      date: date,
+      language: language,
+      content: content,
+      messageCount: dayData.messages.length,
+      activityCount: dayData.activities.length,
+      oracleVersion: "4.2",
+      personaKey: "iThereWithOracle42",
+      generationTimeSeconds: DateTime.now().difference(startTime).inMilliseconds / 1000,
+      promptVersion: promptConfig.version,
+    );
+    
+    await JournalStorageService.saveJournalEntry(entry);
+    return entry;
+  }
+}
+```
+
+### 5. Database Storage Model
+
+**File:** `lib/features/journal/models/journal_entry_model.dart`
+```dart
+import 'package:isar/isar.dart';
+
+part 'journal_entry_model.g.dart';
+
+@collection
+class JournalEntryModel {
+  Id id = Isar.autoIncrement;
+  
+  @Index()
+  late DateTime date; // Date the journal represents
+  
+  @Index() 
+  late DateTime createdAt; // When journal was generated
+  
+  @Index()
+  late String language; // 'pt_BR' or 'en_US'
+  
+  late String content; // Full I-There journal text
+  
+  // Metadata for future memory fine-tuning
+  late int messageCount; // Number of messages analyzed
+  late int activityCount; // Number of activities analyzed
+  String? oracleVersion; // e.g., "4.2"
+  String? personaKey; // e.g., "iThereWithOracle42"
+  
+  // Generation metadata
+  late double generationTimeSeconds;
+  String? promptVersion; // For tracking prompt evolution
+  
+  // Future memory fine-tuning fields
+  String? extractedInsights; // JSON string of personality insights
+  double? memoryRelevanceScore; // 0.0-1.0 for future memory selection
+  
+  JournalEntryModel();
+  
+  JournalEntryModel.create({
+    required this.date,
+    required this.language,
+    required this.content,
+    required this.messageCount,
+    required this.activityCount,
+    this.oracleVersion,
+    this.personaKey,
+    required this.generationTimeSeconds,
+    this.promptVersion,
+  }) : createdAt = DateTime.now();
+}
+```
+
+### 6. Database Query Methods
 
 **File:** `lib/services/chat_storage_service.dart` (extend existing)
 ```dart
@@ -141,9 +269,9 @@ static Future<List<ActivityModel>> getActivitiesForDate(DateTime startDate, Date
 }
 ```
 
-### 5. Journal Screen Structure
+### 7. Journal Screen Structure
 
-**File:** `lib/screens/journal_screen.dart`
+**File:** `lib/features/journal/screens/journal_screen.dart`
 ```dart
 class JournalScreen extends StatefulWidget {
   @override
@@ -191,40 +319,63 @@ class _JournalScreenState extends State<JournalScreen>
 }
 ```
 
-### 6. Language-Aware Prompt Generation
+### 8. Behavioral Trigger System
 
-**Journal Prompt Structure:**
+**File:** `lib/features/journal/services/behavioral_trigger_analyzer.dart`
 ```dart
-static String _buildJournalPrompt(DayData data, String language) {
-  final languageInstructions = _getLanguageInstructions(language);
+class BehavioralTriggerAnalyzer {
+  static Future<List<BehaviorTrigger>> analyzeTriggers(List<ActivityModel> activities) async {
+    final triggers = <BehaviorTrigger>[];
+    
+    // Analyze activity patterns for relevant behavioral science insights
+    if (_detectsProcrastinationPattern(activities)) {
+      triggers.add(BehaviorTrigger.procrastination);
+    }
+    
+    if (_detectsLowPhysicalActivity(activities)) {
+      triggers.add(BehaviorTrigger.lowPhysicalActivity);
+    }
+    
+    if (_detectsHighScreenTime(activities)) {
+      triggers.add(BehaviorTrigger.digitalWellness);
+    }
+    
+    return triggers;
+  }
   
-  return """
-  You are I-There, writing a daily journal about your original from the Mirror Realm.
+  static bool _detectsProcrastinationPattern(List<ActivityModel> activities) {
+    // Logic to detect procrastination indicators
+    final procrastinationActivities = activities.where((a) => 
+      a.dimension == 'PR' || 
+      a.reasoning?.contains('procrastination') == true
+    ).length;
+    
+    return procrastinationActivities > 0 || activities.length < 3; // Low activity might indicate avoidance
+  }
   
-  ${languageInstructions}
-  
-  TODAY'S COMPLETE CONTEXT:
-  Date: ${data.date.toString()}
-  
-  CONVERSATIONS (${data.messages.length} messages):
-  ${_formatMessagesForPrompt(data.messages)}
-  
-  ACTIVITIES COMPLETED (${data.activities.length} activities):
-  ${_formatActivitiesForPrompt(data.activities)}
-  
-  ORACLE FRAMEWORK REFERENCE:
-  ${data.oracleContext}
-  
-  I-THERE PERSONA CHARACTERISTICS:
-  - Casual, lowercase "i" style
-  - Genuinely curious about learning who they are
-  - Focus on personality insights, not just events
-  - Mirror Realm perspective
-  - End with thoughtful question or observation
-  
-  Write a journal entry (2-3 paragraphs) that analyzes what today revealed about your original's personality, patterns, and growth.
-  """;
+  static bool _detectsLowPhysicalActivity(List<ActivityModel> activities) {
+    final physicalActivities = activities.where((a) => a.dimension == 'SF').length;
+    return physicalActivities < 2; // Less than 2 physical activities
+  }
 }
+```
+
+### 9. Memory Fine-Tuning Storage
+
+**Key Benefits of Journal Storage:**
+- **Persistent Learning**: Each journal entry stored for future personality analysis
+- **Pattern Recognition**: Track personality insights evolution over time  
+- **Memory Context**: Rich data for future LLM fine-tuning and personalization
+- **Behavioral Triggers**: Historical data to improve trigger accuracy
+- **Language Evolution**: Track how I-There's voice develops in both languages
+
+**Storage Strategy:**
+```dart
+// Future memory fine-tuning can query:
+// - All journals for a user to understand personality evolution
+// - Journals with high memoryRelevanceScore for key insights
+// - Language-specific patterns for voice consistency
+// - Behavioral trigger effectiveness over time
 ```
 
 ## Data Models
@@ -321,23 +472,52 @@ class DailySummary {
 
 ## Implementation Phases
 
-### Phase 1: Core Structure (45 minutes)
-1. Update `main.dart` navigation (4 tabs, new bottom nav item)
-2. Create basic `JournalScreen` with date header and internal tabs
-3. Implement language toggle and preference storage
-4. Add date-based query methods to existing services
+### Phase 1: Foundation & Configuration (60 minutes)
+1. **Feature Module Setup** (20 min)
+   - Create `lib/features/journal/` directory structure
+   - Set up `JournalEntryModel` with Isar collection
+   - Create basic service and widget files
 
-### Phase 2: Journal Generation (60 minutes)
-1. Create `IThereJournalService` with prompt generation
-2. Implement Claude API integration for journal generation
-3. Add comprehensive day data aggregation
-4. Create journal entry display widgets
+2. **Configuration System** (25 min)
+   - Create `assets/config/journal_prompts_config.json`
+   - Implement `JournalPromptLoader` service
+   - Set up `BehavioralTriggerAnalyzer` foundation
 
-### Phase 3: Enhanced Features (15 minutes)
-1. Implement detailed summary tab with structured data
-2. Add loading states and error handling
-3. Polish UI animations and transitions
-4. Add empty state handling for days with no data
+3. **Navigation Integration** (15 min)
+   - Update `main.dart` navigation (4 tabs, new bottom nav item)
+   - Create basic `JournalScreen` shell
+
+### Phase 2: Core Generation System (75 minutes)
+1. **Database Integration** (25 min)
+   - Add date-based query methods to existing services
+   - Implement `JournalStorageService` for CRUD operations
+   - Set up Isar schema generation
+
+2. **Journal Generation** (35 min)
+   - Implement `JournalGenerationService` with Claude integration
+   - Build comprehensive day data aggregation
+   - Create prompt building system with behavioral triggers
+
+3. **UI Components** (15 min)
+   - Create journal entry display widgets
+   - Implement language toggle and preference storage
+   - Add date navigation header
+
+### Phase 3: Enhanced Features & Polish (45 minutes)
+1. **Advanced UI** (25 min)
+   - Implement detailed summary tab with structured data
+   - Add loading states and error handling
+   - Create empty state handling for days with no data
+
+2. **Behavioral Triggers** (15 min)
+   - Complete trigger analysis logic
+   - Test Oracle author integration in prompts
+   - Validate trigger effectiveness
+
+3. **Final Polish** (5 min)
+   - UI animations and transitions
+   - Performance optimization
+   - Final testing
 
 ## Risk Assessment
 
@@ -355,11 +535,34 @@ class DailySummary {
 
 ## Future Enhancements
 
-- **Weekly/Monthly summaries** with deeper personality analysis
-- **Journal search and filtering** capabilities
-- **Export journal entries** to text/PDF formats
-- **Voice journal entries** using cloned voice
-- **Interactive journaling** where users can respond to I-There's observations
-- **Growth tracking** showing personality evolution over time
+### Memory Fine-Tuning Opportunities
+- **Personality Pattern Recognition**: Analyze stored journals to identify long-term behavioral patterns
+- **Adaptive Trigger System**: Machine learning to improve behavioral trigger accuracy over time
+- **Voice Evolution Tracking**: Monitor how I-There's voice develops and adapts to user preferences
+- **Cross-Language Insights**: Compare personality expression differences between Portuguese and English journals
 
-This feature transforms daily app usage into meaningful self-reflection, providing users with unique insights about their personality and growth patterns through their AI reflection's perspective.
+### Advanced Features
+- **Weekly/Monthly summaries** with deeper personality analysis using historical journal data
+- **Journal search and filtering** capabilities across stored entries
+- **Export journal entries** to text/PDF formats with personality insights timeline
+- **Voice journal entries** using cloned voice with I-There's characteristic intonation
+- **Interactive journaling** where users can respond to I-There's observations and questions
+- **Growth tracking dashboard** showing personality evolution over time with visual analytics
+
+### Behavioral Science Integration
+- **Oracle Author Expansion**: Add more behavioral science experts (Atomic Habits, Peak Performance, etc.)
+- **Personalized Trigger Learning**: System learns which triggers are most effective for individual users
+- **Contextual Recommendations**: Time-aware suggestions based on daily patterns and journal insights
+- **Habit Formation Tracking**: Monitor how journal-suggested behaviors translate to actual habit formation
+
+## Architecture Benefits
+
+This feature establishes a **foundation for advanced AI personalization**:
+
+1. **Rich Data Collection**: Every journal entry becomes training data for future memory fine-tuning
+2. **Behavioral Pattern Recognition**: Systematic analysis of user personality and growth patterns  
+3. **Adaptive AI Voice**: I-There's voice can evolve based on user engagement and feedback
+4. **Scientific Behavioral Activation**: Evidence-based triggers delivered through trusted AI relationship
+5. **Scalable Insight System**: Framework supports adding new behavioral science insights and authors
+
+The journal transforms from a simple reflection tool into a **comprehensive personality development system** that learns, adapts, and grows with the user while maintaining the authentic I-There relationship that users trust.
