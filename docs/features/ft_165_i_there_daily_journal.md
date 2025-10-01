@@ -3,7 +3,7 @@
 **Feature ID:** FT-165  
 **Priority:** High  
 **Category:** UX Enhancement / Content Generation  
-**Effort Estimate:** 3 hours  
+**Effort Estimate:** 2.5 hours  
 **Dependencies:** ClaudeService, ActivityMemoryService, ChatStorageService, I-There Persona Config  
 **Status:** Specification  
 **Created:** October 1, 2025  
@@ -33,13 +33,14 @@ Implement an **I-There authored daily journal** that generates personalized refl
 - **FR-165-08:** Focus on personality insights rather than event summaries
 - **FR-165-09:** Include Oracle framework context for activity interpretation
 - **FR-165-10:** End entries with thoughtful questions or observations
+- **FR-165-11:** Maintain personality consistency by referencing recent journal insights
 
 ### User Experience
-- **FR-165-11:** Easy language switching via PT/EN toggle in app bar
-- **FR-165-12:** Prominent date header with navigation arrows
-- **FR-165-13:** Loading states during journal generation
-- **FR-165-14:** Graceful handling of days with no data
-- **FR-165-15:** Persistent language preference storage
+- **FR-165-12:** Easy language switching via PT/EN toggle in app bar
+- **FR-165-13:** Prominent date header with navigation arrows
+- **FR-165-14:** Loading states during journal generation
+- **FR-165-15:** Graceful handling of days with no data
+- **FR-165-16:** Persistent language preference storage
 
 ## Technical Implementation
 
@@ -154,21 +155,25 @@ class JournalGenerationService {
     // 2. Aggregate day data
     final dayData = await _aggregateDayData(date);
     
-    // 3. Analyze behavioral patterns for triggers
+    // 3. Get recent journal context for personality consistency
+    final recentJournals = await _getRecentJournalContext(date, language);
+    
+    // 4. Analyze behavioral patterns for triggers
     final triggers = await BehavioralTriggerAnalyzer.analyzeTriggers(dayData.activities);
     
-    // 4. Build comprehensive prompt
+    // 5. Build comprehensive prompt with context
     final prompt = JournalPromptLoader.buildPrompt(
       dayData: dayData,
       triggers: triggers,
       config: promptConfig,
       language: language,
+      recentJournalContext: recentJournals,
     );
     
-    // 5. Generate with Claude
+    // 6. Generate with Claude
     final content = await ClaudeService().generateJournalEntry(prompt);
     
-    // 6. Create and store journal entry
+    // 7. Create and store journal entry
     final entry = JournalEntryModel.create(
       date: date,
       language: language,
@@ -183,6 +188,19 @@ class JournalGenerationService {
     
     await JournalStorageService.saveJournalEntry(entry);
     return entry;
+  }
+  
+  // Get recent journal entries for personality consistency
+  static Future<List<JournalEntryModel>> _getRecentJournalContext(DateTime date, String language) async {
+    final startDate = date.subtract(Duration(days: 7));
+    final endDate = date.subtract(Duration(days: 1)); // Exclude today
+    
+    return await JournalStorageService.getJournalEntries(
+      startDate: startDate,
+      endDate: endDate,
+      language: language,
+      limit: 3, // Last 3 entries for context
+    );
   }
 }
 ```
@@ -269,6 +287,52 @@ static Future<List<ActivityModel>> getActivitiesForDate(DateTime startDate, Date
 }
 ```
 
+**File:** `lib/features/journal/services/journal_storage_service.dart`
+```dart
+class JournalStorageService {
+  static Future<void> saveJournalEntry(JournalEntryModel entry) async {
+    final isar = await _getDatabase();
+    await isar.writeTxn(() async {
+      await isar.journalEntryModels.put(entry);
+    });
+  }
+  
+  static Future<List<JournalEntryModel>> getJournalEntries({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? language,
+    int? limit,
+  }) async {
+    final isar = await _getDatabase();
+    var query = isar.journalEntryModels.where();
+    
+    if (startDate != null && endDate != null) {
+      query = query.filter().dateBetween(startDate, endDate);
+    }
+    
+    if (language != null) {
+      query = query.filter().languageEqualTo(language);
+    }
+    
+    return await query
+        .sortByDateDesc()
+        .limit(limit ?? 50)
+        .findAll();
+  }
+  
+  static Future<JournalEntryModel?> getJournalForDate(DateTime date, String language) async {
+    final isar = await _getDatabase();
+    return await isar.journalEntryModels
+        .where()
+        .filter()
+        .dateEqualTo(date)
+        .and()
+        .languageEqualTo(language)
+        .findFirst();
+  }
+}
+```
+
 ### 7. Journal Screen Structure
 
 **File:** `lib/features/journal/screens/journal_screen.dart`
@@ -319,43 +383,69 @@ class _JournalScreenState extends State<JournalScreen>
 }
 ```
 
-### 8. Behavioral Trigger System
+### 8. Enhanced Prompt with Context Consistency
 
-**File:** `lib/features/journal/services/behavioral_trigger_analyzer.dart`
+**File:** `lib/features/journal/services/journal_prompt_loader.dart`
 ```dart
-class BehavioralTriggerAnalyzer {
-  static Future<List<BehaviorTrigger>> analyzeTriggers(List<ActivityModel> activities) async {
-    final triggers = <BehaviorTrigger>[];
+class JournalPromptLoader {
+  static String buildPrompt({
+    required DayData dayData,
+    required List<BehaviorTrigger> triggers,
+    required JournalPromptConfig config,
+    required String language,
+    required List<JournalEntryModel> recentJournalContext,
+  }) {
+    final basePrompt = config.basePrompts[language];
+    final triggerInstructions = _buildTriggerInstructions(triggers, language);
+    final contextInstructions = _buildContextConsistencyInstructions(recentJournalContext, language);
     
-    // Analyze activity patterns for relevant behavioral science insights
-    if (_detectsProcrastinationPattern(activities)) {
-      triggers.add(BehaviorTrigger.procrastination);
-    }
+    return """
+    ${basePrompt.systemInstructions}
     
-    if (_detectsLowPhysicalActivity(activities)) {
-      triggers.add(BehaviorTrigger.lowPhysicalActivity);
-    }
+    RECENT JOURNAL CONTEXT (for personality consistency):
+    ${contextInstructions}
     
-    if (_detectsHighScreenTime(activities)) {
-      triggers.add(BehaviorTrigger.digitalWellness);
-    }
+    TODAY'S CONTEXT:
+    Date: ${dayData.date}
+    Messages: ${dayData.messages.length} conversations
+    Activities: ${dayData.activities.length} completed
     
-    return triggers;
+    BEHAVIORAL TRIGGERS:
+    ${triggerInstructions}
+    
+    CONSISTENCY INSTRUCTIONS:
+    - Reference insights from recent journals when relevant
+    - Build on personality observations you've made before
+    - Maintain consistent voice and curiosity level
+    - Note personality evolution or pattern changes
+    - Ask follow-up questions based on previous observations
+    
+    Generate journal entry following I-There's voice with personality consistency.
+    """;
   }
   
-  static bool _detectsProcrastinationPattern(List<ActivityModel> activities) {
-    // Logic to detect procrastination indicators
-    final procrastinationActivities = activities.where((a) => 
-      a.dimension == 'PR' || 
-      a.reasoning?.contains('procrastination') == true
-    ).length;
+  static String _buildContextConsistencyInstructions(List<JournalEntryModel> journals, String language) {
+    if (journals.isEmpty) {
+      return language == 'pt_BR' 
+        ? "Primeira entrada do diário - estabeleça sua voz curiosa e observadora."
+        : "First journal entry - establish your curious and observant voice.";
+    }
     
-    return procrastinationActivities > 0 || activities.length < 3; // Low activity might indicate avoidance
-  }
-  
-  static bool _detectsLowPhysicalActivity(List<ActivityModel> activities) {
-    final physicalActivities = activities.where((a) => a.dimension == 'SF').length;
-    return physicalActivities < 2; // Less than 2 physical activities
+    final contextLines = journals.map((journal) {
+      final daysAgo = DateTime.now().difference(journal.date).inDays;
+      final timeRef = language == 'pt_BR' 
+        ? (daysAgo == 1 ? 'ontem' : '$daysAgo dias atrás')
+        : (daysAgo == 1 ? 'yesterday' : '$daysAgo days ago');
+        
+      // Extract key insights (first 150 chars)
+      final insights = journal.content.length > 150 
+        ? '${journal.content.substring(0, 150)}...'
+        : journal.content;
+        
+      return '$timeRef: $insights';
+    }).join('\n');
+    
+    return contextLines;
   }
 }
 ```
@@ -472,52 +562,53 @@ class DailySummary {
 
 ## Implementation Phases
 
-### Phase 1: Foundation & Configuration (60 minutes)
-1. **Feature Module Setup** (20 min)
+### Phase 1: Core Implementation (90 minutes)
+1. **Feature Module & Database** (30 min)
    - Create `lib/features/journal/` directory structure
    - Set up `JournalEntryModel` with Isar collection
-   - Create basic service and widget files
-
-2. **Configuration System** (25 min)
-   - Create `assets/config/journal_prompts_config.json`
-   - Implement `JournalPromptLoader` service
-   - Set up `BehavioralTriggerAnalyzer` foundation
-
-3. **Navigation Integration** (15 min)
-   - Update `main.dart` navigation (4 tabs, new bottom nav item)
-   - Create basic `JournalScreen` shell
-
-### Phase 2: Core Generation System (75 minutes)
-1. **Database Integration** (25 min)
+   - Implement `JournalStorageService` with CRUD operations
    - Add date-based query methods to existing services
-   - Implement `JournalStorageService` for CRUD operations
-   - Set up Isar schema generation
 
-2. **Journal Generation** (35 min)
-   - Implement `JournalGenerationService` with Claude integration
+2. **Journal Generation with Context** (35 min)
+   - Create `JournalGenerationService` with Claude integration
+   - Implement recent journal context retrieval for consistency
    - Build comprehensive day data aggregation
-   - Create prompt building system with behavioral triggers
+   - Create prompt building system with context awareness
 
-3. **UI Components** (15 min)
-   - Create journal entry display widgets
-   - Implement language toggle and preference storage
-   - Add date navigation header
+3. **Configuration & Navigation** (25 min)
+   - Create `assets/config/journal_prompts_config.json`
+   - Implement `JournalPromptLoader` with context consistency
+   - Update `main.dart` navigation (4 tabs, new bottom nav item)
+   - Create basic `JournalScreen` with language toggle
 
-### Phase 3: Enhanced Features & Polish (45 minutes)
-1. **Advanced UI** (25 min)
-   - Implement detailed summary tab with structured data
+### Phase 2: UI & Enhanced Features (60 minutes)
+1. **Journal UI Components** (35 min)
+   - Create `JournalScreen` with date navigation and internal tabs
+   - Implement journal entry display widgets
+   - Add language toggle and preference storage
+   - Create detailed summary tab with structured data
+
+2. **Behavioral Triggers & Polish** (25 min)
+   - Implement `BehavioralTriggerAnalyzer` with pattern detection
    - Add loading states and error handling
    - Create empty state handling for days with no data
-
-2. **Behavioral Triggers** (15 min)
-   - Complete trigger analysis logic
    - Test Oracle author integration in prompts
-   - Validate trigger effectiveness
 
-3. **Final Polish** (5 min)
-   - UI animations and transitions
-   - Performance optimization
-   - Final testing
+**Total Implementation Time: 150 minutes (2.5 hours)**
+
+### Key Phase 1 Focus: Context Consistency
+
+The core innovation is **journal context consistency** - each new journal references recent entries to:
+- Build on previous personality observations
+- Maintain I-There's evolving understanding of the user
+- Create conversational continuity across days
+- Simulate persistent memory through stored insights
+
+**Example Context-Aware Generation:**
+```
+Recent Context: "ontem: você parece mais energizado durante resolução de problemas..."
+Today's Journal: "hoje confirmou isso! vi você mergulhar naquele bug complexo..."
+```
 
 ## Risk Assessment
 
