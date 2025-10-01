@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.1] - 2025-09-30
+
+### Added
+- **FT-170**: Lyfe Plan - Comprehensive Design & Implementation Strategy
+  - Complete design for calendar-centric life management system
+  - Single plan, multiple goals architecture with Oracle 4.2 framework compliance
+  - Hierarchical structure: Plan → Goals → Activities (from Oracle catalog)
+  - Persona-driven coaching with unique delivery styles for same Oracle science
+  - PDCA cycle integration (Plan → Do → Check → Act) for continuous improvement
+  - Smart scheduling with recurrent vs spot activities
+
+- **FT-164**: Background Message Processing Fix (Specification)
+  - Comprehensive specification for fixing tab switching crashes during message processing
+  - Database-first architecture design for seamless background conversation continuation
+  - Modern chat app patterns (WhatsApp, Telegram) for persistent conversations
+  - Solution for `setState() called after dispose()` exceptions during tab switches
+
+### Enhanced
+- **Persona Configuration**: Enabled only Oracle 4.2 personas for focused user experience
+  - I-There 4.2, Aristos 4.2, Sergeant Oracle 4.2, Arya 4.2 active
+  - Streamlined persona selection with Oracle framework consistency
+  - Improved user experience with curated, high-quality persona options
+
+### Documentation
+- Comprehensive Lyfe Plan system architecture and implementation strategy
+- Detailed persona integration patterns for Oracle 4.2 framework
+- Background message processing technical specifications
+- Implementation summaries for v1.9.0 features (FT-161, FT-162, FT-163)
+
+### Technical
+- Oracle 4.2 framework compliance across all active personas
+- Calendar-first interface design for daily execution planning
+- Toyota Kata integration with built-in PDCA cycles
+- Realistic constraint handling with single plan prioritization
+
 ## [1.9.0] - 2025-09-29
 
 ### Added
