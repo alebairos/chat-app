@@ -2,6 +2,55 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2025-10-01
+
+### 🎉 Major Release: I-There Daily Journal System
+
+This major release introduces a comprehensive daily journal feature that transforms the app from a simple chat interface into a reflective life companion. The I-There persona now generates personalized daily insights, marking a significant evolution in the user experience.
+
+### Added
+- **FT-165**: I-There Daily Journal - Complete Implementation
+  - **New Journal Tab**: Added as 4th tab in bottom navigation with book icon
+  - **Dual Language Support**: Portuguese (pt_BR) and English (en_US) journal generation
+  - **I-There Persona Voice**: Characteristic lowercase "i" style with curious, reflective tone
+  - **Daily Insights Generation**: Analyzes chat messages and activities for personality insights
+  - **Date Navigation**: Browse previous journal entries with intuitive date picker
+  - **Two-Tab Structure**: "Journal" (narrative) and "Detailed Summary" (structured data)
+  - **Context Consistency**: References recent journal insights for personality continuity
+  - **Oracle Framework Integration**: Activity interpretation using Oracle 4.2 methodology
+
+### Technical Implementation
+- **Complete Feature Module**: `lib/features/journal/` with full MVC architecture
+  - **Models**: JournalEntryModel with Isar database integration and rich metadata
+  - **Services**: JournalGenerationService, JournalStorageService with Claude integration
+  - **Screens**: JournalScreen with date navigation and dual-tab interface
+  - **Widgets**: Reusable components for entry display, language toggle, loading states
+- **Database Schema**: New JournalEntryModel collection with indexing and metadata
+- **Language Persistence**: User language preference storage and retrieval
+- **Performance Optimization**: Efficient date-based queries and caching
+- **Memory Fine-tuning Ready**: Metadata structure for future AI memory improvements
+
+### User Experience Enhancements
+- **Intuitive Navigation**: Seamless date browsing with previous/next arrows
+- **Language Toggle**: Easy PT/EN switching with persistent preferences
+- **Loading States**: Skeleton screens during journal generation
+- **Graceful Handling**: Empty state management for days with no data
+- **Responsive Design**: Optimized for various screen sizes and orientations
+- **Accessibility**: Screen reader support and keyboard navigation
+
+### Data Analysis Features
+- **Activity Breakdown**: Dimension-based activity grouping and analysis
+- **Time Pattern Recognition**: Most active time of day identification
+- **Message Statistics**: Conversation volume and engagement metrics
+- **Personality Insights**: Behavioral pattern recognition and reflection
+- **Oracle Compliance**: Activity interpretation using established Oracle catalog
+
+### Integration Improvements
+- **Claude Service Enhancement**: Optimized prompts for consistent I-There voice generation
+- **Activity Memory Service**: Enhanced data retrieval for journal context
+- **Chat Storage Service**: Improved message filtering and date-based queries
+- **Oracle Static Cache**: Efficient activity metadata lookup for journal generation
+
 ## [1.9.1] - 2025-09-30
 
 ### Added

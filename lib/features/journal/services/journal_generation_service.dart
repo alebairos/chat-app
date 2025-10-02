@@ -6,6 +6,7 @@ import '../../../services/chat_storage_service.dart';
 import '../../../services/activity_memory_service.dart';
 import '../../../services/claude_service.dart';
 import '../../../services/oracle_static_cache.dart';
+import '../../../services/profile_service.dart';
 import '../../../utils/logger.dart';
 import 'journal_storage_service.dart';
 
@@ -27,9 +28,13 @@ class JournalGenerationService {
       _logger.info(
           'JournalGeneration: Found ${dayData.messages.length} messages, ${dayData.activities.length} activities');
 
-      // 2. Build simple prompt with actual data
-      final prompt =
-          _buildSimplePrompt(date, dayData.messages, dayData.activities);
+      // 2. Get user name and build simple prompt with actual data
+      final userName = await ProfileService.getProfileName();
+      if (userName.isEmpty) {
+        throw Exception('User name is required for journal generation');
+      }
+      final prompt = _buildSimplePrompt(
+          date, dayData.messages, dayData.activities, userName);
 
       // 3. Generate with Claude - returns JSON with both languages
       final response = await _generateWithClaude(prompt);
@@ -104,9 +109,13 @@ class JournalGenerationService {
   }
 
   /// Build simple prompt with actual data
-  static String _buildSimplePrompt(DateTime date,
-      List<ChatMessageModel> messages, List<ActivityModel> activities) {
+  static String _buildSimplePrompt(
+      DateTime date,
+      List<ChatMessageModel> messages,
+      List<ActivityModel> activities,
+      String userName) {
     final dateStr = '${date.day}/${date.month}/${date.year}';
+    final name = userName; // No fallback - userName must be provided
 
     // Build actual message content
     final messageContent = messages.isEmpty
@@ -120,7 +129,7 @@ class JournalGenerationService {
             .map((a) => '- ${a.activityName} (${a.dimension})')
             .join('\n');
 
-    return '''You are I-There speaking directly to Alexandre about his day. Generate TWO versions of the same journal entry - one in Portuguese (pt_BR) and one in English (en_US). Use the actual data provided below. Maximum 3 paragraphs each. Be conversational and direct. Use normal capitalization (not all lowercase).
+    return '''You are I-There speaking directly to $name about their day. Generate TWO versions of the same journal entry - one in Portuguese (pt_BR) and one in English (en_US). Use the actual data provided below. Maximum 3 paragraphs each. Be conversational and direct. Use normal capitalization (not all lowercase).
 
 DATE: $dateStr
 
@@ -132,8 +141,8 @@ $activityContent
 
 CRITICAL: Return your response in this EXACT JSON format with proper escaping:
 {
-  "pt_BR": "Alexandre, você teve um ótimo dia hoje. [Paragraph 1]\\n\\n[Paragraph 2]\\n\\n[Paragraph 3]",
-  "en_US": "Alexandre, you had a great day today. [Paragraph 1]\\n\\n[Paragraph 2]\\n\\n[Paragraph 3]"
+  "pt_BR": "$name, você teve um ótimo dia hoje. [Paragraph 1]\\n\\n[Paragraph 2]\\n\\n[Paragraph 3]",
+  "en_US": "$name, you had a great day today. [Paragraph 1]\\n\\n[Paragraph 2]\\n\\n[Paragraph 3]"
 }
 
 IMPORTANT JSON RULES:

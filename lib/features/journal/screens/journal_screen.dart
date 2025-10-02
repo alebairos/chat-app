@@ -7,6 +7,7 @@ import '../widgets/journal_entry_card.dart';
 import '../widgets/journal_language_toggle.dart';
 import '../widgets/detailed_summary_widget.dart';
 import '../widgets/journal_loading_skeleton.dart';
+import '../../../services/profile_service.dart';
 import '../../../utils/logger.dart';
 
 /// Main journal screen with date navigation and language toggle
@@ -119,6 +120,26 @@ class _JournalScreenState extends State<JournalScreen>
     });
 
     try {
+      // Always check if name is set before generation (user might have set it elsewhere)
+      final currentName = await ProfileService.getProfileName();
+      if (currentName.isEmpty) {
+        setState(() {
+          _isGenerating = false; // Reset loading state for dialog
+        });
+
+        final nameSet = await _showNamePromptDialog();
+        if (!nameSet) {
+          // User cancelled or skipped, don't generate
+          return;
+        }
+
+        // Name is now set, continue with generation
+
+        // Resume loading state after name is set
+        setState(() {
+          _isGenerating = true;
+        });
+      }
       // Generate journal entries for both languages in single API call
       await JournalGenerationService.generateDailyJournalBothLanguages(
           _selectedDate);
@@ -153,6 +174,91 @@ class _JournalScreenState extends State<JournalScreen>
         });
       }
     }
+  }
+
+  /// Show name prompt dialog before journal generation
+  Future<bool> _showNamePromptDialog() async {
+    final controller = TextEditingController();
+    String? errorMessage;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Theme.of(context).primaryColor),
+              const SizedBox(width: 8),
+              Text(_selectedLanguage == 'pt_BR'
+                  ? 'Torne Pessoal'
+                  : 'Make it Personal'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _selectedLanguage == 'pt_BR'
+                    ? 'Diários são mais significativos quando suas personas de IA conhecem seu nome.'
+                    : 'Journals are more meaningful when your AI personas know your name.',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  labelText:
+                      _selectedLanguage == 'pt_BR' ? 'Seu nome' : 'Your name',
+                  hintText: _selectedLanguage == 'pt_BR'
+                      ? 'Como a IA deve se dirigir a você?'
+                      : 'How should AI address you?',
+                  errorText: errorMessage,
+                ),
+                onChanged: (value) {
+                  setDialogState(() {
+                    errorMessage = ProfileService.validateProfileName(value);
+                  });
+                },
+                textCapitalization: TextCapitalization.words,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text(_selectedLanguage == 'pt_BR'
+                  ? 'Talvez Depois'
+                  : 'Maybe Later'),
+              onPressed: () {
+                // Don't mark as shown - allow asking again next time
+                Navigator.of(context).pop(false);
+              },
+            ),
+            ElevatedButton(
+              onPressed: errorMessage == null &&
+                      controller.text.trim().isNotEmpty
+                  ? () async {
+                      try {
+                        await ProfileService.setProfileName(controller.text);
+                        Navigator.of(context).pop(true);
+                      } catch (e) {
+                        setDialogState(() {
+                          errorMessage = _selectedLanguage == 'pt_BR'
+                              ? 'Erro ao salvar nome'
+                              : 'Failed to save name';
+                        });
+                      }
+                    }
+                  : null,
+              child: Text(
+                  _selectedLanguage == 'pt_BR' ? 'Definir Nome' : 'Set Name'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return result ?? false;
   }
 
   /// Handle language change

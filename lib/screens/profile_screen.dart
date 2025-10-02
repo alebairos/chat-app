@@ -3,6 +3,7 @@ import '../config/config_loader.dart';
 import '../screens/persona_selection_screen.dart';
 import '../screens/settings/settings_hub_screen.dart';
 import '../screens/onboarding/onboarding_flow.dart';
+import '../services/profile_service.dart';
 
 /// Profile screen with persona management and settings access
 class ProfileScreen extends StatefulWidget {
@@ -14,6 +15,79 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final ConfigLoader _configLoader = ConfigLoader();
+  String _profileName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileName();
+  }
+
+  Future<void> _loadProfileName() async {
+    final name = await ProfileService.getProfileName();
+    if (mounted) {
+      setState(() {
+        _profileName = name;
+      });
+    }
+  }
+
+  Future<void> _showNameEditDialog() async {
+    final controller = TextEditingController(text: _profileName);
+    String? errorMessage;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Your Name'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  labelText: 'How should AI personas address you?',
+                  hintText: 'Enter your name',
+                  errorText: errorMessage,
+                ),
+                onChanged: (value) {
+                  setDialogState(() {
+                    errorMessage = ProfileService.validateProfileName(value);
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: errorMessage == null
+                  ? () => Navigator.of(context).pop(controller.text)
+                  : null,
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null) {
+      try {
+        await ProfileService.setProfileName(result);
+        await _loadProfileName(); // Refresh the display
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save name: $e')),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +126,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  // Profile Name Section
+                  ListTile(
+                    leading: const Icon(Icons.account_circle),
+                    title: Text(
+                      _profileName.isEmpty ? 'Add your name' : _profileName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: _profileName.isEmpty
+                            ? FontWeight.normal
+                            : FontWeight.w500,
+                        color: _profileName.isEmpty ? Colors.grey[600] : null,
+                      ),
+                    ),
+                    subtitle: const Text('How AI personas address you'),
+                    trailing: const Icon(Icons.edit),
+                    onTap: _showNameEditDialog,
+                  ),
+
+                  const Divider(),
+
                   FutureBuilder<String>(
                     future: _configLoader.activePersonaDisplayName,
                     builder: (context, snapshot) {

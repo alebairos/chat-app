@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'personas_screen.dart';
+import 'name_setup_screen.dart';
 import 'features_screen.dart';
 import '../../services/onboarding_manager.dart';
 
@@ -47,6 +48,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               onPageChanged: (page) => setState(() => _currentPage = page),
               children: [
                 PersonasScreen(onContinue: _nextPage),
+                NameSetupScreen(onContinue: _nextPage),
                 FeaturesScreen(onComplete: _completeOnboarding),
               ],
             ),
@@ -61,6 +63,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 _buildProgressDot(0),
                 const SizedBox(width: 8),
                 _buildProgressDot(1),
+                const SizedBox(width: 8),
+                _buildProgressDot(2),
               ],
             ),
           ),
