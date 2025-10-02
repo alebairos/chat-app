@@ -90,6 +90,15 @@ class MockChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<List<ChatMessageModel>> getMessagesForDate(
+      DateTime startDate, DateTime endDate) async {
+    return _messages
+        .where((m) =>
+            m.timestamp.isAfter(startDate) && m.timestamp.isBefore(endDate))
+        .toList();
+  }
+
+  @override
   Future<void> migratePathsToRelative() async {}
 
   @override

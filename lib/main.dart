@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'screens/chat_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/profile_screen.dart';
+import 'features/journal/screens/journal_screen.dart';
 import 'screens/onboarding/onboarding_flow.dart';
 import 'services/onboarding_manager.dart';
 import 'services/oracle_static_cache.dart';
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+    _tabController = TabController(length: 4, vsync: this, initialIndex: 0);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {
@@ -177,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen>
         children: const [
           ChatScreen(),
           StatsScreen(),
+          JournalScreen(),
           ProfileScreen(),
         ],
       ),
@@ -196,6 +198,11 @@ class _HomeScreenState extends State<HomeScreen>
             icon: Icon(Icons.bar_chart_outlined),
             activeIcon: Icon(Icons.bar_chart),
             label: 'Stats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book_outlined),
+            activeIcon: Icon(Icons.book),
+            label: 'Journal',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

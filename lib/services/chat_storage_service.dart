@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/chat_message_model.dart';
 import '../models/activity_model.dart';
 import '../models/message_type.dart';
+import '../features/journal/models/journal_entry_model.dart';
 import 'dart:typed_data';
 import '../utils/path_utils.dart';
 
@@ -18,7 +19,7 @@ class ChatStorageService {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
-        [ChatMessageModelSchema, ActivityModelSchema],
+        [ChatMessageModelSchema, ActivityModelSchema, JournalEntryModelSchema],
         directory: dir.path,
       );
     }
@@ -118,6 +119,18 @@ class ChatStorageService {
           .limit(limit ?? 50)
           .findAll();
     }
+  }
+
+  /// Get messages for a specific date range (for journal generation)
+  Future<List<ChatMessageModel>> getMessagesForDate(
+      DateTime startDate, DateTime endDate) async {
+    final isar = await db;
+    return await isar.chatMessageModels
+        .where()
+        .filter()
+        .timestampBetween(startDate, endDate)
+        .sortByTimestamp()
+        .findAll();
   }
 
   Future<void> deleteMessage(Id id) async {

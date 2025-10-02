@@ -452,6 +452,25 @@ class ActivityMemoryService {
     }
   }
 
+  /// Get activities for a specific date range (for journal generation)
+  static Future<List<ActivityModel>> getActivitiesForDate(
+      DateTime startDate, DateTime endDate) async {
+    try {
+      await ensureFreshConnection();
+      final activities = await _database.activityModels
+          .where()
+          .filter()
+          .completedAtBetween(startDate, endDate)
+          .sortByCompletedAt()
+          .findAll();
+      _logger.debug('Retrieved ${activities.length} activities for date range');
+      return activities;
+    } catch (e) {
+      _logger.error('Failed to get activities for date range: $e');
+      return [];
+    }
+  }
+
   /// Generate activity summary for context injection
   static Future<String> generateActivityContext({int days = 7}) async {
     try {
