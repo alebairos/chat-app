@@ -47,12 +47,14 @@ void main() {
       // Test Aristios 4.2
       manager.setActivePersona('ariWithOracle42');
       final ariOraclePath = await manager.getOracleConfigPath();
-      expect(ariOraclePath, 'assets/config/oracle/oracle_prompt_4.2.md');
+      expect(
+          ariOraclePath, 'assets/config/oracle/oracle_prompt_4.2_optimized.md');
 
       // Test I-There 4.2
       manager.setActivePersona('iThereWithOracle42');
       final iThereOraclePath = await manager.getOracleConfigPath();
-      expect(iThereOraclePath, 'assets/config/oracle/oracle_prompt_4.2.md');
+      expect(iThereOraclePath,
+          'assets/config/oracle/oracle_prompt_4.2_optimized.md');
 
       print('✅ Oracle 4.2 integration preserved for both personas');
     });

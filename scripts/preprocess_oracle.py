@@ -665,14 +665,14 @@ def process_oracle_file(input_path: str, output_path: str = None, create_optimiz
         return False
 
 
-def process_all_oracle_files(oracle_dir: str = "assets/config/oracle/", create_optimized: bool = False):
+def process_all_oracle_files(oracle_dir: str = "assets/config/oracle/", create_optimized: bool = False, goals_mapping: bool = False):
     """Process all Oracle files in directory"""
     print("🔄 Processing all Oracle files...")
     
     oracle_path = Path(oracle_dir)
     if not oracle_path.exists():
         print(f"❌ Oracle directory not found: {oracle_dir}")
-        return
+        return False
     
     oracle_files = list(oracle_path.glob("oracle_prompt_*.md"))
     # Exclude already optimized files
@@ -680,15 +680,23 @@ def process_all_oracle_files(oracle_dir: str = "assets/config/oracle/", create_o
     
     if not oracle_files:
         print(f"❌ No Oracle files found in {oracle_dir}")
-        return
+        return False
     
     success_count = 0
     for oracle_file in oracle_files:
         print(f"\n{'='*60}")
         if process_oracle_file(str(oracle_file), create_optimized=create_optimized):
             success_count += 1
+            
+            # Generate goals mapping if requested
+            if goals_mapping:
+                json_file = str(oracle_file).replace('.md', '.json')
+                if Path(json_file).exists():
+                    print(f"\n🎯 Generating goals mapping for {json_file}...")
+                    generate_goals_mapping(json_file)
     
     print(f"\n🎉 Processed {success_count}/{len(oracle_files)} Oracle files successfully")
+    return success_count > 0
 
 
 def validate_json_output(json_path: str):
@@ -726,6 +734,325 @@ def validate_json_output(json_path: str):
             
     except Exception as e:
         print(f"❌ JSON validation failed: {e}")
+        return False
+
+
+def generate_goals_mapping(oracle_json_path: str, output_path: str = None) -> bool:
+    """Generate goals mapping JSON from Oracle JSON"""
+    print(f"🎯 Generating goals mapping from: {oracle_json_path}")
+    
+    try:
+        # Load Oracle JSON
+        with open(oracle_json_path, 'r', encoding='utf-8') as f:
+            oracle_data = json.load(f)
+        
+        # Extract goal-trilha relationships
+        goal_trilha_data = extract_goal_trilha_relationships(oracle_data)
+        
+        # Build activity-goal mapping
+        activity_goal_data = build_activity_goal_mapping(goal_trilha_data, oracle_data)
+        
+        # Build goal categories
+        goal_categories = build_goal_categories(goal_trilha_data, oracle_data['dimensions'])
+        
+        # Build trilha hierarchy
+        trilha_hierarchy = build_trilha_hierarchy(oracle_data)
+        
+        # Validate mapping
+        validation_report = validate_goals_mapping(goal_trilha_data, activity_goal_data, oracle_data)
+        
+        # Create output structure
+        goals_mapping = {
+            'version': oracle_data.get('version', 'unknown'),
+            'source_file': os.path.basename(oracle_json_path),
+            'generated_at': datetime.now(timezone.utc).isoformat(),
+            'metadata': {
+                'total_goals': len(goal_trilha_data),
+                'total_mapped_activities': len(activity_goal_data),
+                'coverage_percentage': calculate_coverage_percentage(activity_goal_data, oracle_data),
+                'generation_status': 'success' if not validation_report['errors'] else 'warning'
+            },
+            'goal_trilha_mapping': goal_trilha_data,
+            'activity_goal_mapping': activity_goal_data,
+            'goal_categories': goal_categories,
+            'trilha_hierarchy': trilha_hierarchy,
+            'validation_report': validation_report
+        }
+        
+        # Determine output path
+        if output_path is None:
+            output_path = oracle_json_path.replace('.json', '_goals_mapping.json')
+            # Handle optimized files
+            output_path = output_path.replace('_optimized_goals_mapping.json', '_goals_mapping.json')
+        
+        # Write goals mapping JSON
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(goals_mapping, f, indent=2, ensure_ascii=False)
+        
+        # Print success summary
+        metadata = goals_mapping['metadata']
+        print(f"✅ Generated goals mapping: {output_path}")
+        print(f"📊 Mapped {metadata['total_goals']} goals to {metadata['total_mapped_activities']} activities")
+        print(f"🎯 Coverage: {metadata['coverage_percentage']:.1f}% of Oracle activities mapped to goals")
+        print(f"⚡ Optimized for FT-175 goal-aware detection")
+        
+        if validation_report['warnings']:
+            print(f"⚠️  {len(validation_report['warnings'])} warnings (see validation_report in JSON)")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to generate goals mapping: {e}")
+        return False
+
+
+def extract_goal_trilha_relationships(oracle_data: Dict) -> Dict:
+    """Extract goal-trilha-activity relationships from Oracle data"""
+    print("🔍 Extracting goal-trilha relationships...")
+    
+    goal_trilha_mapping = {}
+    activities = oracle_data.get('activities', {})
+    
+    # Find all objectives (codes starting with 'O')
+    objectives = {code: activity for code, activity in activities.items() 
+                  if activity.get('source') == 'objective' and code.startswith('O')}
+    
+    print(f"📊 Found {len(objectives)} objectives")
+    
+    for obj_code, obj_data in objectives.items():
+        trilha = obj_data.get('trilha')
+        if not trilha:
+            continue
+            
+        # Find related activities based on trilha and dimension
+        related_activities = find_related_activities(trilha, obj_data.get('dimension'), activities)
+        
+        # Find trilha levels (Basic, Intermediate, Advanced)
+        trilha_levels = find_trilha_levels(trilha, activities)
+        
+        goal_trilha_mapping[obj_code] = {
+            'objective_code': obj_code,
+            'objective_name': obj_data.get('name', ''),
+            'trilha': trilha,
+            'dimension': obj_data.get('dimension', ''),
+            'related_activities': related_activities,
+            'trilha_levels': trilha_levels
+        }
+        
+        print(f"✓ {obj_code}: {obj_data.get('name')} → {trilha} → {len(related_activities)} activities")
+    
+    print(f"🎯 Extracted {len(goal_trilha_mapping)} goal-trilha mappings")
+    return goal_trilha_mapping
+
+
+def find_related_activities(trilha: str, dimension: str, activities: Dict) -> List[str]:
+    """Find activities related to a trilha and dimension"""
+    related = []
+    
+    for code, activity in activities.items():
+        # Skip objectives and trilha levels themselves
+        if activity.get('source') in ['objective', 'trilha_level']:
+            continue
+            
+        # Match by dimension and activity patterns
+        if activity.get('dimension') == dimension:
+            # Add core dimension activities
+            if activity.get('source') == 'biblioteca':
+                related.append(code)
+        
+        # Add trilha-specific activities
+        if trilha in code or code.startswith(trilha):
+            related.append(code)
+    
+    return sorted(list(set(related)))
+
+
+def find_trilha_levels(trilha: str, activities: Dict) -> List[str]:
+    """Find trilha level codes (Basic, Intermediate, Advanced)"""
+    levels = []
+    
+    for code, activity in activities.items():
+        if activity.get('source') == 'trilha_level' and code.startswith(trilha):
+            levels.append(code)
+    
+    return sorted(levels)
+
+
+def build_activity_goal_mapping(goal_trilha_data: Dict, oracle_data: Dict) -> Dict:
+    """Build reverse mapping from activities to goals"""
+    print("🔄 Building activity→goals mapping...")
+    
+    activity_goal_mapping = {}
+    
+    for goal_code, goal_info in goal_trilha_data.items():
+        for activity_code in goal_info.get('related_activities', []):
+            if activity_code not in activity_goal_mapping:
+                activity_goal_mapping[activity_code] = []
+            activity_goal_mapping[activity_code].append(goal_code)
+    
+    # Sort goals for each activity
+    for activity_code in activity_goal_mapping:
+        activity_goal_mapping[activity_code] = sorted(activity_goal_mapping[activity_code])
+    
+    print(f"🔄 Built reverse mapping for {len(activity_goal_mapping)} activities")
+    return activity_goal_mapping
+
+
+def build_goal_categories(goal_trilha_data: Dict, dimensions: Dict) -> Dict:
+    """Build goal categories by dimension"""
+    print("📂 Building goal categories...")
+    
+    goal_categories = {}
+    
+    for dimension_code, dimension_info in dimensions.items():
+        goals_in_dimension = [goal_code for goal_code, goal_info in goal_trilha_data.items() 
+                             if goal_info.get('dimension') == dimension_code]
+        
+        if goals_in_dimension:
+            # Get primary activities for this dimension
+            primary_activities = set()
+            for goal_code in goals_in_dimension:
+                primary_activities.update(goal_trilha_data[goal_code].get('related_activities', []))
+            
+            goal_categories[dimension_code] = {
+                'name': dimension_info.get('display_name', dimension_info.get('name', '')),
+                'goals': sorted(goals_in_dimension),
+                'primary_activities': sorted(list(primary_activities))
+            }
+    
+    print(f"📂 Built {len(goal_categories)} goal categories")
+    return goal_categories
+
+
+def build_trilha_hierarchy(oracle_data: Dict) -> Dict:
+    """Build trilha hierarchy with levels"""
+    print("📋 Building trilha hierarchy...")
+    
+    trilha_hierarchy = {}
+    activities = oracle_data.get('activities', {})
+    
+    # Group trilha levels
+    for code, activity in activities.items():
+        if activity.get('source') == 'trilha_level':
+            # Extract base trilha from level code (e.g., CX1B → CX1)
+            base_trilha = code.rstrip('BIA')  # Remove Basic/Intermediate/Advanced suffixes
+            
+            if base_trilha not in trilha_hierarchy:
+                trilha_hierarchy[base_trilha] = {
+                    'basic': [],
+                    'intermediate': [],
+                    'advanced': []
+                }
+            
+            if code.endswith('B'):
+                trilha_hierarchy[base_trilha]['basic'].append(code)
+            elif code.endswith('I'):
+                trilha_hierarchy[base_trilha]['intermediate'].append(code)
+            elif code.endswith('A'):
+                trilha_hierarchy[base_trilha]['advanced'].append(code)
+    
+    print(f"📋 Built hierarchy for {len(trilha_hierarchy)} trilhas")
+    return trilha_hierarchy
+
+
+def calculate_coverage_percentage(activity_goal_data: Dict, oracle_data: Dict) -> float:
+    """Calculate percentage of Oracle activities mapped to goals"""
+    total_biblioteca_activities = len([a for a in oracle_data.get('activities', {}).values() 
+                                      if a.get('source') == 'biblioteca'])
+    mapped_activities = len(activity_goal_data)
+    
+    if total_biblioteca_activities == 0:
+        return 0.0
+    
+    return (mapped_activities / total_biblioteca_activities) * 100
+
+
+def validate_goals_mapping(goal_trilha_data: Dict, activity_goal_data: Dict, oracle_data: Dict) -> Dict:
+    """Validate goals mapping completeness and consistency"""
+    print("✅ Validating goals mapping...")
+    
+    warnings = []
+    errors = []
+    
+    # Check for orphaned trilhas
+    referenced_trilhas = set(goal['trilha'] for goal in goal_trilha_data.values() if goal.get('trilha'))
+    for trilha in referenced_trilhas:
+        if not any(code.startswith(trilha) for code in oracle_data.get('activities', {})):
+            warnings.append(f"Trilha '{trilha}' referenced but no matching activities found")
+    
+    # Check bidirectional consistency
+    for activity_code, goal_codes in activity_goal_data.items():
+        for goal_code in goal_codes:
+            if goal_code in goal_trilha_data:
+                if activity_code not in goal_trilha_data[goal_code].get('related_activities', []):
+                    errors.append(f"Bidirectional inconsistency: {activity_code} → {goal_code} missing reverse mapping")
+    
+    # Check for goals without activities
+    for goal_code, goal_info in goal_trilha_data.items():
+        if not goal_info.get('related_activities'):
+            warnings.append(f"Goal '{goal_code}' has no related activities")
+    
+    print(f"✅ Validation complete: {len(errors)} errors, {len(warnings)} warnings")
+    
+    return {
+        'errors': errors,
+        'warnings': warnings,
+        'validated_at': datetime.now(timezone.utc).isoformat()
+    }
+
+
+def validate_goals_mapping_file(json_path: str) -> bool:
+    """Validate generated goals mapping JSON file"""
+    print(f"🔍 Validating goals mapping: {json_path}")
+    
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Validate structure
+        required_keys = ['version', 'source_file', 'goal_trilha_mapping', 'activity_goal_mapping', 'metadata']
+        missing_keys = [key for key in required_keys if key not in data]
+        
+        if missing_keys:
+            print(f"❌ Missing keys: {missing_keys}")
+            return False
+        
+        # Validate content
+        goal_mapping = data['goal_trilha_mapping']
+        activity_mapping = data['activity_goal_mapping']
+        metadata = data['metadata']
+        
+        print(f"✓ Version: {data['version']}")
+        print(f"✓ Goals: {len(goal_mapping)}")
+        print(f"✓ Mapped Activities: {len(activity_mapping)}")
+        print(f"✓ Coverage: {metadata.get('coverage_percentage', 0):.1f}%")
+        print(f"✓ Status: {metadata['generation_status']}")
+        
+        # Check validation report
+        validation_report = data.get('validation_report', {})
+        errors = validation_report.get('errors', [])
+        warnings = validation_report.get('warnings', [])
+        
+        if errors:
+            print(f"❌ Validation errors: {len(errors)}")
+            for error in errors[:3]:  # Show first 3 errors
+                print(f"   - {error}")
+            return False
+        
+        if warnings:
+            print(f"⚠️  Validation warnings: {len(warnings)}")
+            for warning in warnings[:3]:  # Show first 3 warnings
+                print(f"   - {warning}")
+        
+        if metadata['generation_status'] == 'success':
+            print("✅ Goals mapping validation passed")
+            return True
+        else:
+            print(f"⚠️  Goals mapping has issues: {metadata['generation_status']}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Goals mapping validation failed: {e}")
         return False
 
 
@@ -770,44 +1097,83 @@ def main():
         print("  python3 scripts/preprocess_oracle.py <oracle_file.md> --with-model")
         print("  python3 scripts/preprocess_oracle.py <oracle_file.md> --with-model --pt-only")
         print("  python3 scripts/preprocess_oracle.py <oracle_file.md> --optimize")
+        print("  python3 scripts/preprocess_oracle.py --goals-mapping <oracle_file.json>")
         print("  python3 scripts/preprocess_oracle.py --all")
         print("  python3 scripts/preprocess_oracle.py --all --with-model")
         print("  python3 scripts/preprocess_oracle.py --all --optimize")
+        print("  python3 scripts/preprocess_oracle.py --all --goals-mapping")
         print("  python3 scripts/preprocess_oracle.py --validate <oracle_file.json>")
         sys.exit(1)
     
-    # Check for flags
+    # Check for flags first
     with_model = "--with-model" in sys.argv
     portuguese_only = "--pt-only" in sys.argv
     create_optimized = "--optimize" in sys.argv
+    goals_mapping_flag = "--goals-mapping" in sys.argv
     
+    # Handle goals mapping as primary command (not just a flag)
+    if goals_mapping_flag and len(sys.argv) >= 3:
+        json_file_path = None
+        for i, arg in enumerate(sys.argv):
+            if arg == "--goals-mapping" and i + 1 < len(sys.argv):
+                json_file_path = sys.argv[i + 1]
+                break
+        
+        if json_file_path:
+            success = generate_goals_mapping(json_file_path)
+            sys.exit(0 if success else 1)
+        else:
+            print("❌ Please specify Oracle JSON file for goals mapping")
+            sys.exit(1)
+    
+    # Remove flags from argv for normal processing
     if with_model:
         sys.argv.remove("--with-model")
     if portuguese_only:
         sys.argv.remove("--pt-only")
     if create_optimized:
         sys.argv.remove("--optimize")
+    if goals_mapping_flag:
+        sys.argv.remove("--goals-mapping")
     
     arg = sys.argv[1]
     
     if arg == "--all":
-        success = process_all_oracle_files(create_optimized=create_optimized)
+        success = process_all_oracle_files(create_optimized=create_optimized, goals_mapping=goals_mapping_flag)
         if success and with_model:
             # Train models for all Oracle versions
             oracle_dir = Path("assets/config/oracle")
             for json_file in oracle_dir.glob("oracle_prompt_*.json"):
                 train_activity_model(json_file, portuguese_only)
+    elif arg == "--goals-mapping":
+        if len(sys.argv) < 3:
+            print("❌ Please specify Oracle JSON file for goals mapping")
+            sys.exit(1)
+        success = generate_goals_mapping(sys.argv[2])
+        sys.exit(0 if success else 1)
     elif arg == "--validate":
         if len(sys.argv) < 3:
             print("❌ Please specify JSON file to validate")
             sys.exit(1)
-        validate_json_output(sys.argv[2])
+        
+        json_file = sys.argv[2]
+        if 'goals_mapping' in json_file:
+            success = validate_goals_mapping_file(json_file)
+        else:
+            success = validate_json_output(json_file)
+        sys.exit(0 if success else 1)
     else:
         # Process single file
         input_file = arg
         output_file = sys.argv[2] if len(sys.argv) > 2 else None
         
         success = process_oracle_file(input_file, output_file, create_optimized=create_optimized)
+        
+        # Generate goals mapping if requested and processing succeeded
+        if success and goals_mapping_flag:
+            json_file = input_file.replace('.md', '.json')
+            if Path(json_file).exists():
+                generate_goals_mapping(json_file)
         
         # Train model if requested and preprocessing succeeded
         if success and with_model and output_file:

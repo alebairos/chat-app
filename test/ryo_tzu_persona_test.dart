@@ -31,7 +31,7 @@ void main() {
 
       // Verify Oracle integration
       final oraclePath = await manager.getOracleConfigPath();
-      expect(oraclePath, 'assets/config/oracle/oracle_prompt_4.2.md');
+      expect(oraclePath, 'assets/config/oracle/oracle_prompt_4.2_optimized.md');
 
       // Verify Oracle is enabled
       final isOracleEnabled = await manager.isOracleEnabled();
