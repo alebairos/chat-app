@@ -95,10 +95,12 @@ class _ChatScreenState extends State<ChatScreen> {
       // Then load messages
       await _loadMessages();
     } catch (e) {
-      setState(() {
-        _error = 'Error initializing services: $e';
-        _isInitialLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Error initializing services: $e';
+          _isInitialLoading = false;
+        });
+      }
       _logger.error('Error initializing services: $e');
     }
   }
@@ -112,28 +114,34 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadCurrentPersona() async {
     final personaDisplayName = await _configLoader.activePersonaDisplayName;
-    setState(() {
-      _currentPersona = personaDisplayName;
-    });
+    if (mounted) {
+      setState(() {
+        _currentPersona = personaDisplayName;
+      });
+    }
   }
 
   Future<void> _checkPersonaChange() async {
     final currentDisplayName = await _configLoader.activePersonaDisplayName;
     if (_currentPersona != currentDisplayName) {
-      setState(() {
-        _currentPersona = currentDisplayName;
-      });
-      _resetChat();
+      if (mounted) {
+        setState(() {
+          _currentPersona = currentDisplayName;
+        });
+        _resetChat();
+      }
     }
   }
 
   void _resetChat() {
-    setState(() {
-      _messages.clear();
-      _isInitialLoading = true;
-      _error = null;
-    });
-    _loadMessages();
+    if (mounted) {
+      setState(() {
+        _messages.clear();
+        _isInitialLoading = true;
+        _error = null;
+      });
+      _loadMessages();
+    }
   }
 
   void _setupScrollListener() {
@@ -153,15 +161,19 @@ class _ChatScreenState extends State<ChatScreen> {
       if (storedMessages.isNotEmpty) {
         _lastMessageTimestamp = storedMessages.last.timestamp;
       }
-      setState(() {
-        _messages.addAll(storedMessages.map(_createChatMessage));
-        _isInitialLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _messages.addAll(storedMessages.map(_createChatMessage));
+          _isInitialLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Error loading messages: $e';
-        _isInitialLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Error loading messages: $e';
+          _isInitialLoading = false;
+        });
+      }
       _logger.error('Error loading messages: $e');
     }
   }
@@ -169,9 +181,11 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadMoreMessages() async {
     if (_lastMessageTimestamp == null) return;
 
-    setState(() {
-      _isLoadingMore = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+    }
 
     try {
       final olderMessages = await _storageService.getMessages(
@@ -181,9 +195,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (olderMessages.isNotEmpty) {
         _lastMessageTimestamp = olderMessages.last.timestamp;
-        setState(() {
-          _messages.addAll(olderMessages.map(_createChatMessage));
-        });
+        if (mounted) {
+          setState(() {
+            _messages.addAll(olderMessages.map(_createChatMessage));
+          });
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -194,9 +210,11 @@ class _ChatScreenState extends State<ChatScreen> {
       );
       debugPrint('Error loading more messages: $e');
     } finally {
-      setState(() {
-        _isLoadingMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
+      }
     }
   }
 
@@ -323,18 +341,20 @@ class _ChatScreenState extends State<ChatScreen> {
         _logger.debug('   - ID: ${updatedModel.id}');
         _logger.debug('   - Text: ${updatedModel.text}');
 
-        setState(() {
-          final index =
-              _messages.indexWhere((m) => m.key == ValueKey(int.parse(id)));
-          _logger.debug('5b. Found message at index: $index');
+        if (mounted) {
+          setState(() {
+            final index =
+                _messages.indexWhere((m) => m.key == ValueKey(int.parse(id)));
+            _logger.debug('5b. Found message at index: $index');
 
-          if (index != -1) {
-            _messages[index] = _createChatMessage(updatedModel);
-            _logger.debug('5c. Message updated in UI');
-          } else {
-            _logger.debug('5d. ERROR: Message not found in UI list');
-          }
-        });
+            if (index != -1) {
+              _messages[index] = _createChatMessage(updatedModel);
+              _logger.debug('5c. Message updated in UI');
+            } else {
+              _logger.debug('5d. ERROR: Message not found in UI list');
+            }
+          });
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -397,9 +417,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _checkEnvironment() {
     if (dotenv.env['ANTHROPIC_API_KEY']?.isEmpty ?? true) {
-      setState(() {
-        _error = 'API Key not found. Please check your .env file.';
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'API Key not found. Please check your .env file.';
+        });
+      }
     }
   }
 
@@ -454,10 +476,12 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       userMessageModel.id = messageId;
 
-      setState(() {
-        _messages.insert(0, _createChatMessage(userMessageModel));
-        _isTyping = true;
-      });
+      if (mounted) {
+        setState(() {
+          _messages.insert(0, _createChatMessage(userMessageModel));
+          _isTyping = true;
+        });
+      }
       _messageController.clear();
       _scrollToBottom();
 
@@ -483,16 +507,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (isErrorResponse) {
         // Display error message to user
-        setState(() {
-          _messages.insert(
-            0,
-            ChatMessage(
-              text: response.text,
-              isUser: false,
-            ),
-          );
-          _isTyping = false;
-        });
+        if (mounted) {
+          setState(() {
+            _messages.insert(
+              0,
+              ChatMessage(
+                text: response.text,
+                isUser: false,
+              ),
+            );
+            _isTyping = false;
+          });
+        }
 
         // Show error in snackbar
         if (mounted) {
@@ -527,22 +553,26 @@ class _ChatScreenState extends State<ChatScreen> {
         aiMessageModel.id = aiMessageId;
       });
 
-      setState(() {
-        _messages.insert(0, _createChatMessage(aiMessageModel));
-        _isTyping = false;
-      });
+      if (mounted) {
+        setState(() {
+          _messages.insert(0, _createChatMessage(aiMessageModel));
+          _isTyping = false;
+        });
+      }
       _scrollToBottom();
     } catch (e) {
-      setState(() {
-        _messages.insert(
-          0,
-          const ChatMessage(
-            text: 'Error: Unable to send message. Please try again later.',
-            isUser: false,
-          ),
-        );
-        _isTyping = false;
-      });
+      if (mounted) {
+        setState(() {
+          _messages.insert(
+            0,
+            const ChatMessage(
+              text: 'Error: Unable to send message. Please try again later.',
+              isUser: false,
+            ),
+          );
+          _isTyping = false;
+        });
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -560,9 +590,11 @@ class _ChatScreenState extends State<ChatScreen> {
       duration: duration,
     );
 
-    setState(() {
-      _messages.insert(0, transcribingMessage);
-    });
+    if (mounted) {
+      setState(() {
+        _messages.insert(0, transcribingMessage);
+      });
+    }
     _scrollToBottom();
 
     try {
@@ -593,9 +625,11 @@ class _ChatScreenState extends State<ChatScreen> {
         onEdit: (text) => _showEditDialog(messageId.toString(), text),
       );
 
-      setState(() {
-        _messages[0] = userAudioMessage;
-      });
+      if (mounted) {
+        setState(() {
+          _messages[0] = userAudioMessage;
+        });
+      }
       _scrollToBottom();
 
       // Add transcription to TTS service for language detection
@@ -664,9 +698,11 @@ class _ChatScreenState extends State<ChatScreen> {
         aiMessageModel.id = aiMessageId;
       });
 
-      setState(() {
-        _messages.insert(0, _createChatMessage(aiMessageModel));
-      });
+      if (mounted) {
+        setState(() {
+          _messages.insert(0, _createChatMessage(aiMessageModel));
+        });
+      }
       _scrollToBottom();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -678,13 +714,15 @@ class _ChatScreenState extends State<ChatScreen> {
       print('Error processing audio message: $e');
 
       // Update the transcribing message to show the error
-      setState(() {
-        _messages[0] = const ChatMessage(
-          text:
-              'Error: Unable to process audio message. Please try again later.',
-          isUser: false,
-        );
-      });
+      if (mounted) {
+        setState(() {
+          _messages[0] = const ChatMessage(
+            text:
+                'Error: Unable to process audio message. Please try again later.',
+            isUser: false,
+          );
+        });
+      }
     }
   }
 

@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2025-10-02
+
+### Added
+- **FT-173**: User Profile Name with Dual Touchpoint Prompting
+  - Added editable user name field in Profile screen for personalized AI interactions
+  - Persistent storage using SharedPreferences for cross-session name retention
+  - Dynamic name integration in journal generation replacing hardcoded "Alexandre"
+  - Graceful fallback behavior when no name is set (defaults to "Alexandre")
+  - Simple name input dialog with validation (50 character limit, whitespace trimming)
+  - Real-time UI updates after name changes
+
+### Enhanced
+- **Personalized Experience**: AI personas now address users by their actual name
+- **Journal Personalization**: I-There daily journal entries use user's preferred name
+- **Profile Management**: Foundation for future profile customization features
+- **User Engagement**: More personal and engaging AI interactions
+
+### Technical
+- **ProfileService**: New service for managing user profile preferences
+- **SharedPreferences Integration**: Lightweight storage for user name preference
+- **Journal Service Enhancement**: Dynamic name injection in journal generation prompts
+- **UI Components**: Name edit dialog with proper validation and error handling
+
+### Fixed
+- Improved personalization across AI persona interactions
+- Enhanced user experience with customizable addressing preferences
+
 ## [2.0.0] - 2025-10-01
 
 ### 🎉 Major Release: I-There Daily Journal System

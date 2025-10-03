@@ -497,8 +497,27 @@ class CharacterConfigManager {
           buffer.writeln('- ${function['description']}');
         }
         if (function['usage'] != null) {
-          buffer.writeln('- ${function['usage']}');
+          buffer.writeln('- Usage: ${function['usage']}');
         }
+
+        // FT-174: Add when_to_use instructions for goal creation and other functions
+        if (function['when_to_use'] != null) {
+          buffer.writeln('- **When to use**:');
+          final List<dynamic> whenToUse = function['when_to_use'];
+          for (final scenario in whenToUse) {
+            buffer.writeln('  • $scenario');
+          }
+        }
+
+        // FT-174: Add Oracle objectives for goal creation
+        if (function['oracle_objectives'] != null) {
+          buffer.writeln('- **Available Oracle Objectives**:');
+          final List<dynamic> objectives = function['oracle_objectives'];
+          for (final objective in objectives) {
+            buffer.writeln('  • $objective');
+          }
+        }
+
         if (function['examples'] != null) {
           final List<dynamic> examples = function['examples'];
           for (final example in examples) {
@@ -511,12 +530,15 @@ class CharacterConfigManager {
             buffer.writeln('  - $example');
           }
         }
-        if (function['usage'] != null && function['usage'] is String) {
-          buffer.writeln('  - ${function['usage']}');
-        }
         if (function['returns'] != null) {
           buffer.writeln('- Returns: ${function['returns']}');
         }
+
+        // FT-174: Add important notes for goal creation
+        if (function['note'] != null) {
+          buffer.writeln('- **Note**: ${function['note']}');
+        }
+
         buffer.writeln();
       }
     }
