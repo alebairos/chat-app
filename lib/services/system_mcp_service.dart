@@ -7,7 +7,7 @@ import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
 import '../services/activity_memory_service.dart';
 import '../services/chat_storage_service.dart';
-import '../models/goal_model.dart';
+import '../features/goals/services/goal_mcp_service.dart';
 import '../services/oracle_static_cache.dart';
 import '../services/oracle_context_manager.dart';
 import '../services/semantic_activity_detector.dart';
@@ -92,12 +92,12 @@ class SystemMCPService {
         case 'oracle_get_statistics':
           return await _getOracleStatistics();
 
-        // FT-174: Goal management commands
+        // FT-174: Goal management commands (delegated to GoalMCPService)
         case 'create_goal':
-          return await _createGoal(parsedCommand);
+          return await GoalMCPService.handleCreateGoal(parsedCommand);
 
         case 'get_active_goals':
-          return await _getActiveGoals();
+          return await GoalMCPService.handleGetActiveGoals();
 
         // extract_activities removed - now handled by FT-064 semantic detection
 
@@ -821,184 +821,7 @@ Return empty array if NO COMPLETED activities detected.
     }
   }
 
-  /// FT-174: Create a new goal from Oracle objective
-  ///
-  /// Expected command format:
-  /// {"action": "create_goal", "objective_code": "OPP1", "objective_name": "Perder peso"}
-  Future<String> _createGoal(Map<String, dynamic> parsedCommand) async {
-    try {
-      _logger.debug('SystemMCP: Processing create_goal command');
-
-      final objectiveCode = parsedCommand['objective_code'] as String?;
-      final objectiveName = parsedCommand['objective_name'] as String?;
-
-      if (objectiveCode == null || objectiveName == null) {
-        return _errorResponse(
-            'Missing required parameters: objective_code and objective_name');
-      }
-
-      // Validate objective code format (should match Oracle pattern)
-      _logger.debug('SystemMCP: Validating objective code: $objectiveCode');
-      final isValidFormat = RegExp(r'^[A-Z]+\d+$').hasMatch(objectiveCode);
-      _logger.debug('SystemMCP: Code validation result: $isValidFormat');
-
-      if (!isValidFormat) {
-        _logger.warning(
-            'SystemMCP: REJECTED invalid objective code: $objectiveCode');
-        return _errorResponse(
-            'Invalid objective_code format. Expected format: OPP1, OGM1, etc.');
-      }
-
-      _logger
-          .debug('SystemMCP: Objective code validation PASSED: $objectiveCode');
-
-      // Validate that it's a real Oracle objective code (not trilha code)
-      final validOracleCodes = [
-        'OPP1',
-        'OPP2',
-        'OGM1',
-        'OGM2',
-        'ODM1',
-        'ODM2',
-        'OSPM1',
-        'OSPM2',
-        'OSPM3',
-        'OSPM4',
-        'OSPM5',
-        'ORA1',
-        'ORA2',
-        'OLM1',
-        'OVG1',
-        'OME2',
-        'OMF1',
-        'ODE1',
-        'ODE2',
-        'OREQ1',
-        'OREQ2',
-        'OSF1',
-        'OAE1',
-        'OLV1',
-        'OCX1',
-        'OMMA1',
-        'OMMA2'
-      ];
-
-      if (!validOracleCodes.contains(objectiveCode)) {
-        _logger.warning(
-            'SystemMCP: REJECTED invalid Oracle code: $objectiveCode (might be trilha code)');
-        return _errorResponse(
-            'Invalid Oracle objective code: $objectiveCode. Use valid codes like OCX1 (not CX1), OPP1, etc. Check the Oracle framework for valid codes.');
-      }
-
-      _logger.debug('SystemMCP: Oracle code validation PASSED: $objectiveCode');
-
-      // Create goal using GoalModel
-      final goal = GoalModel.fromObjective(
-        objectiveCode: objectiveCode,
-        objectiveName: objectiveName,
-      );
-
-      // Save to database via ChatStorageService (which manages Isar instance)
-      final chatStorage = ChatStorageService();
-      final isar = await chatStorage.db;
-
-      await isar.writeTxn(() async {
-        await isar.goalModels.put(goal);
-      });
-
-      _logger
-          .info('SystemMCP: ✅ Created goal: $objectiveCode - $objectiveName');
-
-      return json.encode({
-        'status': 'success',
-        'data': {
-          'goal_id': goal.id,
-          'objective_code': goal.objectiveCode,
-          'objective_name': goal.objectiveName,
-          'created_at': goal.createdAt.toIso8601String(),
-          'is_active': goal.isActive,
-        },
-        'message': 'Goal created successfully',
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-    } catch (e) {
-      _logger.error('SystemMCP: Error creating goal: $e');
-      return _errorResponse('Failed to create goal: $e');
-    }
-  }
-
-  /// FT-174: Get all active goals
-  ///
-  /// Expected command format:
-  /// {"action": "get_active_goals"}
-  Future<String> _getActiveGoals() async {
-    try {
-      _logger.debug('SystemMCP: Processing get_active_goals command');
-
-      // INVESTIGATION: Let's see what's actually in the database
-      final chatStorage = ChatStorageService();
-      final isar = await chatStorage.db;
-
-      final goals = <GoalModel>[];
-
-      try {
-        // Simple approach: Try to get goals by checking common ID ranges
-        // This avoids all problematic Isar query methods (count, where, findAll)
-        _logger.debug('SystemMCP: Checking for goals by ID...');
-
-        // Check IDs 1-10 (should cover most test cases)
-        for (int id = 1; id <= 10; id++) {
-          try {
-            final goal = await isar.goalModels.get(id);
-            if (goal != null) {
-              _logger.debug(
-                  'SystemMCP: Found goal ID $id: ${goal.objectiveCode} - ${goal.objectiveName} (active: ${goal.isActive})');
-              if (goal.isActive) {
-                goals.add(goal);
-              }
-            }
-          } catch (e) {
-            // Skip this ID if there's an error
-            _logger.debug('SystemMCP: No goal found at ID $id');
-          }
-        }
-
-        // Sort by creation date (most recent first)
-        if (goals.isNotEmpty) {
-          goals.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        }
-
-        _logger.debug('SystemMCP: Retrieved ${goals.length} active goals');
-      } catch (e) {
-        _logger.error('SystemMCP: Error querying goals: $e');
-      }
-
-      _logger.info('SystemMCP: ✅ Retrieved ${goals.length} active goals');
-
-      return json.encode({
-        'status': 'success',
-        'data': {
-          'goals': goals
-              .map((goal) => {
-                    'id': goal.id,
-                    'objective_code': goal.objectiveCode,
-                    'objective_name': goal.objectiveName,
-                    'display_name': goal.displayName,
-                    'created_at': goal.createdAt.toIso8601String(),
-                    'formatted_created_date': goal.formattedCreatedDate,
-                    'is_active': goal.isActive,
-                  })
-              .toList(),
-          'total_count': goals.length,
-        },
-        'message': 'Active goals retrieved successfully',
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-    } catch (e) {
-      _logger.error('SystemMCP: Error retrieving goals: $e');
-      return _errorResponse('Failed to retrieve goals: $e');
-    }
-  }
+  // FT-176: Goal methods moved to GoalMCPService for better organization
 
   /// Returns standardized error response
   String _errorResponse(String message) {

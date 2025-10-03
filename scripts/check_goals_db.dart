@@ -3,7 +3,7 @@
 import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import '../lib/models/goal_model.dart';
+import '../lib/features/goals/models/goal_model.dart';
 import '../lib/models/chat_message_model.dart';
 import '../lib/models/activity_model.dart';
 import '../lib/features/journal/models/journal_entry_model.dart';

@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/chat_message_model.dart';
 import '../models/activity_model.dart';
 import '../models/message_type.dart';
-import '../models/goal_model.dart';
+import '../features/goals/models/goal_model.dart';
 import '../features/journal/models/journal_entry_model.dart';
 import 'dart:typed_data';
 import '../utils/path_utils.dart';

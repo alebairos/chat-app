@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ai_personas_app/screens/goals_screen.dart';
+import 'package:ai_personas_app/features/goals/screens/goals_screen.dart';
 import 'package:ai_personas_app/services/chat_storage_service.dart';
-import 'package:ai_personas_app/models/goal_model.dart';
+import 'package:ai_personas_app/features/goals/models/goal_model.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:isar/isar.dart';
 

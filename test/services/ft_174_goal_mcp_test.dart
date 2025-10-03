@@ -79,8 +79,8 @@ void main() {
 
       // Assert
       expect(data['status'], equals('error'));
-      expect(data['message'], contains('Invalid objective_code format'));
-      expect(data['message'], contains('OPP1, OGM1'));
+      expect(data['message'], contains('Invalid Oracle objective code'));
+      expect(data['message'], contains('invalid123'));
     });
 
     test('should accept valid Oracle objective codes', () async {

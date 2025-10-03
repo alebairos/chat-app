@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
-import 'package:ai_personas_app/models/goal_model.dart';
+import 'package:ai_personas_app/features/goals/models/goal_model.dart';
 
 /// FT-174: Simple and focused GoalModel tests
 ///

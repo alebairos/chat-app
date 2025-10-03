@@ -4,7 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'screens/chat_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/goals_screen.dart';
+import 'features/goals/screens/goals_screen.dart';
 import 'features/journal/screens/journal_screen.dart';
 import 'screens/onboarding/onboarding_flow.dart';
 import 'services/onboarding_manager.dart';
