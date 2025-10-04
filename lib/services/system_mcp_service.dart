@@ -93,6 +93,7 @@ class SystemMCPService {
           return await _getOracleStatistics();
 
         // FT-174: Goal management commands (delegated to GoalMCPService)
+        // FT-178: Feature flag protection handled in GoalMCPService
         case 'create_goal':
           return await GoalMCPService.handleCreateGoal(parsedCommand);
 

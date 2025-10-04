@@ -4,6 +4,7 @@ import '../services/goal_mcp_service.dart';
 import '../widgets/goal_card.dart';
 import '../widgets/empty_goals_state.dart';
 import '../../../utils/logger.dart';
+import '../../../config/feature_flags.dart';
 import 'dart:convert';
 
 /// FT-174: Goals screen for displaying user goals
@@ -76,6 +77,39 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // FT-178: Feature flag check
+    if (!FeatureFlags.isGoalsTabEnabled) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.flag_outlined,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Goals Feature Not Available',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.grey[700],
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This feature is currently disabled',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _refreshGoals,
@@ -130,7 +164,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
     return _buildGoalsList();
   }
-
 
   Widget _buildGoalsList() {
     return ListView.builder(

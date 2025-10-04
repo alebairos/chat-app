@@ -11,6 +11,7 @@ import 'services/onboarding_manager.dart';
 import 'services/oracle_static_cache.dart';
 import 'services/dimension_display_service.dart';
 import 'utils/logger.dart';
+import 'config/feature_flags.dart';
 
 import 'config/config_loader.dart';
 
@@ -100,7 +101,10 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this, initialIndex: 0);
+    // FT-178: Dynamic tab count based on feature flags
+    final tabCount = FeatureFlags.isGoalsTabEnabled ? 5 : 4;
+    _tabController =
+        TabController(length: tabCount, vsync: this, initialIndex: 0);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {
@@ -176,13 +180,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          ChatScreen(),
-          StatsScreen(),
-          JournalScreen(),
-          GoalsScreen(),
-          ProfileScreen(),
-        ],
+        children: _buildTabViews(),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -190,34 +188,63 @@ class _HomeScreenState extends State<HomeScreen>
           _tabController.animateTo(index);
         },
         type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            activeIcon: Icon(Icons.bar_chart),
-            label: 'Stats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book_outlined),
-            activeIcon: Icon(Icons.book),
-            label: 'Journal',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.flag_outlined),
-            activeIcon: Icon(Icons.flag),
-            label: 'Goals',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+        items: _buildNavigationItems(),
       ),
     );
+  }
+
+  /// FT-178: Build tab views conditionally based on feature flags
+  List<Widget> _buildTabViews() {
+    final tabs = <Widget>[
+      const ChatScreen(),
+      const StatsScreen(),
+      const JournalScreen(),
+    ];
+
+    // FT-178: Conditionally add Goals tab
+    if (FeatureFlags.isGoalsTabEnabled) {
+      tabs.add(const GoalsScreen());
+    }
+
+    tabs.add(const ProfileScreen());
+    return tabs;
+  }
+
+  /// FT-178: Build navigation items conditionally based on feature flags
+  List<BottomNavigationBarItem> _buildNavigationItems() {
+    final items = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.chat_bubble_outline),
+        activeIcon: Icon(Icons.chat_bubble),
+        label: 'Chat',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.bar_chart_outlined),
+        activeIcon: Icon(Icons.bar_chart),
+        label: 'Stats',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.book_outlined),
+        activeIcon: Icon(Icons.book),
+        label: 'Journal',
+      ),
+    ];
+
+    // FT-178: Conditionally add Goals tab
+    if (FeatureFlags.isGoalsTabEnabled) {
+      items.add(const BottomNavigationBarItem(
+        icon: Icon(Icons.flag_outlined),
+        activeIcon: Icon(Icons.flag),
+        label: 'Goals',
+      ));
+    }
+
+    items.add(const BottomNavigationBarItem(
+      icon: Icon(Icons.person_outline),
+      activeIcon: Icon(Icons.person),
+      label: 'Profile',
+    ));
+
+    return items;
   }
 }

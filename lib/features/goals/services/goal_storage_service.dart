@@ -1,6 +1,7 @@
 import '../models/goal_model.dart';
 import '../../../services/chat_storage_service.dart';
 import '../../../utils/logger.dart';
+import '../../../config/feature_flags.dart';
 
 /// FT-176: Service for goal database operations
 ///
@@ -17,8 +18,14 @@ class GoalStorageService {
     required String objectiveCode,
     required String objectiveName,
   }) async {
+    // FT-178: Feature flag protection
+    if (!FeatureFlags.isGoalTrackingEnabled) {
+      throw Exception('Goal tracking is not enabled');
+    }
+
     try {
-      _logger.debug('GoalStorage: Creating goal: $objectiveCode - $objectiveName');
+      _logger
+          .debug('GoalStorage: Creating goal: $objectiveCode - $objectiveName');
 
       // Create goal instance
       final goal = GoalModel.fromObjective(
@@ -34,7 +41,8 @@ class GoalStorageService {
         await isar.goalModels.put(goal);
       });
 
-      _logger.info('GoalStorage: ✅ Created goal: $objectiveCode - $objectiveName');
+      _logger
+          .info('GoalStorage: ✅ Created goal: $objectiveCode - $objectiveName');
       return goal;
     } catch (e) {
       _logger.error('GoalStorage: Error creating goal: $e');
@@ -46,6 +54,11 @@ class GoalStorageService {
   ///
   /// Returns list of active goals sorted by creation date (most recent first)
   static Future<List<GoalModel>> getActiveGoals() async {
+    // FT-178: Feature flag protection
+    if (!FeatureFlags.isGoalTrackingEnabled) {
+      return []; // Return empty list when disabled
+    }
+
     try {
       _logger.debug('GoalStorage: Retrieving active goals');
 
@@ -156,7 +169,8 @@ class GoalStorageService {
       final goal = await isar.goalModels.get(goalId);
 
       if (goal != null) {
-        _logger.debug('GoalStorage: Found goal: ${goal.objectiveCode} - ${goal.objectiveName}');
+        _logger.debug(
+            'GoalStorage: Found goal: ${goal.objectiveCode} - ${goal.objectiveName}');
       } else {
         _logger.debug('GoalStorage: No goal found with ID: $goalId');
       }

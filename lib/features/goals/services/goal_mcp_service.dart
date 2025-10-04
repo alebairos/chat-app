@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'goal_storage_service.dart';
 import '../../../utils/logger.dart';
+import '../../../config/feature_flags.dart';
 
 /// FT-176: Service for handling goal MCP commands
 ///
@@ -13,7 +14,13 @@ class GoalMCPService {
   ///
   /// Expected command format:
   /// {"action": "create_goal", "objective_code": "OPP1", "objective_name": "Perder peso"}
-  static Future<String> handleCreateGoal(Map<String, dynamic> parsedCommand) async {
+  static Future<String> handleCreateGoal(
+      Map<String, dynamic> parsedCommand) async {
+    // FT-178: Feature flag protection
+    if (!FeatureFlags.isGoalCreationEnabled) {
+      return _errorResponse('Goal creation is not available');
+    }
+
     try {
       _logger.debug('GoalMCP: Processing create_goal command');
 
@@ -22,26 +29,51 @@ class GoalMCPService {
 
       if (objectiveCode == null || objectiveName == null) {
         _logger.warning('GoalMCP: Missing required parameters');
-        return _errorResponse('Missing required parameters: objective_code and objective_name are required');
+        return _errorResponse(
+            'Missing required parameters: objective_code and objective_name are required');
       }
 
       // Validate that objectiveCode and objectiveName are not empty
       if (objectiveCode.trim().isEmpty || objectiveName.trim().isEmpty) {
         _logger.warning('GoalMCP: Empty parameters provided');
-        return _errorResponse('Empty parameters: objective_code and objective_name cannot be empty');
+        return _errorResponse(
+            'Empty parameters: objective_code and objective_name cannot be empty');
       }
 
       // Validate that it's a real Oracle objective code (not trilha code)
       final validOracleCodes = [
-        'OPP1', 'OPP2', 'OGM1', 'OGM2', 'ODM1', 'ODM2', 
-        'OSPM1', 'OSPM2', 'OSPM3', 'OSPM4', 'OSPM5',
-        'ORA1', 'ORA2', 'OLM1', 'OVG1', 'OME2', 'OMF1',
-        'ODE1', 'ODE2', 'OREQ1', 'OREQ2', 'OSF1', 'OAE1',
-        'OLV1', 'OCX1', 'OMMA1', 'OMMA2'
+        'OPP1',
+        'OPP2',
+        'OGM1',
+        'OGM2',
+        'ODM1',
+        'ODM2',
+        'OSPM1',
+        'OSPM2',
+        'OSPM3',
+        'OSPM4',
+        'OSPM5',
+        'ORA1',
+        'ORA2',
+        'OLM1',
+        'OVG1',
+        'OME2',
+        'OMF1',
+        'ODE1',
+        'ODE2',
+        'OREQ1',
+        'OREQ2',
+        'OSF1',
+        'OAE1',
+        'OLV1',
+        'OCX1',
+        'OMMA1',
+        'OMMA2'
       ];
 
       if (!validOracleCodes.contains(objectiveCode)) {
-        _logger.warning('GoalMCP: REJECTED invalid Oracle code: $objectiveCode (might be trilha code)');
+        _logger.warning(
+            'GoalMCP: REJECTED invalid Oracle code: $objectiveCode (might be trilha code)');
         return _errorResponse(
             'Invalid Oracle objective code: $objectiveCode. Use valid codes like OCX1 (not CX1), OPP1, etc. Check the Oracle framework for valid codes.');
       }
@@ -79,6 +111,16 @@ class GoalMCPService {
   /// Expected command format:
   /// {"action": "get_active_goals"}
   static Future<String> handleGetActiveGoals() async {
+    // FT-178: Feature flag protection
+    if (!FeatureFlags.isGoalTrackingEnabled) {
+      return json.encode({
+        'status': 'success',
+        'data': {'goals': []},
+        'message': 'Goal tracking not enabled',
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    }
+
     try {
       _logger.debug('GoalMCP: Processing get_active_goals command');
 
@@ -116,7 +158,8 @@ class GoalMCPService {
   ///
   /// Expected command format:
   /// {"action": "update_goal", "goal_id": 1, "is_active": false}
-  static Future<String> handleUpdateGoal(Map<String, dynamic> parsedCommand) async {
+  static Future<String> handleUpdateGoal(
+      Map<String, dynamic> parsedCommand) async {
     try {
       _logger.debug('GoalMCP: Processing update_goal command');
 
@@ -167,7 +210,8 @@ class GoalMCPService {
   ///
   /// Expected command format:
   /// {"action": "delete_goal", "goal_id": 1}
-  static Future<String> handleDeleteGoal(Map<String, dynamic> parsedCommand) async {
+  static Future<String> handleDeleteGoal(
+      Map<String, dynamic> parsedCommand) async {
     try {
       _logger.debug('GoalMCP: Processing delete_goal command');
 
