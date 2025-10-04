@@ -26,7 +26,7 @@
     },
     "system_functions": {
       "title": "System Functions Available:",
-      "intro": "You can call system functions by using JSON format: {\"action\": \"function_name\"}. IMPORTANT: When users express goals or aspirations, use create_goal function to help them set meaningful objectives.",
+      "intro": "You can call system functions by using JSON format: {\"action\": \"function_name\"}",
       "mandatory_data_queries": {
         "title": "🎯 MANDATORY DATA QUERIES:",
         "description": "For ANY activity-related questions, you MUST generate fresh MCP commands:",
