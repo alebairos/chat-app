@@ -4,13 +4,13 @@
 /// All flags default to false for safe incremental rollout.
 class FeatureFlags {
   // FT-178: Master flag for goal-aware personas functionality
-  static const bool goalAwarePersonas = false;
+  static const bool goalAwarePersonas = true;
 
   // Individual feature components (for granular control)
-  static const bool goalsTab = false; // Goals tab visibility in navigation
+  static const bool goalsTab = true; // Goals tab visibility in navigation
   static const bool goalCreation =
-      false; // Goal creation via persona conversation
-  static const bool goalModel = false; // Goal storage and database operations
+      true; // Goal creation via persona conversation
+  static const bool goalModel = true; // Goal storage and database operations
   static const bool personaGoalAwareness =
       false; // Persona system prompt goal context
   static const bool goalActivityAssociation =
