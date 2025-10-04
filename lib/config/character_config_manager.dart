@@ -538,7 +538,6 @@ class CharacterConfigManager {
         if (function['note'] != null) {
           buffer.writeln('- **Note**: ${function['note']}');
         }
-
         buffer.writeln();
       }
     }
