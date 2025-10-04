@@ -64,18 +64,23 @@
     },
     {
       "name": "oracle_get_statistics",
-      "description": "FT-144: Get EXACT Oracle 4.2 statistics from loaded data - NEVER approximate",
+      "description": "FT-144/FT-179: Get EXACT Oracle 4.2 statistics from loaded data - NEVER approximate",
       "usage": "{\"action\": \"oracle_get_statistics\"}",
-      "critical_instruction": "ALWAYS use this command when user asks about Oracle catalog size, activity counts, or dimensions",
+      "critical_instruction": "ALWAYS use this command when user asks about Oracle catalog size, activity counts, dimensions, or objectives",
       "returns": {
         "total_activities": "Exact count from loaded Oracle data",
+        "total_objectives": "Exact count from goals mapping data",
         "dimensions": "Exact dimension count (8 for Oracle 4.2)",
         "dimension_breakdown": "Exact activity count per dimension",
+        "objectives_by_dimension": "Exact objectives grouped by dimension",
+        "objectives_list": "Complete list of all objective codes",
         "oracle_version": "4.2",
         "methodology_compliance": "Complete Oracle 4.2 framework"
       },
       "mandatory_usage": [
         "\"quantas atividades você tem?\" → oracle_get_statistics REQUIRED",
+        "\"quantos objetivos você tem?\" → oracle_get_statistics REQUIRED",
+        "\"quantos objetivos no bd?\" → oracle_get_statistics REQUIRED",
         "\"qual o tamanho do seu catálogo?\" → oracle_get_statistics REQUIRED",
         "\"me fale sobre suas atividades\" → oracle_get_statistics REQUIRED",
         "\"quantas dimensões?\" → oracle_get_statistics REQUIRED"

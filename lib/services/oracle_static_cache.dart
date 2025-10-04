@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import '../utils/logger.dart';
 import 'oracle_context_manager.dart';
 import 'semantic_activity_detector.dart';
@@ -19,6 +21,10 @@ class OracleStaticCache {
   static Map<String, OracleDimension>? _dimensionLookup;
   static bool _isInitialized = false;
   static int _totalActivities = 0;
+
+  // FT-179: Goals mapping cache
+  static Map<String, dynamic>? _goalsMappingCache;
+  static bool _goalsMappingInitialized = false;
 
   /// Initialize Oracle static cache at app startup
   ///
@@ -373,10 +379,85 @@ class OracleStaticCache {
     _isInitialized = false;
   }
 
+  /// FT-179: Initialize goals mapping cache
+  ///
+  /// Loads Oracle goals mapping data for objectives statistics
+  static Future<void> initializeGoalsMapping() async {
+    if (_goalsMappingInitialized) {
+      Logger().debug('FT-179: Goals mapping cache already initialized');
+      return;
+    }
+
+    try {
+      Logger().info('FT-179: Initializing goals mapping cache...');
+      
+      final jsonString = await rootBundle.loadString(
+        'assets/config/oracle/oracle_prompt_4.2_goals_mapping.json'
+      );
+      _goalsMappingCache = json.decode(jsonString);
+      _goalsMappingInitialized = true;
+      
+      final totalObjectives = _goalsMappingCache?['metadata']?['total_goals'] ?? 0;
+      Logger().info('✅ FT-179: Goals mapping cache initialized with $totalObjectives objectives');
+    } catch (e) {
+      Logger().warning('FT-179: Failed to load goals mapping: $e');
+      _goalsMappingCache = null;
+      _goalsMappingInitialized = false;
+    }
+  }
+
+  /// FT-179: Get objectives statistics from cached goals mapping
+  ///
+  /// Returns objectives count and breakdown by dimension
+  static Map<String, dynamic> getObjectivesStatistics() {
+    if (!_goalsMappingInitialized || _goalsMappingCache == null) {
+      Logger().debug('FT-179: Goals mapping not available, returning empty statistics');
+      return {
+        'total_objectives': 0,
+        'objectives_by_dimension': <String, List<String>>{},
+        'all_objectives': <String>[],
+      };
+    }
+
+    return _extractObjectivesFromCache();
+  }
+
+  /// FT-179: Extract objectives data from cached goals mapping
+  static Map<String, dynamic> _extractObjectivesFromCache() {
+    final goalTrilhaMapping = _goalsMappingCache!['goal_trilha_mapping'] as Map<String, dynamic>? ?? {};
+    final objectivesByDimension = <String, List<String>>{};
+    final allObjectives = <String>[];
+
+    // Extract objectives dynamically from cached data
+    for (final entry in goalTrilhaMapping.entries) {
+      final objectiveCode = entry.key;
+      final objectiveData = entry.value as Map<String, dynamic>;
+      final dimension = objectiveData['dimension'] as String? ?? 'Unknown';
+
+      allObjectives.add(objectiveCode);
+      objectivesByDimension.putIfAbsent(dimension, () => []).add(objectiveCode);
+    }
+
+    // Sort for consistent output
+    allObjectives.sort();
+    for (final dimensionList in objectivesByDimension.values) {
+      dimensionList.sort();
+    }
+
+    Logger().debug('FT-179: Extracted ${allObjectives.length} objectives from cache');
+    
+    return {
+      'total_objectives': allObjectives.length,
+      'objectives_by_dimension': objectivesByDimension,
+      'all_objectives': allObjectives,
+    };
+  }
+
   /// Force reinitialization (for testing or Oracle data updates)
   static Future<void> reinitialize() async {
     Logger().info('FT-140: Force reinitializing Oracle static cache');
     clearCache();
     await initializeAtStartup();
+    await initializeGoalsMapping(); // FT-179: Also reinitialize goals mapping
   }
 }

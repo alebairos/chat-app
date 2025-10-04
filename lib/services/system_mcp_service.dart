@@ -605,12 +605,16 @@ Return empty array if NO COMPLETED activities detected.
       final oracle42Info =
           debugInfo['oracle42Validation'] as Map<String, dynamic>?;
 
+      // FT-179: Get objectives data from goals mapping cache
+      final objectivesData = OracleStaticCache.getObjectivesStatistics();
+
       _logger.info(
-          'SystemMCP: Retrieved Oracle statistics - ${oracleContext.totalActivities} activities, ${oracleContext.dimensions.length} dimensions');
+          'SystemMCP: Retrieved Oracle statistics - ${oracleContext.totalActivities} activities, ${oracleContext.dimensions.length} dimensions, ${objectivesData['total_objectives']} objectives');
 
       return jsonEncode({
         'status': 'success',
         'data': {
+          // Existing Oracle data
           'total_activities': oracleContext.totalActivities,
           'dimensions': oracleContext.dimensions.length,
           'oracle_version': oracle42Info?['isOracle42'] == true
@@ -618,6 +622,13 @@ Return empty array if NO COMPLETED activities detected.
               : (oracleContext.dimensions.length == 5 ? '2.1/3.0' : 'Unknown'),
           'dimension_breakdown': dimensionBreakdown,
           'dimensions_available': oracleContext.dimensions.keys.toList(),
+          
+          // FT-179: New objectives data
+          'total_objectives': objectivesData['total_objectives'],
+          'objectives_by_dimension': objectivesData['objectives_by_dimension'],
+          'objectives_list': objectivesData['all_objectives'],
+          
+          // Existing metadata
           'oracle_validation':
               oracle42Info, // Dynamic validation info instead of hardcoded strings
           'cache_status': OracleStaticCache.isInitialized

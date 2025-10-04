@@ -49,6 +49,14 @@ Future<void> main() async {
     logger.warning('Failed to initialize Oracle static cache: $e');
   }
 
+  // FT-179: Initialize goals mapping cache
+  try {
+    await OracleStaticCache.initializeGoalsMapping();
+    logger.info('✅ Goals mapping cache initialized successfully');
+  } catch (e) {
+    logger.warning('Failed to initialize goals mapping cache: $e');
+  }
+
   // FT-146: Initialize dimension display service
   try {
     await DimensionDisplayService.initialize();
