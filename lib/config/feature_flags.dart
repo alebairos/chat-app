@@ -16,6 +16,14 @@ class FeatureFlags {
   static const bool goalActivityAssociation =
       false; // Activity-goal linking and tracking
 
+  // FT-181: Goal-aware activity detection features
+  static const bool goalAwareActivityDetection =
+      false; // Enhanced activity detection with goal context
+  static const bool goalActivityBoard =
+      false; // Activity board with goal sections
+  static const bool activityGoalLabels =
+      false; // Visual goal labels on activity cards
+
   // Composite flags for common feature combinations
   static bool get isGoalsTabEnabled => goalAwarePersonas && goalsTab;
   static bool get isGoalCreationEnabled =>
@@ -25,6 +33,14 @@ class FeatureFlags {
       goalAwarePersonas && personaGoalAwareness;
   static bool get isGoalActivityTrackingEnabled =>
       goalAwarePersonas && goalActivityAssociation;
+
+  // FT-181: Goal-aware activity detection composite flags
+  static bool get isGoalAwareActivityDetectionEnabled =>
+      goalAwarePersonas && goalAwareActivityDetection && goalModel;
+  static bool get isGoalActivityBoardEnabled =>
+      goalAwarePersonas && goalActivityBoard && goalModel;
+  static bool get isActivityGoalLabelsEnabled =>
+      goalAwarePersonas && activityGoalLabels && goalModel;
 
   // Development and testing flags
   static const bool debugGoalFeatures =
@@ -36,7 +52,10 @@ class FeatureFlags {
       goalCreation ||
       goalModel ||
       personaGoalAwareness ||
-      goalActivityAssociation;
+      goalActivityAssociation ||
+      goalAwareActivityDetection ||
+      goalActivityBoard ||
+      activityGoalLabels;
 
   /// Get enabled feature list for debugging
   static List<String> get enabledGoalFeatures {
@@ -47,6 +66,9 @@ class FeatureFlags {
     if (goalModel) enabled.add('goalModel');
     if (personaGoalAwareness) enabled.add('personaGoalAwareness');
     if (goalActivityAssociation) enabled.add('goalActivityAssociation');
+    if (goalAwareActivityDetection) enabled.add('goalAwareActivityDetection');
+    if (goalActivityBoard) enabled.add('goalActivityBoard');
+    if (activityGoalLabels) enabled.add('activityGoalLabels');
     if (debugGoalFeatures) enabled.add('debugGoalFeatures');
     return enabled;
   }

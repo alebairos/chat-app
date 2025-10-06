@@ -94,7 +94,10 @@
             "User expresses desire to set a goal (\"I want to lose weight\", \"I need to be more productive\")",
             "User talks about aspirations or objectives they want to achieve",
             "User asks for help with goal setting or life improvement",
-            "After explaining what activities a goal involves, user confirms they want to create it"
+            "After explaining what activities a goal involves, user confirms they want to create it",
+            "PROACTIVE: User agrees to follow advice/plan for improvement (\"sim\", \"bora\", \"vamos fazer\", \"pode ser\")",
+            "PROACTIVE: User commits to lifestyle changes you've suggested (sleep routine, exercise plan, etc.)",
+            "PROACTIVE: User asks for reminders about improvement activities you've discussed"
           ],
               "oracle_objectives": [
                 "OPP1/OPP2: Perder peso (Weight loss)",
@@ -119,7 +122,8 @@
                 "CORRECT: {\"objective_code\": \"OCX1\", \"objective_name\": \"Correr 5 Km\"}",
                 "WRONG: {\"objective_code\": \"CX1\", \"objective_name\": \"Correr 5 Km\"}"
               ],
-          "note": "Always explain what activities the goal involves before creating it"
+          "note": "Always explain what activities the goal involves before creating it",
+          "MANDATORY_BEHAVIOR": "When user commits to improvement plan you've suggested, IMMEDIATELY create the corresponding goal. Don't wait for explicit goal creation request."
         },
         {
           "name": "get_active_goals",
