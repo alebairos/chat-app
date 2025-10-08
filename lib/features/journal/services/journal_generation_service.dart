@@ -9,22 +9,30 @@ import '../../../services/oracle_static_cache.dart';
 import '../../../services/profile_service.dart';
 import '../../../utils/logger.dart';
 import 'journal_storage_service.dart';
+// FT-185: Import rate limiting infrastructure
+import '../../../services/shared_claude_rate_limiter.dart';
+import '../../../services/activity_queue.dart' as ft154;
 
 /// Service for generating daily journal entries with I-There persona and context consistency
 class JournalGenerationService {
   static final Logger _logger = Logger();
 
   /// Generate daily journal entries for both languages in a single LLM call
+  /// FT-185: Integrated with SharedClaudeRateLimiter and ActivityQueue recovery
   static Future<List<JournalEntryModel>> generateDailyJournalBothLanguages(
       DateTime date) async {
     final startTime = DateTime.now();
+    
+    // FT-185: Declare variables outside try block for catch block access
+    DayData? dayData;
+    String? prompt;
 
     try {
       _logger.info(
           'JournalGeneration: Starting dual-language journal generation for ${date.toIso8601String()}');
 
       // 1. Aggregate day data
-      final dayData = await _aggregateDayData(date);
+      dayData = await _aggregateDayData(date);
       _logger.info(
           'JournalGeneration: Found ${dayData.messages.length} messages, ${dayData.activities.length} activities');
 
@@ -33,10 +41,10 @@ class JournalGenerationService {
       if (userName.isEmpty) {
         throw Exception('User name is required for journal generation');
       }
-      final prompt = _buildSimplePrompt(
+      prompt = _buildSimplePrompt(
           date, dayData.messages, dayData.activities, userName);
 
-      // 3. Generate with Claude - returns JSON with both languages
+      // 3. Generate with Claude using integrated rate limiting
       final response = await _generateWithClaude(prompt);
       final parsedResponse = _parseJournalResponse(response);
 
@@ -69,6 +77,15 @@ class JournalGenerationService {
           'JournalGeneration: Successfully generated both language entries (${generationTime.toStringAsFixed(2)}s)');
       return entries;
     } catch (e) {
+      // FT-185: Handle rate limiting with recovery instead of fallback content
+      if (_isRateLimitError(e) && dayData != null && prompt != null) {
+        _logger.warning('JournalGeneration: Rate limit hit, creating recovery entries and queuing for later processing');
+        await _queueJournalGeneration(date, prompt);
+        
+        // Return recovery entries instead of fallback content
+        return _createRecoveryEntries(date, dayData);
+      }
+      
       _logger.error('JournalGeneration: Failed to generate journal: $e');
       rethrow;
     }
@@ -203,9 +220,14 @@ IMPORTANT JSON RULES:
         : 'Alexandre, I had some technical difficulties processing your activities completely today, but I still wanted to leave a note. Even when I can\'t analyze everything perfectly, I know you continue to grow and evolve.';
   }
 
-  /// Generate journal content using Claude with I-There persona
+  /// Generate journal content using proven rate limiting infrastructure
+  /// FT-185: Integrates with SharedClaudeRateLimiter and ClaudeService retry logic
   static Future<String> _generateWithClaude(String prompt) async {
     try {
+      // FT-185: Use SharedClaudeRateLimiter for prevention (Layer 1)
+      await SharedClaudeRateLimiter().waitAndRecord(isUserFacing: true);
+      
+      // Use ClaudeService which has built-in retry logic (Layer 2)
       final claudeService = ClaudeService();
       final response = await claudeService.sendMessage(prompt);
 
@@ -213,27 +235,7 @@ IMPORTANT JSON RULES:
         throw Exception('Claude returned empty response');
       }
 
-      // Check if Claude is rate limiting
-      if (response.contains('processing a lot of requests') ||
-          response.contains('get back to you') ||
-          response.contains('moment')) {
-        _logger.warning(
-            'JournalGeneration: Claude is rate limiting, retrying in 5 seconds...');
-        await Future.delayed(Duration(seconds: 5));
-
-        // Retry once
-        final retryResponse = await claudeService.sendMessage(prompt);
-        if (retryResponse.isEmpty) {
-          throw Exception('Claude returned empty response on retry');
-        }
-
-        _logger.debug(
-            'JournalGeneration: Claude retry generated ${retryResponse.length} characters');
-        return retryResponse;
-      }
-
-      _logger.debug(
-          'JournalGeneration: Claude generated ${response.length} characters');
+      _logger.debug('JournalGeneration: Claude generated ${response.length} characters');
       return response;
     } catch (e) {
       _logger.error('JournalGeneration: Claude generation failed: $e');
@@ -295,6 +297,59 @@ IMPORTANT JSON RULES:
         'activityBreakdown': <String, int>{},
       };
     }
+  }
+  
+  /// FT-185: Check if error is rate limit related
+  static bool _isRateLimitError(dynamic error) {
+    final errorStr = error.toString().toLowerCase();
+    return errorStr.contains('429') || 
+           errorStr.contains('rate_limit_error') ||
+           errorStr.contains('processing a lot of requests') ||
+           errorStr.contains('get back to you') ||
+           errorStr.contains('moment');
+  }
+
+  /// FT-185: Queue journal generation for later processing via ActivityQueue
+  static Future<void> _queueJournalGeneration(DateTime date, String prompt) async {
+    try {
+      // Use ActivityQueue infrastructure for recovery
+      final queueMessage = 'journal_generation:${date.toIso8601String()}';
+      
+      await ft154.ActivityQueue.queueActivity(queueMessage, DateTime.now());
+      
+      _logger.info('FT-185: Journal generation queued for recovery processing');
+    } catch (e) {
+      _logger.error('FT-185: Failed to queue journal generation: $e');
+    }
+  }
+
+  /// FT-185: Create recovery notice entries instead of fallback content
+  static List<JournalEntryModel> _createRecoveryEntries(DateTime date, DayData dayData) {
+    final entries = <JournalEntryModel>[];
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    
+    for (final lang in ['pt_BR', 'en_US']) {
+      final content = lang == 'pt_BR'
+          ? 'Alexandre, estou processando seu diário em segundo plano devido ao alto uso da API. Ele aparecerá em breve com todo o conteúdo personalizado baseado em suas ${dayData.messages.length} mensagens e ${dayData.activities.length} atividades do dia.'
+          : 'Alexandre, I\'m processing your journal in the background due to high API usage. It will appear shortly with all personalized content based on your ${dayData.messages.length} messages and ${dayData.activities.length} activities from the day.';
+      
+      final entry = JournalEntryModel.create(
+        date: normalizedDate,
+        language: lang,
+        content: content,
+        messageCount: dayData.messages.length,
+        activityCount: dayData.activities.length,
+        oracleVersion: "4.2",
+        personaKey: "iThereWithOracle42",
+        generationTimeSeconds: 0.0,
+        promptVersion: "1.0-recovery",
+      );
+      
+      entries.add(entry);
+    }
+    
+    _logger.info('FT-185: Created recovery entries instead of fallback content');
+    return entries;
   }
 }
 
