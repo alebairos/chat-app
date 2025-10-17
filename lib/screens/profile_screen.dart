@@ -178,8 +178,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               builder: (context) => PersonaSelectionScreen(
                                 onCharacterSelected: () {
                                   setState(() {});
-                                  // Trigger persona change check in chat screen
-                                  Navigator.of(context).popUntil((route) => route.isFirst);
                                 },
                               ),
                             ),
