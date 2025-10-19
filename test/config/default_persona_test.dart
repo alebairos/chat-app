@@ -130,6 +130,7 @@ void main() {
       final manager = CharacterConfigManager();
       final initialPersona = manager.activePersonaKey;
       
+      // The initialize method should handle the error gracefully
       await manager.initialize();
       
       // Should keep the initial persona if config loading fails
