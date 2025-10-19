@@ -7,7 +7,7 @@ class ConfigLoader {
       _defaultLoadExplorationPrompts;
 
   final CharacterConfigManager _characterManager = CharacterConfigManager();
-  
+
   /// Initialize the config loader and character manager
   Future<void> initialize() async {
     await _characterManager.initialize();
@@ -58,8 +58,8 @@ class ConfigLoader {
   String get activePersonaKey => _characterManager.activePersonaKey;
 
   /// Set the active character persona by key
-  void setActivePersona(String personaKey) {
-    _characterManager.setActivePersona(personaKey);
+  Future<void> setActivePersona(String personaKey) async {
+    await _characterManager.setActivePersona(personaKey);
   }
 
   /// Get the display name for the active persona

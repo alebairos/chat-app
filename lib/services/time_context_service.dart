@@ -267,7 +267,7 @@ class TimeContextService {
   /// Returns parsed time data map or null if unavailable
   static Future<Map<String, dynamic>?> _getCurrentTimeData() async {
     try {
-      final mcpService = SystemMCPService();
+      final mcpService = SystemMCPService.instance;
       final response = await mcpService.processCommand(
         '{"action":"get_current_time"}',
       );

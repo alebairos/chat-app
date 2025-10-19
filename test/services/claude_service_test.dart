@@ -41,6 +41,10 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
   group('System MCP Integration', () {
     test('processes system commands through MCP', () async {
       print('\n🧪 Testing system command processing...');
+
+      // Add stub for isOracleEnabled getter
+      when(mockMCP.isOracleEnabled).thenReturn(true);
+
       final command = json.encode({'action': 'get_current_time'});
       print('📤 Sending command: $command');
 
@@ -76,6 +80,10 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
 
     test('falls back to normal message processing if MCP fails', () async {
       print('\n🧪 Testing MCP failure fallback...');
+
+      // Add stub for isOracleEnabled getter
+      when(mockMCP.isOracleEnabled).thenReturn(true);
+
       final command = json.encode({'action': 'invalid_command'});
       print('📤 Sending invalid command: $command');
 
@@ -117,6 +125,10 @@ CLAUDE_API_URL=https://api.anthropic.com/v1/messages
 
     test('processes normal messages without MCP', () async {
       print('\n🧪 Testing normal message processing...');
+
+      // Add stub for isOracleEnabled getter
+      when(mockMCP.isOracleEnabled).thenReturn(true);
+
       const message = 'Hello';
       print('📤 Sending message: $message');
 

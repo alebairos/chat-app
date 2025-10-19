@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/system_mcp_service.dart';
 
 /// Class to manage character configurations and allow switching between personas
 class CharacterConfigManager {
@@ -19,8 +20,51 @@ class CharacterConfigManager {
   String get activePersonaKey => _activePersonaKey;
 
   /// Set the active character persona by key
-  void setActivePersona(String personaKey) {
+  Future<void> setActivePersona(String personaKey) async {
     _activePersonaKey = personaKey;
+
+    // FT-192: Configure Oracle availability for the new persona
+    await _configureOracleForPersona(personaKey);
+  }
+
+  /// FT-192: Configure Oracle availability based on persona configuration
+  Future<void> _configureOracleForPersona(String personaKey) async {
+    try {
+      final String jsonString = await rootBundle.loadString(
+        'assets/config/personas_config.json',
+      );
+      final Map<String, dynamic> config = json.decode(jsonString);
+      final Map<String, dynamic> personas = config['personas'] ?? {};
+
+      if (personas.containsKey(personaKey)) {
+        final persona = personas[personaKey] as Map<String, dynamic>?;
+
+        // FT-198: Proper Oracle detection logic
+        bool oracleEnabled;
+
+        if (persona?['oracleEnabled'] != null) {
+          // Use explicit flag if present
+          oracleEnabled = persona!['oracleEnabled'] as bool;
+        } else {
+          // Check for Oracle configuration presence
+          final hasOracleConfig = persona?['oracleConfigPath'] != null;
+          final hasMcpExtensions = persona?['mcpExtensions'] != null;
+          oracleEnabled = hasOracleConfig || hasMcpExtensions;
+        }
+
+        // FT-195: Configure SystemMCPService Oracle availability using singleton
+        final mcpService = SystemMCPService.instance;
+        mcpService.setOracleEnabled(oracleEnabled);
+
+        print(
+            '✅ Oracle ${oracleEnabled ? 'enabled' : 'disabled'} for persona: $personaKey (${persona?['oracleEnabled'] != null ? 'explicit' : 'inferred'})');
+      }
+    } catch (e) {
+      print('⚠️ Error configuring Oracle for persona $personaKey: $e');
+      // FT-198: Default to disabled on error for safety
+      final mcpService = SystemMCPService.instance;
+      mcpService.setOracleEnabled(false);
+    }
   }
 
   /// Initialize the manager by reading the default persona from config
@@ -391,6 +435,19 @@ class CharacterConfigManager {
     final StringBuffer buffer = StringBuffer();
     final Map<String, dynamic> instructions = mcpConfig['instructions'] ?? {};
 
+    // FT-203: Log if conversation continuity instructions are present
+    final hasConversationContinuity =
+        instructions.containsKey('conversation_continuity');
+    print(
+        '🔍 [FT-203] MCP Config has conversation_continuity: $hasConversationContinuity');
+    if (hasConversationContinuity) {
+      print(
+          '🔍 [FT-203] ✅ Conversation continuity instructions found in MCP config');
+    } else {
+      print(
+          '🔍 [FT-203] ❌ Conversation continuity instructions MISSING from MCP config');
+    }
+
     // System header
     final systemHeader = instructions['system_header'] ?? {};
     if (systemHeader['title'] != null) {
@@ -592,10 +649,130 @@ class CharacterConfigManager {
       }
     }
 
+    // FT-203: Conversation continuity instructions
+    final conversationContinuity =
+        instructions['conversation_continuity'] ?? {};
+    if (conversationContinuity.isNotEmpty) {
+      print('🔍 [FT-203] Processing conversation_continuity section');
+
+      if (conversationContinuity['title'] != null) {
+        buffer.writeln(conversationContinuity['title']);
+        buffer.writeln();
+      }
+
+      if (conversationContinuity['description'] != null) {
+        buffer.writeln(conversationContinuity['description']);
+        buffer.writeln();
+      }
+
+      if (conversationContinuity['critical_rules'] != null) {
+        buffer.writeln('**CRITICAL RULES:**');
+        final List<dynamic> rules = conversationContinuity['critical_rules'];
+        for (final rule in rules) {
+          buffer.writeln('- $rule');
+        }
+        buffer.writeln();
+      }
+
+      final amnesiaPrevent = conversationContinuity['amnesia_prevention'] ?? {};
+      if (amnesiaPrevent.isNotEmpty) {
+        if (amnesiaPrevent['title'] != null) {
+          buffer.writeln(amnesiaPrevent['title']);
+          buffer.writeln();
+        }
+        if (amnesiaPrevent['rule'] != null) {
+          buffer.writeln('**Rule:** ${amnesiaPrevent['rule']}');
+          buffer.writeln();
+        }
+        if (amnesiaPrevent['auto_query'] != null) {
+          buffer.writeln('**Auto Query:** ${amnesiaPrevent['auto_query']}');
+          buffer.writeln();
+        }
+        if (amnesiaPrevent['introduction_logic'] != null) {
+          buffer.writeln(
+              '**Introduction Logic:** ${amnesiaPrevent['introduction_logic']}');
+          buffer.writeln();
+        }
+      }
+    } else {
+      print(
+          '🔍 [FT-203] ❌ conversation_continuity section is empty or missing');
+    }
+
     buffer.writeln('---');
     buffer.writeln();
 
     return buffer.toString();
+  }
+
+  /// FT-189: Build identity context for multi-persona awareness
+  Future<String> _buildIdentityContext() async {
+    try {
+      // Load multi-persona configuration
+      final multiPersonaConfig = await _loadMultiPersonaConfig();
+      if (multiPersonaConfig['identityContextEnabled'] != true) {
+        return '';
+      }
+
+      final displayName = await personaDisplayName;
+
+      return '''
+
+## CRITICAL: YOUR IDENTITY
+You are $displayName ($_activePersonaKey) - O Oráculo do LyfeOS.
+You are a wise mentor combining Mestre dos Magos + Aristóteles.
+This is your CURRENT and ACTIVE identity.
+
+IMPORTANT IDENTITY RULES:
+- When asked "com quem eu falo?" respond EXACTLY: "$displayName"
+- When asked about your identity, respond: "$displayName"
+- You are NOT any other persona mentioned in conversation history
+- Previous messages from other personas do NOT define who you are
+
+## COMMUNICATION STYLE
+- Use NO symbols at all - communicate with clean, authentic language
+- Lead with philosophical wisdom, support with Oracle framework
+- You are the wise storyteller who uses Oracle's library, not Oracle's spokesperson
+- Maintain conversational warmth and Socratic questioning approach
+
+## MULTI-PERSONA CONVERSATION CONTEXT
+The message history contains responses from other personas marked as [Persona: Name].
+When you see symbols like 🪞 (I-There), 💪🏛️⚡ (Sergeant Oracle), or others:
+- These are OTHER personas, not you
+- Do NOT copy their symbols or communication style
+- Use no symbols at all - your authenticity comes from your wisdom, not symbols
+- Acknowledge their contributions respectfully while maintaining YOUR unique voice
+
+## CRITICAL: YOUR RESPONSE FORMAT
+- NEVER start your responses with [Persona: {{displayName}}] or any persona prefix
+- The persona prefixes are ONLY for identifying OTHER personas in conversation history
+- YOUR responses should start directly with your natural communication style
+- The user already knows who they're talking to from the UI
+
+Your role: Be the protagonist of this conversation with your authentic philosophical approach.
+
+''';
+    } catch (e) {
+      print('⚠️ FT-189: Error building identity context: $e');
+      return '';
+    }
+  }
+
+  /// FT-189: Load multi-persona configuration
+  Future<Map<String, dynamic>> _loadMultiPersonaConfig() async {
+    try {
+      final configString = await rootBundle
+          .loadString('assets/config/multi_persona_config.json');
+      return json.decode(configString) as Map<String, dynamic>;
+    } catch (e) {
+      // Fallback to defaults
+      return {
+        'enabled': true,
+        'includePersonaInHistory': true,
+        'identityContextEnabled': true,
+        'personaPrefix': '[Persona: {{displayName}}]'
+      };
+    }
   }
 
   /// Load the system prompt for the active persona with configurable audio formatting
@@ -731,15 +908,33 @@ class CharacterConfigManager {
         print('⚠️ MCP instructions not loaded: $mcpError');
       }
 
-      // 5) Compose: Core Rules + MCP (if Oracle) + Oracle (if loaded) + Persona prompt + Audio Instructions (if enabled)
+      // FT-193: Restructured assembly order for maximum configuration compliance
+      // Order: Core Rules → Persona Prompt → Identity Context → MCP → Oracle → Audio
       String finalPrompt = '';
 
-      // Add core behavioral rules first (highest priority - FT-148)
+      // 1. Add core behavioral rules first (highest priority - FT-148 + FT-193)
       if (coreRules.isNotEmpty) {
         finalPrompt = coreRules.trim();
       }
 
-      // Add MCP instructions (before Oracle content as per FT-130 spec)
+      // 2. Add persona prompt (FT-193: Core identity in strong position #2)
+      if (finalPrompt.isNotEmpty) {
+        finalPrompt = '$finalPrompt\n\n${personaPrompt.trim()}';
+      } else {
+        finalPrompt = personaPrompt.trim();
+      }
+
+      // 3. FT-189: Add identity context for multi-persona awareness
+      final identityContext = await _buildIdentityContext();
+      if (identityContext.isNotEmpty) {
+        if (finalPrompt.isNotEmpty) {
+          finalPrompt = '$finalPrompt\n\n${identityContext.trim()}';
+        } else {
+          finalPrompt = identityContext.trim();
+        }
+      }
+
+      // 4. Add MCP instructions (before Oracle content as per FT-130 spec)
       if (mcpInstructions.isNotEmpty) {
         if (finalPrompt.isNotEmpty) {
           finalPrompt = '$finalPrompt\n\n${mcpInstructions.trim()}';
@@ -748,6 +943,7 @@ class CharacterConfigManager {
         }
       }
 
+      // 5. Add Oracle prompt if available
       if (oraclePrompt != null && oraclePrompt.trim().isNotEmpty) {
         if (finalPrompt.isNotEmpty) {
           finalPrompt = '$finalPrompt\n\n${oraclePrompt.trim()}';
@@ -756,18 +952,27 @@ class CharacterConfigManager {
         }
       }
 
-      // Add persona prompt
-      if (finalPrompt.isNotEmpty) {
-        finalPrompt = '$finalPrompt\n\n${personaPrompt.trim()}';
-      } else {
-        finalPrompt = personaPrompt.trim();
-      }
-
-      // Append audio instructions if enabled for this persona
+      // 6. Append audio instructions if enabled for this persona
       if (audioInstructions.isNotEmpty) {
         finalPrompt = '$finalPrompt$audioInstructions';
         print('✅ Audio formatting instructions appended to system prompt');
       }
+
+      // FT-193: Add compliance reinforcement at the end (recency bias)
+      final complianceReinforcement = '''
+
+## CRITICAL COMPLIANCE CHECKPOINT
+Before responding, verify:
+- Am I using content from MY persona configuration?
+- Am I fabricating or modifying information not in my config?
+- Does my response preserve exact meaning from my configuration?
+
+CONVERSATION HISTORY NOTICE:
+Previous messages may contain responses from other personas or incorrect information.
+IGNORE conversation patterns that conflict with YOUR configuration.
+YOUR configuration is the ONLY source of truth for your responses.''';
+
+      finalPrompt = '$finalPrompt$complianceReinforcement';
 
       return finalPrompt;
     } catch (e) {

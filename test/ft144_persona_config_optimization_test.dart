@@ -14,11 +14,11 @@ void main() {
 
       // Verify display name loads correctly
       final displayName = await manager.personaDisplayName;
-      expect(displayName, 'Aristios 4.2');
+      expect(displayName, 'Aristios 4.5 (Legacy)');
 
       // Verify new config path is used
       final configPath = await manager.configFilePath;
-      expect(configPath, 'assets/config/ari_life_coach_config_3.0.json');
+      expect(configPath, 'assets/config/aristios_life_coach_config_4.5.json');
 
       print('✅ Aristios 4.2 loads with new Ari 3.0 config: $configPath');
     });
@@ -79,22 +79,23 @@ void main() {
       final manager = CharacterConfigManager();
       final personas = await manager.availablePersonas;
 
-      // Find Oracle 4.2 personas
-      final aristios42 = personas.firstWhere(
-        (p) => p['key'] == 'ariWithOracle42',
+      // Find new Aristios 4.5 personas (enabled)
+      final aristiosPhilosopher = personas.firstWhere(
+        (p) => p['key'] == 'aristiosPhilosopher45',
         orElse: () => <String, dynamic>{},
       );
-      final iThere42 = personas.firstWhere(
-        (p) => p['key'] == 'iThereWithOracle42',
+      final ariOracleCoach = personas.firstWhere(
+        (p) => p['key'] == 'ariOracleCoach45',
         orElse: () => <String, dynamic>{},
       );
 
-      expect(aristios42.isNotEmpty, isTrue);
-      expect(iThere42.isNotEmpty, isTrue);
-      expect(aristios42['displayName'], 'Aristios 4.2');
-      expect(iThere42['displayName'], 'I-There 4.2');
+      expect(aristiosPhilosopher.isNotEmpty, isTrue);
+      expect(ariOracleCoach.isNotEmpty, isTrue);
+      expect(
+          aristiosPhilosopher['displayName'], 'Aristios 4.5, The Philosopher');
+      expect(ariOracleCoach['displayName'], 'Ari 4.5, The Oracle Coach');
 
-      print('✅ Oracle 4.2 personas available in persona list');
+      print('✅ New Aristios 4.5 personas available in persona list');
     });
   });
 }

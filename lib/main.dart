@@ -95,6 +95,8 @@ class _HomeScreenState extends State<HomeScreen>
   late TabController _tabController;
   int _currentIndex = 0;
   bool _isCheckingOnboarding = true;
+  String _currentPersonaDisplayName =
+      'Loading...'; // FT-208: Track persona name
 
   @override
   void initState() {
@@ -108,6 +110,27 @@ class _HomeScreenState extends State<HomeScreen>
       }
     });
     _checkAndShowOnboarding();
+    _loadCurrentPersonaName(); // FT-208: Load initial persona name
+  }
+
+  // FT-208: Load current persona name
+  Future<void> _loadCurrentPersonaName() async {
+    try {
+      final name = await _configLoader.activePersonaDisplayName;
+      if (mounted) {
+        setState(() {
+          _currentPersonaDisplayName = name;
+        });
+      }
+    } catch (e) {
+      print('FT-208: Error loading persona name: $e');
+    }
+  }
+
+  // FT-208: Callback to refresh persona name when it changes
+  void _refreshPersonaName() {
+    print('FT-208: Refreshing persona name in title');
+    _loadCurrentPersonaName();
   }
 
   Future<void> _checkAndShowOnboarding() async {
@@ -146,40 +169,35 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: FutureBuilder<String>(
-          future: _configLoader.activePersonaDisplayName,
-          builder: (context, snapshot) {
-            final personaDisplayName = snapshot.data ?? 'Loading...';
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'AI Personas',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  personaDisplayName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ],
-            );
-          },
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'AI Personas',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              _currentPersonaDisplayName, // FT-208: Use state variable
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          ChatScreen(),
-          StatsScreen(),
-          JournalScreen(),
-          ProfileScreen(),
+        children: [
+          ChatScreen(
+              onPersonaChanged: _refreshPersonaName), // FT-208: Pass callback
+          const StatsScreen(),
+          const JournalScreen(),
+          const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

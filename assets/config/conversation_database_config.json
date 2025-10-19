@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "description": "FT-200: Conversation History Database Queries - Start disabled for safe rollout",
+  "fallback_to_history_injection": true,
+  "mcp_commands": {
+    "get_recent_user_messages": true,
+    "get_current_persona_messages": true,
+    "search_conversation_context": true
+  },
+  "performance": {
+    "max_user_messages": 10,
+    "max_persona_messages": 5,
+    "query_timeout_ms": 200
+  },
+  "rollout": {
+    "version": "1.0.0",
+    "deployment_date": "2025-10-18",
+    "rollback_instructions": "Set 'enabled': false to instantly disable feature"
+  }
+}

@@ -42,6 +42,10 @@ void main() {
     print('\n🔄 Setting up test case...');
     mockClient = MockHttpClient();
     mockMCP = MockSystemMCPService();
+
+    // Add stub for isOracleEnabled getter
+    when(() => mockMCP.isOracleEnabled).thenReturn(true);
+
     print('✓ Mock client and MCP initialized');
 
     final configLoader = ConfigLoader();

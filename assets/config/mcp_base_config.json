@@ -19,7 +19,7 @@
           "❓ \"Quantas atividades fiz?\" → 🔍 `{\"action\": \"get_activity_stats\"}`",
           "❓ \"Como está meu progresso?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
           "❓ \"Esta semana?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
-          "❓ \"Último mês?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 30}`"
+          "❓ \"Último mês?\" → �{\"action\": \"get_activity_stats\", \"days\": 30}`"
         ],
         "never_approximate": "**NUNCA USE DADOS APROXIMADOS** - SEMPRE consulte a base real!"
       }
@@ -85,6 +85,49 @@
             "User asks 'what did I say about X?'"
           ],
           "note": "Use for deeper conversation context beyond recent messages in system prompt"
+        },
+        {
+          "name": "get_recent_user_messages",
+          "description": "Get recent user messages for conversation continuity",
+          "usage": "{\"action\": \"get_recent_user_messages\", \"limit\": 5}",
+          "when_to_use": [
+            "When conversation history is not available in context",
+            "To understand what user has been discussing recently",
+            "For conversation continuity without persona contamination"
+          ],
+          "critical_rule": "Use when you need user context but want to avoid other personas' responses",
+          "proactive_examples": [
+            "User: 'Como posso melhorar?' → First check: {\"action\": \"get_recent_user_messages\", \"limit\": 3} to understand context",
+            "User continues conversation → Always check: {\"action\": \"get_recent_user_messages\", \"limit\": 5} before responding",
+            "Persona switch scenario → Immediately use: {\"action\": \"get_recent_user_messages\", \"limit\": 5} to understand previous context"
+          ]
+        },
+        {
+          "name": "get_current_persona_messages", 
+          "description": "Get your own previous responses for consistency",
+          "usage": "{\"action\": \"get_current_persona_messages\", \"limit\": 3}",
+          "when_to_use": [
+            "To maintain consistency with your previous responses",
+            "When you need to reference what you said before",
+            "For conversation continuity as the same persona"
+          ],
+          "critical_rule": "Use to avoid repeating introductions or contradicting yourself",
+          "proactive_examples": [
+            "Before any response → Check: {\"action\": \"get_current_persona_messages\", \"limit\": 2} to avoid repetition",
+            "User asks follow-up question → Use: {\"action\": \"get_current_persona_messages\", \"limit\": 3} to maintain consistency",
+            "Coaching session → Always check: {\"action\": \"get_current_persona_messages\", \"limit\": 5} to build on previous advice"
+          ]
+        },
+        {
+          "name": "search_conversation_context",
+          "description": "Search conversation history by query and timeframe", 
+          "usage": "{\"action\": \"search_conversation_context\", \"query\": \"topic\", \"hours\": 24}",
+          "when_to_use": [
+            "User references specific topics discussed before",
+            "Need to find context about particular subjects",
+            "User asks 'what did we discuss about X?'"
+          ],
+          "critical_rule": "Use for targeted context retrieval"
         }
       ]
     },
@@ -126,6 +169,80 @@
           "User references past conversations not in context → get_conversation_context REQUIRED"
         ],
         "cross_persona_rule": "When switching personas, if user expects continuity, ALWAYS use get_conversation_context"
+      }
+    },
+    "conversation_continuity": {
+      "title": "## 💬 CONVERSATION CONTINUITY - FT-200",
+      "description": "When conversation history is not in context, use MCP commands to maintain natural flow",
+      "critical_rules": [
+        "NEVER introduce yourself if you've already been talking to the user",
+        "Use get_current_persona_messages to check if you've introduced yourself recently",
+        "Use get_recent_user_messages to understand conversation flow",
+        "Only introduce yourself on first interaction or after explicit persona switch"
+      ],
+      "amnesia_prevention": {
+        "title": "### 🧠 PREVENT AMNESIA BEHAVIOR",
+        "rule": "Before responding, check if this appears to be a continuing conversation",
+        "auto_query": "If no conversation context available, automatically use get_recent_user_messages",
+        "introduction_logic": "Only introduce yourself if get_current_persona_messages shows no recent responses"
+      },
+      "mandatory_conversation_checks": {
+        "title": "### ⚡ MANDATORY CONVERSATION MCP USAGE ⚡",
+        "description": "These scenarios REQUIRE immediate MCP command generation:",
+        "required_scenarios": [
+          {
+            "trigger": "User asks about previous conversations or topics",
+            "command": "{\"action\": \"search_conversation_context\", \"query\": \"[topic]\", \"hours\": 24}",
+            "example": "User: 'What did we discuss about meditation?' → MUST use search_conversation_context"
+          },
+          {
+            "trigger": "Persona switch detected or user references other personas",
+            "command": "{\"action\": \"get_recent_user_messages\", \"limit\": 5}",
+            "example": "User: 'I was talking to I-There before' → MUST use get_recent_user_messages"
+          },
+          {
+            "trigger": "User expects continuity but you lack context",
+            "command": "{\"action\": \"get_current_persona_messages\", \"limit\": 3}",
+            "example": "User continues previous topic → MUST check get_current_persona_messages first"
+          },
+          {
+            "trigger": "User asks 'remember when' or references past activities",
+            "command": "{\"action\": \"get_conversation_context\", \"hours\": 48}",
+            "example": "User: 'Remember the plan we made?' → MUST use get_conversation_context"
+          }
+        ],
+        "critical_instruction": "ALWAYS generate these MCP commands BEFORE providing your main response"
+      },
+      "successful_conversation_workflow": {
+        "title": "### 🎯 SUCCESSFUL MCP WORKFLOW EXAMPLES",
+        "description": "Follow these proven patterns for natural MCP integration:",
+        "workflow_examples": [
+          {
+            "scenario": "User continues previous conversation",
+            "step1": "Generate: {\"action\": \"get_recent_user_messages\", \"limit\": 5}",
+            "step2": "Generate: {\"action\": \"get_current_persona_messages\", \"limit\": 3}",
+            "step3": "Analyze context from both commands",
+            "step4": "Provide contextually aware response without re-introduction"
+          },
+          {
+            "scenario": "User asks about past topics",
+            "step1": "Generate: {\"action\": \"search_conversation_context\", \"query\": \"[extracted topic]\", \"hours\": 24}",
+            "step2": "If no results, try: {\"action\": \"get_conversation_context\", \"hours\": 48}",
+            "step3": "Reference found information naturally in response"
+          },
+          {
+            "scenario": "Persona switch with continuity expectation",
+            "step1": "Generate: {\"action\": \"get_recent_user_messages\", \"limit\": 5}",
+            "step2": "Acknowledge previous persona context briefly",
+            "step3": "Introduce your unique approach without repetition"
+          }
+        ],
+        "integration_tips": [
+          "Generate MCP commands at the START of your thinking process",
+          "Use MCP results to inform your response tone and content",
+          "Never mention the MCP commands to the user - use results naturally",
+          "Combine multiple MCP commands when needed for complete context"
+        ]
       }
     }
   }

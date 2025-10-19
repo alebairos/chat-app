@@ -115,7 +115,7 @@ class IntegratedMCPProcessor {
       const timeCommand = '{"action":"get_current_time"}';
       Logger().debug('FT-064: Getting time data via SystemMCP');
 
-      final systemMCPService = SystemMCPService();
+      final systemMCPService = SystemMCPService.instance;
       final timeResponse = await systemMCPService.processCommand(timeCommand);
 
       if (timeResponse.startsWith('{"status":"success"')) {

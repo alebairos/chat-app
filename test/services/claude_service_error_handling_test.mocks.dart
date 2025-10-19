@@ -373,11 +373,12 @@ class MockConfigLoader extends _i1.Mock implements _i7.ConfigLoader {
       );
 
   @override
-  void setActivePersona(String? personaKey) => super.noSuchMethod(
+  _i3.Future<void> setActivePersona(String? personaKey) => (super.noSuchMethod(
         Invocation.method(
           #setActivePersona,
           [personaKey],
         ),
-        returnValueForMissingStub: null,
-      );
+        returnValue: _i3.Future<void>.value(),
+        returnValueForMissingStub: _i3.Future<void>.value(),
+      ) as _i3.Future<void>);
 }

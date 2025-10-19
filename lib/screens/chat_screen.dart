@@ -20,11 +20,13 @@ class ChatScreen extends StatefulWidget {
   final ChatStorageService? storageService;
   final ClaudeService? claudeService;
   final bool testMode;
+  final VoidCallback? onPersonaChanged; // FT-208: Add callback
 
   const ChatScreen({
     this.storageService,
     this.claudeService,
     this.testMode = false,
+    this.onPersonaChanged, // FT-208: Add parameter
     super.key,
   });
 
@@ -58,7 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _storageService = widget.storageService ?? ChatStorageService();
     _claudeService = widget.claudeService ??
         ClaudeService(
-          systemMCP: SystemMCPService(),
+          systemMCP: SystemMCPService.instance,
           ttsService: _ttsService,
           storageService: _storageService,
           audioEnabled: true,
@@ -774,6 +776,8 @@ class _ChatScreenState extends State<ChatScreen> {
             controller: _messageController,
             onSend: _sendMessage,
             onSendAudio: _handleAudioMessage,
+            onPersonaChanged:
+                widget.onPersonaChanged, // FT-208: Pass through callback
           ),
           Container(
             padding:

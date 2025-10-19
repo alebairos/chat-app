@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ai_personas_app/config/config_loader.dart';
 
@@ -82,7 +83,7 @@ class ClaudeService {
     ChatStorageService? storageService,
     bool audioEnabled = true,
   })  : _client = client ?? http.Client(),
-        _systemMCP = systemMCP,
+        _systemMCP = systemMCP ?? SystemMCPService.instance,
         _configLoader = configLoader ?? ConfigLoader(),
         _ttsService = ttsService,
         _storageService = storageService,
@@ -90,6 +91,10 @@ class ClaudeService {
     _apiKey = dotenv.env['ANTHROPIC_API_KEY'] ?? '';
     _model =
         (dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-latest').trim();
+
+    // FT-195: Track SystemMCP singleton assignment
+    print(
+        '🔍 [FT-195] ClaudeService using SystemMCP instance: ${_systemMCP!.hashCode} (${systemMCP != null ? "injected" : "singleton"})');
   }
 
   // Add getter and setter for audioEnabled
@@ -177,6 +182,7 @@ class ClaudeService {
   }
 
   /// FT-150-Simple: Load recent conversation history for cross-session memory
+  /// FT-189: Enhanced with multi-persona awareness
   Future<void> _loadRecentHistory({int limit = 5}) async {
     _logger.debug(
         'FT-150-Simple: Starting to load conversation history (limit: $limit)');
@@ -193,12 +199,30 @@ class ClaudeService {
       _logger.debug(
           'FT-150-Simple: Retrieved ${recentMessages.length} messages from storage');
 
+      // FT-189: Load multi-persona configuration
+      final multiPersonaConfig = await _loadMultiPersonaConfig();
+      final includePersonaInHistory =
+          multiPersonaConfig['includePersonaInHistory'] ?? true;
+      final personaPrefix =
+          multiPersonaConfig['personaPrefix'] ?? '[Persona: {{displayName}}]';
+
       // Convert to conversation history format (newest first, so reverse)
       for (final message in recentMessages.reversed) {
+        String content = message.text;
+
+        // FT-189: Add persona context for assistant messages
+        if (includePersonaInHistory &&
+            !message.isUser &&
+            message.personaDisplayName != null) {
+          final prefix = personaPrefix.replaceAll(
+              '{{displayName}}', message.personaDisplayName!);
+          content = '$prefix\n${message.text}';
+        }
+
         _conversationHistory.add({
           'role': message.isUser ? 'user' : 'assistant',
           'content': [
-            {'type': 'text', 'text': message.text}
+            {'type': 'text', 'text': content}
           ],
           // FT-157: Removed timestamp field - Claude API doesn't accept extra fields
         });
@@ -212,6 +236,42 @@ class ClaudeService {
       _logger
           .warning('FT-150-Simple: ❌ Failed to load conversation history: $e');
       // Graceful degradation - continue without history
+    }
+  }
+
+  /// FT-189: Load multi-persona configuration
+  Future<Map<String, dynamic>> _loadMultiPersonaConfig() async {
+    try {
+      final configString = await rootBundle
+          .loadString('assets/config/multi_persona_config.json');
+      return json.decode(configString) as Map<String, dynamic>;
+    } catch (e) {
+      _logger
+          .debug('FT-189: Multi-persona config not found, using defaults: $e');
+      // Fallback to defaults
+      return {
+        'enabled': true,
+        'includePersonaInHistory': true,
+        'personaPrefix': '[Persona: {{displayName}}]'
+      };
+    }
+  }
+
+  /// FT-200: Check if conversation database queries are enabled
+  Future<bool> _isConversationDatabaseEnabled() async {
+    try {
+      final configString = await rootBundle
+          .loadString('assets/config/conversation_database_config.json');
+      final config = json.decode(configString) as Map<String, dynamic>;
+      final enabled = config['enabled'] == true;
+      _logger.debug(
+          'FT-200: Conversation database queries ${enabled ? 'enabled' : 'disabled'}');
+      return enabled;
+    } catch (e) {
+      // Default to legacy behavior if config not found
+      _logger
+          .debug('FT-200: Config not found, defaulting to legacy behavior: $e');
+      return false;
     }
   }
 
@@ -344,8 +404,24 @@ class ClaudeService {
       // Prepare messages array with history
       final messages = <Map<String, dynamic>>[];
 
-      // Add conversation history
-      messages.addAll(_conversationHistory);
+      // FT-200: Feature toggle for conversation history database queries
+      if (await _isConversationDatabaseEnabled()) {
+        // FT-200: Use database queries (no history injection)
+        _logger.info(
+            'FT-200: Using conversation database queries - no history injection');
+        // Only add current user message, no conversation history
+        messages.add({
+          'role': 'user',
+          'content': [
+            {'type': 'text', 'text': message},
+          ],
+        });
+      } else {
+        // Legacy: Load conversation history into context
+        messages.addAll(_conversationHistory);
+        _logger.info(
+            'Legacy: Using conversation history injection (${_conversationHistory.length} messages)');
+      }
 
       // Generate enhanced time-aware context (FT-060)
       final lastMessageTime = await _getLastMessageTimestamp();
@@ -543,8 +619,23 @@ class ClaudeService {
           '🧠 FT-084: Processing data-required query with two-pass approach');
 
       // Extract MCP commands from Claude's initial response
+      _logger.info(
+          '🔍 [FT-203] AI Initial Response: ${initialResponse.substring(0, initialResponse.length > 200 ? 200 : initialResponse.length)}...');
       final mcpCommands = _extractMCPCommands(initialResponse);
-      _logger.debug('Found MCP commands: $mcpCommands');
+      _logger.info('🔍 [FT-203] Found MCP commands: $mcpCommands');
+
+      // FT-203: Check if conversation commands are being used
+      final hasConversationCommands = mcpCommands.any((cmd) =>
+          cmd.toString().contains('get_recent_user_messages') ||
+          cmd.toString().contains('get_current_persona_messages') ||
+          cmd.toString().contains('search_conversation_context'));
+
+      if (hasConversationCommands) {
+        _logger.info('🔍 [FT-203] ✅ AI is using conversation MCP commands!');
+      } else {
+        _logger.warning(
+            '🔍 [FT-203] ❌ AI NOT using conversation MCP commands - potential amnesia!');
+      }
 
       // Execute all MCP commands and collect data
       String collectedData = '';
@@ -679,46 +770,79 @@ class ClaudeService {
   }
 
   /// FT-157: Build recent conversation context for temporal awareness
+  /// FT-206: Proactive conversation context loading using MCP commands
   Future<String> _buildRecentConversationContext() async {
-    if (_storageService == null) return '';
+    // FT-200: Check if conversation database queries are enabled
+    if (!await _isConversationDatabaseEnabled()) {
+      _logger.debug(
+          'FT-206: Conversation database queries disabled, no context loaded');
+      return '';
+    }
 
     try {
-      final messages = await _storageService!
-          .getMessages(limit: 30); // FT-157-Enhanced: Extended context
-      if (messages.isEmpty) return '';
+      _logger.debug('FT-206: Loading proactive conversation context via MCP');
 
-      final now = DateTime.now();
-      final contextLines = <String>[];
+      // Execute conversation MCP commands directly (following time context pattern)
+      final recentMessages = await _systemMCP!
+          .processCommand('{"action":"get_recent_user_messages","limit":5}');
+      final personaMessages = await _systemMCP!.processCommand(
+          '{"action":"get_current_persona_messages","limit":3}');
 
-      for (final msg in messages.reversed) {
-        final timeDiff = now.difference(msg.timestamp);
-        final timeAgo = _formatNaturalTime(timeDiff);
-        final speaker = msg.isUser ? 'User' : 'You';
-        contextLines.add('$timeAgo: $speaker: "${msg.text}"');
-      }
-
-      return '''## RECENT CONVERSATION
-${contextLines.join('\n')}
-
-For deeper conversation history, use: {"action": "get_conversation_context", "hours": N}''';
+      // Format for system prompt injection
+      return _buildConversationContextPrompt(recentMessages, personaMessages);
     } catch (e) {
-      _logger.debug('FT-157: Failed to build conversation context: $e');
+      _logger
+          .warning('FT-206: Failed to load conversation context via MCP: $e');
       return '';
     }
   }
 
-  /// FT-157: Format time difference in natural language
-  String _formatNaturalTime(Duration diff) {
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 2) return 'A minute ago';
-    if (diff.inMinutes < 10) return '${diff.inMinutes} minutes ago';
-    if (diff.inMinutes < 30) return 'About ${diff.inMinutes} minutes ago';
-    if (diff.inHours < 1) return 'About an hour ago';
-    if (diff.inHours < 2) return 'An hour ago';
-    if (diff.inHours < 6) return '${diff.inHours} hours ago';
-    if (diff.inDays < 1) return 'Earlier today';
-    if (diff.inDays == 1) return 'Yesterday';
-    return '${diff.inDays} days ago';
+  /// FT-206: Format MCP conversation responses for system prompt
+  String _buildConversationContextPrompt(
+      String recentMessages, String personaMessages) {
+    final buffer = StringBuffer();
+
+    // Parse and format recent user messages
+    try {
+      final recentData = json.decode(recentMessages);
+      if (recentData['status'] == 'success' &&
+          recentData['data']['user_messages'] != null &&
+          recentData['data']['user_messages'].isNotEmpty) {
+        buffer.writeln('## Recent User Messages:');
+        for (final msg in recentData['data']['user_messages']) {
+          buffer.writeln('- ${msg['time_ago']}: "${msg['text']}"');
+        }
+        buffer.writeln();
+      }
+    } catch (e) {
+      _logger.warning('FT-206: Failed to parse recent messages: $e');
+    }
+
+    // Parse and format persona messages
+    try {
+      final personaData = json.decode(personaMessages);
+      if (personaData['status'] == 'success' &&
+          personaData['data']['persona_messages'] != null &&
+          personaData['data']['persona_messages'].isNotEmpty) {
+        buffer.writeln('## Your Previous Responses:');
+        for (final msg in personaData['data']['persona_messages']) {
+          buffer.writeln('- ${msg['time_ago']}: "${msg['text']}"');
+        }
+        buffer.writeln();
+      }
+    } catch (e) {
+      _logger.warning('FT-206: Failed to parse persona messages: $e');
+    }
+
+    final result = buffer.toString();
+    if (result.isNotEmpty) {
+      _logger.info(
+          'FT-206: ✅ Loaded conversation context via MCP (${result.split('\n').length} lines)');
+    } else {
+      _logger.debug('FT-206: No conversation context loaded (empty result)');
+    }
+
+    return result;
   }
 
   /// Helper method to call Claude with a specific prompt
@@ -1055,6 +1179,23 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
 
   /// Evaluate if user message should trigger activity analysis
   bool _shouldAnalyzeUserActivities(String modelResponse) {
+    // FT-194: First check if Oracle is available for this persona
+    if (_systemMCP == null) {
+      print('🔍 [FT-194] _shouldAnalyzeUserActivities: _systemMCP is NULL');
+      return false;
+    }
+
+    print(
+        '🔍 [FT-194] _shouldAnalyzeUserActivities checking Oracle on instance: ${_systemMCP.hashCode}');
+    if (!_systemMCP!.isOracleEnabled) {
+      print(
+          '🔍 [FT-194] _shouldAnalyzeUserActivities: Oracle DISABLED - returning false');
+      return false; // Never analyze activities for non-Oracle personas
+    }
+
+    print(
+        '🔍 [FT-194] _shouldAnalyzeUserActivities: Oracle ENABLED - proceeding with qualification');
+
     // Explicit NO patterns (skip detection)
     final skipPatterns = [
       'NEEDS_ACTIVITY_DETECTION: NO',
@@ -1097,6 +1238,28 @@ NEEDS_ACTIVITY_DETECTION: YES/NO
   /// FT-156: Added message context for activity linking
   Future<void> _processBackgroundActivitiesWithQualification(String userMessage,
       String qualificationResponse, String messageId) async {
+    // FT-194: Early Oracle gate - prevent activity detection for non-Oracle personas
+    if (_systemMCP == null) {
+      print('🔍 [FT-194] ClaudeService Oracle check: _systemMCP is NULL');
+      _logger.info('Activity analysis: Skipped - MCP service not available');
+      return;
+    }
+
+    print(
+        '🔍 [FT-194] ClaudeService checking Oracle on instance: ${_systemMCP.hashCode}');
+    if (!_systemMCP!.isOracleEnabled) {
+      print(
+          '🔍 [FT-194] ClaudeService Oracle check result: DISABLED - skipping activity detection');
+      _logger.info(
+          'Activity analysis: Skipped - Oracle disabled for current persona');
+      return;
+    }
+
+    print(
+        '🔍 [FT-194] ClaudeService Oracle check result: ENABLED - proceeding with activity detection');
+    _logger.debug(
+        'Activity analysis: Oracle enabled - proceeding with qualification check');
+
     // Use model intelligence to decide if analysis is needed
     if (!_shouldAnalyzeUserActivities(qualificationResponse)) {
       _logger.info('Activity analysis: Skipped - message not activity-focused');

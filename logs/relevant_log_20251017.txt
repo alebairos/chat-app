@@ -1,0 +1,247 @@
+$ flutter run --debug -d "iPhone 15 Pro (Flutter)"
+Launching lib/main.dart on iPhone 15 Pro (Flutter) in debug mode...
+Running Xcode build...                                          
+Xcode build done.                                           12.5s
+flutter: ℹ️ [INFO] Starting application
+flutter: Failed to initialize log file: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+[ERROR:flutter/shell/platform/darwin/ios/framework/Source/FlutterDartVMServicePublisher.mm(129)] Could not register as server for FlutterDartVMServicePublisher, permission denied. Check your 'Local Network' permissions for this app in the Privacy section of the system Settings.
+flutter: ℹ️ [INFO] ✅ Portuguese locale initialized
+flutter: ✅ CharacterConfigManager initialized with default persona: iThereWithOracle42
+flutter: ℹ️ [INFO] ✅ ConfigLoader and CharacterConfigManager initialized
+flutter: ℹ️ [INFO] 🧠 FT-140: Initializing Oracle static cache at app startup...
+flutter: 🔍 [DEBUG] FT-064: Loading Oracle context for persona: iThereWithOracle42
+flutter: 🔍 [DEBUG] FT-141: Loading Oracle JSON from: assets/config/oracle/oracle_prompt_4.2_optimized.json
+flutter: ℹ️ [INFO] ✅ FT-141: Oracle 4.2 validation passed - 8 dimensions, 265 activities
+flutter: ℹ️ [INFO]    📊 New dimensions: TT(21), PR(17), F(24) activities
+flutter: ℹ️ [INFO] FT-064: ✅ Loaded Oracle context: 265 activities, 8 dimensions
+flutter: 🔍 [DEBUG] FT-140: Built compact format with 265 activities
+flutter: 🔍 [DEBUG] FT-140: Built activity lookup with 265 entries
+flutter: 🔍 [DEBUG] FT-140: Built dimension lookup with 8 entries
+flutter: ℹ️ [INFO] ✅ FT-140: Oracle cache initialized successfully
+flutter: ℹ️ [INFO]    📊 Total activities: 265
+flutter: ℹ️ [INFO]    📏 Compact format size: 9283 chars
+flutter: ℹ️ [INFO]    🔍 Fast lookup entries: 265
+flutter: ℹ️ [INFO] 🔍 FT-141: Validating Oracle 4.2 compliance...
+flutter: ℹ️ [INFO] ✅ FT-141: Oracle 4.2 compliance VERIFIED
+flutter: ℹ️ [INFO]    📊 8 dimensions: R, SF, TG, E, SM, TT, PR, F
+flutter: ℹ️ [INFO]    📋 265 activities total
+flutter: ℹ️ [INFO]    🆕 New dimensions: TT(21), PR(17), F(24)
+flutter: ⚠️ [WARNING] FT-141: Oracle 4.2 sample activity TG1 not found in cache
+flutter: ℹ️ [INFO] ✅ FT-141: Oracle methodology compliance VERIFIED
+flutter: ℹ️ [INFO]    📋 All 265 activities accessible
+flutter: ℹ️ [INFO]    🔍 Compact format complete
+flutter: ℹ️ [INFO]    ⚡ Fast lookup operational
+flutter: ℹ️ [INFO] ✅ Oracle static cache initialized successfully
+flutter: ℹ️ [INFO] FT-147: 🚀 Initializing DimensionDisplayService...
+flutter: 🔍 [DEBUG] FT-064: Using cached Oracle context for iThereWithOracle42
+flutter: ℹ️ [INFO] FT-147: ✅ Initialized with 8 Oracle dimensions
+flutter: ℹ️ [INFO] FT-147: Available dimension codes: [R, SF, TG, E, SM, TT, PR, F]
+flutter: ℹ️ [INFO] FT-147: Dimension R: "Relacionamentos"
+flutter: ℹ️ [INFO] FT-147: Dimension SF: "Saúde Física"
+flutter: ℹ️ [INFO] FT-147: Dimension TG: "Trabalho Gratificante"
+flutter: ℹ️ [INFO] FT-147: Dimension E: "Espiritualidade"
+flutter: ℹ️ [INFO] FT-147: Dimension SM: "Saúde Mental"
+flutter: ℹ️ [INFO] FT-147: Dimension TT: "Tempo de Tela"
+flutter: ℹ️ [INFO] FT-147: Dimension PR: "Procrastinação"
+flutter: ℹ️ [INFO] FT-147: Dimension F: "Finanças"
+flutter: ℹ️ [INFO] ✅ DimensionDisplayService initialized successfully
+flutter: ℹ️ [INFO] FT-147: === DimensionDisplayService State ===
+flutter: ℹ️ [INFO] FT-147: Initialized: true
+flutter: ℹ️ [INFO] FT-147: Has Oracle Context: true
+flutter: ℹ️ [INFO] FT-147: Dimension Count: 8
+flutter: ℹ️ [INFO] FT-147: Available Codes: [R, SF, TG, E, SM, TT, PR, F]
+flutter: ℹ️ [INFO] FT-147: =====================================
+Syncing files to device iPhone 15 Pro (Flutter)...              
+[ERROR:flutter/shell/platform/darwin/ios/framework/Source/FlutterDartVMServicePublisher.mm(129)] Could not register as server for FlutterDartVMServicePublisher, permission denied. Check your 'Local Network' permissions for this app in the Privacy section of the system Settings.
+Syncing files to device iPhone 15 Pro (Flutter)...                 130ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on iPhone 15 Pro (Flutter) is available at: http://127.0.0.1:50220/uoC8X1jO0k4=/
+The Flutter DevTools debugger and profiler on iPhone 15 Pro (Flutter) is available at: http://127.0.0.1:9101?uri=http://127.0.0.1:50220/uoC8X1jO0k4=/
+flutter: 🔍 [DEBUG] FT-150-Simple: Initializing ClaudeService...
+flutter: ✅ Core behavioral rules loaded for all personas
+flutter: ╔══════════════════════════════════════════════════════╗
+flutter: ║                 ISAR CONNECT STARTED                 ║
+flutter: ╟──────────────────────────────────────────────────────╢
+flutter: ║         Open the link to connect to the Isar         ║
+flutter: ║        Inspector while this build is running.        ║
+flutter: ╟──────────────────────────────────────────────────────╢
+flutter: ║ https://inspect.isar.dev/3.1.0+1/#/50220/uoC8X1jO0k4 ║
+flutter: ╚══════════════════════════════════════════════════════╝
+flutter: ✅ Audio formatting enabled for persona: iThereWithOracle42
+flutter: 📄 Loading base MCP config: assets/config/mcp_base_config.json
+flutter: 🔧 Loading 1 MCP extensions...
+flutter:    🔧 Merging extension: assets/config/mcp_extensions/oracle_4.2_extension.json
+flutter:    ✅ Extension merged successfully
+flutter: ✅ Oracle version compatibility validated: 4.2
+flutter: ✅ Loaded Base + Extensions MCP config for: iThereWithOracle42
+flutter: ✅ MCP instructions loaded for Oracle persona: iThereWithOracle42
+flutter: ✅ Audio formatting instructions appended to system prompt
+flutter: 🔍 [DEBUG] FT-150-Enhanced: About to load recent history...
+flutter: 🔍 [DEBUG] FT-150-Simple: Starting to load conversation history (limit: 25)
+flutter: 🔍 [DEBUG] FT-150-Simple: Calling getMessages...
+flutter: 🔍 [DEBUG] FT-150-Simple: Retrieved 25 messages from storage
+flutter: ℹ️ [INFO] FT-150-Simple: ✅ Loaded 25 messages for cross-session memory
+flutter: 🔍 [DEBUG] FT-150-Simple: Conversation history now has 25 total messages
+flutter: 🔍 [DEBUG] FT-150-Enhanced: History loading completed
+flutter: 🔍 [DEBUG] FT-150-Simple: ClaudeService initialization completed
+flutter: 🔍 [DEBUG] ElevenLabs TTS Provider initialized successfully
+flutter: 🔍 [DEBUG] Audio directory exists at: /Users/alebairos/Library/Developer/CoreSimulator/Devices/6C57132D-D7E1-4C94-B320-C5D0C36EA765/data/Containers/Data/Application/3694A378-DA51-4194-9B14-6713FCDAE5C2/Documents/audio_assistant
+flutter: 🔍 [DEBUG] Audio Assistant TTS Service initialized successfully
+flutter: ℹ️ [INFO] ActivityMemoryService initialized
+flutter: ℹ️ [INFO] FT-119: Started background queue processing (3min intervals)
+flutter: Migrated 0 paths from absolute to relative
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760581858238.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760580615653.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760580420895.mp3
+flutter: 🔍 [DEBUG] AudioPlaybackManager initialized
+flutter: 🔍 [DEBUG] FT-150-Simple: Initializing ClaudeService...
+flutter: ✅ Core behavioral rules loaded for all personas
+flutter: ✅ Audio formatting enabled for persona: ariWithOracle42
+flutter: 📄 Loading base MCP config: assets/config/mcp_base_config.json
+flutter: 🔧 Loading 1 MCP extensions...
+flutter:    🔧 Merging extension: assets/config/mcp_extensions/oracle_4.2_extension.json
+flutter:    ✅ Extension merged successfully
+flutter: ✅ Oracle version compatibility validated: 4.2
+flutter: ✅ Loaded Base + Extensions MCP config for: ariWithOracle42
+flutter: ✅ MCP instructions loaded for Oracle persona: ariWithOracle42
+flutter: ✅ Audio formatting instructions appended to system prompt
+flutter: 🔍 [DEBUG] FT-150-Enhanced: About to load recent history...
+flutter: 🔍 [DEBUG] FT-150-Simple: Starting to load conversation history (limit: 25)
+flutter: 🔍 [DEBUG] FT-150-Simple: Calling getMessages...
+flutter: 🔍 [DEBUG] FT-150-Simple: Retrieved 25 messages from storage
+flutter: ℹ️ [INFO] FT-150-Simple: ✅ Loaded 25 messages for cross-session memory
+flutter: 🔍 [DEBUG] FT-150-Simple: Conversation history now has 25 total messages
+flutter: 🔍 [DEBUG] FT-150-Enhanced: History loading completed
+flutter: 🔍 [DEBUG] FT-150-Simple: ClaudeService initialization completed
+flutter: 🔍 [DEBUG] ElevenLabs TTS Provider initialized successfully
+flutter: 🔍 [DEBUG] Audio directory exists at: /Users/alebairos/Library/Developer/CoreSimulator/Devices/6C57132D-D7E1-4C94-B320-C5D0C36EA765/data/Containers/Data/Application/3694A378-DA51-4194-9B14-6713FCDAE5C2/Documents/audio_assistant
+flutter: 🔍 [DEBUG] Audio Assistant TTS Service initialized successfully
+flutter: ℹ️ [INFO] ActivityMemoryService initialized
+flutter: ℹ️ [INFO] FT-119: Started background queue processing (3min intervals)
+flutter: Migrated 0 paths from absolute to relative
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760581858238.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760580615653.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760580420895.mp3
+flutter: 🔍 [DEBUG] Added user message for language detection. Total messages: 1
+flutter: 🔍 [DEBUG] Generated message ID: msg_1760709263299_0001 for message: Opa!
+flutter: ✅ Core behavioral rules loaded for all personas
+flutter: ✅ Audio formatting enabled for persona: ariWithOracle42
+flutter: 📄 Loading base MCP config: assets/config/mcp_base_config.json
+flutter: 🔧 Loading 1 MCP extensions...
+flutter:    🔧 Merging extension: assets/config/mcp_extensions/oracle_4.2_extension.json
+flutter:    ✅ Extension merged successfully
+flutter: ✅ Oracle version compatibility validated: 4.2
+flutter: ✅ Loaded Base + Extensions MCP config for: ariWithOracle42
+flutter: ✅ MCP instructions loaded for Oracle persona: ariWithOracle42
+flutter: ✅ Audio formatting instructions appended to system prompt
+flutter: 🔍 [DEBUG] FT-060: Generating precise time context
+flutter: 🔍 [DEBUG] SystemMCP: Processing command: {"action":"get_current_time"}
+flutter: 🔍 [DEBUG] SystemMCP: Parsed command: {action: get_current_time}
+flutter: 🔍 [DEBUG] SystemMCP: Action: get_current_time
+flutter: ℹ️ [INFO] SystemMCP: Getting fresh current time
+flutter: 🔍 [DEBUG] Formatting date: 2025-10-17T10:54:23.306138
+flutter: 🔍 [DEBUG] Portuguese format result: sexta-feira, 17 de outubro de 2025 às 10:54
+flutter: ℹ️ [INFO] SystemMCP: Current time retrieved successfully
+flutter: 🔍 [DEBUG] FT-060: get_current_time raw response: {"status":"success","data":{"timestamp":"2025-10-17T10:54:23.306138","timezone":"-03","hour":10,"minute":54,"second":23,"dayOfWeek":"Friday","timeOfDay":"morning","readableTime":"sexta-feira, 17 de outubro de 2025 às 10:54","iso8601":"2025-10-17T10:54:23.306138","unixTimestamp":1760709263306}}
+flutter: ℹ️ [INFO] FT-060: ⏰ Current time data retrieved:
+flutter: ℹ️ [INFO]   📅 Date: Friday, sexta-feira, 17 de outubro de 2025 às 10:54
+flutter: ℹ️ [INFO]   🕐 Time: 10:54:23 (morning)
+flutter: ℹ️ [INFO]   🌍 Timezone: -03
+flutter: ℹ️ [INFO]   📊 Unix timestamp: 1760709263306
+flutter: ℹ️ [INFO]   🔧 ISO8601: 2025-10-17T10:54:23.306138
+flutter: 🔍 [DEBUG] FT-060: 📝 Using ENHANCED time context for gap: TimeGap.sameSession (< 4 hours)
+flutter: 🔍 [DEBUG] Time Context Debug: {hasLastMessage: true, lastMessageTime: 2025-10-17T10:54:23.259103, currentTime: 2025-10-17T10:54:23.309449, differenceMinutes: 0, differenceHours: 0, differenceDays: 0, timeGap: TimeGap.sameSession, context: Current context: It is Friday at 10:54 AM (morning).}
+flutter: 🔍 [DEBUG] FT-060: Generating precise time context
+flutter: 🔍 [DEBUG] SystemMCP: Processing command: {"action":"get_current_time"}
+flutter: 🔍 [DEBUG] SystemMCP: Parsed command: {action: get_current_time}
+flutter: 🔍 [DEBUG] SystemMCP: Action: get_current_time
+flutter: ℹ️ [INFO] SystemMCP: Using cached time data
+flutter: 🔍 [DEBUG] FT-060: get_current_time raw response: {"status":"success","data":{"timestamp":"2025-10-17T10:54:23.306138","timezone":"-03","hour":10,"minute":54,"second":23,"dayOfWeek":"Friday","timeOfDay":"morning","readableTime":"sexta-feira, 17 de outubro de 2025 às 10:54","iso8601":"2025-10-17T10:54:23.306138","unixTimestamp":1760709263306}}
+flutter: ℹ️ [INFO] FT-060: ⏰ Current time data retrieved:
+flutter: ℹ️ [INFO]   📅 Date: Friday, sexta-feira, 17 de outubro de 2025 às 10:54
+flutter: ℹ️ [INFO]   🕐 Time: 10:54:23 (morning)
+flutter: ℹ️ [INFO]   🌍 Timezone: -03
+flutter: ℹ️ [INFO]   📊 Unix timestamp: 1760709263306
+flutter: ℹ️ [INFO]   🔧 ISO8601: 2025-10-17T10:54:23.306138
+flutter: 🔍 [DEBUG] FT-060: 📝 Using ENHANCED time context for gap: TimeGap.sameSession (< 4 hours)
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760581858238.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760580615653.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760580420895.mp3
+flutter: 🔍 [DEBUG] Original AI response: oi! 🪞 tudo bem? hoje é sexta feira, 17 de outubro, 10h54. 
+
+vejo que estamos numa sequência de retomada de contato - quer me contar como tem sido seus dias? ainda estamos mantendo aquele foco nas entregas da app de personas e no horário de sono ajustado? 🪞
+flutter: 🔍 [DEBUG] Regular conversation - no data required
+flutter: ℹ️ [INFO] Activity analysis: Qualified for detection - proceeding with optimized analysis
+flutter: 🔍 [DEBUG] Activity analysis: Applying 5s throttling delay
+flutter: 🔍 [DEBUG] Applying character voice for: Aristios 4.2
+flutter: 🔍 [DEBUG] Voice config: {voiceId: pNInz6obpgDQGcFmaJgB, modelId: eleven_multilingual_v1, stability: 0.6, similarityBoost: 0.8, style: 0.0, speakerBoost: true, apply_text_normalization: auto, description: Standard assistant voice}
+flutter: 🔍 [DEBUG] Updated ElevenLabs TTS Provider configuration
+flutter: 🔍 [DEBUG] Successfully applied character voice configuration for: Aristios 4.2
+flutter: 🔍 [DEBUG] Language Detection - Analyzing 1 messages
+flutter: 🔍 [DEBUG] Language Detection - Confidence too low (0.0 < 0.6), using default
+flutter: 🔍 [DEBUG] Language Detection - Detected language: pt_BR
+flutter: 🔍 [DEBUG] Language Detection - Scores: {pt_BR: 0.0, en_US: 0.0}
+flutter: 🔍 [DEBUG] TTS Language detected/specified: pt_BR
+flutter: 🔍 [DEBUG] TTS preprocessing completed
+flutter: 🔍 [DEBUG] TTS Text preprocessing applied
+flutter: 🔍 [DEBUG] TTS Preprocessing Stats:
+flutter: 🔍 [DEBUG]   Language: pt_BR
+flutter: 🔍 [DEBUG]   Original length: 258
+flutter: 🔍 [DEBUG]   Processed length: 264
+flutter: 🔍 [DEBUG]   Changes made: true
+flutter: 🔍 [DEBUG] Configured TTS provider for Portuguese (Brazil)
+flutter: 🔍 [DEBUG] Updated ElevenLabs TTS Provider configuration
+flutter: 🔍 [DEBUG] TTS provider configured for language: pt_BR
+flutter: 🔍 [DEBUG] Audio directory exists at: /Users/alebairos/Library/Developer/CoreSimulator/Devices/6C57132D-D7E1-4C94-B320-C5D0C36EA765/data/Containers/Data/Application/3694A378-DA51-4194-9B14-6713FCDAE5C2/Documents/audio_assistant
+flutter: 🔍 [DEBUG] Text normalization: Using mode "auto" for model eleven_multilingual_v1
+flutter: 🔍 [DEBUG] ElevenLabs: Using language_code: pt
+flutter: 🔍 [DEBUG] Generating speech with ElevenLabs: {"text":"oi! 🪞 tudo bem? hoje é sexta feira, dezessete de outubro, 10h54. vejo que estamos numa sequência de retomada de contato - quer me contar como tem sido seus dias? ainda estamos mantendo aquele foco nas entregas da app de personas e no horário de sono ajustado? 🪞.","model_id":"eleven_multilingual_v1","voice_settings":{"stability":0.5,"similarity_boost":0.75,"style":0.0,"speaker_boost":true},"apply_text_normalization":"auto","language_code":"pt"}
+flutter: 🔍 [DEBUG] Generated audio file saved to: /Users/alebairos/Library/Developer/CoreSimulator/Devices/6C57132D-D7E1-4C94-B320-C5D0C36EA765/data/Containers/Data/Application/3694A378-DA51-4194-9B14-6713FCDAE5C2/Documents/audio_assistant/audio_assistant_1760709267479.mp3
+flutter: 🔍 [DEBUG] Generated audio assistant audio file at: /Users/alebairos/Library/Developer/CoreSimulator/Devices/6C57132D-D7E1-4C94-B320-C5D0C36EA765/data/Containers/Data/Application/3694A378-DA51-4194-9B14-6713FCDAE5C2/Documents/audio_assistant/audio_assistant_1760709267479.mp3
+flutter: 🔍 [DEBUG] TTS processing complete - Language: pt_BR, Text optimized: true
+flutter: 🔍 [DEBUG] Generated audio at path: audio_assistant/audio_assistant_1760709267479.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760709267479.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760581858238.mp3
+flutter: 🔍 [DEBUG] AssistantAudioMessage initialized with path: audio_assistant/audio_assistant_1760580615653.mp3
+flutter: 🔍 [DEBUG] FT-140: Starting MCP-based Oracle activity detection
+flutter: 🔍 [DEBUG] FT-140: Starting MCP Oracle activity detection
+flutter: 🔍 [DEBUG] SystemMCP: Processing command: {"action":"oracle_detect_activities","message":"Opa!"}
+flutter: 🔍 [DEBUG] SystemMCP: Parsed command: {action: oracle_detect_activities, message: Opa!}
+flutter: 🔍 [DEBUG] SystemMCP: Action: oracle_detect_activities
+flutter: 🔍 [DEBUG] SystemMCP: Processing oracle_detect_activities command
+flutter: 🔍 [DEBUG] FT-064: Loading Oracle context for persona: ariWithOracle42
+flutter: 🔍 [DEBUG] FT-141: Loading Oracle JSON from: assets/config/oracle/oracle_prompt_4.2_optimized.json
+flutter: ℹ️ [INFO] ✅ FT-141: Oracle 4.2 validation passed - 8 dimensions, 265 activities
+flutter: ℹ️ [INFO]    📊 New dimensions: TT(21), PR(17), F(24) activities
+flutter: ℹ️ [INFO] FT-064: ✅ Loaded Oracle context: 265 activities, 8 dimensions
+flutter: 🔍 [DEBUG] SystemMCP: Using Oracle context with 265 activities
+flutter: 🔍 [DEBUG] SharedClaudeRateLimiter: Checking rate limits before API call (background)
+flutter: 🔍 [DEBUG] SharedClaudeRateLimiter: Normal usage, applying 3000ms delay for background request
+flutter: 🔍 [DEBUG] SharedClaudeRateLimiter: API call recorded, 1 calls in last minute
+flutter: 🔍 [DEBUG] 🔍 [FT-149] Raw Claude response: For the message "Opa!", I don't detect any completed activities in any language. This appears to be just a greeting or exclamation.
+
+{"activities": []}
+
+Reasoning:
+1. "Opa" is an informal greeting/exclamation in Portuguese
+2. No past tense verbs or completion indicators in any language
+3. No activity descriptions or quantitative data
+4. No reference to any activities from the Oracle catalog
+5. Cannot infer any completed activities from this message alone
+flutter: 🔍 [DEBUG] 🔍 [FT-149] Extracted JSON: {"activities": []}
+flutter: ℹ️ [INFO] SystemMCP: Oracle detection completed - 0 activities detected
+flutter: ℹ️ [INFO] FT-140: ✅ Detected 0 activities via MCP Oracle detection
+flutter: 🔍 [DEBUG] FT-140: No activities detected via MCP Oracle detection
+flutter: ℹ️ [INFO] FT-140: ✅ Completed MCP Oracle activity detection

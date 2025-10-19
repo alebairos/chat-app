@@ -291,6 +291,21 @@ class MockSystemMCPService extends _i1.Mock implements _i7.SystemMCPService {
   }
 
   @override
+  bool get isOracleEnabled => (super.noSuchMethod(
+        Invocation.getter(#isOracleEnabled),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  void setOracleEnabled(bool? enabled) => super.noSuchMethod(
+        Invocation.method(
+          #setOracleEnabled,
+          [enabled],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i3.Future<String> processCommand(String? command) => (super.noSuchMethod(
         Invocation.method(
           #processCommand,

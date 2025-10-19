@@ -181,8 +181,8 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              _configLoader.setActivePersona(_selectedPersonaKey);
+            onPressed: () async {
+              await _configLoader.setActivePersona(_selectedPersonaKey);
               widget.onCharacterSelected();
               Navigator.pop(context);
             },

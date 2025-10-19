@@ -106,10 +106,35 @@
       }
     },
     "ariWithOracle42": {
+      "enabled": false,
+      "displayName": "Aristios 4.5 (Legacy)",
+      "description": "Legacy version - replaced by specialized Philosopher and Oracle Coach personas.",
+      "configPath": "assets/config/aristios_life_coach_config_4.5.json",
+      "oracleEnabled": true,
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],
+      "audioFormatting": {
+        "enabled": true
+      }
+    },
+    "aristiosPhilosopher45": {
       "enabled": true,
-      "displayName": "Aristios 4.2",
-      "description": "Advanced Life Management Coach with comprehensive behavioral change framework integrating 9 scientific methodologies, structured onboarding, and complete habit catalog system - latest version with enhanced features.",
-      "configPath": "assets/config/ari_life_coach_config_3.0.json",
+      "displayName": "Aristios 4.5, The Philosopher",
+      "description": "Aristios in pure philosophical mode - same personality and wisdom without activity tracking or Oracle framework.",
+      "configPath": "assets/config/aristios_base_config_4.5.json",
+      "oracleEnabled": false,
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "audioFormatting": {
+        "enabled": true
+      }
+    },
+    "ariOracleCoach45": {
+      "enabled": true,
+      "displayName": "Ari 4.5, The Oracle Coach",
+      "description": "Aristios with full Oracle 4.2 framework - same personality enhanced with data-driven behavioral coaching.",
+      "configPath": "assets/config/aristios_base_config_4.5.json",
+      "oracleEnabled": true,
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
       "mcpBaseConfig": "assets/config/mcp_base_config.json",
       "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],
@@ -120,7 +145,7 @@
     "iThereWithOracle42": {
       "enabled": true,
       "displayName": "I-There 4.2",
-      "description": "AI reflection enhanced with Aristios 4.2 Life Management framework - your mirror realm guide with the most advanced behavioral science, real-time habit monitoring, and intelligent data insights.",
+      "description": "Your AI reflection from Mirror Realm 🪞 - has profound knowledge and Oracle 4.2 behavioral science framework, but still learning about you personally. Genuinely curious about discovering your unique traits and preferences.",
       "configPath": "assets/config/i_there_config_2.0.json",
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
       "mcpBaseConfig": "assets/config/mcp_base_config.json",
@@ -158,6 +183,19 @@
       "displayName": "Ryo Tzu 4.2",
       "description": "Chill guide for figuring out life's vibes - real talk, good questions, and deep wisdom from tech, art, and philosophy. Helps you spot patterns, find meaning, and build confidence in your weirdness with Oracle 4.2 framework.",
       "configPath": "assets/config/ryo_tzu_config.json",
+      "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
+      "mcpBaseConfig": "assets/config/mcp_base_config.json",
+      "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],
+      "audioFormatting": {
+        "enabled": true
+      }
+    },
+    "tonyWithOracle42": {
+      "enabled": true,
+      "displayName": "Tony 4.2",
+      "description": "Pragmatic Life Coach with Oracle 4.2 framework - TARS-inspired intelligent brevity, evidence-based coaching, and adaptive engagement for focused personal transformation.",
+      "configPath": "assets/config/tony_life_coach_config.json",
+      "oracleEnabled": true,
       "oracleConfigPath": "assets/config/oracle/oracle_prompt_4.2_optimized.md",
       "mcpBaseConfig": "assets/config/mcp_base_config.json",
       "mcpExtensions": ["assets/config/mcp_extensions/oracle_4.2_extension.json"],

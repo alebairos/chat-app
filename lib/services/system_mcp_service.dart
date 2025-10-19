@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
@@ -25,21 +26,67 @@ import 'activity_queue.dart' as ft154;
 class SystemMCPService {
   final Logger _logger = Logger();
 
+  // FT-195: Singleton pattern implementation
+  static SystemMCPService? _instance;
+
+  // FT-192: Oracle toggle per persona
+  bool _oracleEnabled = true; // Default to enabled for backward compatibility
+
+  // FT-194: Instance tracking for debugging
+  late final String _instanceId;
+
   // FT-102: Time cache to prevent rate limiting
   static String? _cachedTimeResponse;
   static DateTime? _cacheTimestamp;
   static const Duration CACHE_DURATION = Duration(seconds: 30);
+
+  // FT-195: Private constructor for singleton
+  SystemMCPService._internal() {
+    _instanceId = 'MCP_SINGLETON_${DateTime.now().millisecondsSinceEpoch}';
+    print(
+        '🔍 [FT-195] SystemMCP SINGLETON instance created: $_instanceId (Oracle: $_oracleEnabled)');
+  }
+
+  // FT-195: Singleton factory constructor
+  factory SystemMCPService() {
+    return _instance ??= SystemMCPService._internal();
+  }
+
+  // FT-195: Singleton getter for explicit access
+  static SystemMCPService get instance {
+    return SystemMCPService();
+  }
+
+  // FT-195: Reset singleton for testing purposes
+  static void resetSingleton() {
+    _instance = null;
+  }
+
+  /// FT-192: Configure Oracle command availability for current persona
+  void setOracleEnabled(bool enabled) {
+    _oracleEnabled = enabled;
+    print('🔍 [FT-194] Oracle set to $enabled on instance: $_instanceId');
+    _logger.debug(
+        'SystemMCP: Oracle commands ${enabled ? 'enabled' : 'disabled'}');
+  }
+
+  /// FT-192: Check if Oracle commands are available for current persona
+  bool get isOracleEnabled {
+    print(
+        '🔍 [FT-194] Oracle check on instance: $_instanceId, enabled: $_oracleEnabled');
+    return _oracleEnabled;
+  }
 
   /// Processes MCP commands in JSON format
   ///
   /// Expected format: {"action": "function_name", "param": "value"}
   /// Returns JSON response with status and data
   Future<String> processCommand(String command) async {
-    _logger.debug('SystemMCP: Processing command: $command');
+    _logger.info('🔍 [FT-203] SystemMCP: Processing command: $command');
 
     try {
       final parsedCommand = json.decode(command);
-      _logger.debug('SystemMCP: Parsed command: $parsedCommand');
+      _logger.info('🔍 [FT-203] SystemMCP: Parsed command: $parsedCommand');
 
       final action = parsedCommand['action'] as String?;
       if (action == null) {
@@ -57,6 +104,13 @@ class SystemMCPService {
           return _getDeviceInfo();
 
         case 'get_activity_stats':
+          // FT-192: Check Oracle availability
+          if (!_oracleEnabled) {
+            _logger.warning(
+                'SystemMCP: Oracle command get_activity_stats blocked - Oracle disabled for this persona');
+            return _errorResponse(
+                'Oracle commands not available for this persona');
+          }
           // Parse days parameter safely, default to 0 (today) if invalid
           int days = 0;
           if (parsedCommand['days'] is int) {
@@ -79,19 +133,94 @@ class SystemMCPService {
 
         // FT-140: Oracle-specific MCP commands
         case 'oracle_detect_activities':
+          // FT-194: Enhanced Oracle availability check with explicit logging
+          if (!_oracleEnabled) {
+            _logger.info(
+                'SystemMCP: Oracle activity detection blocked - Oracle disabled for this persona (FT-194)');
+            return _errorResponse(
+                'Oracle activity detection not available for this persona');
+          }
           return await _oracleDetectActivities(parsedCommand);
 
         case 'oracle_query_activities':
+          // FT-194: Enhanced Oracle availability check with explicit logging
+          if (!_oracleEnabled) {
+            _logger.info(
+                'SystemMCP: Oracle query blocked - Oracle disabled for this persona (FT-194)');
+            return _errorResponse(
+                'Oracle query commands not available for this persona');
+          }
           return await _oracleQueryActivities(parsedCommand);
 
         case 'oracle_get_compact_context':
+          // FT-192: Check Oracle availability
+          if (!_oracleEnabled) {
+            _logger.warning(
+                'SystemMCP: Oracle command oracle_get_compact_context blocked - Oracle disabled for this persona');
+            return _errorResponse(
+                'Oracle commands not available for this persona');
+          }
           return await _getCompactOracleContext();
 
         // FT-144: Oracle statistics command for precise data queries
         case 'oracle_get_statistics':
+          // FT-192: Check Oracle availability
+          if (!_oracleEnabled) {
+            _logger.warning(
+                'SystemMCP: Oracle command oracle_get_statistics blocked - Oracle disabled for this persona');
+            return _errorResponse(
+                'Oracle commands not available for this persona');
+          }
           return await _getOracleStatistics();
 
         // extract_activities removed - now handled by FT-064 semantic detection
+
+        // FT-200: Conversation database query commands
+        case 'get_recent_user_messages':
+          _logger.info(
+              '🔍 [FT-203] CONVERSATION MCP: get_recent_user_messages called!');
+          if (await _isConversationCommandEnabled('get_recent_user_messages')) {
+            final limit = parsedCommand['limit'] ?? 5;
+            _logger.info(
+                '🔍 [FT-203] CONVERSATION MCP: Executing get_recent_user_messages (limit: $limit)');
+            return await _getRecentUserMessages(limit);
+          } else {
+            _logger.warning(
+                '🔍 [FT-203] CONVERSATION MCP: get_recent_user_messages DISABLED');
+            return _errorResponse('Conversation database queries disabled');
+          }
+
+        case 'get_current_persona_messages':
+          _logger.info(
+              '🔍 [FT-203] CONVERSATION MCP: get_current_persona_messages called!');
+          if (await _isConversationCommandEnabled(
+              'get_current_persona_messages')) {
+            final personaKey = parsedCommand['persona_key'] as String?;
+            final limit = parsedCommand['limit'] ?? 3;
+            _logger.info(
+                '🔍 [FT-203] CONVERSATION MCP: Executing get_current_persona_messages (persona: $personaKey, limit: $limit)');
+            return await _getCurrentPersonaMessages(personaKey, limit);
+          } else {
+            _logger.warning(
+                '🔍 [FT-203] CONVERSATION MCP: get_current_persona_messages DISABLED');
+            return _errorResponse('Conversation database queries disabled');
+          }
+
+        case 'search_conversation_context':
+          _logger.info(
+              '🔍 [FT-203] CONVERSATION MCP: search_conversation_context called!');
+          if (await _isConversationCommandEnabled(
+              'search_conversation_context')) {
+            final query = parsedCommand['query'] as String?;
+            final hours = parsedCommand['hours'] ?? 24;
+            _logger.info(
+                '🔍 [FT-203] CONVERSATION MCP: Executing search_conversation_context (query: "$query", hours: $hours)');
+            return await _searchConversationContext(query, hours);
+          } else {
+            _logger.warning(
+                '🔍 [FT-203] CONVERSATION MCP: search_conversation_context DISABLED');
+            return _errorResponse('Conversation database queries disabled');
+          }
 
         default:
           _logger.warning('SystemMCP: Unknown action: $action');
@@ -106,6 +235,24 @@ class SystemMCPService {
   /// Method to enable or disable logging
   void setLogging(bool enable) {
     _logger.setLogging(enable);
+  }
+
+  /// FT-200: Check if conversation command is enabled
+  Future<bool> _isConversationCommandEnabled(String command) async {
+    try {
+      final configString = await rootBundle
+          .loadString('assets/config/conversation_database_config.json');
+      final config = json.decode(configString) as Map<String, dynamic>;
+      final mcpCommands = config['mcp_commands'] as Map<String, dynamic>? ?? {};
+      final enabled = mcpCommands[command] == true;
+      _logger.debug(
+          'FT-200: Conversation command $command ${enabled ? 'enabled' : 'disabled'}');
+      return enabled;
+    } catch (e) {
+      _logger.debug(
+          'FT-200: Config not found for command $command, defaulting to disabled: $e');
+      return false;
+    }
   }
 
   /// Gets current time in multiple formats
@@ -259,7 +406,8 @@ class SystemMCPService {
 
   /// Gets chat message statistics from the database
   Future<String> _getMessageStats(int limit, {bool fullText = false}) async {
-    _logger.info('SystemMCP: Getting message stats (limit: $limit, fullText: $fullText)');
+    _logger.info(
+        'SystemMCP: Getting message stats (limit: $limit, fullText: $fullText)');
 
     try {
       final storageService = ChatStorageService();
@@ -268,7 +416,7 @@ class SystemMCPService {
       final messagesData = messages
           .map((message) => {
                 'id': message.id,
-                'text': fullText 
+                'text': fullText
                     ? message.text
                     : (message.text.length > 100
                         ? '${message.text.substring(0, 100)}...'
@@ -819,5 +967,171 @@ Return empty array if NO COMPLETED activities detected.
       'message': message,
       'timestamp': DateTime.now().toIso8601String(),
     });
+  }
+
+  // FT-200: Conversation database query methods
+
+  /// Get recent user messages only (no AI persona contamination)
+  Future<String> _getRecentUserMessages(int limit) async {
+    _logger.info('FT-200: Getting recent user messages (limit: $limit)');
+
+    try {
+      final storageService = ChatStorageService();
+      final messages = await storageService.getMessages(
+          limit: limit * 2); // Get more to filter
+
+      // Filter to ONLY user messages (no AI persona responses)
+      final userMessages = messages
+          .where((msg) => msg.isUser)
+          .take(limit)
+          .map((msg) => {
+                'timestamp': msg.timestamp.toIso8601String(),
+                'text': msg.text,
+                'time_ago':
+                    _formatTimeAgo(DateTime.now().difference(msg.timestamp))
+              })
+          .toList();
+
+      final response = {
+        'status': 'success',
+        'data': {
+          'user_messages': userMessages,
+          'total_count': userMessages.length,
+          'context': 'Recent user messages for conversation continuity'
+        },
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      _logger.info('FT-200: ✅ Retrieved ${userMessages.length} user messages');
+      return json.encode(response);
+    } catch (e) {
+      _logger.error('FT-200: Error getting recent user messages: $e');
+      return _errorResponse('Error getting recent user messages: $e');
+    }
+  }
+
+  /// Get current persona's previous messages for consistency
+  Future<String> _getCurrentPersonaMessages(
+      String? personaKey, int limit) async {
+    // Get current persona key if not provided
+    final currentPersonaKey = personaKey ?? await _getCurrentPersonaKey();
+    _logger.info(
+        'FT-200: Getting current persona messages (persona: $currentPersonaKey, limit: $limit)');
+
+    try {
+      final storageService = ChatStorageService();
+      final messages =
+          await storageService.getMessages(limit: 50); // Get more to filter
+
+      // Filter to ONLY current persona's messages
+      final personaMessages = messages
+          .where((msg) => !msg.isUser && msg.personaKey == currentPersonaKey)
+          .take(limit)
+          .map((msg) => {
+                'timestamp': msg.timestamp.toIso8601String(),
+                'text': msg.text,
+                'time_ago':
+                    _formatTimeAgo(DateTime.now().difference(msg.timestamp))
+              })
+          .toList();
+
+      final response = {
+        'status': 'success',
+        'data': {
+          'persona_messages': personaMessages,
+          'persona_key': currentPersonaKey,
+          'total_count': personaMessages.length,
+          'context': 'Previous responses from current persona for consistency'
+        },
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      _logger.info(
+          'FT-200: ✅ Retrieved ${personaMessages.length} messages for persona $currentPersonaKey');
+      return json.encode(response);
+    } catch (e) {
+      _logger.error('FT-200: Error getting current persona messages: $e');
+      return _errorResponse('Error getting current persona messages: $e');
+    }
+  }
+
+  /// Search conversation context by query and time range
+  Future<String> _searchConversationContext(String? query, int hours) async {
+    _logger.info(
+        'FT-200: Searching conversation context (query: "$query", hours: $hours)');
+
+    try {
+      final storageService = ChatStorageService();
+      final cutoff = DateTime.now().subtract(Duration(hours: hours));
+      final messages = await storageService.getMessages(limit: 200);
+
+      // Filter messages within time range
+      var filteredMessages =
+          messages.where((msg) => msg.timestamp.isAfter(cutoff)).toList();
+
+      // Apply text search if query provided
+      if (query != null && query.trim().isNotEmpty) {
+        final queryLower = query.toLowerCase();
+        filteredMessages = filteredMessages
+            .where((msg) => msg.text.toLowerCase().contains(queryLower))
+            .toList();
+      }
+
+      final contextMessages = filteredMessages.map((msg) {
+        final timeDiff = DateTime.now().difference(msg.timestamp);
+        final timeAgo = _formatTimeAgo(timeDiff);
+        final speaker =
+            msg.isUser ? 'User' : (msg.personaDisplayName ?? 'Assistant');
+        return {
+          'timestamp': msg.timestamp.toIso8601String(),
+          'speaker': speaker,
+          'text': msg.text,
+          'time_ago': timeAgo,
+          'is_user': msg.isUser,
+          'persona_key': msg.personaKey,
+        };
+      }).toList();
+
+      final response = {
+        'status': 'success',
+        'data': {
+          'conversation_context': contextMessages,
+          'total_messages': contextMessages.length,
+          'time_span_hours': hours,
+          'search_query': query,
+          'current_time': DateTime.now().toIso8601String(),
+        },
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      _logger.info(
+          'FT-200: ✅ Found ${contextMessages.length} messages matching search criteria');
+      return json.encode(response);
+    } catch (e) {
+      _logger.error('FT-200: Error searching conversation context: $e');
+      return _errorResponse('Error searching conversation context: $e');
+    }
+  }
+
+  /// Get current persona key from CharacterConfigManager
+  Future<String> _getCurrentPersonaKey() async {
+    try {
+      final configManager = CharacterConfigManager();
+      return configManager.activePersonaKey;
+    } catch (e) {
+      _logger.warning('FT-200: Could not get current persona key: $e');
+      return 'unknown';
+    }
+  }
+
+  /// Format time difference for human readability
+  String _formatTimeAgo(Duration diff) {
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 2) return '1 minute ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
+    if (diff.inHours < 2) return '1 hour ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+    if (diff.inDays == 1) return '1 day ago';
+    return '${diff.inDays} days ago';
   }
 }
