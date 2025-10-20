@@ -8,7 +8,7 @@ import 'package:ai_personas_app/config/config_loader.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 @GenerateMocks([http.Client, ConfigLoader])
-import '../helpers/claude_service_error_handling_test.mocks.dart';
+import 'claude_service_error_handling_test.mocks.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

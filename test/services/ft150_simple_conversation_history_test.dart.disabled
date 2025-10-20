@@ -5,7 +5,7 @@ import 'package:ai_personas_app/services/claude_service.dart';
 import 'package:ai_personas_app/services/chat_storage_service.dart';
 import 'package:ai_personas_app/models/message_type.dart';
 import '../mocks/mock_client.dart';
-import '../helpers/mock_config_loader.dart';
+import '../mock_config_loader.dart';
 
 class MockPathProvider
     with MockPlatformInterfaceMixin

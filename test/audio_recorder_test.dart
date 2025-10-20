@@ -7,7 +7,7 @@ import 'package:mockito/annotations.dart';
 import 'package:ai_personas_app/widgets/audio_recorder.dart';
 
 @GenerateMocks([Record, AudioPlayer])
-import 'helpers/audio_recorder_test.mocks.dart';
+import 'audio_recorder_test.mocks.dart';
 
 void main() {
   late MockRecord mockRecord;
