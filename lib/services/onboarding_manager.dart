@@ -1,24 +1,28 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'user_settings_service.dart';
 
-/// Manages onboarding state and first-install detection
+/// Manages onboarding state and first-install detection using Isar database
 class OnboardingManager {
-  static const String _hasSeenOnboardingKey = 'has_seen_onboarding_v1';
+  static final UserSettingsService _settingsService = UserSettingsService();
 
   /// Check if user should see onboarding flow
   static Future<bool> shouldShowOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    return !(prefs.getBool(_hasSeenOnboardingKey) ?? false);
+    return await _settingsService.shouldShowOnboarding();
   }
 
   /// Mark onboarding as completed
   static Future<void> markOnboardingComplete() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_hasSeenOnboardingKey, true);
+    await _settingsService.markOnboardingComplete();
   }
 
   /// Reset onboarding state (for testing or re-showing)
   static Future<void> resetOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_hasSeenOnboardingKey);
+    await _settingsService.resetOnboarding();
+  }
+
+  /// Reset all user data (for complete app reset)
+  static Future<void> resetAllUserData() async {
+    print('RESET: 🎯 OnboardingManager calling UserSettingsService...');
+    await _settingsService.resetAllUserData();
+    print('RESET: ✅ OnboardingManager reset completed');
   }
 }

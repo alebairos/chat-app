@@ -6,7 +6,12 @@ import '../../services/onboarding_manager.dart';
 
 /// Main onboarding flow with PageView navigation
 class OnboardingFlow extends StatefulWidget {
-  const OnboardingFlow({super.key});
+  final VoidCallback? onComplete;
+
+  const OnboardingFlow({
+    super.key,
+    this.onComplete,
+  });
 
   @override
   State<OnboardingFlow> createState() => _OnboardingFlowState();
@@ -26,7 +31,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   void _completeOnboarding() async {
     await OnboardingManager.markOnboardingComplete();
     if (mounted) {
-      Navigator.of(context).pop();
+      // If we have an onComplete callback, use it (for first-time flow)
+      if (widget.onComplete != null) {
+        widget.onComplete!();
+      } else {
+        // Otherwise, pop the screen (for profile menu access)
+        Navigator.of(context).pop();
+      }
     }
   }
 
