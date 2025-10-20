@@ -44,17 +44,17 @@ void main() {
     test('should read defaultPersona from config and set as active', () async {
       // Create a new instance for testing
       final manager = CharacterConfigManager();
-      
+
       // Verify initial state (should be hardcoded default)
       expect(manager.activePersonaKey, equals('ariLifeCoach'));
       expect(manager.isInitialized, isFalse);
-      
+
       // Initialize the manager
       await manager.initialize();
-      
+
       // Verify it was initialized
       expect(manager.isInitialized, isTrue);
-      
+
       // Verify the default persona was read and set
       expect(manager.activePersonaKey, equals('ariWithOracle21'));
     });
@@ -76,14 +76,15 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler('flutter/assets', (ByteData? message) async {
-        return ByteData.view(Uint8List.fromList(mockConfigNoDefault.codeUnits).buffer);
+        return ByteData.view(
+            Uint8List.fromList(mockConfigNoDefault.codeUnits).buffer);
       });
 
       final manager = CharacterConfigManager();
       final initialPersona = manager.activePersonaKey;
-      
+
       await manager.initialize();
-      
+
       // Should keep the initial persona if no defaultPersona is specified
       expect(manager.activePersonaKey, equals(initialPersona));
       expect(manager.isInitialized, isTrue);
@@ -107,14 +108,15 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler('flutter/assets', (ByteData? message) async {
-        return ByteData.view(Uint8List.fromList(mockConfigInvalid.codeUnits).buffer);
+        return ByteData.view(
+            Uint8List.fromList(mockConfigInvalid.codeUnits).buffer);
       });
 
       final manager = CharacterConfigManager();
       final initialPersona = manager.activePersonaKey;
-      
+
       await manager.initialize();
-      
+
       // Should keep the initial persona if defaultPersona doesn't exist
       expect(manager.activePersonaKey, equals(initialPersona));
       expect(manager.isInitialized, isTrue);
@@ -129,14 +131,13 @@ void main() {
 
       final manager = CharacterConfigManager();
       final initialPersona = manager.activePersonaKey;
-      
+
       // The initialize method should handle the error gracefully
       await manager.initialize();
-      
+
       // Should keep the initial persona if config loading fails
       expect(manager.activePersonaKey, equals(initialPersona));
       expect(manager.isInitialized, isTrue);
     });
   });
 }
-

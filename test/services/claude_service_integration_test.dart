@@ -7,7 +7,7 @@ import 'package:ai_personas_app/services/claude_service.dart';
 import 'package:ai_personas_app/services/system_mcp_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../helpers/mock_config_loader.dart';
-import '../helpers/claude_service_integration_test.mocks.dart';
+import 'claude_service_integration_test.mocks.dart';
 
 @GenerateMocks([http.Client])
 void main() {
