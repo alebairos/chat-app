@@ -197,7 +197,8 @@ class _HomeScreenState extends State<HomeScreen>
               onPersonaChanged: _refreshPersonaName), // FT-208: Pass callback
           const StatsScreen(),
           const JournalScreen(),
-          const ProfileScreen(),
+          ProfileScreen(
+              onPersonaChanged: _refreshPersonaName), // FT-213: Add callback
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
