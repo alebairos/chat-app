@@ -2,6 +2,54 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2025-10-20
+
+### 🎉 Major Release: Aristios 4.5 Persona & System Stability
+
+This release introduces the advanced Aristios 4.5 persona with philosophical depth and Oracle 4.2 integration, along with critical system stability improvements and enhanced persona management.
+
+### Added
+- **FT-186**: Aristios 4.5 Persona Development
+  - **Philosophical Integration**: 14 core beliefs from Ari 5 documentation with transformational language
+  - **Three-Pillar Framework**: MEEDDS (Energia), PLOW (Habilidade), GLOWS (Conexão) strategies
+  - **Progressive Development Coaching**: Phase-based coaching (Estabelecimento → Desenvolvimento → Expansão)
+  - **Enhanced Communication Style**: Soul-centered approach with practical Oracle 4.2 guidance
+  - **Complete Oracle Integration**: 265+ activities across 8 dimensions with philosophical context
+
+- **FT-208**: Persona Mention Autocomplete Enhancements
+  - **Increased Persona Limit**: From 5 to 10 personas in @mention autocomplete
+  - **Comprehensive Debug Logging**: Enhanced persona filtering and loading diagnostics
+  - **Callback System**: Real-time title updates when switching personas via @mention
+  - **Tony 4.2 Visibility**: Now properly appears in autocomplete (was 6th of 6 enabled)
+
+### Fixed
+- **FT-211**: Database Singleton Architecture Reversion
+  - **Reverted Singleton Changes**: Restored working database architecture for journal generation
+  - **Test Compatibility**: Removed singleton dependencies causing test failures
+  - **Journal Generation**: Fixed database connection errors preventing daily journal creation
+  - **Persona Switching**: Restored reliable persona switching functionality
+
+- **FT-187**: Navigation Black Screen Fix
+  - **Removed Aggressive Navigation**: Fixed black screen issues during app navigation
+  - **Improved User Experience**: Smoother transitions between screens and features
+
+### Enhanced
+- **Persona Management System**: More robust persona loading and switching mechanisms
+- **Database Architecture**: Restored stable, non-singleton database patterns
+- **Test Infrastructure**: Comprehensive test cleanup and compatibility improvements
+- **System Stability**: Multiple critical fixes for production reliability
+
+### Technical Improvements
+- **Configuration Management**: Enhanced persona configuration loading and validation
+- **Debug Infrastructure**: Comprehensive logging for persona and database operations  
+- **Test Architecture**: Restored working test patterns without singleton dependencies
+- **Error Handling**: Improved error recovery for database and persona operations
+
+### Documentation
+- **Complete System Architecture Analysis (FT-188)**: Comprehensive documentation of persona loading, message history, and activity detection systems
+- **Aristios 4.5 Specifications**: Detailed philosophical framework and implementation guidelines
+- **Database Reversion Analysis**: Complete documentation of singleton pattern issues and solutions
+
 ## [2.0.0] - 2025-10-01
 
 ### 🎉 Major Release: I-There Daily Journal System
