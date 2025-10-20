@@ -7,7 +7,7 @@ import 'package:mockito/annotations.dart';
 import 'dart:convert';
 import 'dart:io';
 
-import 'transcription_service_test.mocks.dart';
+import 'helpers/transcription_service_test.mocks.dart';
 
 @GenerateMocks([http.Client])
 void main() {
