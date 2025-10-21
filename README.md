@@ -123,9 +123,41 @@ firebase appdistribution:distribute \
 
 #### iOS (TestFlight)
 
+**🚀 Protected Branch Release Workflow**
+
 ```bash
-python3 scripts/release_testflight.py
+# 1. Ensure you're on develop branch
+git checkout develop
+git pull origin develop
+
+# 2. Release with automatic version bumping
+python3 scripts/release_testflight.py --version-bump patch    # Bug fixes
+python3 scripts/release_testflight.py --version-bump minor   # New features  
+python3 scripts/release_testflight.py --version-bump major   # Breaking changes
+
+# 3. Preview changes without executing (dry run)
+python3 scripts/release_testflight.py --dry-run --version-bump patch
+
+# 4. Emergency releases (bypass branch validation)
+python3 scripts/release_testflight.py --force-branch --version-bump patch
 ```
+
+**What the script does automatically:**
+- ✅ Validates you're on `develop` branch
+- ✅ Checks working directory is clean
+- ✅ Bumps version in `pubspec.yaml`
+- ✅ Updates `CHANGELOG.md` with release notes
+- ✅ Commits version changes to git
+- ✅ Creates git tag (e.g., `v2.1.1`)
+- ✅ Builds Flutter app for iOS
+- ✅ Creates Xcode archive
+- ✅ Exports IPA for App Store
+- ✅ Uploads to TestFlight
+
+**Setup Requirements:**
+- Create `.env` file with Apple credentials (see setup docs)
+- Ensure `develop` branch is up to date
+- Clean working directory (no uncommitted changes)
 
 **Testing iOS Builds:**
 1. Install TestFlight app from App Store
@@ -231,7 +263,20 @@ make patch-android  # Apply Android namespace patches only
 **TestFlight upload fails**
 - **Check**: Apple Developer account active
 - **Check**: Certificates and provisioning profiles valid
-- **Solution**: Run `python3 scripts/release_testflight.py`
+- **Verify setup**: `python3 scripts/release_testflight.py --verify`
+- **Branch issue**: Ensure you're on `develop` branch or use `--force-branch`
+- **Clean directory**: Commit or stash changes before releasing
+- **Solution**: Run `python3 scripts/release_testflight.py --version-bump patch`
+
+**Wrong branch error**
+- **Error**: "Release must be from 'develop' branch"
+- **Solution**: `git checkout develop` or use `--force-branch` for emergencies
+- **Best practice**: Always release from protected `develop` branch
+
+**Uncommitted changes error**  
+- **Error**: "Working directory has uncommitted changes"
+- **Solution**: `git add . && git commit -m "Pre-release changes"` or `git stash`
+- **Override**: Use `--force-branch` to bypass (not recommended)
 
 ## Development
 
