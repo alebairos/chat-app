@@ -14,14 +14,140 @@ A Flutter chat app with AI personas, voice features, and activity tracking.
 
 ## Quick Start
 
-1. Clone and run `flutter pub get`
-2. Create `.env` with your API keys:
+### Prerequisites
+
+- **Flutter**: 3.27.0+ with iOS and Android toolchains
+- **iOS Development**: Xcode 16.2+, Apple Developer account
+- **Android Development**: Android Studio, Android SDK 35+
+- **Firebase CLI**: For Android distribution (`npm install -g firebase-tools`)
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies (use one of these methods):
+   ```bash
+   # Recommended: Use Makefile (auto-patches Android)
+   make deps
+   
+   # Alternative: Use wrapper script
+   ./scripts/flutter_pub_get.sh
+   
+   # Manual: Standard Flutter command (requires manual patching for Android)
+   flutter pub get && ./scripts/patch_android_namespaces.sh
+   ```
+
+3. Create `.env` with your API keys:
    ```
    ANTHROPIC_API_KEY=your_claude_key
    OPENAI_API_KEY=your_whisper_key
    ELEVEN_LABS_API_KEY=your_tts_key
    ```
-3. Run `flutter run`
+
+**⚠️ Important for Android:**
+Always use `make deps` instead of `flutter pub get` to ensure Android namespace patches are applied. These patches fix compatibility issues with older plugins (Isar, Record) that lack namespace declarations required by Android Gradle Plugin 8.0+.
+
+### Running the App
+
+```bash
+# iOS
+flutter run -d ios
+# or
+make run-ios
+
+# Android
+flutter run -d android
+# or
+make run-android
+```
+
+### Building
+
+```bash
+# Android Debug APK
+make build-android
+
+# Android Release APK
+make build-android-release
+
+# iOS
+make build-ios
+```
+
+### Distribution
+
+#### Android (Firebase App Distribution)
+
+**One-Command Distribution:**
+```bash
+make distribute-android
+```
+
+**What happens:**
+1. Prompts for release notes (type and press Ctrl+D)
+2. Applies Android namespace patches automatically
+3. Builds release APK (~2-3 minutes)
+4. Uploads to Firebase App Distribution
+5. Sends email notifications to testers
+
+**Manual Distribution:**
+```bash
+# Build release APK
+flutter build apk --release
+
+# Distribute to Firebase
+firebase appdistribution:distribute \
+  build/app/outputs/flutter-apk/app-release.apk \
+  --app "1:807856535419:android:39a9db3b2fa8c010d52fde" \
+  --groups "internal-testers" \
+  --release-notes "Your release notes here"
+```
+
+**Testing Android Builds:**
+
+1. **Receive Notification**: Testers get email: "New build available: AI Personas App"
+2. **Download APK**: Click link in email or visit Firebase Console
+3. **Install on Device**:
+   - Enable "Install from Unknown Sources" in Android settings
+   - Download and install APK
+   - Grant necessary permissions
+
+**Firebase Console:**
+- View releases: https://console.firebase.google.com/project/ai-personas-app/appdistribution
+- Manage testers: Add/remove testers in "Testers & Groups" tab
+- Download APK: Direct download links available for each release
+
+**Requirements:**
+- Firebase CLI installed: `npm install -g firebase-tools`
+- Logged in: `firebase login`
+- Tester group created: `internal-testers` in Firebase Console
+
+#### iOS (TestFlight)
+
+```bash
+python3 scripts/release_testflight.py
+```
+
+**Testing iOS Builds:**
+1. Install TestFlight app from App Store
+2. Accept invitation email
+3. Download and install builds directly from TestFlight app
+
+### Development Commands
+
+Use `make` for consistent builds with automatic Android patching:
+
+```bash
+make help           # Show all available commands
+make deps           # Install dependencies + patch Android
+make test           # Run all tests
+make clean          # Clean build artifacts
+make patch-android  # Apply Android namespace patches only
+```
+
+**Why use `make deps` instead of `flutter pub get`?**
+- Automatically applies Android namespace patches for plugin compatibility
+- Ensures successful Android builds without manual intervention
+- Recommended for all developers working on this project
 
 ## API Keys
 
@@ -36,6 +162,13 @@ A Flutter chat app with AI personas, voice features, and activity tracking.
 - **I-There**: AI clone with dimensional knowledge
 
 ## Recent Updates
+
+### FT-212: Android Build Support ✅
+- **Platform Expansion**: Full Android build support with automated plugin patching
+- **Automated Tooling**: Makefile, wrapper script, and git hooks for seamless development
+- **Plugin Compatibility**: Resolved namespace issues for Isar and Record plugins
+- **Build Success**: Debug APK builds working (96MB, 95.6s build time)
+- **Zero iOS Impact**: Android changes completely isolated, iOS builds unaffected
 
 ### FT-118: Oracle v3.0 Personas Implementation ✅
 - **Oracle v3.0 Integration**: Successfully implemented Oracle v3.0 personas with full activity detection
@@ -70,12 +203,43 @@ A Flutter chat app with AI personas, voice features, and activity tracking.
 - **Consistent Responses**: Always use MCP for "what time?", "what date?", "what day?"
 - **Reliable Data**: Fix date inconsistencies in AI responses
 
+## Troubleshooting
+
+### Android Build Issues
+
+**Error: "Namespace not specified"**
+- **Solution**: Run `make deps` instead of `flutter pub get`
+- **Why**: Applies necessary namespace patches to plugins
+
+**Error: "resource android:attr/lStar not found"**
+- **Solution**: Patches are applied automatically by `make deps`
+- **Manual fix**: Run `./scripts/patch_android_namespaces.sh`
+- **What it does**: Updates Isar plugin's compileSdkVersion from 30 to 35
+
+**Release build fails but debug works**
+- **Solution**: Already configured in `android/app/build.gradle.kts`
+- **Settings**: `compileSdk = 35`, resource shrinking disabled
+- **Clean build**: `flutter clean && make build-android-release`
+
+**Firebase distribution fails**
+- **Check**: Firebase CLI logged in (`firebase login`)
+- **Check**: Tester group exists (`internal-testers`)
+- **Check**: Project ID correct in `.firebaserc`
+
+### iOS Build Issues
+
+**TestFlight upload fails**
+- **Check**: Apple Developer account active
+- **Check**: Certificates and provisioning profiles valid
+- **Solution**: Run `python3 scripts/release_testflight.py`
+
 ## Development
 
 - **Tests**: 500+ tests with 95%+ pass rate
 - **Architecture**: Clean Flutter with Isar database
 - **Audio**: Provider-based TTS with emotional preprocessing
 - **MCP**: Local Model Context Protocol for privacy-preserving data integration
+- **Platforms**: iOS (TestFlight) and Android (Firebase App Distribution)
 
 ## Version
 

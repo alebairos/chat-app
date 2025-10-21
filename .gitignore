@@ -12,6 +12,11 @@
 .swiftpm/
 migrate_working_dir/
 
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
 # IntelliJ related
 *.iml
 *.ipr

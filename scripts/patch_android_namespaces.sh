@@ -48,6 +48,16 @@ echo ""
 echo "📦 Patching Isar Flutter Libs..."
 patch_plugin "$PUB_CACHE/isar_flutter_libs-3.1.0+1" "dev.isar.isar_flutter_libs" "24"
 
+# Also update Isar's compileSdkVersion for release builds
+ISAR_BUILD_GRADLE="$PUB_CACHE/isar_flutter_libs-3.1.0+1/android/build.gradle"
+if [ -f "$ISAR_BUILD_GRADLE" ]; then
+    if grep -q "compileSdkVersion 30" "$ISAR_BUILD_GRADLE"; then
+        echo "   🔧 Updating Isar compileSdkVersion to 35..."
+        sed -i '' 's/compileSdkVersion 30/compileSdkVersion 35/g' "$ISAR_BUILD_GRADLE"
+        echo -e "   ${GREEN}✓${NC} Updated Isar SDK version"
+    fi
+fi
+
 echo ""
 echo "📦 Patching Record Plugin..."
 patch_plugin "$PUB_CACHE/record-4.4.4" "com.llfbandit.record" "25"
