@@ -293,13 +293,13 @@ class TestFlightRelease:
                 print(f"⚠️  Could not add files to git: {result.stderr}")
                 return
             
-            # Create commit message
-            commit_msg = f"chore: Bump version to {version} ({bump_type})\n\n- Update pubspec.yaml version\n- Update CHANGELOG.md with release notes\n- Automated via FT-214 release workflow"
+            # Create commit message (sanitize version input)
+            safe_version = version.replace('"', '\\"').replace('`', '\\`').replace('$', '\\$')
+            commit_msg = f"chore: Bump version to {safe_version} ({bump_type})\n\n- Update pubspec.yaml version\n- Update CHANGELOG.md with release notes\n- Automated via FT-214 release workflow"
             
-            # Commit the changes
+            # Commit the changes (SECURE: Use argument list instead of shell=True)
             result = subprocess.run(
-                f'git commit -m "{commit_msg}"',
-                shell=True,
+                ["git", "commit", "-m", commit_msg],
                 capture_output=True,
                 text=True
             )
