@@ -9,7 +9,12 @@ import '../services/app_restart_service.dart';
 
 /// Profile screen with persona management and settings access
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onPersonaChanged; // FT-213: Add callback
+
+  const ProfileScreen({
+    super.key,
+    this.onPersonaChanged, // FT-213: Add parameter
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -316,7 +321,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             MaterialPageRoute(
                               builder: (context) => PersonaSelectionScreen(
                                 onCharacterSelected: () {
-                                  setState(() {});
+                                  setState(
+                                      () {}); // Keep existing ProfileScreen refresh
+                                  widget.onPersonaChanged
+                                      ?.call(); // FT-213: Notify parent
                                 },
                               ),
                             ),
