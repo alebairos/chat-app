@@ -38,12 +38,21 @@ class UserSettingsService {
   }
 
   /// Get the database instance, initializing if necessary
-  Future<Isar> get database {
+  Future<Isar> get database async {
     try {
-      return _database;
+      final isar = await _database;
+      // Check if the instance is still open
+      if (isar.isOpen) {
+        return isar;
+      } else {
+        // Database was closed, reinitialize
+        _initDatabase();
+        return await _database;
+      }
     } catch (e) {
+      // Database initialization failed, reinitialize
       _initDatabase();
-      return _database;
+      return await _database;
     }
   }
 
@@ -159,6 +168,13 @@ class UserSettingsService {
       final newSettings = UserSettingsModel.initial();
       await isar.userSettingsModels.put(newSettings);
     });
+    
+    // Close the current database instance to ensure clean restart
+    await isar.close();
+    print('RESET: 🔄 Database closed for clean restart');
+    
+    // Reinitialize for next access
+    _initDatabase();
     
     print('RESET: ✅ UserSettingsService reset completed');
   }
