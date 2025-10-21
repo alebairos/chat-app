@@ -75,6 +75,10 @@ make build-ios
 
 ### Distribution
 
+**📚 Complete Release Guides:**
+- **Quick Start**: See `docs/RELEASE_QUICK_START.md` for 5-command dual-platform releases
+- **Full Workflow**: See `docs/DUAL_PLATFORM_RELEASE_WORKFLOW.md` for detailed process
+
 #### Android (Firebase App Distribution)
 
 **One-Command Distribution:**
