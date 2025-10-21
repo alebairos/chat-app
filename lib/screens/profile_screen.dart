@@ -41,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _showNameEditDialog() async {
     final controller = TextEditingController(text: _profileName);
-    String? errorMessage;
+    String? errorMessage = ProfileService.validateProfileName(_profileName);
 
     final result = await showDialog<String>(
       context: context,
