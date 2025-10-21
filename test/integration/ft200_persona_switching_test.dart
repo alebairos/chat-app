@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:mocktail/mocktail.dart';
-import '../../lib/services/system_mcp_service.dart';
-import '../../lib/services/chat_storage_service.dart';
-import '../../lib/config/config_loader.dart';
-import '../../lib/models/chat_message_model.dart';
-import '../../lib/models/message_type.dart';
+import 'package:ai_personas_app/services/system_mcp_service.dart';
+import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/config/config_loader.dart';
+import 'package:ai_personas_app/models/chat_message_model.dart';
+import 'package:ai_personas_app/models/message_type.dart';
 
 // Mock classes
 class MockConfigLoader extends Mock implements ConfigLoader {}

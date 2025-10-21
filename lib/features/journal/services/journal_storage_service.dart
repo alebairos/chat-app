@@ -174,7 +174,7 @@ class JournalStorageService {
 
       if (result != null) {
         _logger.debug(
-            'JournalStorage: Found journal entry for ${normalizedDate} in $language');
+            'JournalStorage: Found journal entry for $normalizedDate in $language');
       }
 
       return result;

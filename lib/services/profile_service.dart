@@ -39,6 +39,10 @@ class ProfileService {
   static String? validateProfileName(String name) {
     final trimmedName = name.trim();
 
+    if (trimmedName.isEmpty) {
+      return 'Name cannot be empty';
+    }
+
     if (trimmedName.length > 50) {
       return 'Name must be 50 characters or less';
     }
