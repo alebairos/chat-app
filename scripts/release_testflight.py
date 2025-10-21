@@ -254,20 +254,40 @@ class TestFlightRelease:
         
         # Find where to insert (after initial header/description)
         for i, line in enumerate(lines):
-            if line.startswith('## [') or line.startswith('# '):
-                if 'Changelog' not in line:  # Skip the main title
-                    header_end = i
-                    break
-            elif line.strip() == '' and i > 2:  # Empty line after description
-                header_end = i + 1
+            if line.startswith('## ['):  # Found existing version entry
+                header_end = i
+                break
+            elif line.startswith('# ') and 'Changelog' not in line:  # Found other header (not main title)
+                header_end = i
                 break
         
-        # If no existing versions found, add after description
+        # If no existing versions found, find insertion point after description
         if header_end == 0:
+            # Look for the end of the description section
+            found_title = False
             for i, line in enumerate(lines):
-                if line.strip() == '' and i > 2:
-                    header_end = i + 1
-                    break
+                if line.startswith('# ') and 'Changelog' in line:
+                    found_title = True
+                    continue
+                # After finding title, look for first empty line that indicates end of description
+                if found_title and line.strip() == '' and i > 2:
+                    # Check if next line is also empty or is a version entry
+                    if i + 1 < len(lines) and (lines[i + 1].strip() == '' or lines[i + 1].startswith('## [')):
+                        header_end = i + 1
+                        break
+            
+            # Final fallback: if still no insertion point found, add after a reasonable default
+            if header_end == 0:
+                # Find the main title and add some lines after it
+                for i, line in enumerate(lines):
+                    if line.startswith('# ') and 'Changelog' in line:
+                        # Insert after title + empty line + description + empty line
+                        header_end = min(i + 4, len(lines))
+                        break
+                
+                # Ultimate fallback: add at end if nothing else works
+                if header_end == 0:
+                    header_end = len(lines)
         
         # Insert new entry
         lines.insert(header_end, new_entry)
