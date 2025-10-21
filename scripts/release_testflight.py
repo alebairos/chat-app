@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
 """
-Simple TestFlight Release Script
+Enhanced TestFlight Release Script with Protected Branch Workflow
 Usage: 
-  python3 scripts/release_testflight.py         # Release to TestFlight
-  python3 scripts/release_testflight.py --verify # Verify setup only
+  python3 scripts/release_testflight.py --version-bump patch    # Bug fixes (2.1.0 → 2.1.1)
+  python3 scripts/release_testflight.py --version-bump minor   # New features (2.1.0 → 2.2.0)  
+  python3 scripts/release_testflight.py --version-bump major   # Breaking changes (2.1.0 → 3.0.0)
+  python3 scripts/release_testflight.py --verify              # Verify setup only
+  python3 scripts/release_testflight.py --dry-run --version-bump patch  # Preview changes
+  python3 scripts/release_testflight.py --force-branch --version-bump patch  # Emergency override
+
+Features:
+  - ✅ Branch validation (must be on 'develop')
+  - ✅ Automatic version bumping in pubspec.yaml
+  - ✅ CHANGELOG.md updates with release notes
+  - ✅ Git commits and tagging
+  - ✅ Complete TestFlight build and upload pipeline
+  - ✅ Dry run mode for safe testing
 """
 
 import subprocess
@@ -14,11 +26,16 @@ from pathlib import Path
 from datetime import datetime
 
 class TestFlightRelease:
-    def __init__(self):
+    def __init__(self, force_branch=False, version_bump=None, dry_run=False):
         self.project_root = Path(__file__).parent.parent
         self.build_dir = self.project_root / "build"
+        self.force_branch = force_branch
+        self.version_bump = version_bump
+        self.dry_run = dry_run
         self.load_env()
         self.validate_environment()
+        if not force_branch:
+            self.validate_branch()
     
     def load_env(self):
         """Load environment variables from .env file"""
@@ -46,13 +63,297 @@ class TestFlightRelease:
         
         print("✅ Environment validation passed")
     
+    def validate_branch(self):
+        """Ensure we're on the develop branch for releases"""
+        try:
+            result = subprocess.run(
+                "git branch --show-current", 
+                shell=True, 
+                capture_output=True, 
+                text=True
+            )
+            
+            if result.returncode != 0:
+                print("⚠️  Could not determine current git branch")
+                return
+            
+            current_branch = result.stdout.strip()
+            
+            if current_branch != "develop":
+                print(f"❌ Release must be from 'develop' branch")
+                print(f"   Currently on: '{current_branch}'")
+                print(f"   Switch to develop: git checkout develop")
+                print(f"   Or use --force-branch to override")
+                sys.exit(1)
+            
+            print(f"✅ On develop branch - ready for release")
+            
+        except Exception as e:
+            print(f"⚠️  Could not verify git branch: {e}")
+            if not self.force_branch:
+                print("   Use --force-branch to skip branch validation")
+                sys.exit(1)
+    
+    def validate_git_status(self):
+        """Ensure working directory is clean"""
+        try:
+            result = subprocess.run(
+                "git status --porcelain", 
+                shell=True, 
+                capture_output=True, 
+                text=True
+            )
+            
+            if result.returncode != 0:
+                print("⚠️  Could not check git status")
+                return
+            
+            if result.stdout.strip():
+                print("❌ Working directory has uncommitted changes")
+                print("   Commit or stash changes before releasing")
+                print("   Or use --force-branch to override")
+                if not self.force_branch:
+                    sys.exit(1)
+            else:
+                print("✅ Working directory is clean")
+                
+        except Exception as e:
+            print(f"⚠️  Could not verify git status: {e}")
+    
+    def get_current_version(self):
+        """Parse current version from pubspec.yaml"""
+        pubspec_file = self.project_root / "pubspec.yaml"
+        
+        if not pubspec_file.exists():
+            raise FileNotFoundError("pubspec.yaml not found")
+        
+        with open(pubspec_file, 'r') as f:
+            for line in f:
+                if line.startswith('version:'):
+                    # Extract version like "2.1.0+26"
+                    version_line = line.split(':', 1)[1].strip()
+                    return version_line
+        
+        raise ValueError("Version not found in pubspec.yaml")
+    
+    def parse_version(self, version_string):
+        """Parse version string into components"""
+        if '+' not in version_string:
+            raise ValueError(f"Invalid version format: {version_string}")
+        
+        version_part, build_part = version_string.split('+')
+        major, minor, patch = map(int, version_part.split('.'))
+        build = int(build_part)
+        
+        return {
+            'major': major,
+            'minor': minor, 
+            'patch': patch,
+            'build': build,
+            'version': version_part,
+            'full': version_string
+        }
+    
+    def bump_version(self, bump_type):
+        """Increment version based on type and update pubspec.yaml"""
+        if self.dry_run:
+            print(f"🔍 DRY RUN: Would bump version ({bump_type})")
+        
+        current_version = self.get_current_version()
+        parsed = self.parse_version(current_version)
+        
+        print(f"📋 Current version: {current_version}")
+        
+        # Increment version components
+        if bump_type == 'patch':
+            parsed['patch'] += 1
+        elif bump_type == 'minor':
+            parsed['minor'] += 1
+            parsed['patch'] = 0
+        elif bump_type == 'major':
+            parsed['major'] += 1
+            parsed['minor'] = 0
+            parsed['patch'] = 0
+        
+        # Always increment build number
+        parsed['build'] += 1
+        
+        # Create new version string
+        new_version = f"{parsed['major']}.{parsed['minor']}.{parsed['patch']}"
+        new_full_version = f"{new_version}+{parsed['build']}"
+        
+        print(f"📈 New version: {new_full_version}")
+        
+        if not self.dry_run:
+            self.update_pubspec_version(new_full_version)
+            self.update_changelog(new_version, bump_type)
+            self.commit_version_changes(new_version, bump_type)
+            self.create_git_tag(f"v{new_version}")
+        else:
+            print(f"🔍 DRY RUN: Would update CHANGELOG.md with version {new_version}")
+            print(f"🔍 DRY RUN: Would commit version changes")
+            print(f"🔍 DRY RUN: Would create git tag v{new_version}")
+        
+        return {
+            'version': new_version,
+            'full': new_full_version,
+            'build': parsed['build']
+        }
+    
+    def update_pubspec_version(self, new_version):
+        """Update version in pubspec.yaml"""
+        pubspec_file = self.project_root / "pubspec.yaml"
+        
+        with open(pubspec_file, 'r') as f:
+            content = f.read()
+        
+        # Replace version line
+        lines = content.split('\n')
+        for i, line in enumerate(lines):
+            if line.startswith('version:'):
+                lines[i] = f"version: {new_version}"
+                break
+        
+        with open(pubspec_file, 'w') as f:
+            f.write('\n'.join(lines))
+        
+        print(f"✅ Updated pubspec.yaml with version {new_version}")
+    
+    def update_changelog(self, version, bump_type):
+        """Update CHANGELOG.md with new version entry"""
+        changelog_file = self.project_root / "CHANGELOG.md"
+        
+        # Create CHANGELOG.md if it doesn't exist
+        if not changelog_file.exists():
+            with open(changelog_file, 'w') as f:
+                f.write("# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n")
+        
+        # Read current content
+        with open(changelog_file, 'r') as f:
+            content = f.read()
+        
+        # Generate version entry
+        date_str = datetime.now().strftime('%Y-%m-%d')
+        bump_description = {
+            'patch': 'Bug fixes and improvements',
+            'minor': 'New features and enhancements', 
+            'major': 'Major release with breaking changes'
+        }
+        
+        new_entry = f"""## [{version}] - {date_str}
+
+### {bump_description.get(bump_type, 'Changes')}
+- Automated release via FT-214 Protected Branch Release Workflow
+- Version bumped from previous release ({bump_type} increment)
+
+"""
+        
+        # Insert new entry after the header
+        lines = content.split('\n')
+        header_end = 0
+        
+        # Find where to insert (after initial header/description)
+        for i, line in enumerate(lines):
+            if line.startswith('## [') or line.startswith('# '):
+                if 'Changelog' not in line:  # Skip the main title
+                    header_end = i
+                    break
+            elif line.strip() == '' and i > 2:  # Empty line after description
+                header_end = i + 1
+                break
+        
+        # If no existing versions found, add after description
+        if header_end == 0:
+            for i, line in enumerate(lines):
+                if line.strip() == '' and i > 2:
+                    header_end = i + 1
+                    break
+        
+        # Insert new entry
+        lines.insert(header_end, new_entry)
+        
+        # Write updated content
+        with open(changelog_file, 'w') as f:
+            f.write('\n'.join(lines))
+        
+        print(f"✅ Updated CHANGELOG.md with version {version}")
+    
+    def commit_version_changes(self, version, bump_type):
+        """Commit version changes to git"""
+        try:
+            # Add the changed files
+            result = subprocess.run(
+                "git add pubspec.yaml CHANGELOG.md",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode != 0:
+                print(f"⚠️  Could not add files to git: {result.stderr}")
+                return
+            
+            # Create commit message
+            commit_msg = f"chore: Bump version to {version} ({bump_type})\n\n- Update pubspec.yaml version\n- Update CHANGELOG.md with release notes\n- Automated via FT-214 release workflow"
+            
+            # Commit the changes
+            result = subprocess.run(
+                f'git commit -m "{commit_msg}"',
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode == 0:
+                print(f"✅ Committed version changes for {version}")
+            else:
+                print(f"⚠️  Could not commit changes: {result.stderr}")
+                
+        except Exception as e:
+            print(f"⚠️  Could not commit version changes: {e}")
+    
+    def create_git_tag(self, tag_name):
+        """Create git tag for the new version"""
+        if self.dry_run:
+            print(f"🔍 DRY RUN: Would create git tag {tag_name}")
+            return
+        
+        try:
+            # Check if tag already exists
+            result = subprocess.run(
+                f"git tag -l {tag_name}",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            
+            if result.stdout.strip():
+                print(f"⚠️  Tag {tag_name} already exists")
+                return
+            
+            # Create the tag
+            result = subprocess.run(
+                f"git tag {tag_name}",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode == 0:
+                print(f"✅ Created git tag {tag_name}")
+            else:
+                print(f"❌ Failed to create git tag: {result.stderr}")
+                
+        except Exception as e:
+            print(f"⚠️  Could not create git tag: {e}")
+    
     def verify_setup(self):
         """Verify all setup requirements for TestFlight release"""
         print("🔍 Verifying TestFlight setup...")
         print()
         
         checks_passed = 0
-        total_checks = 5
+        total_checks = 7
         
         # Check 1: Credentials
         print("1. Checking credentials...")
@@ -125,6 +426,30 @@ class TestFlightRelease:
                 print("   ❌ iOS project file not found")
         except:
             print("   ❌ Cannot verify Bundle ID")
+        
+        # Check 6: Branch Validation
+        print("6. Checking git branch...")
+        try:
+            if not self.force_branch:
+                self.validate_branch()
+                checks_passed += 1
+            else:
+                print("   ⚠️  Branch validation skipped (--force-branch)")
+                checks_passed += 1
+        except SystemExit:
+            print("   ❌ Branch validation failed")
+        except:
+            print("   ❌ Cannot verify git branch")
+        
+        # Check 7: Git Status
+        print("7. Checking git status...")
+        try:
+            self.validate_git_status()
+            checks_passed += 1
+        except SystemExit:
+            print("   ❌ Git status validation failed")
+        except:
+            print("   ❌ Cannot verify git status")
         
         print()
         print(f"📊 Verification Results: {checks_passed}/{total_checks} checks passed")
@@ -267,6 +592,17 @@ class TestFlightRelease:
         print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print()
         
+        # Handle version bumping if requested
+        if self.version_bump:
+            print("📈 Version Management")
+            print("=" * 50)
+            version_info = self.bump_version(self.version_bump)
+            print()
+        
+        if self.dry_run:
+            print("🔍 DRY RUN COMPLETE - No actual build or upload performed")
+            return
+        
         # Execute pipeline
         self.build_flutter()
         archive_path = self.create_archive()
@@ -283,14 +619,27 @@ def main():
     parser = argparse.ArgumentParser(description='TestFlight Release Tool')
     parser.add_argument('--verify', action='store_true', 
                        help='Verify setup only (don\'t release)')
+    parser.add_argument('--force-branch', action='store_true',
+                       help='Skip branch validation (emergency use only)')
+    parser.add_argument('--version-bump', choices=['patch', 'minor', 'major'],
+                       help='Automatically bump version (patch/minor/major)')
+    parser.add_argument('--dry-run', action='store_true',
+                       help='Preview changes without executing')
     args = parser.parse_args()
     
     try:
-        releaser = TestFlightRelease()
+        releaser = TestFlightRelease(
+            force_branch=args.force_branch,
+            version_bump=args.version_bump,
+            dry_run=args.dry_run
+        )
         
         if args.verify:
             releaser.verify_setup()
         else:
+            if args.dry_run:
+                print("🔍 DRY RUN MODE - No changes will be made")
+                print()
             releaser.release()
             
     except KeyboardInterrupt:
