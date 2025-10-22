@@ -47,7 +47,15 @@ class ProfileService {
       return 'Name must be 50 characters or less';
     }
 
-    if (trimmedName.contains(RegExp(r'[<>"\\/]'))) {
+    // Check for potentially dangerous characters and patterns
+    if (trimmedName.contains(RegExp(r'[<>"\\/]')) ||
+        trimmedName.toLowerCase().contains('script') ||
+        trimmedName.toLowerCase().contains('javascript:') ||
+        trimmedName.toLowerCase().contains('jndi:') ||
+        trimmedName.contains('..') ||
+        trimmedName.contains('\${') ||
+        trimmedName.contains('DROP TABLE') ||
+        trimmedName.toLowerCase().contains('alert(')) {
       return 'Name contains invalid characters';
     }
 

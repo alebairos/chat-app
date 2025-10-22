@@ -85,6 +85,16 @@ class MockChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<void> deleteAllActivities() async {
+    // Mock implementation - no-op for this test
+  }
+
+  @override
+  Future<void> deleteAllJournalEntries() async {
+    // Mock implementation - no-op for this test
+  }
+
+  @override
   Future<List<ChatMessageModel>> searchMessages(String query) async {
     return _messages.where((m) => m.text.contains(query)).toList();
   }

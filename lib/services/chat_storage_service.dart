@@ -3,6 +3,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/chat_message_model.dart';
 import '../models/activity_model.dart';
+import '../models/user_settings_model.dart';
 import '../models/message_type.dart';
 import '../features/journal/models/journal_entry_model.dart';
 import 'dart:typed_data';
@@ -19,7 +20,12 @@ class ChatStorageService {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
-        [ChatMessageModelSchema, ActivityModelSchema, JournalEntryModelSchema],
+        [
+          ChatMessageModelSchema,
+          ActivityModelSchema,
+          UserSettingsModelSchema, // ✅ Added missing schema
+          JournalEntryModelSchema
+        ],
         directory: dir.path,
       );
     }

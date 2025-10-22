@@ -115,7 +115,6 @@ void main() {
 
         // Initialize storage service with test directory
         storageService = ChatStorageService();
-        await storageService.openDB();
 
         // Clear any existing messages
         print('🧹 Clearing database before test');
@@ -124,7 +123,13 @@ void main() {
 
       tearDown(() async {
         print('🧹 Cleaning up after test');
-        await storageService.close();
+        // Don't close the database - let DatabaseService singleton manage it
+        // Just clear the data for the next test
+        try {
+          await storageService.deleteAllMessages();
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
         if (testDir.existsSync()) {
           await testDir.delete(recursive: true);
         }

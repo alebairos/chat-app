@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2025-10-22
+
+### New features and enhancements
+- Automated release via FT-214 Protected Branch Release Workflow
+- Version bumped from previous release (minor increment)
+
+
 ## [2.1.0] - 2025-10-20
 
 ### 🎉 Major Release: Aristios 4.5 Persona & System Stability

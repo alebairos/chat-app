@@ -54,11 +54,18 @@ void main() {
 
   setUp(() async {
     storage = ChatStorageService();
+    // Clear any existing data before each test
+    await storage.deleteAllMessages();
   });
 
   tearDown(() async {
-    final isar = await storage.db;
-    await isar.close(deleteFromDisk: true);
+    // Don't close the database directly - let DatabaseService singleton manage it
+    // Just clear the data for the next test
+    try {
+      await storage.deleteAllMessages();
+    } catch (e) {
+      // Ignore errors during cleanup
+    }
   });
 
   group('ChatStorageService', () {
