@@ -5,7 +5,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_personas_app/models/activity_model.dart';
-import 'package:ai_personas_app/services/activity_memory_service.dart';
 import 'package:ai_personas_app/utils/message_id_generator.dart';
 
 void main() {

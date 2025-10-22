@@ -32,7 +32,7 @@ class JournalLanguageToggle extends StatelessWidget {
       },
       style: ButtonStyle(
         visualDensity: VisualDensity.compact,
-        textStyle: MaterialStateProperty.all(
+        textStyle: WidgetStateProperty.all(
           const TextStyle(fontSize: 12),
         ),
       ),

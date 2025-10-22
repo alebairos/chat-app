@@ -41,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _showNameEditDialog() async {
     final controller = TextEditingController(text: _profileName);
-    String? errorMessage;
+    String? errorMessage = ProfileService.validateProfileName(_profileName);
 
     final result = await showDialog<String>(
       context: context,
@@ -181,7 +181,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Navigator.of(context).pop(); // Close loading dialog
 
         // For any error (including Isar issues), assume reset worked and proceed
-        if (e.toString().contains('Isar') || e.toString().contains('database')) {
+        if (e.toString().contains('Isar') ||
+            e.toString().contains('database')) {
           // Database-related errors likely mean reset worked but connection is unstable
           _showResetCompleteDialog();
         } else {
@@ -411,8 +412,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'Reset All Data',
                       style: TextStyle(color: Colors.red),
                     ),
-                    subtitle: const Text('Clear all messages, activities, and user settings'),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.red),
+                    subtitle: const Text(
+                        'Clear all messages, activities, and user settings'),
+                    trailing:
+                        const Icon(Icons.chevron_right, color: Colors.red),
                     onTap: _showResetConfirmationDialog,
                   ),
                 ],

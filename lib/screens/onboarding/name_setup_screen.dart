@@ -20,6 +20,20 @@ class _NameSetupScreenState extends State<NameSetupScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // _errorMessage starts as null - no error shown initially
+    // Validation will occur when user starts typing
+
+    // Listen to text changes to update button state
+    _nameController.addListener(() {
+      setState(() {
+        // This will trigger a rebuild to update button state
+      });
+    });
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();

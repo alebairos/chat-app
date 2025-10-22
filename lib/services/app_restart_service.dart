@@ -1,5 +1,3 @@
-import 'database_service.dart';
-
 /// Service for restarting the entire app after major state changes like data reset
 class AppRestartService {
   static AppRestartService? _instance;
@@ -14,13 +12,12 @@ class AppRestartService {
     _restartCallback = callback;
   }
 
-  /// Restart the entire app and ensure database is reinitialized
+  /// Restart the entire app
   Future<void> restartApp() async {
     print('RESET: 🔄 AppRestartService starting restart...');
 
-    // Ensure database is properly reinitialized
-    await DatabaseService.instance.reinitializeDatabase();
-    print('RESET: 📱 Database reinitialized');
+    // Small delay to ensure all operations are complete
+    await Future.delayed(const Duration(milliseconds: 500));
 
     // Restart the app UI
     _restartCallback?.call();

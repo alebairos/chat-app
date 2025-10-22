@@ -74,7 +74,7 @@ void main() {
 
       // Filter by 24 hours
       const hours = 24;
-      final cutoff = now.subtract(Duration(hours: hours));
+      final cutoff = now.subtract(const Duration(hours: hours));
       final recentMessages = testMessages
           .where((msg) => (msg['timestamp'] as DateTime).isAfter(cutoff))
           .toList();

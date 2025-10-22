@@ -74,8 +74,8 @@ void main() {
     testWidgets('should handle multiple activities in queue', (tester) async {
       // Arrange: Queue multiple activities
       await queue.ActivityQueue.queueActivity('Bebi água', DateTime.now());
-      await queue.ActivityQueue.queueActivity(
-          'Fiz exercício', DateTime.now().subtract(Duration(minutes: 30)));
+      await queue.ActivityQueue.queueActivity('Fiz exercício',
+          DateTime.now().subtract(const Duration(minutes: 30)));
 
       // Assert: Multiple items queued
       expect(queue.ActivityQueue.queueSize, 2);
