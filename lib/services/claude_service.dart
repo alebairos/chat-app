@@ -675,14 +675,9 @@ class ClaudeService {
       final rawResponse = await _callClaudeWithPrompt(enrichedPrompt);
       final dataInformedResponse = _cleanResponseForUser(rawResponse);
 
-      // Add to conversation history
-      _conversationHistory.add({
-        'role': 'user',
-        'content': [
-          {'type': 'text', 'text': userMessage}
-        ],
-      });
-
+      // FT-210: Add assistant response to conversation history
+      // NOTE: User message already added in _sendMessageInternal() at line 393-399
+      // Only add assistant response here to avoid duplicates
       _conversationHistory.add({
         'role': 'assistant',
         'content': [
