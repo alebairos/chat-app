@@ -3,6 +3,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:ai_personas_app/services/chat_storage_service.dart';
+import 'package:ai_personas_app/services/database_service.dart';
 import 'package:ai_personas_app/models/message_type.dart';
 import 'dart:typed_data';
 import 'dart:io';
@@ -54,11 +55,18 @@ void main() {
 
   setUp(() async {
     storage = ChatStorageService();
+    // Clear any existing data before each test
+    await storage.deleteAllMessages();
   });
 
   tearDown(() async {
-    final isar = await storage.db;
-    await isar.close(deleteFromDisk: true);
+    // Don't close the database directly - let DatabaseService singleton manage it
+    // Just clear the data for the next test
+    try {
+      await storage.deleteAllMessages();
+    } catch (e) {
+      // Ignore errors during cleanup
+    }
   });
 
   group('ChatStorageService', () {

@@ -123,6 +123,16 @@ class FakeChatStorageService implements ChatStorageService {
   }
 
   @override
+  Future<void> deleteAllActivities() async {
+    // Mock implementation - no-op for this test
+  }
+
+  @override
+  Future<void> deleteAllJournalEntries() async {
+    // Mock implementation - no-op for this test
+  }
+
+  @override
   Future<List<ChatMessageModel>> searchMessages(String query) async {
     final messages = await getMessages();
     return messages
@@ -131,10 +141,12 @@ class FakeChatStorageService implements ChatStorageService {
   }
 
   @override
-  Future<List<ChatMessageModel>> getMessagesForDate(DateTime startDate, DateTime endDate) async {
-    return _isar._chatMessageModels._messages.where((m) => 
-      m.timestamp.isAfter(startDate) && m.timestamp.isBefore(endDate)
-    ).toList();
+  Future<List<ChatMessageModel>> getMessagesForDate(
+      DateTime startDate, DateTime endDate) async {
+    return _isar._chatMessageModels._messages
+        .where((m) =>
+            m.timestamp.isAfter(startDate) && m.timestamp.isBefore(endDate))
+        .toList();
   }
 
   @override
