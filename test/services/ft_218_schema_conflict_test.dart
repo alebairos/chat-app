@@ -7,7 +7,7 @@ import 'package:ai_personas_app/features/journal/models/journal_entry_model.dart
 import 'package:ai_personas_app/models/message_type.dart';
 
 /// FT-218: Tests for Isar schema conflict resolution
-/// 
+///
 /// These tests verify that all services can access all required collections
 /// regardless of initialization order, preventing "Collection not found" errors.
 void main() {
@@ -256,7 +256,7 @@ void main() {
         expect(await isar.chatMessageModels.count(), 0);
         expect(await isar.activityModels.count(), 0);
         expect(await isar.journalEntryModels.count(), 0);
-        
+
         // Should have fresh user settings
         expect(await isar.userSettingsModels.count(), 1);
         final newSettings = await isar.userSettingsModels.where().findFirst();
@@ -281,10 +281,12 @@ void main() {
         );
 
         // All collections should be accessible
-        expect(() => isar.userSettingsModels.where().findAll(), returnsNormally);
+        expect(
+            () => isar.userSettingsModels.where().findAll(), returnsNormally);
         expect(() => isar.chatMessageModels.where().findAll(), returnsNormally);
         expect(() => isar.activityModels.where().findAll(), returnsNormally);
-        expect(() => isar.journalEntryModels.where().findAll(), returnsNormally);
+        expect(
+            () => isar.journalEntryModels.where().findAll(), returnsNormally);
 
         await isar.close(deleteFromDisk: true);
       });
@@ -331,7 +333,7 @@ void main() {
         // Verify all expected collections are available
         final collections = [
           'ChatMessageModel',
-          'ActivityModel', 
+          'ActivityModel',
           'UserSettingsModel',
           'JournalEntryModel',
         ];
@@ -352,7 +354,8 @@ void main() {
                 isar.journalEntryModels;
                 break;
             }
-          }, returnsNormally, reason: 'Collection $collectionName should be available');
+          }, returnsNormally,
+              reason: 'Collection $collectionName should be available');
         }
 
         await isar.close(deleteFromDisk: true);

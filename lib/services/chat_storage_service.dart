@@ -21,9 +21,9 @@ class ChatStorageService {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
         [
-          ChatMessageModelSchema, 
-          ActivityModelSchema, 
-          UserSettingsModelSchema,  // ✅ Added missing schema
+          ChatMessageModelSchema,
+          ActivityModelSchema,
+          UserSettingsModelSchema, // ✅ Added missing schema
           JournalEntryModelSchema
         ],
         directory: dir.path,

@@ -7,7 +7,7 @@ import 'package:ai_personas_app/features/journal/models/journal_entry_model.dart
 import 'package:ai_personas_app/models/message_type.dart';
 
 /// FT-217: Simplified tests for database reset functionality
-/// 
+///
 /// These tests verify the core reset logic without depending on service initialization.
 void main() {
   group('FT-217: Database Reset Core Logic', () {
@@ -181,7 +181,7 @@ void main() {
       });
 
       final settings = await isar.userSettingsModels.where().findFirst();
-      
+
       expect(settings, isNotNull);
       expect(settings!.hasCompletedOnboarding, false);
       expect(settings.userName, null);
