@@ -61,9 +61,8 @@ class UserSettingsService {
     final isar = await database;
 
     // Try to get existing settings
-    UserSettingsModel? settings = await isar.userSettingsModels
-        .where()
-        .findFirst();
+    UserSettingsModel? settings =
+        await isar.userSettingsModels.where().findFirst();
 
     if (settings == null) {
       // Create initial settings
@@ -79,7 +78,8 @@ class UserSettingsService {
   /// Check if user should see onboarding flow
   Future<bool> shouldShowOnboarding() async {
     final settings = await _getUserSettings();
-    print('RESET: 👤 User settings: hasCompletedOnboarding=${settings.hasCompletedOnboarding}');
+    print(
+        'RESET: 👤 User settings: hasCompletedOnboarding=${settings.hasCompletedOnboarding}');
     final shouldShow = !settings.hasCompletedOnboarding;
     print('RESET: 🔍 Should show onboarding: $shouldShow');
     return shouldShow;
@@ -150,32 +150,32 @@ class UserSettingsService {
   Future<void> resetAllUserData() async {
     print('RESET: 💾 UserSettingsService starting reset...');
     final isar = await database;
-    
+
     await isar.writeTxn(() async {
       // Clear all collections
       await isar.userSettingsModels.clear();
       await isar.chatMessageModels.clear();
       await isar.activityModels.clear();
-      
+
       // Try to clear journal entries (may not exist)
       try {
         await isar.journalEntryModels.clear();
       } catch (e) {
         print('RESET: ℹ️ Journal entries not found (OK): $e');
       }
-      
+
       // Create fresh user settings
       final newSettings = UserSettingsModel.initial();
       await isar.userSettingsModels.put(newSettings);
     });
-    
+
     // Close the current database instance to ensure clean restart
     await isar.close();
     print('RESET: 🔄 Database closed for clean restart');
-    
+
     // Reinitialize for next access
     _initDatabase();
-    
+
     print('RESET: ✅ UserSettingsService reset completed');
   }
 
