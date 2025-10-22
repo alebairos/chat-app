@@ -96,3 +96,9 @@ lib/generated_plugin_registrant.dart
 /coverage/html/
 coverage/
 Symbols/
+
+# Isar database files (test databases should not be tracked)
+*.isar
+*.isar.lock
+test_*.isar
+test_*.isar.lock
