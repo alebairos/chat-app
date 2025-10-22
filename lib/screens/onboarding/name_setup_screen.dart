@@ -24,7 +24,7 @@ class _NameSetupScreenState extends State<NameSetupScreen> {
     super.initState();
     // _errorMessage starts as null - no error shown initially
     // Validation will occur when user starts typing
-    
+
     // Listen to text changes to update button state
     _nameController.addListener(() {
       setState(() {
@@ -140,9 +140,9 @@ class _NameSetupScreenState extends State<NameSetupScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _errorMessage == null && 
-                                 _nameController.text.trim().isNotEmpty && 
-                                 !_isLoading
+                      onPressed: _errorMessage == null &&
+                              _nameController.text.trim().isNotEmpty &&
+                              !_isLoading
                           ? _saveName
                           : null,
                       style: ElevatedButton.styleFrom(
