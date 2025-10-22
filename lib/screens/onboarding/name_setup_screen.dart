@@ -20,6 +20,13 @@ class _NameSetupScreenState extends State<NameSetupScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize validation state
+    _validateName(_nameController.text);
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
@@ -126,9 +133,7 @@ class _NameSetupScreenState extends State<NameSetupScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _errorMessage == null &&
-                              _nameController.text.trim().isNotEmpty &&
-                              !_isLoading
+                      onPressed: _errorMessage == null && !_isLoading
                           ? _saveName
                           : null,
                       style: ElevatedButton.styleFrom(

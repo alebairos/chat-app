@@ -959,7 +959,7 @@ Your role: Be the protagonist of this conversation with your authentic philosoph
       }
 
       // FT-193: Add compliance reinforcement at the end (recency bias)
-      final complianceReinforcement = '''
+      const complianceReinforcement = '''
 
 ## CRITICAL COMPLIANCE CHECKPOINT
 Before responding, verify:

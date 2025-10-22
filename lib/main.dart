@@ -9,6 +9,7 @@ import 'screens/onboarding/onboarding_flow.dart';
 import 'services/onboarding_manager.dart';
 import 'services/oracle_static_cache.dart';
 import 'services/dimension_display_service.dart';
+import 'services/app_restart_service.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
@@ -62,12 +63,34 @@ Future<void> main() async {
   runApp(const ChatApp());
 }
 
-class ChatApp extends StatelessWidget {
+class ChatApp extends StatefulWidget {
   const ChatApp({super.key});
+
+  @override
+  State<ChatApp> createState() => _ChatAppState();
+}
+
+class _ChatAppState extends State<ChatApp> {
+  Key _appKey = UniqueKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Register restart callback with the service
+    AppRestartService.instance.setRestartCallback(_restartApp);
+  }
+
+  void _restartApp() {
+    print('RESET: 🔄 Restarting app with new key...');
+    setState(() {
+      _appKey = UniqueKey();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      key: _appKey,
       title: 'AI Personas da Lyfe',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -95,12 +118,14 @@ class _HomeScreenState extends State<HomeScreen>
   late TabController _tabController;
   int _currentIndex = 0;
   bool _isCheckingOnboarding = true;
+  bool _shouldShowOnboarding = false;
   String _currentPersonaDisplayName =
       'Loading...'; // FT-208: Track persona name
 
   @override
   void initState() {
     super.initState();
+    print('RESET: 🏠 HomeScreen initializing...');
     _tabController = TabController(length: 4, vsync: this, initialIndex: 0);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
@@ -109,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen>
         });
       }
     });
-    _checkAndShowOnboarding();
+    _checkOnboardingStatus();
     _loadCurrentPersonaName(); // FT-208: Load initial persona name
   }
 
@@ -133,22 +158,21 @@ class _HomeScreenState extends State<HomeScreen>
     _loadCurrentPersonaName();
   }
 
-  Future<void> _checkAndShowOnboarding() async {
+  Future<void> _checkOnboardingStatus() async {
+    print('RESET: 🔍 Checking onboarding status...');
     final shouldShow = await OnboardingManager.shouldShowOnboarding();
+    print('RESET: 🎯 Should show onboarding: $shouldShow');
 
     setState(() {
       _isCheckingOnboarding = false;
+      _shouldShowOnboarding = shouldShow;
     });
+  }
 
-    if (shouldShow && mounted) {
-      // Show onboarding flow
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const OnboardingFlow(),
-          fullscreenDialog: true,
-        ),
-      );
-    }
+  void _onOnboardingComplete() {
+    setState(() {
+      _shouldShowOnboarding = false;
+    });
   }
 
   @override
@@ -164,6 +188,13 @@ class _HomeScreenState extends State<HomeScreen>
         body: Center(
           child: CircularProgressIndicator(),
         ),
+      );
+    }
+
+    // Show onboarding first if user hasn't completed it
+    if (_shouldShowOnboarding) {
+      return OnboardingFlow(
+        onComplete: _onOnboardingComplete,
       );
     }
 
@@ -197,7 +228,8 @@ class _HomeScreenState extends State<HomeScreen>
               onPersonaChanged: _refreshPersonaName), // FT-208: Pass callback
           const StatsScreen(),
           const JournalScreen(),
-          const ProfileScreen(),
+          ProfileScreen(
+              onPersonaChanged: _refreshPersonaName), // FT-213: Add callback
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

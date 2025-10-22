@@ -1,0 +1,8 @@
+{
+  "appDistribution": {
+    "app": "1:807856535419:android:39a9db3b2fa8c010d52fde",
+    "releaseNotesFile": "RELEASE_NOTES.txt",
+    "groups": ["internal-testers"]
+  }
+}
+

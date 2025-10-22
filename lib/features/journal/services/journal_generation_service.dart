@@ -219,7 +219,7 @@ IMPORTANT JSON RULES:
           response.contains('moment')) {
         _logger.warning(
             'JournalGeneration: Claude is rate limiting, retrying in 5 seconds...');
-        await Future.delayed(Duration(seconds: 5));
+        await Future.delayed(const Duration(seconds: 5));
 
         // Retry once
         final retryResponse = await claudeService.sendMessage(prompt);
