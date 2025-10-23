@@ -28,6 +28,8 @@ dependencies:
   intl: ^0.18.1
   # File picker for chat import
   file_picker: ^8.1.2
+  # Image picker for profile pictures
+  image_picker: ^1.0.4
   # SharedPreferences for onboarding state
   shared_preferences: ^2.2.2
 

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../models/journal_entry_model.dart';
 
@@ -26,6 +27,12 @@ class JournalEntryCard extends StatelessWidget {
             _buildHeader(),
 
             const SizedBox(height: 16),
+
+            // Generated image (if available)
+            if (entry.imageData != null) ...[
+              _buildGeneratedImage(),
+              const SizedBox(height: 16),
+            ],
 
             // Journal content
             _buildContent(),
@@ -70,6 +77,51 @@ class JournalEntryCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Build the generated image display
+  Widget _buildGeneratedImage() {
+    if (entry.imageData == null) return const SizedBox.shrink();
+
+    final imageBytes = Uint8List.fromList(entry.imageData!);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: GestureDetector(
+          onTap: () => _showFullScreenImage(imageBytes),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image
+              Image.memory(
+                imageBytes,
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Show full-screen image viewer
+  void _showFullScreenImage(Uint8List imageBytes) {
+    // Note: This would need to be called with context from parent widget
+    // For now, we'll keep the tap gesture but implement full-screen later
   }
 
   /// Build the main journal content

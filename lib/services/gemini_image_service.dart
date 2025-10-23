@@ -68,10 +68,12 @@ class GeminiImageService {
 
   /// Generate an image using Vertex AI Imagen API or Google AI Studio
   /// Returns a map with 'imageBytes', 'description', and 'prompt'
+  /// [inputImageBytes] - Optional input image for style transfer or reference
   Future<Map<String, dynamic>?> generateImage({
     required String prompt,
     String aspectRatio = '1:1',
     int retryCount = 3,
+    Uint8List? inputImageBytes,
   }) async {
     if (!_isInitialized) {
       await initialize();
@@ -90,18 +92,18 @@ class GeminiImageService {
 
       if (_projectId != null && _accessToken != null) {
         // Use Vertex AI Imagen API (preferred)
-        imageBytes = await _generateImageWithVertexAI(prompt, aspectRatio);
+        imageBytes = await _generateImageWithVertexAI(prompt, aspectRatio, inputImageBytes);
       } else if (_apiKey != null) {
         // Use Google AI Studio API with Gemini
         Logger().log('Using Google AI Studio API for image generation');
-        imageBytes = await _generateImageWithGoogleAI(prompt, aspectRatio);
+        imageBytes = await _generateImageWithGoogleAI(prompt, aspectRatio, inputImageBytes);
       }
 
       if (imageBytes != null) {
         Logger().log('Image generated successfully');
         return {
           'imageBytes': imageBytes,
-          'description': 'Generated image: $prompt',
+          'description': prompt,
           'prompt': prompt,
           'aspectRatio': aspectRatio,
         };
@@ -134,7 +136,7 @@ class GeminiImageService {
   }
 
   /// Generate image using Vertex AI Imagen API
-  Future<Uint8List?> _generateImageWithVertexAI(String prompt, String aspectRatio) async {
+  Future<Uint8List?> _generateImageWithVertexAI(String prompt, String aspectRatio, [Uint8List? inputImageBytes]) async {
     try {
       // Build the API endpoint
       final endpoint = 'https://$_location-aiplatform.googleapis.com/v1/projects/$_projectId/locations/$_location/publishers/google/models/imagen-4.0-generate-001:predict';
@@ -195,7 +197,7 @@ class GeminiImageService {
   }
 
   /// Generate image using Google AI Studio API
-  Future<Uint8List?> _generateImageWithGoogleAI(String prompt, String aspectRatio) async {
+  Future<Uint8List?> _generateImageWithGoogleAI(String prompt, String aspectRatio, [Uint8List? inputImageBytes]) async {
     try {
       // Build the API endpoint for Gemini 2.5 Flash Image
       final endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
@@ -203,12 +205,24 @@ class GeminiImageService {
       Logger().log('Making request to Google AI Studio Gemini API: $endpoint');
 
       // Prepare the request body according to Gemini API specification
+      final List<Map<String, dynamic>> parts = [{'text': prompt}];
+
+      // Add input image if provided
+      if (inputImageBytes != null) {
+        final base64Image = base64Encode(inputImageBytes);
+        parts.add({
+          'inlineData': {
+            'mimeType': 'image/jpeg',
+            'data': base64Image
+          }
+        });
+        Logger().log('Added input image to request (${inputImageBytes.length} bytes)');
+      }
+
       final requestBody = {
         'contents': [
           {
-            'parts': [
-              {'text': prompt}
-            ]
+            'parts': parts
           }
         ],
         'generationConfig': {

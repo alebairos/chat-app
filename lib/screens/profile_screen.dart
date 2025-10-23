@@ -9,6 +9,7 @@ import '../services/onboarding_manager.dart';
 import '../services/app_restart_service.dart';
 import '../services/gemini_image_service.dart';
 import '../services/chat_storage_service.dart';
+import '../services/profile_picture_service.dart';
 import '../models/message_type.dart';
 
 /// Profile screen with persona management and settings access
@@ -31,12 +32,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _totalGeneratedImages = 0;
   Uint8List? _generatedImageData;
   String? _generatedImageDescription;
+  Uint8List? _profilePictureData;
+  bool _hasProfilePicture = false;
 
   @override
   void initState() {
     super.initState();
     _loadProfileName();
     _loadImageData();
+    _loadProfilePicture();
   }
 
   Future<void> _loadProfileName() async {
@@ -76,21 +80,229 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _loadProfilePicture() async {
+    try {
+      final bool hasProfilePicture = await ProfilePictureService.hasProfilePicture();
+      if (hasProfilePicture) {
+        final Uint8List? pictureData = await ProfilePictureService.getProfilePictureBytes();
+        if (mounted) {
+          setState(() {
+            _hasProfilePicture = hasProfilePicture;
+            _profilePictureData = pictureData;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _hasProfilePicture = false;
+            _profilePictureData = null;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasProfilePicture = false;
+          _profilePictureData = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _showProfilePictureOptions() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _uploadProfilePictureFromGallery();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _takeProfilePicture();
+              },
+            ),
+            if (_hasProfilePicture)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Remove Picture', style: TextStyle(color: Colors.red)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _deleteProfilePicture();
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _uploadProfilePictureFromGallery() async {
+    try {
+      final result = await ProfilePictureService.uploadProfilePicture();
+
+      if (mounted) {
+        if (result.success) {
+          await _loadProfilePicture();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Profile picture uploaded successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (result.isCancelled) {
+          // User cancelled, no error message needed
+          return;
+        } else {
+          // Show appropriate error message
+          String message;
+          Color backgroundColor;
+
+          if (result.isSimulatorError) {
+            message = '⚠️ ${result.errorMessage ?? "Simulator limitation detected"}';
+            backgroundColor = Colors.orange;
+          } else {
+            message = '❌ ${result.errorMessage ?? "Failed to upload profile picture"}';
+            backgroundColor = Colors.red;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: backgroundColor,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Unexpected error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _takeProfilePicture() async {
+    try {
+      final result = await ProfilePictureService.takeProfilePicture();
+
+      if (mounted) {
+        if (result.success) {
+          await _loadProfilePicture();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Profile picture captured successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (result.isCancelled) {
+          // User cancelled, no error message needed
+          return;
+        } else {
+          // Show appropriate error message
+          String message;
+          Color backgroundColor;
+
+          if (result.isSimulatorError) {
+            message = '⚠️ ${result.errorMessage ?? "Simulator limitation detected"}';
+            backgroundColor = Colors.orange;
+          } else {
+            message = '❌ ${result.errorMessage ?? "Failed to capture profile picture"}';
+            backgroundColor = Colors.red;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: backgroundColor,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Unexpected error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteProfilePicture() async {
+    try {
+      final bool success = await ProfilePictureService.deleteProfilePicture();
+      if (success) {
+        await _loadProfilePicture();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Profile picture removed'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to remove profile picture: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _testImageGeneration() async {
     try {
       await GeminiImageService.instance.initialize();
+
+      // Check if profile picture is available
+      final profilePictureBytes = await ProfilePictureService.getProfilePictureBytes();
+      final hasProfilePicture = profilePictureBytes != null;
+
+      final promptText = hasProfilePicture
+          ? "Generate a beautiful artistic image of the user with a friendly dog. Show the user and dog together in a scenic, joyful setting."
+          : "Generate an image of a dog";
 
       if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const AlertDialog(
+          builder: (context) => AlertDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Generating an image of a dog...'),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(hasProfilePicture
+                    ? 'Generating personalized image with your profile...'
+                    : 'Generating an image of a dog...'),
               ],
             ),
           ),
@@ -98,8 +310,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       final result = await GeminiImageService.instance.generateImage(
-        prompt: "generate an image of a dog",
+        prompt: promptText,
         aspectRatio: "1:1",
+        inputImageBytes: profilePictureBytes,
       );
 
       if (mounted) {
@@ -167,12 +380,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fit: BoxFit.contain,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _generatedImageDescription ?? 'Generated image of a dog',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -476,6 +683,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  // Profile Picture Section
+                  ListTile(
+                    leading: GestureDetector(
+                      onTap: _showProfilePictureOptions,
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: _profilePictureData != null
+                            ? MemoryImage(_profilePictureData!)
+                            : null,
+                        child: _profilePictureData == null
+                            ? const Icon(
+                                Icons.camera_alt,
+                                color: Colors.grey,
+                                size: 20,
+                              )
+                            : null,
+                      ),
+                    ),
+                    title: Text(
+                      _hasProfilePicture ? 'Profile Picture' : 'Add Profile Picture',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: _hasProfilePicture
+                            ? FontWeight.w500
+                            : FontWeight.normal,
+                        color: _hasProfilePicture ? null : Colors.grey[600],
+                      ),
+                    ),
+                    subtitle: Text(
+                      _hasProfilePicture ? 'Tap to change or remove' : 'Upload or take a photo',
+                    ),
+                    trailing: const Icon(Icons.edit),
+                    onTap: _showProfilePictureOptions,
+                  ),
+
+                  const Divider(),
 
                   // Profile Name Section
                   ListTile(

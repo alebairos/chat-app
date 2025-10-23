@@ -49,5 +49,7 @@
 	<string>This app needs microphone access to record audio messages.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to allow you to select and share images in conversations with AI personas.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take profile pictures and photos for conversations with AI personas.</string>
 </dict>
 </plist>

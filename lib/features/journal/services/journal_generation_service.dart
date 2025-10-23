@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import '../models/journal_entry_model.dart';
 import '../../../models/chat_message_model.dart';
 import '../../../models/activity_model.dart';
@@ -7,6 +8,8 @@ import '../../../services/activity_memory_service.dart';
 import '../../../services/claude_service.dart';
 import '../../../services/oracle_static_cache.dart';
 import '../../../services/profile_service.dart';
+import '../../../services/gemini_image_service.dart';
+import '../../../services/profile_picture_service.dart';
 import '../../../utils/logger.dart';
 import 'journal_storage_service.dart';
 
@@ -46,6 +49,41 @@ class JournalGenerationService {
       final generationTime =
           DateTime.now().difference(startTime).inMilliseconds / 1000;
 
+      // Generate image for the journal content (using Portuguese version)
+      Uint8List? imageData;
+      String? imageDescription;
+
+      try {
+        final portugueseContent = parsedResponse['pt_BR'] ?? _getFallbackContent('pt_BR');
+        _logger.info('JournalGeneration: Generating image for journal content');
+
+        // Create image prompt based on journal content and get profile picture
+        final imagePrompt = await _createImagePrompt(portugueseContent);
+        final profilePictureBytes = await ProfilePictureService.getProfilePictureBytes();
+
+        // Generate image using Gemini service
+        final imageResult = await GeminiImageService.instance.generateImage(
+          prompt: imagePrompt,
+          aspectRatio: '16:9', // Wide format for journal entries
+          inputImageBytes: profilePictureBytes, // Include profile picture if available
+        );
+
+        if (profilePictureBytes != null) {
+          _logger.info('JournalGeneration: Using profile picture as input for image generation (${profilePictureBytes.length} bytes)');
+        }
+
+        if (imageResult != null) {
+          imageData = imageResult['imageBytes'];
+          imageDescription = imageResult['description'];
+          _logger.info('JournalGeneration: Successfully generated image for journal');
+        } else {
+          _logger.warning('JournalGeneration: Failed to generate image for journal');
+        }
+      } catch (e) {
+        _logger.warning('JournalGeneration: Error generating image: $e');
+        // Continue without image - don't fail the entire journal generation
+      }
+
       for (final lang in ['pt_BR', 'en_US']) {
         final content = parsedResponse[lang] ?? _getFallbackContent(lang);
         final entry = JournalEntryModel.create(
@@ -58,6 +96,8 @@ class JournalGenerationService {
           personaKey: "iThereWithOracle42",
           generationTimeSeconds: generationTime,
           promptVersion: "1.0",
+          imageData: imageData?.toList(), // Convert Uint8List to List<int> for Isar
+          imageDescription: imageDescription,
         );
 
         await JournalStorageService.saveJournalEntry(entry);
@@ -194,6 +234,27 @@ IMPORTANT JSON RULES:
         'en_US': _getFallbackContent('en_US'),
       };
     }
+  }
+
+  /// Create an image generation prompt based on journal content
+  static Future<String> _createImagePrompt(String journalContent) async {
+    // Check if user has a profile picture
+    final bool hasProfilePicture = await ProfilePictureService.hasProfilePicture();
+
+    // Create base prompt from journal content
+    final basePrompt = journalContent.length > 200 ? journalContent.substring(0, 200) + '...' : journalContent;
+
+    String prompt;
+    if (hasProfilePicture) {
+      // Enhanced prompt when profile picture is available
+      prompt = 'Create a beautiful, artistic illustration that depicts a scene from this journal entry: $basePrompt. The image should show the user (based on their profile picture) engaging in the actual activities, locations, and moments described in the journal. Incorporate the user as the main character in this cohesive scene, showing them participating in their daily activities. Use vibrant colors, abstract elements, and emotional imagery to capture the mood and atmosphere of their day. Style: modern digital art, dreamy, inspirational, scenic composition with the user as the focal point.';
+    } else {
+      // Original prompt when no profile picture is available
+      prompt = 'Create a beautiful, artistic illustration that depicts a scene from this journal entry: $basePrompt. Show the actual activities, locations, and moments described in the journal as a cohesive scene. Use vibrant colors, abstract elements, and emotional imagery to capture the mood and atmosphere of the day. Style: modern digital art, dreamy, inspirational, scenic composition.';
+    }
+
+    _logger.info('JournalGeneration: Created image prompt with profile picture context: $hasProfilePicture');
+    return prompt;
   }
 
   /// Get fallback content when parsing fails

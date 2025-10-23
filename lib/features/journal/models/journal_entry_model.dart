@@ -32,6 +32,10 @@ class JournalEntryModel {
   String? extractedInsights; // JSON string of personality insights
   double? memoryRelevanceScore; // 0.0-1.0 for future memory selection
 
+  // Generated image data
+  List<int>? imageData; // Uint8List stored as List<int> for Isar compatibility
+  String? imageDescription; // Description of the generated image
+
   JournalEntryModel();
 
   JournalEntryModel.create({
@@ -44,6 +48,8 @@ class JournalEntryModel {
     this.personaKey,
     required this.generationTimeSeconds,
     this.promptVersion,
+    this.imageData,
+    this.imageDescription,
   }) : createdAt = DateTime.now();
 
   /// Get a summary of the journal content (first 200 characters)

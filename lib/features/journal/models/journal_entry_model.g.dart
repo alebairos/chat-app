@@ -47,38 +47,48 @@ const JournalEntryModelSchema = CollectionSchema(
       name: r'generationTimeSeconds',
       type: IsarType.double,
     ),
-    r'language': PropertySchema(
+    r'imageData': PropertySchema(
       id: 6,
+      name: r'imageData',
+      type: IsarType.longList,
+    ),
+    r'imageDescription': PropertySchema(
+      id: 7,
+      name: r'imageDescription',
+      type: IsarType.string,
+    ),
+    r'language': PropertySchema(
+      id: 8,
       name: r'language',
       type: IsarType.string,
     ),
     r'memoryRelevanceScore': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'memoryRelevanceScore',
       type: IsarType.double,
     ),
     r'messageCount': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'messageCount',
       type: IsarType.long,
     ),
     r'oracleVersion': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'oracleVersion',
       type: IsarType.string,
     ),
     r'personaKey': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'personaKey',
       type: IsarType.string,
     ),
     r'promptVersion': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'promptVersion',
       type: IsarType.string,
     ),
     r'summary': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'summary',
       type: IsarType.string,
     )
@@ -150,6 +160,18 @@ int _journalEntryModelEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.imageData;
+    if (value != null) {
+      bytesCount += 3 + value.length * 8;
+    }
+  }
+  {
+    final value = object.imageDescription;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.language.length * 3;
   {
     final value = object.oracleVersion;
@@ -185,13 +207,15 @@ void _journalEntryModelSerialize(
   writer.writeDateTime(offsets[3], object.date);
   writer.writeString(offsets[4], object.extractedInsights);
   writer.writeDouble(offsets[5], object.generationTimeSeconds);
-  writer.writeString(offsets[6], object.language);
-  writer.writeDouble(offsets[7], object.memoryRelevanceScore);
-  writer.writeLong(offsets[8], object.messageCount);
-  writer.writeString(offsets[9], object.oracleVersion);
-  writer.writeString(offsets[10], object.personaKey);
-  writer.writeString(offsets[11], object.promptVersion);
-  writer.writeString(offsets[12], object.summary);
+  writer.writeLongList(offsets[6], object.imageData);
+  writer.writeString(offsets[7], object.imageDescription);
+  writer.writeString(offsets[8], object.language);
+  writer.writeDouble(offsets[9], object.memoryRelevanceScore);
+  writer.writeLong(offsets[10], object.messageCount);
+  writer.writeString(offsets[11], object.oracleVersion);
+  writer.writeString(offsets[12], object.personaKey);
+  writer.writeString(offsets[13], object.promptVersion);
+  writer.writeString(offsets[14], object.summary);
 }
 
 JournalEntryModel _journalEntryModelDeserialize(
@@ -208,12 +232,14 @@ JournalEntryModel _journalEntryModelDeserialize(
   object.extractedInsights = reader.readStringOrNull(offsets[4]);
   object.generationTimeSeconds = reader.readDouble(offsets[5]);
   object.id = id;
-  object.language = reader.readString(offsets[6]);
-  object.memoryRelevanceScore = reader.readDoubleOrNull(offsets[7]);
-  object.messageCount = reader.readLong(offsets[8]);
-  object.oracleVersion = reader.readStringOrNull(offsets[9]);
-  object.personaKey = reader.readStringOrNull(offsets[10]);
-  object.promptVersion = reader.readStringOrNull(offsets[11]);
+  object.imageData = reader.readLongList(offsets[6]);
+  object.imageDescription = reader.readStringOrNull(offsets[7]);
+  object.language = reader.readString(offsets[8]);
+  object.memoryRelevanceScore = reader.readDoubleOrNull(offsets[9]);
+  object.messageCount = reader.readLong(offsets[10]);
+  object.oracleVersion = reader.readStringOrNull(offsets[11]);
+  object.personaKey = reader.readStringOrNull(offsets[12]);
+  object.promptVersion = reader.readStringOrNull(offsets[13]);
   return object;
 }
 
@@ -237,18 +263,22 @@ P _journalEntryModelDeserializeProp<P>(
     case 5:
       return (reader.readDouble(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongList(offset)) as P;
     case 7:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 9:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 10:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 11:
       return (reader.readStringOrNull(offset)) as P;
     case 12:
+      return (reader.readStringOrNull(offset)) as P;
+    case 13:
+      return (reader.readStringOrNull(offset)) as P;
+    case 14:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1175,6 +1205,323 @@ extension JournalEntryModelQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'imageData',
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'imageData',
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'imageData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'imageData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'imageData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'imageData',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'imageData',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'imageData',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'imageData',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'imageData',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'imageData',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDataLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'imageData',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'imageDescription',
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'imageDescription',
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'imageDescription',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'imageDescription',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'imageDescription',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'imageDescription',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'imageDescription',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'imageDescription',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'imageDescription',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'imageDescription',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'imageDescription',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterFilterCondition>
+      imageDescriptionIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'imageDescription',
+        value: '',
       ));
     });
   }
@@ -2147,6 +2494,20 @@ extension JournalEntryModelQuerySortBy
   }
 
   QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterSortBy>
+      sortByImageDescription() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageDescription', Sort.asc);
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterSortBy>
+      sortByImageDescriptionDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageDescription', Sort.desc);
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterSortBy>
       sortByLanguage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'language', Sort.asc);
@@ -2345,6 +2706,20 @@ extension JournalEntryModelQuerySortThenBy
   }
 
   QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterSortBy>
+      thenByImageDescription() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageDescription', Sort.asc);
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterSortBy>
+      thenByImageDescriptionDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageDescription', Sort.desc);
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QAfterSortBy>
       thenByLanguage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'language', Sort.asc);
@@ -2489,6 +2864,21 @@ extension JournalEntryModelQueryWhereDistinct
   }
 
   QueryBuilder<JournalEntryModel, JournalEntryModel, QDistinct>
+      distinctByImageData() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'imageData');
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QDistinct>
+      distinctByImageDescription({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'imageDescription',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, JournalEntryModel, QDistinct>
       distinctByLanguage({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'language', caseSensitive: caseSensitive);
@@ -2585,6 +2975,20 @@ extension JournalEntryModelQueryProperty
       generationTimeSecondsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'generationTimeSeconds');
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, List<int>?, QQueryOperations>
+      imageDataProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'imageData');
+    });
+  }
+
+  QueryBuilder<JournalEntryModel, String?, QQueryOperations>
+      imageDescriptionProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'imageDescription');
     });
   }
 
