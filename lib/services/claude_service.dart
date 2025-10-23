@@ -1120,6 +1120,8 @@ class ClaudeService {
     return 'An error occurred during audio generation.';
   }
 
+
+
   /// Build enriched prompt with activity qualification for intelligent throttling
   String _buildEnrichedPromptWithQualification(
       String userMessage, String collectedData) {

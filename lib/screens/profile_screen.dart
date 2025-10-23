@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../config/config_loader.dart';
 import '../screens/persona_selection_screen.dart';
@@ -6,6 +7,9 @@ import '../screens/onboarding/onboarding_flow.dart';
 import '../services/profile_service.dart';
 import '../services/onboarding_manager.dart';
 import '../services/app_restart_service.dart';
+import '../services/gemini_image_service.dart';
+import '../services/chat_storage_service.dart';
+import '../models/message_type.dart';
 
 /// Profile screen with persona management and settings access
 class ProfileScreen extends StatefulWidget {
@@ -23,11 +27,16 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final ConfigLoader _configLoader = ConfigLoader();
   String _profileName = '';
+  bool _isImageServiceInitialized = false;
+  int _totalGeneratedImages = 0;
+  Uint8List? _generatedImageData;
+  String? _generatedImageDescription;
 
   @override
   void initState() {
     super.initState();
     _loadProfileName();
+    _loadImageData();
   }
 
   Future<void> _loadProfileName() async {
@@ -37,6 +46,202 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _profileName = name;
       });
     }
+  }
+
+  Future<void> _loadImageData() async {
+    try {
+      // Check if Gemini Image Service is available
+      final service = GeminiImageService.instance;
+      final isInitialized = service.isInitialized;
+
+      // Count generated images from chat storage
+      final storageService = ChatStorageService();
+      final messages = await storageService.getMessages(limit: 1000);
+      final imageCount = messages.where((msg) => msg.type == MessageType.image).length;
+
+      if (mounted) {
+        setState(() {
+          _isImageServiceInitialized = isInitialized;
+          _totalGeneratedImages = imageCount;
+        });
+      }
+    } catch (e) {
+      // Handle errors gracefully
+      if (mounted) {
+        setState(() {
+          _isImageServiceInitialized = false;
+          _totalGeneratedImages = 0;
+        });
+      }
+    }
+  }
+
+  Future<void> _testImageGeneration() async {
+    try {
+      await GeminiImageService.instance.initialize();
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Generating an image of a dog...'),
+              ],
+            ),
+          ),
+        );
+      }
+
+      final result = await GeminiImageService.instance.generateImage(
+        prompt: "generate an image of a dog",
+        aspectRatio: "1:1",
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        if (result != null) {
+          setState(() {
+            _generatedImageData = result['imageBytes'];
+            _generatedImageDescription = result['description'];
+          });
+
+          _showGeneratedImage();
+          _loadImageData(); // Refresh data
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Image generation test failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showGeneratedImage() {
+    if (_generatedImageData == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBar(
+              title: const Text('Generated Image'),
+              automaticallyImplyLeading: false,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: InteractiveViewer(
+                        child: Image.memory(
+                          _generatedImageData!,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _generatedImageDescription ?? 'Generated image of a dog',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                            label: const Text('Close'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _testImageGeneration,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('New'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showImageInfo() {
+    final service = GeminiImageService.instance;
+    final status = service.getRateLimitStatus();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Image Generation Info'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Service Status: ${_isImageServiceInitialized ? "Ready" : "Not initialized"}'),
+            const SizedBox(height: 8),
+            Text('Total Images Generated: $_totalGeneratedImages'),
+            const SizedBox(height: 8),
+            Text('Rate Limit Status: ${status["hasRecentRateLimit"] ? "Limited" : "Available"}'),
+            const SizedBox(height: 8),
+            Text('High API Usage: ${status["hasHighApiUsage"] ? "Yes" : "No"}'),
+            const SizedBox(height: 16),
+            const Text(
+              'To generate images, simply type prompts like:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text('• "Generate an image of a sunset"'),
+            const Text('• "Create a picture of a cat"'),
+            const Text('• "Draw an image of a city"'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _showNameEditDialog() async {
@@ -333,6 +538,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       );
                     },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Image Section
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.image,
+                        color: Theme.of(context).primaryColor,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Image Generation',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Service Status
+                  ListTile(
+                    leading: Icon(
+                      _isImageServiceInitialized ? Icons.check_circle : Icons.error,
+                      color: _isImageServiceInitialized ? Colors.green : Colors.orange,
+                    ),
+                    title: Text(
+                      _isImageServiceInitialized ? 'Service Ready' : 'Service Not Initialized',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: _isImageServiceInitialized ? Colors.green[700] : Colors.orange[700],
+                      ),
+                    ),
+                    subtitle: Text(
+                      _isImageServiceInitialized
+                          ? 'Gemini 2.5 Flash Image ready to generate images'
+                          : 'Set up your Google AI API key to start generating images',
+                    ),
+                    trailing: const Icon(Icons.info_outline),
+                    onTap: _showImageInfo,
+                  ),
+
+                  const Divider(),
+
+                  // Image Statistics
+                  ListTile(
+                    leading: const Icon(Icons.photo_library),
+                    title: const Text('Generated Images'),
+                    subtitle: Text('$_totalGeneratedImages images created'),
+                    trailing: Text(
+                      '$_totalGeneratedImages',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+
+                  const Divider(),
+
+                  // Test Generation
+                  ListTile(
+                    leading: const Icon(Icons.science),
+                    title: const Text('Test Image Generation'),
+                    subtitle: const Text('Generate a test image to verify setup'),
+                    trailing: const Icon(Icons.play_arrow),
+                    onTap: _isImageServiceInitialized ? _testImageGeneration : null,
                   ),
                 ],
               ),

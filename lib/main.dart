@@ -10,6 +10,7 @@ import 'services/onboarding_manager.dart';
 import 'services/oracle_static_cache.dart';
 import 'services/dimension_display_service.dart';
 import 'services/app_restart_service.dart';
+import 'services/gemini_image_service.dart';
 import 'utils/logger.dart';
 
 import 'config/config_loader.dart';
@@ -56,6 +57,15 @@ Future<void> main() async {
     DimensionDisplayService.logServiceState();
   } catch (e) {
     logger.warning('Failed to initialize DimensionDisplayService: $e');
+  }
+
+  // Initialize Gemini Image Service
+  try {
+    await GeminiImageService.instance.initialize();
+    logger.info('✅ GeminiImageService initialized successfully');
+  } catch (e) {
+    logger.warning('Failed to initialize GeminiImageService: $e');
+    // This is not a critical error, app can continue without image generation
   }
 
   // Note: LifePlan service initialization removed

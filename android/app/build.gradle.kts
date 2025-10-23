@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.lyfeab.ai_personas_app"
-        minSdk = 21  // Android 5.0+
+        minSdk = flutter.minSdkVersion  // Android 5.0+
         targetSdk = 35  // Match compileSdk
         versionCode = flutter.versionCode
         versionName = flutter.versionName

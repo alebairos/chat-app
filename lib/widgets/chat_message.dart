@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'audio_message.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../features/audio_assistant/widgets/assistant_audio_message.dart';
+import '../models/message_type.dart';
 
 class ChatMessage extends StatelessWidget {
   final String text;
@@ -16,6 +17,8 @@ class ChatMessage extends StatelessWidget {
   final String? personaKey;
   final String? personaDisplayName;
   final DateTime? timestamp;
+  final MessageType messageType;
+  final Uint8List? imageData;
 
   const ChatMessage({
     required this.text,
@@ -28,6 +31,8 @@ class ChatMessage extends StatelessWidget {
     this.personaKey,
     this.personaDisplayName,
     this.timestamp,
+    this.messageType = MessageType.text,
+    this.imageData,
     super.key,
   });
 
@@ -140,6 +145,9 @@ class ChatMessage extends StatelessWidget {
     Function(String)? onEdit,
     String? personaKey,
     String? personaDisplayName,
+    DateTime? timestamp,
+    MessageType? messageType,
+    Uint8List? imageData,
   }) {
     return ChatMessage(
       text: text ?? this.text,
@@ -151,6 +159,173 @@ class ChatMessage extends StatelessWidget {
       onEdit: onEdit ?? this.onEdit,
       personaKey: personaKey ?? this.personaKey,
       personaDisplayName: personaDisplayName ?? this.personaDisplayName,
+      timestamp: timestamp ?? this.timestamp,
+      messageType: messageType ?? this.messageType,
+      imageData: imageData ?? this.imageData,
+    );
+  }
+
+  Widget _buildMessageContent(BuildContext context) {
+    switch (messageType) {
+      case MessageType.audio:
+        return audioPath != null
+            ? isUser
+                ? AudioMessage(
+                    audioPath: audioPath!,
+                    isUser: isUser,
+                    transcription: text,
+                    duration: duration ?? Duration.zero,
+                  )
+                : AssistantAudioMessage(
+                    audioPath: audioPath!,
+                    transcription: text,
+                    duration: duration ?? Duration.zero,
+                    messageId: key.toString(),
+                  )
+            : _buildTextContent();
+
+      case MessageType.image:
+        return _buildImageContent(context);
+
+      case MessageType.text:
+        return _buildTextContent();
+    }
+  }
+
+  Widget _buildTextContent() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isUser ? Colors.blue : Colors.grey[200],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: MarkdownBody(
+        data: text,
+        styleSheet: MarkdownStyleSheet(
+          p: TextStyle(
+            color: isUser ? Colors.white : Colors.black,
+            fontSize: 16,
+            height: 1.4,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageContent(BuildContext context) {
+    return Column(
+      crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        if (imageData != null) ...[
+          Container(
+            constraints: const BoxConstraints(
+              maxWidth: 300,
+              maxHeight: 300,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: GestureDetector(
+                onTap: () => _showImageDialog(context),
+                child: Image.memory(
+                  imageData!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.error, color: Colors.grey[400], size: 48),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Failed to load image',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (text.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: isUser ? Colors.blue : Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: MarkdownBody(
+              data: text,
+              styleSheet: MarkdownStyleSheet(
+                p: TextStyle(
+                  color: isUser ? Colors.white : Colors.black,
+                  fontSize: 16,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _showImageDialog(BuildContext context) {
+    if (imageData == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                color: Colors.black54,
+                child: Center(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.9,
+                      maxHeight: MediaQuery.of(context).size.height * 0.8,
+                    ),
+                    child: Image.memory(
+                      imageData!,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 40,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -183,38 +358,7 @@ class ChatMessage extends StatelessWidget {
               crossAxisAlignment:
                   isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                audioPath != null
-                    ? isUser
-                        ? AudioMessage(
-                            audioPath: audioPath!,
-                            isUser: isUser,
-                            transcription: text,
-                            duration: duration ?? Duration.zero,
-                          )
-                        : AssistantAudioMessage(
-                            audioPath: audioPath!,
-                            transcription: text,
-                            duration: duration ?? Duration.zero,
-                            messageId: key.toString(),
-                          )
-                    : Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isUser ? Colors.blue : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: MarkdownBody(
-                          data: text,
-                          styleSheet: MarkdownStyleSheet(
-                            p: TextStyle(
-                              color: isUser ? Colors.white : Colors.black,
-                              fontSize: 16,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ),
+                _buildMessageContent(context),
                 // FT-160: Add timestamp display
                 if (timestamp != null)
                   Padding(

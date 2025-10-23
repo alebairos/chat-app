@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../widgets/chat_message.dart';
 import '../widgets/chat_input.dart';
@@ -385,6 +386,8 @@ class _ChatScreenState extends State<ChatScreen> {
       personaKey: model.personaKey,
       personaDisplayName: model.personaDisplayName,
       timestamp: model.timestamp, // FT-160: Add timestamp
+      messageType: model.type,
+      imageData: model.mediaData != null ? Uint8List.fromList(model.mediaData!) : null,
       onDelete: () => _deleteMessage(model.id),
       onEdit: model.isUser
           ? (text) {
@@ -509,13 +512,10 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Process normal response
-      final messageType =
-          response.audioPath != null ? MessageType.audio : MessageType.text;
-
+      // Process response (text or audio)
       final aiMessageModel = ChatMessageModel.aiMessage(
         text: response.text,
-        type: messageType,
+        type: response.audioPath != null ? MessageType.audio : MessageType.text,
         timestamp: DateTime.now(),
         personaKey: _configLoader.activePersonaKey,
         personaDisplayName: await _configLoader.activePersonaDisplayName,
@@ -645,13 +645,10 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      // Process normal response
-      final messageType =
-          response.audioPath != null ? MessageType.audio : MessageType.text;
-
+      // Process response (text or audio)
       final aiMessageModel = ChatMessageModel.aiMessage(
         text: response.text,
-        type: messageType,
+        type: response.audioPath != null ? MessageType.audio : MessageType.text,
         timestamp: DateTime.now(),
         personaKey: _configLoader.activePersonaKey,
         personaDisplayName: await _configLoader.activePersonaDisplayName,
