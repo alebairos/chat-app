@@ -1,20 +1,33 @@
 {
   "enabled": true,
-  "description": "FT-200: Conversation History Database Queries - Start disabled for safe rollout",
+  "description": "FT-200/FT-206: Conversation History Database Queries with Interleaved Context",
   "fallback_to_history_injection": true,
   "mcp_commands": {
     "get_recent_user_messages": true,
     "get_current_persona_messages": true,
-    "search_conversation_context": true
+    "search_conversation_context": true,
+    "get_interleaved_conversation": true
   },
   "performance": {
     "max_user_messages": 10,
     "max_persona_messages": 5,
+    "max_interleaved_messages": 10,
+    "max_interleaved_messages_oracle": 8,
+    "max_context_tokens": 600,
+    "max_context_tokens_oracle": 500,
     "query_timeout_ms": 200
   },
+  "context_strategy": {
+    "proactive_context": {
+      "enabled": true,
+      "format": "interleaved",
+      "include_all_personas": true,
+      "strip_oracle_artifacts": true
+    }
+  },
   "rollout": {
-    "version": "1.0.0",
-    "deployment_date": "2025-10-18",
+    "version": "2.0.0",
+    "deployment_date": "2025-10-23",
     "rollback_instructions": "Set 'enabled': false to instantly disable feature"
   }
 }

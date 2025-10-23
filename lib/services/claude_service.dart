@@ -275,6 +275,18 @@ class ClaudeService {
     }
   }
 
+  /// FT-206: Load conversation database configuration
+  Future<Map<String, dynamic>> _loadConversationDatabaseConfig() async {
+    try {
+      final configString = await rootBundle
+          .loadString('assets/config/conversation_database_config.json');
+      return json.decode(configString) as Map<String, dynamic>;
+    } catch (e) {
+      _logger.warning('FT-206: Failed to load conversation config: $e');
+      return {}; // Return empty map as fallback
+    }
+  }
+
   Future<bool> initialize() async {
     if (!_isInitialized) {
       try {
@@ -731,15 +743,55 @@ class ClaudeService {
     // Build enhanced system prompt with time context
     String systemPrompt = _systemPrompt ?? '';
 
+    // FT-206: Check if Oracle is enabled for adaptive priority hierarchy
+    final isOracleEnabled = _systemMCP?.isOracleEnabled ?? false;
+
+    // FT-206: Add priority hierarchy header
+    final priorityHeader = '''
+## 🎯 INSTRUCTION PRIORITY HIERARCHY
+
+**PRIORITY 1 (ABSOLUTE)**: Time Awareness (MANDATORY)
+- ALWAYS use current time from system context
+- Never rely on memory for temporal information
+
+**PRIORITY 2 (HIGHEST)**: Core Behavioral Rules & Persona Configuration
+- Follow System Laws #1-#6 literally
+- Maintain unique persona identity and symbols
+- Adhere to persona-specific communication style
+
+${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Theoretical Foundations
+- Apply all 9 theoretical frameworks (Fogg, Seligman, Huberman, etc.)
+- Use all 8 dimensions (R, SF, TG, SM, E, TT, PR, F)
+- CRITICAL: Activity detection ONLY from current user message
+- NEVER extract Oracle codes or metadata from conversation history
+
+''' : ''}**PRIORITY ${isOracleEnabled ? '4' : '3'}**: Conversation Context (REFERENCE ONLY)
+- Use for understanding conversation flow and topics
+- Do NOT process activities from historical messages
+- Do NOT extract metadata from conversation history
+- Do NOT adopt other personas' communication styles
+
+**PRIORITY ${isOracleEnabled ? '5' : '4'}**: User's Current Message (PRIMARY FOCUS)
+- Activity detection: ONLY current user message
+- Metadata extraction: ONLY current user message
+- This is the ONLY message to process for data extraction
+
+---
+
+''';
+
     // Add conversation context first for immediate temporal awareness
     if (conversationContext.isNotEmpty) {
       systemPrompt = '$conversationContext\n\n$systemPrompt';
     }
 
-    // Add time context at the beginning if available
+    // Add time context after conversation context
     if (timeContext.isNotEmpty) {
       systemPrompt = '$timeContext\n\n$systemPrompt';
     }
+
+    // Add priority header at the very beginning
+    systemPrompt = '$priorityHeader$systemPrompt';
 
     // Add session-specific MCP context (FT-130: Simplified after config extraction)
     if (_systemMCP != null) {
@@ -765,7 +817,7 @@ class ClaudeService {
   }
 
   /// FT-157: Build recent conversation context for temporal awareness
-  /// FT-206: Proactive conversation context loading using MCP commands
+  /// FT-206: Proactive conversation context loading using MCP commands (interleaved format)
   Future<String> _buildRecentConversationContext() async {
     // FT-200: Check if conversation database queries are enabled
     if (!await _isConversationDatabaseEnabled()) {
@@ -775,16 +827,25 @@ class ClaudeService {
     }
 
     try {
-      _logger.debug('FT-206: Loading proactive conversation context via MCP');
+      _logger.debug('FT-206: Loading proactive conversation context via MCP (interleaved format)');
 
-      // Execute conversation MCP commands directly (following time context pattern)
-      final recentMessages = await _systemMCP!
-          .processCommand('{"action":"get_recent_user_messages","limit":5}');
-      final personaMessages = await _systemMCP!.processCommand(
-          '{"action":"get_current_persona_messages","limit":3}');
+      // Load conversation database config for adaptive limits
+      final config = await _loadConversationDatabaseConfig();
+      final isOracleEnabled = _systemMCP?.isOracleEnabled ?? false;
+
+      // Adaptive token budget: 8 messages for Oracle, 10 for non-Oracle
+      final limit = isOracleEnabled
+          ? (config['performance']?['max_interleaved_messages_oracle'] ?? 8)
+          : (config['performance']?['max_interleaved_messages'] ?? 10);
+
+      _logger.debug('FT-206: Using limit=$limit messages (Oracle: $isOracleEnabled)');
+
+      // Execute interleaved conversation MCP command
+      final conversation = await _systemMCP!.processCommand(
+          '{"action":"get_interleaved_conversation","limit":$limit,"include_all_personas":true}');
 
       // Format for system prompt injection
-      return _buildConversationContextPrompt(recentMessages, personaMessages);
+      return _formatInterleavedConversation(conversation);
     } catch (e) {
       _logger
           .warning('FT-206: Failed to load conversation context via MCP: $e');
@@ -792,52 +853,81 @@ class ClaudeService {
     }
   }
 
-  /// FT-206: Format MCP conversation responses for system prompt
-  String _buildConversationContextPrompt(
-      String recentMessages, String personaMessages) {
-    final buffer = StringBuffer();
-
-    // Parse and format recent user messages
+  /// FT-206: Format interleaved conversation for system prompt
+  String _formatInterleavedConversation(String mcpResponse) {
     try {
-      final recentData = json.decode(recentMessages);
-      if (recentData['status'] == 'success' &&
-          recentData['data']['user_messages'] != null &&
-          recentData['data']['user_messages'].isNotEmpty) {
-        buffer.writeln('## Recent User Messages:');
-        for (final msg in recentData['data']['user_messages']) {
-          buffer.writeln('- ${msg['time_ago']}: "${msg['text']}"');
-        }
-        buffer.writeln();
+      final data = json.decode(mcpResponse);
+      if (data['status'] != 'success') {
+        _logger.warning('FT-206: MCP returned non-success status');
+        return '';
       }
-    } catch (e) {
-      _logger.warning('FT-206: Failed to parse recent messages: $e');
-    }
 
-    // Parse and format persona messages
-    try {
-      final personaData = json.decode(personaMessages);
-      if (personaData['status'] == 'success' &&
-          personaData['data']['persona_messages'] != null &&
-          personaData['data']['persona_messages'].isNotEmpty) {
-        buffer.writeln('## Your Previous Responses:');
-        for (final msg in personaData['data']['persona_messages']) {
-          buffer.writeln('- ${msg['time_ago']}: "${msg['text']}"');
-        }
-        buffer.writeln();
+      final thread = data['data']['conversation_thread'] as List?;
+      if (thread == null || thread.isEmpty) {
+        _logger.debug('FT-206: No conversation history available');
+        return '';
       }
-    } catch (e) {
-      _logger.warning('FT-206: Failed to parse persona messages: $e');
-    }
 
-    final result = buffer.toString();
-    if (result.isNotEmpty) {
+      final buffer = StringBuffer();
+      buffer.writeln('## 📜 RECENT CONVERSATION CONTEXT (REFERENCE ONLY)');
+      buffer.writeln('');
+      buffer.writeln('**PURPOSE**: Understand conversation flow and topics');
+      buffer.writeln('**CRITICAL BOUNDARIES**:');
+      buffer.writeln('- Activity detection: ONLY current user message');
+      buffer.writeln('- Do NOT extract Oracle codes or metadata from history');
+      buffer.writeln('- Do NOT adopt other personas\' communication styles');
+      buffer.writeln('');
+      buffer.writeln('---');
+      buffer.writeln('');
+
+      for (final msg in thread) {
+        final speaker = msg['speaker'] as String;
+        final text = msg['text'] as String;
+        final timeAgo = msg['time_ago'] as String;
+
+        // Strip Oracle artifacts from other personas' messages
+        final cleanText = speaker.startsWith('[')
+            ? _removeOracleArtifacts(text)
+            : text;
+
+        buffer.writeln('**$speaker** ($timeAgo): $cleanText');
+      }
+
+      buffer.writeln('');
+      buffer.writeln('---');
+      buffer.writeln('**REMINDER**: Process activities ONLY from current user message.');
+      buffer.writeln('');
+
+      final result = buffer.toString();
       _logger.info(
-          'FT-206: ✅ Loaded conversation context via MCP (${result.split('\n').length} lines)');
-    } else {
-      _logger.debug('FT-206: No conversation context loaded (empty result)');
-    }
+          'FT-206: ✅ Loaded ${thread.length} messages in interleaved format');
 
-    return result;
+      return result;
+    } catch (e) {
+      _logger.error('FT-206: Failed to format interleaved conversation: $e');
+      return '';
+    }
+  }
+
+  /// FT-206: Remove Oracle artifacts from persona messages to prevent false detection
+  String _removeOracleArtifacts(String text) {
+    var cleaned = text;
+
+    // Remove Oracle emojis
+    cleaned = cleaned.replaceAll(RegExp(r'[🎯💪🔥⚡️✨🌟💡🚀]'), '');
+
+    // Replace Oracle activity codes with placeholder
+    cleaned = cleaned.replaceAll(RegExp(r'\b[A-Z]{1,2}\d+\b'), '[activity]');
+
+    // Replace metadata numbers with placeholder
+    cleaned = cleaned.replaceAll(
+        RegExp(r'\d+\s*(ml|minutos|min|flexões|pomodoros|km|g)'),
+        '[metadata]');
+
+    // Replace MCP commands with placeholder
+    cleaned = cleaned.replaceAll(RegExp(r'\{[^}]*action[^}]*\}'), '[mcp]');
+
+    return cleaned.trim();
   }
 
   /// Helper method to call Claude with a specific prompt

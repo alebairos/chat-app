@@ -8,6 +8,8 @@ class ChatMessageModel {
   Id id = Isar.autoIncrement;
 
   @Index()
+  @Index(composite: [CompositeIndex('personaKey')])
+  @Index(composite: [CompositeIndex('isUser')])
   DateTime timestamp;
 
   @Index()
