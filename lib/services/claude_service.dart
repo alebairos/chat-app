@@ -1106,12 +1106,20 @@ ${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
         return null;
       }
 
-      final messages = await _storageService!.getMessages(limit: 1);
+      // FT-206: Get last 2 messages to skip the current user message
+      // The current user message is already saved to DB before this is called
+      final messages = await _storageService!.getMessages(limit: 2);
       if (messages.isEmpty) {
         return null;
       }
 
-      return TimeContextService.validateTimestamp(messages.first.timestamp);
+      // If we only have 1 message (first conversation), return null
+      if (messages.length == 1) {
+        return null;
+      }
+
+      // Return the second message (previous conversation's last message)
+      return TimeContextService.validateTimestamp(messages[1].timestamp);
     } catch (e) {
       _logger.error('Error getting last message timestamp: $e');
       return null;
