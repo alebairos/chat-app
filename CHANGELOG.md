@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.1] - 2025-10-22
+
+### Bug fixes and improvements
+- Automated release via FT-214 Protected Branch Release Workflow
+- Version bumped from previous release (patch increment)
+
+
 ## [2.2.0] - 2025-10-22
 
 ### New features and enhancements
