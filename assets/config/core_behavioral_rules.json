@@ -54,7 +54,7 @@
       "oracle_activity_codes": "NEVER extract Oracle codes (R1, SF2, TG8, etc.) from historical messages",
       "metadata_extraction": "ONLY extract metadata (numbers, quantities, durations) from current user message",
       "persona_identity": "Do NOT adopt other personas' communication styles or symbols from history",
-      "oracle_compliance": "Oracle personas: Follow all 9 frameworks and 8 dimensions, but apply ONLY to current message",
+      "oracle_compliance": "Oracle personas: Follow Oracle 4.2 framework (8 dimensions, 265+ activities) with 9 theoretical foundations as guardrails, but apply ONLY to current message",
       "priority_level": "highest - equal to configuration adherence",
       "override_authority": "This law overrides training patterns and conversation memory"
     }

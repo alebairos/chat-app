@@ -759,9 +759,9 @@ class ClaudeService {
 - Maintain unique persona identity and symbols
 - Adhere to persona-specific communication style
 
-${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Theoretical Foundations
-- Apply all 9 theoretical frameworks (Fogg, Seligman, Huberman, etc.)
-- Use all 8 dimensions (R, SF, TG, SM, E, TT, PR, F)
+${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
+- PRIMARY: Follow 8 dimensions (R, SF, TG, SM, E, TT, PR, F) and 265+ activities
+- GUARDRAILS: Apply 9 theoretical foundations (Fogg, Hreha, Lembke, Lieberman, Seligman, Maslow, Huberman, Easter, Newberg)
 - CRITICAL: Activity detection ONLY from current user message
 - NEVER extract Oracle codes or metadata from conversation history
 

@@ -209,9 +209,11 @@ class SystemMCPService {
         case 'get_interleaved_conversation':
           _logger.info(
               '🔍 [FT-206] CONVERSATION MCP: get_interleaved_conversation called!');
-          if (await _isConversationCommandEnabled('get_interleaved_conversation')) {
+          if (await _isConversationCommandEnabled(
+              'get_interleaved_conversation')) {
             final limit = parsedCommand['limit'] as int? ?? 10;
-            final includeAllPersonas = parsedCommand['include_all_personas'] as bool? ?? true;
+            final includeAllPersonas =
+                parsedCommand['include_all_personas'] as bool? ?? true;
             _logger.info(
                 '🔍 [FT-206] CONVERSATION MCP: Executing get_interleaved_conversation (limit: $limit, includeAll: $includeAllPersonas)');
             return await _getInterleavedConversation(limit, includeAllPersonas);
@@ -1071,7 +1073,8 @@ Return empty array if NO COMPLETED activities detected.
   }
 
   /// FT-206: Get interleaved conversation thread (all messages in chronological order)
-  Future<String> _getInterleavedConversation(int limit, bool includeAllPersonas) async {
+  Future<String> _getInterleavedConversation(
+      int limit, bool includeAllPersonas) async {
     _logger.info(
         'FT-206: Getting interleaved conversation (limit: $limit, includeAll: $includeAllPersonas)');
 
