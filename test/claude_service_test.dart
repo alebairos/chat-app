@@ -294,16 +294,10 @@ void main() {
       const message = 'Hello';
       print('📤 Sending message: $message');
 
-      // FT-206: Normal messages now trigger conversation context MCP calls
-      // Mock the conversation MCP commands that are now expected
-      when(() => mockMCP.processCommand(
-              '{"action":"get_recent_user_messages","limit":5}'))
-          .thenAnswer(
-              (_) async => '{"status":"success","data":{"user_messages":[]}}');
-      when(() => mockMCP.processCommand(
-              '{"action":"get_current_persona_messages","limit":3}'))
-          .thenAnswer((_) async =>
-              '{"status":"success","data":{"persona_messages":[]}}');
+      // FT-206: Normal messages now trigger interleaved conversation context MCP call
+      // Mock the conversation MCP command that is now expected
+      when(() => mockMCP.processCommand(any(that: contains('get_interleaved_conversation'))))
+          .thenAnswer((_) async => '{"status":"success","data":{"conversation_thread":[],"total_messages":0}}');
 
       when(() => mockClient.post(
             any(),
@@ -331,12 +325,9 @@ void main() {
       expect(response, equals('Normal response'),
           reason: 'Response should match expected normal response');
 
-      // FT-206: Verify that conversation context MCP commands were called
-      verify(() => mockMCP.processCommand(
-          '{"action":"get_recent_user_messages","limit":5}')).called(1);
-      verify(() => mockMCP.processCommand(
-          '{"action":"get_current_persona_messages","limit":3}')).called(1);
-      print('✓ Test completed successfully - conversation MCP calls verified');
+      // FT-206: Verify that interleaved conversation context MCP command was called
+      verify(() => mockMCP.processCommand(any(that: contains('get_interleaved_conversation')))).called(1);
+      print('✓ Test completed successfully - conversation MCP call verified');
     });
   });
 }
