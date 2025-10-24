@@ -378,44 +378,370 @@ logs/
 
 ## 🚀 Implementation Plan
 
-### **Phase 1: Core Service** (4 hours)
+### **Phase 1: Configuration & Core Service** (3-4 hours)
 
-- [ ] Create `ContextLoggerService` class
-- [ ] Implement configuration loading
-- [ ] Implement file I/O
-- [ ] Implement guard pattern
-- [ ] Add unit tests
+**Files to Create**:
+- [ ] `assets/config/context_logging_config.json` - Feature configuration
+- [ ] `lib/services/context_logger_service.dart` - Core logging service
 
-### **Phase 2: Integration** (2 hours)
+**Implementation**:
+```dart
+class ContextLoggerService {
+  bool _enabled = false;
+  String? _sessionId;
+  int _contextCounter = 0;
+  
+  // Initialize and load config
+  Future<void> initialize() async {
+    final config = await _loadConfig();
+    _enabled = config['enabled'] ?? false;
+    if (!_enabled) return;  // ⚠️ Early return - zero overhead
+    
+    _sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
+    await _ensureLogDirectory();
+  }
+  
+  // Log context (NO-OP if disabled)
+  Future<String?> logContext({
+    required Map<String, dynamic> apiRequest,
+    required Map<String, dynamic> metadata,
+  }) async {
+    if (!_enabled) return null;  // ⚠️ Guard pattern - zero overhead
+    
+    // ... logging implementation ...
+  }
+}
+```
 
-- [ ] Integrate into `claude_service.dart`
-- [ ] Add logging before API call
-- [ ] Add response update after API call
-- [ ] Test end-to-end flow
+**Key Requirements**:
+- [ ] Guard pattern: `if (!_enabled) return null;` at start of every method
+- [ ] Configuration loading with `enabled: false` default
+- [ ] Session directory creation: `logs/context/session_<timestamp>/`
+- [ ] Sequential file naming: `ctx_001_<timestamp>.json`
+- [ ] Complete data logging (API request, response, timing, analysis)
+- [ ] API key redaction in headers
+
+---
+
+### **Phase 2: Integration with ClaudeService** (2 hours)
+
+**File to Modify**:
+- [ ] `lib/services/claude_service.dart`
+
+**Integration Points**:
+
+```dart
+// 1. Add service instance
+final _contextLogger = ContextLoggerService();
+
+// 2. Initialize in constructor
+ClaudeService() {
+  // ... existing initialization ...
+  _contextLogger.initialize();
+}
+
+// 3. Log before API call in _sendMessageInternal()
+Future<String> _sendMessageInternal(...) async {
+  // ... build context ...
+  
+  // ✅ Log context (zero overhead if disabled)
+  String? contextLogPath;
+  if (_contextLogger.isEnabled) {
+    contextLogPath = await _contextLogger.logContext(
+      apiRequest: {
+        'endpoint': 'https://api.anthropic.com/v1/messages',
+        'method': 'POST',
+        'body': {
+          'model': 'claude-sonnet-4-20250514',
+          'system': systemPrompt,  // ⚠️ Complete system prompt
+          'messages': messages,     // ⚠️ Complete messages array
+        },
+      },
+      metadata: {
+        'persona_key': _configManager.activePersonaKey,
+        'oracle_enabled': await _configManager.isOracleEnabled(),
+        'timestamp': DateTime.now().toIso8601String(),
+      },
+    );
+  }
+  
+  // Make API call
+  final response = await _makeApiCall(...);
+  
+  // ✅ Update with response (zero overhead if disabled)
+  if (contextLogPath != null) {
+    await _contextLogger.updateWithResponse(
+      contextLogPath: contextLogPath,
+      response: response,
+    );
+  }
+  
+  return response.text;
+}
+```
+
+**Key Requirements**:
+- [ ] Log EXACT system prompt (no truncation)
+- [ ] Log EXACT messages array (no filtering)
+- [ ] Log raw JSON strings for reproduction
+- [ ] Include timing metrics
+- [ ] Include token usage from response
+
+---
 
 ### **Phase 3: Settings UI** (2 hours)
 
-- [ ] Add toggle switch
-- [ ] Add warning dialog
-- [ ] Add export button
-- [ ] Add clear logs button
-- [ ] Test UI flow
+**File to Modify**:
+- [ ] `lib/screens/settings_screen.dart`
+
+**UI Components**:
+
+```dart
+// 1. Add state variable
+bool _contextLoggingEnabled = false;
+
+// 2. Add settings card
+Card(
+  color: _contextLoggingEnabled ? Colors.orange[100] : null,
+  child: Column(
+    children: [
+      SwitchListTile(
+        title: Text('Context Logging (Debug)'),
+        subtitle: Text(
+          _contextLoggingEnabled 
+            ? '⚠️ ENABLED - Logging complete conversation'
+            : 'Disabled'
+        ),
+        value: _contextLoggingEnabled,
+        onChanged: (value) {
+          if (value) {
+            _showContextLoggingWarning(value);
+          } else {
+            setState(() => _contextLoggingEnabled = false);
+            ContextLoggerService().setEnabled(false);
+          }
+        },
+      ),
+      if (_contextLoggingEnabled) ...[
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            '⚠️ WARNING: Logs contain COMPLETE conversation history. Handle with care.',
+            style: TextStyle(color: Colors.orange[900], fontSize: 12),
+          ),
+        ),
+        ListTile(
+          title: Text('Export Context Logs'),
+          trailing: Icon(Icons.file_download),
+          onTap: _exportContextLogs,
+        ),
+        ListTile(
+          title: Text('Clear Context Logs'),
+          trailing: Icon(Icons.delete),
+          onTap: _clearContextLogs,
+        ),
+      ],
+    ],
+  ),
+)
+
+// 3. Add warning dialog
+Future<void> _showContextLoggingWarning(bool enable) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('⚠️ Enable Context Logging?'),
+      content: Text(
+        'Context logging will record:\n\n'
+        '• Complete conversation history\n'
+        '• All user messages (exact text)\n'
+        '• All AI responses (exact text)\n'
+        '• Complete system prompts\n\n'
+        'Enable only if you understand the privacy implications.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text('Enable'),
+        ),
+      ],
+    ),
+  );
+  
+  if (confirmed == true) {
+    setState(() => _contextLoggingEnabled = true);
+    await ContextLoggerService().setEnabled(true);
+  }
+}
+```
+
+**Key Requirements**:
+- [ ] Toggle switch with visual warning (orange background)
+- [ ] Confirmation dialog with clear privacy warning
+- [ ] Export functionality (ZIP archive)
+- [ ] Clear logs functionality
+- [ ] Only show export/clear when enabled
+
+---
 
 ### **Phase 4: Export & Cleanup** (2 hours)
 
-- [ ] Implement ZIP export
-- [ ] Implement auto cleanup
+**Methods to Implement**:
+
+```dart
+// 1. Export session logs
+Future<String> exportSessionLogs() async {
+  final directory = await _getContextDirectory();
+  final zipPath = '${directory.parent.path}/${_sessionId}_export.zip';
+  
+  // Create ZIP archive of all context files
+  final encoder = ZipFileEncoder();
+  encoder.create(zipPath);
+  
+  final files = directory.listSync();
+  for (final file in files) {
+    if (file is File) {
+      encoder.addFile(file);
+    }
+  }
+  
+  encoder.close();
+  return zipPath;
+}
+
+// 2. Auto cleanup old logs
+Future<void> cleanupOldLogs() async {
+  if (!_enabled) return;
+  
+  final config = await _loadConfig();
+  final cleanupDays = config['settings']['auto_cleanup_days'] ?? 7;
+  if (cleanupDays == 0) return;  // Cleanup disabled
+  
+  final logsDir = await _getLogsDirectory();
+  final cutoffDate = DateTime.now().subtract(Duration(days: cleanupDays));
+  
+  final sessions = logsDir.listSync();
+  for (final session in sessions) {
+    if (session is Directory) {
+      final stat = session.statSync();
+      if (stat.modified.isBefore(cutoffDate)) {
+        session.deleteSync(recursive: true);
+        _logger.info('🗑️ Cleaned up old session: ${session.path}');
+      }
+    }
+  }
+}
+
+// 3. Clear all logs
+Future<void> clearAllLogs() async {
+  final logsDir = await _getLogsDirectory();
+  if (await logsDir.exists()) {
+    await logsDir.delete(recursive: true);
+    _logger.info('🗑️ Cleared all context logs');
+  }
+}
+```
+
+**Key Requirements**:
+- [ ] ZIP export with all context files
+- [ ] Share via system share dialog
+- [ ] Auto cleanup on app startup
+- [ ] Manual clear logs functionality
+- [ ] Configurable cleanup days (0 = disabled)
+
+---
+
+### **Phase 5: Testing & Documentation** (2 hours)
+
+**Unit Tests** (`test/services/context_logger_service_test.dart`):
+- [ ] Test initialization with enabled/disabled
+- [ ] Test guard pattern (no-op when disabled)
+- [ ] Test file creation and writing
+- [ ] Test API key redaction
 - [ ] Test export functionality
 - [ ] Test cleanup functionality
 
-### **Phase 5: Documentation & Testing** (2 hours)
+**Integration Tests**:
+- [ ] Test end-to-end logging flow
+- [ ] Test settings UI integration
+- [ ] Test export and share flow
 
-- [ ] Write user documentation
-- [ ] Write developer documentation
-- [ ] Manual testing
-- [ ] Bug fixes
+**Manual Testing**:
+- [ ] Enable logging and send messages
+- [ ] Verify log files contain complete data
+- [ ] Verify API key is redacted
+- [ ] Export logs and verify ZIP
+- [ ] Clear logs and verify deletion
+- [ ] Disable logging and verify no overhead
 
-**Total Effort**: 12 hours
+**Documentation**:
+- [ ] Update README with context logging feature
+- [ ] Document configuration options
+- [ ] Document privacy considerations
+- [ ] Create implementation summary
+
+---
+
+## 📦 Dependencies
+
+**Packages to Add** (if not already present):
+```yaml
+dependencies:
+  path_provider: ^2.1.0  # For app documents directory
+  
+dev_dependencies:
+  archive: ^3.4.0  # For ZIP export
+```
+
+---
+
+## ⚡ Quick Start Guide
+
+**1. Create Configuration**:
+```bash
+# Create config file with enabled: false
+touch assets/config/context_logging_config.json
+```
+
+**2. Implement Core Service**:
+```bash
+# Create service file
+touch lib/services/context_logger_service.dart
+```
+
+**3. Integrate with ClaudeService**:
+```bash
+# Modify claude_service.dart
+# Add logging before/after API calls
+```
+
+**4. Add Settings UI**:
+```bash
+# Modify settings_screen.dart
+# Add toggle, warning, export, clear
+```
+
+**5. Test**:
+```bash
+# Run tests
+flutter test test/services/context_logger_service_test.dart
+
+# Manual test
+# 1. Enable logging in settings
+# 2. Send messages
+# 3. Verify logs in logs/context/
+# 4. Export and verify ZIP
+```
+
+---
+
+**Total Effort**: 11-12 hours
+
+**Priority**: Implement Phase 1-2 first (core functionality), then Phase 3-4 (UI & features), finally Phase 5 (testing & docs)
 
 ---
 
