@@ -1,0 +1,23 @@
+{
+  "enabled": false,
+  "description": "FT-220: Complete context logging for debugging and optimization (MVP)",
+  "version": "1.0.0",
+  "settings": {
+    "log_api_request": true,
+    "log_api_response": true,
+    "log_raw_json": true,
+    "redact_api_key": true,
+    "max_logs_per_session": 100
+  },
+  "storage": {
+    "directory": "logs/context",
+    "format": "json",
+    "max_file_size_mb": 10
+  },
+  "privacy": {
+    "warning": "Context logs contain COMPLETE conversation history including all user messages and AI responses. Handle with extreme care.",
+    "exclude_from_backup": true
+  },
+  "note": "MVP: Manual file access via Files app. Export and auto-cleanup features deferred to Phase 5."
+}
+
