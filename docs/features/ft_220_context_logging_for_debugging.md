@@ -3,16 +3,19 @@
 **Feature ID**: FT-220  
 **Priority**: High  
 **Category**: Developer Tools / Debugging  
-**Effort Estimate**: 9-12 hours  
+**Effort Estimate**: 6-7 hours (MVP)  
 **Status**: Specification  
 **Created**: 2025-10-24  
-**Branch**: `feature/ft-220-context-logging`
+**Branch**: `feature/ft-220-context-logging`  
+**Approach**: MVP (Minimum Viable Product) - Core functionality first, advanced features deferred
 
 ---
 
 ## 📋 Overview
 
-Implement comprehensive context logging that captures the **EXACT** context sent to the Claude API for every request, enabling debugging, optimization, and analysis of system prompt complexity, token usage, and conversation patterns.
+Implement **MVP context logging** that captures the **EXACT** context sent to the Claude API for every request, enabling immediate debugging of repetition bugs (FT-206), token usage analysis, and system prompt optimization.
+
+**MVP Focus**: Core logging functionality with zero overhead when disabled. Advanced features (export, auto-cleanup, analysis) deferred to future iterations.
 
 ---
 
@@ -59,16 +62,15 @@ Log the **complete, unfiltered context** sent to the Claude API to local files, 
 
 **Description**: Log the EXACT API request and response with zero filtering.
 
-**What Gets Logged**:
+**What Gets Logged (MVP)**:
 - ✅ Complete system prompt (every character)
 - ✅ Complete messages array (all messages)
 - ✅ Complete API request (raw JSON)
 - ✅ Complete API response (raw JSON)
-- ✅ Timing metrics (latency, TTFB)
-- ✅ Token usage (input, output, total)
-- ✅ Metadata (persona, session, timestamp)
-- ✅ Automated analysis (layer breakdown, flags)
+- ✅ Basic metadata (persona, session, timestamp)
+- ✅ Token usage (from API response)
 - ❌ API key (redacted for security)
+- ⏸️ **Deferred**: Automated analysis, detailed timing metrics (can be added later)
 
 **Acceptance Criteria**:
 - [ ] System prompt is logged character-for-character
@@ -175,37 +177,21 @@ logs/
 
 ---
 
-### **FR-6: Export Functionality**
+### **FR-6: Manual File Access** (MVP)
 
-**Description**: User can export context logs for analysis.
+**Description**: Users can manually access log files via device file manager.
 
-**Export Format**:
-- ZIP archive of all context files
-- Named: `session_<timestamp>_export.zip`
-- Shared via system share dialog
-
-**Acceptance Criteria**:
-- [ ] Export creates ZIP archive
-- [ ] ZIP contains all context files
-- [ ] Share dialog opens correctly
-- [ ] Files are readable after export
-
----
-
-### **FR-7: Auto Cleanup**
-
-**Description**: Old logs are automatically deleted after N days.
-
-**Behavior**:
-- Check on app startup
-- Delete logs older than `auto_cleanup_days`
-- Log cleanup actions
+**File Location**:
+- iOS: App Documents directory
+- Android: App-specific storage
+- Path: `<app_documents>/logs/context/session_<timestamp>/`
 
 **Acceptance Criteria**:
-- [ ] Cleanup runs on app startup
-- [ ] Logs older than N days are deleted
-- [ ] Cleanup is logged
-- [ ] Cleanup can be disabled (set to 0)
+- [ ] Log files are accessible via Files app (iOS) or file manager (Android)
+- [ ] Files are readable JSON format
+- [ ] Directory structure is clear and organized
+
+**Note**: Export and auto-cleanup features deferred to Phase 4 (future iteration)
 
 ---
 
@@ -270,7 +256,7 @@ logs/
 
 ## 📊 Data Structure
 
-### **Context Log File**
+### **Context Log File (MVP - Simplified)**
 
 ```json
 {
@@ -281,9 +267,7 @@ logs/
     "persona_display_name": "I-There 4.2",
     "oracle_enabled": true,
     "session_id": "session_1729795000000",
-    "message_number": 1,
-    "app_version": "2.0.1",
-    "build_number": "25"
+    "message_number": 1
   },
   "api_request": {
     "endpoint": "https://api.anthropic.com/v1/messages",
@@ -295,43 +279,33 @@ logs/
     "body": {
       "model": "claude-sonnet-4-20250514",
       "max_tokens": 4096,
-      "system": "<COMPLETE SYSTEM PROMPT>",
-      "messages": [...]
+      "system": "<COMPLETE SYSTEM PROMPT - EVERY CHARACTER>",
+      "messages": [
+        {"role": "user", "content": "previous message"},
+        {"role": "assistant", "content": "previous response"},
+        {"role": "user", "content": "current message"}
+      ]
     },
-    "raw_json": "<COMPLETE REQUEST JSON>"
+    "raw_json": "<COMPLETE REQUEST JSON STRING>"
   },
   "api_response": {
     "status_code": 200,
     "body": {
       "id": "msg_123",
-      "content": [...],
+      "content": [
+        {"type": "text", "text": "<COMPLETE RESPONSE TEXT>"}
+      ],
       "usage": {
         "input_tokens": 3850,
         "output_tokens": 150
       }
     },
-    "raw_json": "<COMPLETE RESPONSE JSON>"
-  },
-  "timing": {
-    "request_sent_at": "2025-10-24T18:30:45.123Z",
-    "response_received_at": "2025-10-24T18:30:47.456Z",
-    "latency_ms": 2333
-  },
-  "analysis": {
-    "system_prompt": {
-      "total_chars": 45678,
-      "total_lines": 1082,
-      "total_tokens": 3850,
-      "layers_detected": [...]
-    },
-    "flags": {
-      "has_priority_header": true,
-      "has_conversation_context": true,
-      "oracle_enabled": true
-    }
+    "raw_json": "<COMPLETE RESPONSE JSON STRING>"
   }
 }
 ```
+
+**Note**: Advanced analysis (timing, layer detection, flags) deferred to Phase 5
 
 ---
 
@@ -378,7 +352,7 @@ logs/
 
 ## 🚀 Implementation Plan
 
-### **Phase 1: Configuration & Core Service** (3-4 hours)
+### **Phase 1: Configuration & Core Service** (3 hours)
 
 **Files to Create**:
 - [ ] `assets/config/context_logging_config.json` - Feature configuration
@@ -413,13 +387,14 @@ class ContextLoggerService {
 }
 ```
 
-**Key Requirements**:
+**Key Requirements (MVP)**:
 - [ ] Guard pattern: `if (!_enabled) return null;` at start of every method
 - [ ] Configuration loading with `enabled: false` default
 - [ ] Session directory creation: `logs/context/session_<timestamp>/`
 - [ ] Sequential file naming: `ctx_001_<timestamp>.json`
-- [ ] Complete data logging (API request, response, timing, analysis)
+- [ ] Complete data logging (API request, response, basic metadata)
 - [ ] API key redaction in headers
+- [ ] Simple JSON structure (no complex analysis)
 
 ---
 
@@ -489,7 +464,7 @@ Future<String> _sendMessageInternal(...) async {
 
 ---
 
-### **Phase 3: Settings UI** (2 hours)
+### **Phase 3: Settings UI** (1-2 hours)
 
 **File to Modify**:
 - [ ] `lib/screens/settings_screen.dart`
@@ -525,20 +500,20 @@ Card(
       if (_contextLoggingEnabled) ...[
         Padding(
           padding: EdgeInsets.all(16),
-          child: Text(
-            '⚠️ WARNING: Logs contain COMPLETE conversation history. Handle with care.',
-            style: TextStyle(color: Colors.orange[900], fontSize: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '⚠️ WARNING: Logs contain COMPLETE conversation history.',
+                style: TextStyle(color: Colors.orange[900], fontSize: 12),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Access logs via Files app:\nlogs/context/session_<timestamp>/',
+                style: TextStyle(color: Colors.grey[700], fontSize: 11),
+              ),
+            ],
           ),
-        ),
-        ListTile(
-          title: Text('Export Context Logs'),
-          trailing: Icon(Icons.file_download),
-          onTap: _exportContextLogs,
-        ),
-        ListTile(
-          title: Text('Clear Context Logs'),
-          trailing: Icon(Icons.delete),
-          onTap: _clearContextLogs,
         ),
       ],
     ],
@@ -579,108 +554,35 @@ Future<void> _showContextLoggingWarning(bool enable) async {
 }
 ```
 
-**Key Requirements**:
+**Key Requirements (MVP)**:
 - [ ] Toggle switch with visual warning (orange background)
 - [ ] Confirmation dialog with clear privacy warning
-- [ ] Export functionality (ZIP archive)
-- [ ] Clear logs functionality
-- [ ] Only show export/clear when enabled
+- [ ] File path display for manual access
+- ⏸️ **Deferred**: Export and clear buttons (manual file access for MVP)
 
 ---
 
-### **Phase 4: Export & Cleanup** (2 hours)
-
-**Methods to Implement**:
-
-```dart
-// 1. Export session logs
-Future<String> exportSessionLogs() async {
-  final directory = await _getContextDirectory();
-  final zipPath = '${directory.parent.path}/${_sessionId}_export.zip';
-  
-  // Create ZIP archive of all context files
-  final encoder = ZipFileEncoder();
-  encoder.create(zipPath);
-  
-  final files = directory.listSync();
-  for (final file in files) {
-    if (file is File) {
-      encoder.addFile(file);
-    }
-  }
-  
-  encoder.close();
-  return zipPath;
-}
-
-// 2. Auto cleanup old logs
-Future<void> cleanupOldLogs() async {
-  if (!_enabled) return;
-  
-  final config = await _loadConfig();
-  final cleanupDays = config['settings']['auto_cleanup_days'] ?? 7;
-  if (cleanupDays == 0) return;  // Cleanup disabled
-  
-  final logsDir = await _getLogsDirectory();
-  final cutoffDate = DateTime.now().subtract(Duration(days: cleanupDays));
-  
-  final sessions = logsDir.listSync();
-  for (final session in sessions) {
-    if (session is Directory) {
-      final stat = session.statSync();
-      if (stat.modified.isBefore(cutoffDate)) {
-        session.deleteSync(recursive: true);
-        _logger.info('🗑️ Cleaned up old session: ${session.path}');
-      }
-    }
-  }
-}
-
-// 3. Clear all logs
-Future<void> clearAllLogs() async {
-  final logsDir = await _getLogsDirectory();
-  if (await logsDir.exists()) {
-    await logsDir.delete(recursive: true);
-    _logger.info('🗑️ Cleared all context logs');
-  }
-}
-```
-
-**Key Requirements**:
-- [ ] ZIP export with all context files
-- [ ] Share via system share dialog
-- [ ] Auto cleanup on app startup
-- [ ] Manual clear logs functionality
-- [ ] Configurable cleanup days (0 = disabled)
-
----
-
-### **Phase 5: Testing & Documentation** (2 hours)
+### **Phase 4: Testing & Documentation** (1 hour)
 
 **Unit Tests** (`test/services/context_logger_service_test.dart`):
 - [ ] Test initialization with enabled/disabled
 - [ ] Test guard pattern (no-op when disabled)
 - [ ] Test file creation and writing
 - [ ] Test API key redaction
-- [ ] Test export functionality
-- [ ] Test cleanup functionality
 
 **Integration Tests**:
 - [ ] Test end-to-end logging flow
 - [ ] Test settings UI integration
-- [ ] Test export and share flow
 
-**Manual Testing**:
+**Manual Testing (MVP)**:
 - [ ] Enable logging and send messages
 - [ ] Verify log files contain complete data
 - [ ] Verify API key is redacted
-- [ ] Export logs and verify ZIP
-- [ ] Clear logs and verify deletion
+- [ ] Access logs via Files app (iOS) or file manager (Android)
 - [ ] Disable logging and verify no overhead
 
 **Documentation**:
-- [ ] Update README with context logging feature
-- [ ] Document configuration options
+- [ ] Document file location for manual access
 - [ ] Document privacy considerations
 - [ ] Create implementation summary
 
@@ -692,10 +594,9 @@ Future<void> clearAllLogs() async {
 ```yaml
 dependencies:
   path_provider: ^2.1.0  # For app documents directory
-  
-dev_dependencies:
-  archive: ^3.4.0  # For ZIP export
 ```
+
+**Note**: `archive` package for ZIP export deferred to Phase 5 (future iteration)
 
 ---
 
@@ -730,18 +631,43 @@ touch lib/services/context_logger_service.dart
 # Run tests
 flutter test test/services/context_logger_service_test.dart
 
-# Manual test
+# Manual test (MVP)
 # 1. Enable logging in settings
 # 2. Send messages
-# 3. Verify logs in logs/context/
-# 4. Export and verify ZIP
+# 3. Access logs via Files app: logs/context/session_<timestamp>/
+# 4. Verify JSON files contain complete context
 ```
 
 ---
 
-**Total Effort**: 11-12 hours
+**Total Effort**: 6-7 hours (MVP)
 
-**Priority**: Implement Phase 1-2 first (core functionality), then Phase 3-4 (UI & features), finally Phase 5 (testing & docs)
+**Priority**: Implement Phase 1-3 (core functionality + UI), then Phase 4 (testing & docs)
+
+---
+
+## 🔮 Phase 5: Future Enhancements (Deferred)
+
+**Export Functionality** (2 hours):
+- ZIP export of all context files
+- Share via system share dialog
+- Export button in settings
+
+**Auto Cleanup** (1 hour):
+- Auto-delete logs older than N days
+- Configurable cleanup interval
+- Cleanup on app startup
+
+**Clear Logs Button** (30 min):
+- Manual clear all logs
+- Confirmation dialog
+
+**Advanced Analysis** (2 hours):
+- Automated layer detection
+- Token breakdown by layer
+- Pattern detection flags
+
+**Total Future Enhancements**: 5-6 hours
 
 ---
 
