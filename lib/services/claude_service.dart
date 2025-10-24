@@ -905,7 +905,8 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
       buffer.writeln('2. What did you already say in your previous responses?');
       buffer.writeln(
           '3. What is the user\'s current context and what are they referring to?');
-      buffer.writeln('4. CRITICAL: Check if you already gave this exact response - if yes, provide a DIFFERENT response');
+      buffer.writeln(
+          '4. CRITICAL: Check if you already gave this exact response - if yes, provide a DIFFERENT response');
       buffer.writeln('');
       buffer.writeln('**YOUR RESPONSE MUST**:');
       buffer.writeln('- Acknowledge and build on recent conversation flow');
