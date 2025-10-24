@@ -119,6 +119,24 @@
           ]
         },
         {
+          "name": "get_interleaved_conversation",
+          "description": "FT-206: Get recent conversation as interleaved thread (all personas + user)",
+          "usage": "{\"action\": \"get_interleaved_conversation\", \"limit\": 10, \"include_all_personas\": true}",
+          "when_to_use": [
+            "To understand complete conversation flow across persona switches",
+            "When user references something said by another persona",
+            "For cross-persona context awareness and handoffs"
+          ],
+          "critical_rule": "This is SYSTEM-DRIVEN (pre-executed), not model-driven. You receive this context automatically in system prompt.",
+          "note": "Unlike other MCP commands, you do NOT need to call this - it's already loaded for you",
+          "context_boundaries": [
+            "Use history for UNDERSTANDING conversation flow only",
+            "NEVER extract activities or metadata from historical messages",
+            "NEVER adopt other personas' communication styles",
+            "Process activities ONLY from current user message"
+          ]
+        },
+        {
           "name": "search_conversation_context",
           "description": "Search conversation history by query and timeframe", 
           "usage": "{\"action\": \"search_conversation_context\", \"query\": \"topic\", \"hours\": 24}",

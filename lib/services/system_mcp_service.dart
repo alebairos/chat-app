@@ -206,6 +206,23 @@ class SystemMCPService {
             return _errorResponse('Conversation database queries disabled');
           }
 
+        case 'get_interleaved_conversation':
+          _logger.info(
+              '🔍 [FT-206] CONVERSATION MCP: get_interleaved_conversation called!');
+          if (await _isConversationCommandEnabled(
+              'get_interleaved_conversation')) {
+            final limit = parsedCommand['limit'] as int? ?? 10;
+            final includeAllPersonas =
+                parsedCommand['include_all_personas'] as bool? ?? true;
+            _logger.info(
+                '🔍 [FT-206] CONVERSATION MCP: Executing get_interleaved_conversation (limit: $limit, includeAll: $includeAllPersonas)');
+            return await _getInterleavedConversation(limit, includeAllPersonas);
+          } else {
+            _logger.warning(
+                '🔍 [FT-206] CONVERSATION MCP: get_interleaved_conversation DISABLED');
+            return _errorResponse('Conversation database queries disabled');
+          }
+
         case 'search_conversation_context':
           _logger.info(
               '🔍 [FT-203] CONVERSATION MCP: search_conversation_context called!');
@@ -1052,6 +1069,49 @@ Return empty array if NO COMPLETED activities detected.
     } catch (e) {
       _logger.error('FT-200: Error getting current persona messages: $e');
       return _errorResponse('Error getting current persona messages: $e');
+    }
+  }
+
+  /// FT-206: Get interleaved conversation thread (all messages in chronological order)
+  Future<String> _getInterleavedConversation(
+      int limit, bool includeAllPersonas) async {
+    _logger.info(
+        'FT-206: Getting interleaved conversation (limit: $limit, includeAll: $includeAllPersonas)');
+
+    try {
+      final storageService = ChatStorageService();
+      final messages = await storageService.getMessages(limit: limit);
+
+      // Format as interleaved conversation thread
+      final conversationThread = messages.map((msg) {
+        final speaker = msg.isUser
+            ? 'User'
+            : '[${msg.personaDisplayName ?? msg.personaKey}]';
+
+        return {
+          'speaker': speaker,
+          'text': msg.text,
+          'time_ago': _formatTimeAgo(DateTime.now().difference(msg.timestamp)),
+          'timestamp': msg.timestamp.toIso8601String(),
+        };
+      }).toList();
+
+      final response = {
+        'status': 'success',
+        'data': {
+          'conversation_thread': conversationThread,
+          'total_messages': conversationThread.length,
+          'context': 'Complete recent conversation history across all personas'
+        },
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      _logger.info(
+          'FT-206: ✅ Retrieved ${conversationThread.length} messages in interleaved format');
+      return json.encode(response);
+    } catch (e) {
+      _logger.error('FT-206: Error getting interleaved conversation: $e');
+      return _errorResponse('Error getting interleaved conversation: $e');
     }
   }
 

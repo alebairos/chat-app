@@ -275,6 +275,18 @@ class ClaudeService {
     }
   }
 
+  /// FT-206: Load conversation database configuration
+  Future<Map<String, dynamic>> _loadConversationDatabaseConfig() async {
+    try {
+      final configString = await rootBundle
+          .loadString('assets/config/conversation_database_config.json');
+      return json.decode(configString) as Map<String, dynamic>;
+    } catch (e) {
+      _logger.warning('FT-206: Failed to load conversation config: $e');
+      return {}; // Return empty map as fallback
+    }
+  }
+
   Future<bool> initialize() async {
     if (!_isInitialized) {
       try {
@@ -369,6 +381,13 @@ class ClaudeService {
 
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
+
+      // FT-206: Detect data query patterns and inject hints
+      final queryHint = _detectDataQueryPattern(message);
+      if (queryHint != null) {
+        _logger.info('FT-206: Detected data query pattern, injecting hint');
+        _systemPrompt = '$_systemPrompt$queryHint';
+      }
 
       // Check if message contains a system MCP command
       if (_systemMCP != null && message.startsWith('{')) {
@@ -731,15 +750,75 @@ class ClaudeService {
     // Build enhanced system prompt with time context
     String systemPrompt = _systemPrompt ?? '';
 
+    // FT-206: Check if Oracle is enabled for adaptive priority hierarchy
+    final isOracleEnabled = _systemMCP?.isOracleEnabled ?? false;
+
+    // FT-206: Add priority hierarchy header
+    final priorityHeader = '''
+## 🎯 INSTRUCTION PRIORITY HIERARCHY
+
+**PRIORITY 1 (ABSOLUTE)**: Data Query Intelligence (MANDATORY)
+
+When user asks about TIME PERIODS, QUANTITIES, or PROGRESS:
+- Past periods: "week", "yesterday", "month", "last N days"
+- Quantities: "how many", "how much", "total", "count"
+- Progress: "summary", "progress", "how was", "compared to"
+- Frequency: "how often", "usually", "typically"
+- Intensity: "most", "least", "best", "worst"
+
+MANDATORY ACTION:
+1. Recognize query requires historical data
+2. Generate MCP command: {"action": "get_activity_stats", "days": N}
+3. Wait for data response
+4. Provide data-informed answer
+
+NEVER approximate historical data from conversation memory.
+ALWAYS fetch fresh data via MCP for temporal/quantitative queries.
+
+---
+
+**PRIORITY 2 (ABSOLUTE)**: Time Awareness (MANDATORY)
+- ALWAYS use current time from system context
+- Never rely on memory for temporal information
+
+**PRIORITY 3 (HIGHEST)**: Core Behavioral Rules & Persona Configuration
+- Follow System Laws #1-#7 literally
+- Maintain unique persona identity and symbols
+- Adhere to persona-specific communication style
+
+${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
+- PRIMARY: Follow 8 dimensions (R, SF, TG, SM, E, TT, PR, F) and 265+ activities
+- GUARDRAILS: Apply 9 theoretical foundations (Fogg, Hreha, Lembke, Lieberman, Seligman, Maslow, Huberman, Easter, Newberg)
+- CRITICAL: Activity detection ONLY from current user message
+- NEVER extract Oracle codes or metadata from conversation history
+
+''' : ''}**PRIORITY ${isOracleEnabled ? '5' : '4'}**: Conversation Context (REFERENCE ONLY)
+- Use for understanding conversation flow and topics
+- Do NOT process activities from historical messages
+- Do NOT extract metadata from conversation history
+- Do NOT adopt other personas' communication styles
+
+**PRIORITY ${isOracleEnabled ? '6' : '5'}**: User's Current Message (PRIMARY FOCUS)
+- Activity detection: ONLY current user message
+- Metadata extraction: ONLY current user message
+- This is the ONLY message to process for data extraction
+
+---
+
+''';
+
     // Add conversation context first for immediate temporal awareness
     if (conversationContext.isNotEmpty) {
       systemPrompt = '$conversationContext\n\n$systemPrompt';
     }
 
-    // Add time context at the beginning if available
+    // Add time context after conversation context
     if (timeContext.isNotEmpty) {
       systemPrompt = '$timeContext\n\n$systemPrompt';
     }
+
+    // Add priority header at the very beginning
+    systemPrompt = '$priorityHeader$systemPrompt';
 
     // Add session-specific MCP context (FT-130: Simplified after config extraction)
     if (_systemMCP != null) {
@@ -765,7 +844,7 @@ class ClaudeService {
   }
 
   /// FT-157: Build recent conversation context for temporal awareness
-  /// FT-206: Proactive conversation context loading using MCP commands
+  /// FT-206: Proactive conversation context loading using MCP commands (interleaved format)
   Future<String> _buildRecentConversationContext() async {
     // FT-200: Check if conversation database queries are enabled
     if (!await _isConversationDatabaseEnabled()) {
@@ -775,16 +854,27 @@ class ClaudeService {
     }
 
     try {
-      _logger.debug('FT-206: Loading proactive conversation context via MCP');
+      _logger.debug(
+          'FT-206: Loading proactive conversation context via MCP (interleaved format)');
 
-      // Execute conversation MCP commands directly (following time context pattern)
-      final recentMessages = await _systemMCP!
-          .processCommand('{"action":"get_recent_user_messages","limit":5}');
-      final personaMessages = await _systemMCP!.processCommand(
-          '{"action":"get_current_persona_messages","limit":3}');
+      // Load conversation database config for adaptive limits
+      final config = await _loadConversationDatabaseConfig();
+      final isOracleEnabled = _systemMCP?.isOracleEnabled ?? false;
+
+      // Adaptive token budget: 8 messages for Oracle, 10 for non-Oracle
+      final limit = isOracleEnabled
+          ? (config['performance']?['max_interleaved_messages_oracle'] ?? 8)
+          : (config['performance']?['max_interleaved_messages'] ?? 10);
+
+      _logger.debug(
+          'FT-206: Using limit=$limit messages (Oracle: $isOracleEnabled)');
+
+      // Execute interleaved conversation MCP command
+      final conversation = await _systemMCP!.processCommand(
+          '{"action":"get_interleaved_conversation","limit":$limit,"include_all_personas":true}');
 
       // Format for system prompt injection
-      return _buildConversationContextPrompt(recentMessages, personaMessages);
+      return _formatInterleavedConversation(conversation);
     } catch (e) {
       _logger
           .warning('FT-206: Failed to load conversation context via MCP: $e');
@@ -792,52 +882,108 @@ class ClaudeService {
     }
   }
 
-  /// FT-206: Format MCP conversation responses for system prompt
-  String _buildConversationContextPrompt(
-      String recentMessages, String personaMessages) {
-    final buffer = StringBuffer();
-
-    // Parse and format recent user messages
+  /// FT-206: Format interleaved conversation for system prompt
+  String _formatInterleavedConversation(String mcpResponse) {
     try {
-      final recentData = json.decode(recentMessages);
-      if (recentData['status'] == 'success' &&
-          recentData['data']['user_messages'] != null &&
-          recentData['data']['user_messages'].isNotEmpty) {
-        buffer.writeln('## Recent User Messages:');
-        for (final msg in recentData['data']['user_messages']) {
-          buffer.writeln('- ${msg['time_ago']}: "${msg['text']}"');
-        }
-        buffer.writeln();
+      final data = json.decode(mcpResponse);
+      if (data['status'] != 'success') {
+        _logger.warning('FT-206: MCP returned non-success status');
+        return '';
       }
-    } catch (e) {
-      _logger.warning('FT-206: Failed to parse recent messages: $e');
-    }
 
-    // Parse and format persona messages
-    try {
-      final personaData = json.decode(personaMessages);
-      if (personaData['status'] == 'success' &&
-          personaData['data']['persona_messages'] != null &&
-          personaData['data']['persona_messages'].isNotEmpty) {
-        buffer.writeln('## Your Previous Responses:');
-        for (final msg in personaData['data']['persona_messages']) {
-          buffer.writeln('- ${msg['time_ago']}: "${msg['text']}"');
-        }
-        buffer.writeln();
+      final thread = data['data']['conversation_thread'] as List?;
+      if (thread == null || thread.isEmpty) {
+        _logger.debug('FT-206: No conversation history available');
+        return '';
       }
-    } catch (e) {
-      _logger.warning('FT-206: Failed to parse persona messages: $e');
-    }
 
-    final result = buffer.toString();
-    if (result.isNotEmpty) {
+      final buffer = StringBuffer();
+      buffer.writeln('## 📜 RECENT CONVERSATION CONTEXT (REFERENCE ONLY)');
+      buffer.writeln('');
+      buffer.writeln('**MANDATORY REVIEW BEFORE RESPONDING**:');
+      buffer.writeln('1. What was just discussed in the conversation above?');
+      buffer.writeln('2. What did you already say in your previous responses?');
+      buffer.writeln(
+          '3. What is the user\'s current context and what are they referring to?');
+      buffer.writeln('');
+      buffer.writeln('**YOUR RESPONSE MUST**:');
+      buffer.writeln('- Acknowledge and build on recent conversation flow');
+      buffer.writeln(
+          '- Provide NEW information or insights (never repeat previous responses)');
+      buffer.writeln(
+          '- Reference what user mentioned (e.g., if they say "I was talking with X", acknowledge it)');
+      buffer
+          .writeln('- Maintain conversation continuity without starting fresh');
+      buffer.writeln('');
+      buffer.writeln('**CRITICAL BOUNDARIES**:');
+      buffer.writeln('- Activity detection: ONLY current user message');
+      buffer.writeln('- Do NOT extract codes or metadata from history');
+      buffer.writeln('- Do NOT adopt other personas\' communication styles');
+      buffer.writeln('');
+      buffer.writeln('---');
+      buffer.writeln('');
+
+      for (final msg in thread) {
+        final speaker = msg['speaker'] as String;
+        final text = msg['text'] as String;
+        final timeAgo = msg['time_ago'] as String;
+
+        buffer.writeln('**$speaker** ($timeAgo): $text');
+      }
+
+      buffer.writeln('');
+      buffer.writeln('---');
+      buffer.writeln(
+          '**REMINDER**: Process activities ONLY from current user message.');
+      buffer.writeln('');
+
+      final result = buffer.toString();
       _logger.info(
-          'FT-206: ✅ Loaded conversation context via MCP (${result.split('\n').length} lines)');
-    } else {
-      _logger.debug('FT-206: No conversation context loaded (empty result)');
+          'FT-206: ✅ Loaded ${thread.length} messages in interleaved format');
+
+      return result;
+    } catch (e) {
+      _logger.error('FT-206: Failed to format interleaved conversation: $e');
+      return '';
+    }
+  }
+
+  /// FT-206: Detect if user message requires historical data query
+  /// Returns hint to inject into system prompt for explicit guidance
+  String? _detectDataQueryPattern(String message) {
+    final lowerMessage = message.toLowerCase();
+
+    // Temporal patterns (generic, language-agnostic where possible)
+    final temporalPatterns = {
+      r'\b(semana|week)\b': 7,
+      r'\b(ontem|yesterday)\b': 1,
+      r'\b(mês|mes|month)\b': 30,
+      r'\b(hoje|today)\b': 0,
+    };
+
+    // Quantitative patterns
+    final quantPatterns = [
+      r'\b(quantas|quantos|how many|how much)\b',
+      r'\b(total|count|sum)\b',
+      r'\b(resumo|summary|overview)\b',
+      r'\b(progresso|progress)\b',
+    ];
+
+    // Check temporal patterns
+    for (final entry in temporalPatterns.entries) {
+      if (RegExp(entry.key, caseSensitive: false).hasMatch(lowerMessage)) {
+        return '\n**QUERY HINT**: User is asking about ${entry.value} day(s) period. Use get_activity_stats(days: ${entry.value})\n';
+      }
     }
 
-    return result;
+    // Check quantitative patterns
+    for (final pattern in quantPatterns) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(lowerMessage)) {
+        return '\n**QUERY HINT**: User is asking for quantitative data. Use get_activity_stats to fetch precise numbers.\n';
+      }
+    }
+
+    return null;
   }
 
   /// Helper method to call Claude with a specific prompt
@@ -1016,12 +1162,20 @@ class ClaudeService {
         return null;
       }
 
-      final messages = await _storageService!.getMessages(limit: 1);
+      // FT-206: Get last 2 messages to skip the current user message
+      // The current user message is already saved to DB before this is called
+      final messages = await _storageService!.getMessages(limit: 2);
       if (messages.isEmpty) {
         return null;
       }
 
-      return TimeContextService.validateTimestamp(messages.first.timestamp);
+      // If we only have 1 message (first conversation), return null
+      if (messages.length == 1) {
+        return null;
+      }
+
+      // Return the second message (previous conversation's last message)
+      return TimeContextService.validateTimestamp(messages[1].timestamp);
     } catch (e) {
       _logger.error('Error getting last message timestamp: $e');
       return null;

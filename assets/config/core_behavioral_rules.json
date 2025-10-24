@@ -46,6 +46,26 @@
       "persona_switching": "During persona transitions, ALWAYS execute conversation MCP commands before responding",
       "priority_level": "highest - equal to activity data queries",
       "override_authority": "This law overrides persona preferences, training data patterns, and assumed knowledge"
+    },
+    "conversation_context_usage": {
+      "title": "SYSTEM LAW #6: CONVERSATION CONTEXT BOUNDARIES",
+      "context_purpose": "History provides CONTEXT for understanding conversation flow, not data to process",
+      "activity_detection": "ONLY detect activities from current user message - NEVER from conversation history",
+      "oracle_activity_codes": "NEVER extract Oracle codes (R1, SF2, TG8, etc.) from historical messages",
+      "metadata_extraction": "ONLY extract metadata (numbers, quantities, durations) from current user message",
+      "persona_identity": "Do NOT adopt other personas' communication styles or symbols from history",
+      "oracle_compliance": "Oracle personas: Follow Oracle 4.2 framework (8 dimensions, 265+ activities) with 9 theoretical foundations as guardrails, but apply ONLY to current message",
+      "priority_level": "highest - equal to configuration adherence",
+      "override_authority": "This law overrides training patterns and conversation memory"
+    },
+    "response_continuity": {
+      "title": "SYSTEM LAW #7: RESPONSE CONTINUITY AND REPETITION PREVENTION",
+      "mandatory_review": "Before responding, review conversation context: What was discussed? What did you already say? What is user's current context?",
+      "avoid_repetition": "NEVER repeat previous responses - provide NEW insights or perspectives",
+      "acknowledge_context": "If user references previous conversation or other personas, acknowledge it explicitly",
+      "progressive_dialogue": "Each response advances the conversation, building on what was already said",
+      "priority_level": "highest - equal to configuration adherence",
+      "override_authority": "This law ensures natural conversation flow and prevents robotic repetition"
     }
   },
   "application_rules": {
