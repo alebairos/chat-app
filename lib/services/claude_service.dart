@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ai_personas_app/config/config_loader.dart';
+import 'package:ai_personas_app/config/character_config_manager.dart';
 
 import 'system_mcp_service.dart';
 import '../utils/activity_detection_utils.dart';
@@ -18,6 +19,7 @@ import 'semantic_activity_detector.dart';
 import 'shared_claude_rate_limiter.dart';
 import 'activity_queue.dart' as ft154;
 import '../utils/message_id_generator.dart';
+import 'context_logger_service.dart';
 
 import 'chat_storage_service.dart';
 
@@ -74,6 +76,9 @@ class ClaudeService {
 
   // FT-154: Contextual user feedback tracking
   int _consecutiveFallbacks = 0;
+
+  // FT-220: Context logging service
+  final _contextLogger = ContextLoggerService();
 
   ClaudeService({
     http.Client? client,
@@ -299,6 +304,9 @@ class ClaudeService {
             limit: 25); // Enhanced: Handle complex conversations
         _logger.debug('FT-150-Enhanced: History loading completed');
 
+        // FT-220: Initialize context logging service
+        await _contextLogger.initialize();
+
         _isInitialized = true;
         _logger.debug('FT-150-Simple: ClaudeService initialization completed');
       } catch (e) {
@@ -461,6 +469,41 @@ class ClaudeService {
       // Build enhanced system prompt with time context and FT-095 temporal intelligence
       final systemPrompt = await _buildSystemPrompt();
 
+      // FT-220: Log context before API call (zero overhead if disabled)
+      String? contextLogPath;
+      if (_contextLogger.isEnabled) {
+        final configManager = CharacterConfigManager();
+        contextLogPath = await _contextLogger.logContext(
+          apiRequest: {
+            'endpoint': _baseUrl,
+            'method': 'POST',
+            'headers': {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Accept': 'application/json; charset=utf-8',
+              'x-api-key': _apiKey,
+              'anthropic-version': '2023-06-01',
+            },
+            'body': {
+              'model': _model,
+              'max_tokens': 1024,
+              'messages': messages,
+              'system': systemPrompt,
+            },
+            'raw_json': jsonEncode({
+              'model': _model,
+              'max_tokens': 1024,
+              'messages': messages,
+              'system': systemPrompt,
+            }),
+          },
+          metadata: {
+            'persona_key': configManager.activePersonaKey,
+            'persona_display_name': await configManager.personaDisplayName,
+            'oracle_enabled': await configManager.isOracleEnabled(),
+          },
+        );
+      }
+
       final response = await _client.post(
         Uri.parse(_baseUrl),
         headers: {
@@ -489,6 +532,18 @@ class ClaudeService {
 
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         var assistantMessage = data['content'][0]['text'];
+
+        // FT-220: Update context log with response (zero overhead if disabled)
+        if (contextLogPath != null) {
+          await _contextLogger.updateWithResponse(
+            contextFilePath: contextLogPath,
+            apiResponse: {
+              'status_code': response.statusCode,
+              'body': data,
+              'raw_json': utf8.decode(response.bodyBytes),
+            },
+          );
+        }
 
         // Log the original AI response to see what we're working with
         _logger.debug('Original AI response: $assistantMessage');
