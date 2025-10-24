@@ -1,4 +1,4 @@
-<!-- 9b5cfb03-ff55-44c7-900b-05c3d7782d1c 9d1f220f-8ee2-444a-baa1-0b2376836641 -->
+<!-- 9b5cfb03-ff55-44c7-900b-05c3d7782d1c 40110ff5-567d-4356-9f22-b2ca1a0f60d8 -->
 # FT-206: Enhance Conversation Context Structure
 
 ## Overview
@@ -307,17 +307,11 @@ If issues arise:
 
 ### To-dos
 
-- [ ] Add composite indexes to ChatMessageModel for efficient queries
-- [ ] Implement _getInterleavedConversation() in system_mcp_service.dart
-- [ ] Add command handler for get_interleaved_conversation
-- [ ] Add Oracle-aware priority hierarchy to _buildSystemPrompt()
-- [ ] Update _buildRecentConversationContext() with adaptive token budget
-- [ ] Implement _formatInterleavedConversation() with Oracle artifact stripping
-- [ ] Update conversation_database_config.json with new parameters
-- [ ] Add System Law #6 to core_behavioral_rules.json
-- [ ] Document get_interleaved_conversation in mcp_base_config.json
-- [ ] Test: Activity detection only from current message
-- [ ] Test: FT-211 time reference interpretation
-- [ ] Test: Cross-persona handoff with context
-- [ ] Test: Oracle persona token budget compliance
-- [ ] Update ft_206_conversation_context_analysis.md with implementation details
+- [ ] Add PRIORITY 1 (Data Query Intelligence) to priority header in _buildSystemPrompt()
+- [ ] Implement _detectDataQueryPattern() method with generic temporal/quantitative patterns
+- [ ] Integrate pattern detection and hint injection in _sendMessageInternal()
+- [ ] Add mandatory conversation review instructions to _formatInterleavedConversation()
+- [ ] Add SYSTEM LAW #7 (Response Continuity) to core_behavioral_rules.json
+- [ ] Test with real time gap scenario (4+ hours) to verify timestamp fix
+- [ ] Test data query patterns (weekly summary, yesterday, quantities)
+- [ ] Test repetition prevention and context acknowledgment

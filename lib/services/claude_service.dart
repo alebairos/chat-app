@@ -382,6 +382,13 @@ class ClaudeService {
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
 
+      // FT-206: Detect data query patterns and inject hints
+      final queryHint = _detectDataQueryPattern(message);
+      if (queryHint != null) {
+        _logger.info('FT-206: Detected data query pattern, injecting hint');
+        _systemPrompt = '$_systemPrompt$queryHint';
+      }
+
       // Check if message contains a system MCP command
       if (_systemMCP != null && message.startsWith('{')) {
         try {
@@ -750,28 +757,48 @@ class ClaudeService {
     final priorityHeader = '''
 ## 🎯 INSTRUCTION PRIORITY HIERARCHY
 
-**PRIORITY 1 (ABSOLUTE)**: Time Awareness (MANDATORY)
+**PRIORITY 1 (ABSOLUTE)**: Data Query Intelligence (MANDATORY)
+
+When user asks about TIME PERIODS, QUANTITIES, or PROGRESS:
+- Past periods: "week", "yesterday", "month", "last N days"
+- Quantities: "how many", "how much", "total", "count"
+- Progress: "summary", "progress", "how was", "compared to"
+- Frequency: "how often", "usually", "typically"
+- Intensity: "most", "least", "best", "worst"
+
+MANDATORY ACTION:
+1. Recognize query requires historical data
+2. Generate MCP command: {"action": "get_activity_stats", "days": N}
+3. Wait for data response
+4. Provide data-informed answer
+
+NEVER approximate historical data from conversation memory.
+ALWAYS fetch fresh data via MCP for temporal/quantitative queries.
+
+---
+
+**PRIORITY 2 (ABSOLUTE)**: Time Awareness (MANDATORY)
 - ALWAYS use current time from system context
 - Never rely on memory for temporal information
 
-**PRIORITY 2 (HIGHEST)**: Core Behavioral Rules & Persona Configuration
-- Follow System Laws #1-#6 literally
+**PRIORITY 3 (HIGHEST)**: Core Behavioral Rules & Persona Configuration
+- Follow System Laws #1-#7 literally
 - Maintain unique persona identity and symbols
 - Adhere to persona-specific communication style
 
-${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
+${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
 - PRIMARY: Follow 8 dimensions (R, SF, TG, SM, E, TT, PR, F) and 265+ activities
 - GUARDRAILS: Apply 9 theoretical foundations (Fogg, Hreha, Lembke, Lieberman, Seligman, Maslow, Huberman, Easter, Newberg)
 - CRITICAL: Activity detection ONLY from current user message
 - NEVER extract Oracle codes or metadata from conversation history
 
-''' : ''}**PRIORITY ${isOracleEnabled ? '4' : '3'}**: Conversation Context (REFERENCE ONLY)
+''' : ''}**PRIORITY ${isOracleEnabled ? '5' : '4'}**: Conversation Context (REFERENCE ONLY)
 - Use for understanding conversation flow and topics
 - Do NOT process activities from historical messages
 - Do NOT extract metadata from conversation history
 - Do NOT adopt other personas' communication styles
 
-**PRIORITY ${isOracleEnabled ? '5' : '4'}**: User's Current Message (PRIMARY FOCUS)
+**PRIORITY ${isOracleEnabled ? '6' : '5'}**: User's Current Message (PRIMARY FOCUS)
 - Activity detection: ONLY current user message
 - Metadata extraction: ONLY current user message
 - This is the ONLY message to process for data extraction
@@ -871,10 +898,20 @@ ${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
       final buffer = StringBuffer();
       buffer.writeln('## 📜 RECENT CONVERSATION CONTEXT (REFERENCE ONLY)');
       buffer.writeln('');
-      buffer.writeln('**PURPOSE**: Understand conversation flow and topics');
+      buffer.writeln('**MANDATORY REVIEW BEFORE RESPONDING**:');
+      buffer.writeln('1. What was just discussed in the conversation above?');
+      buffer.writeln('2. What did you already say in your previous responses?');
+      buffer.writeln('3. What is the user\'s current context and what are they referring to?');
+      buffer.writeln('');
+      buffer.writeln('**YOUR RESPONSE MUST**:');
+      buffer.writeln('- Acknowledge and build on recent conversation flow');
+      buffer.writeln('- Provide NEW information or insights (never repeat previous responses)');
+      buffer.writeln('- Reference what user mentioned (e.g., if they say "I was talking with X", acknowledge it)');
+      buffer.writeln('- Maintain conversation continuity without starting fresh');
+      buffer.writeln('');
       buffer.writeln('**CRITICAL BOUNDARIES**:');
       buffer.writeln('- Activity detection: ONLY current user message');
-      buffer.writeln('- Do NOT extract Oracle codes or metadata from history');
+      buffer.writeln('- Do NOT extract codes or metadata from history');
       buffer.writeln('- Do NOT adopt other personas\' communication styles');
       buffer.writeln('');
       buffer.writeln('---');
@@ -885,12 +922,7 @@ ${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
         final text = msg['text'] as String;
         final timeAgo = msg['time_ago'] as String;
 
-        // Strip Oracle artifacts from other personas' messages
-        final cleanText = speaker.startsWith('[')
-            ? _removeOracleArtifacts(text)
-            : text;
-
-        buffer.writeln('**$speaker** ($timeAgo): $cleanText');
+        buffer.writeln('**$speaker** ($timeAgo): $text');
       }
 
       buffer.writeln('');
@@ -909,25 +941,42 @@ ${isOracleEnabled ? '''**PRIORITY 3 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
     }
   }
 
-  /// FT-206: Remove Oracle artifacts from persona messages to prevent false detection
-  String _removeOracleArtifacts(String text) {
-    var cleaned = text;
-
-    // Remove Oracle emojis
-    cleaned = cleaned.replaceAll(RegExp(r'[🎯💪🔥⚡️✨🌟💡🚀]'), '');
-
-    // Replace Oracle activity codes with placeholder
-    cleaned = cleaned.replaceAll(RegExp(r'\b[A-Z]{1,2}\d+\b'), '[activity]');
-
-    // Replace metadata numbers with placeholder
-    cleaned = cleaned.replaceAll(
-        RegExp(r'\d+\s*(ml|minutos|min|flexões|pomodoros|km|g)'),
-        '[metadata]');
-
-    // Replace MCP commands with placeholder
-    cleaned = cleaned.replaceAll(RegExp(r'\{[^}]*action[^}]*\}'), '[mcp]');
-
-    return cleaned.trim();
+  /// FT-206: Detect if user message requires historical data query
+  /// Returns hint to inject into system prompt for explicit guidance
+  String? _detectDataQueryPattern(String message) {
+    final lowerMessage = message.toLowerCase();
+    
+    // Temporal patterns (generic, language-agnostic where possible)
+    final temporalPatterns = {
+      r'\b(semana|week)\b': 7,
+      r'\b(ontem|yesterday)\b': 1,
+      r'\b(mês|mes|month)\b': 30,
+      r'\b(hoje|today)\b': 0,
+    };
+    
+    // Quantitative patterns
+    final quantPatterns = [
+      r'\b(quantas|quantos|how many|how much)\b',
+      r'\b(total|count|sum)\b',
+      r'\b(resumo|summary|overview)\b',
+      r'\b(progresso|progress)\b',
+    ];
+    
+    // Check temporal patterns
+    for (final entry in temporalPatterns.entries) {
+      if (RegExp(entry.key, caseSensitive: false).hasMatch(lowerMessage)) {
+        return '\n**QUERY HINT**: User is asking about ${entry.value} day(s) period. Use get_activity_stats(days: ${entry.value})\n';
+      }
+    }
+    
+    // Check quantitative patterns
+    for (final pattern in quantPatterns) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(lowerMessage)) {
+        return '\n**QUERY HINT**: User is asking for quantitative data. Use get_activity_stats to fetch precise numbers.\n';
+      }
+    }
+    
+    return null;
   }
 
   /// Helper method to call Claude with a specific prompt

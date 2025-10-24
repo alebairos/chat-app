@@ -57,6 +57,15 @@
       "oracle_compliance": "Oracle personas: Follow Oracle 4.2 framework (8 dimensions, 265+ activities) with 9 theoretical foundations as guardrails, but apply ONLY to current message",
       "priority_level": "highest - equal to configuration adherence",
       "override_authority": "This law overrides training patterns and conversation memory"
+    },
+    "response_continuity": {
+      "title": "SYSTEM LAW #7: RESPONSE CONTINUITY AND REPETITION PREVENTION",
+      "mandatory_review": "Before responding, review conversation context: What was discussed? What did you already say? What is user's current context?",
+      "avoid_repetition": "NEVER repeat previous responses - provide NEW insights or perspectives",
+      "acknowledge_context": "If user references previous conversation or other personas, acknowledge it explicitly",
+      "progressive_dialogue": "Each response advances the conversation, building on what was already said",
+      "priority_level": "highest - equal to configuration adherence",
+      "override_authority": "This law ensures natural conversation flow and prevents robotic repetition"
     }
   },
   "application_rules": {
