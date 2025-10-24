@@ -854,7 +854,8 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
     }
 
     try {
-      _logger.debug('FT-206: Loading proactive conversation context via MCP (interleaved format)');
+      _logger.debug(
+          'FT-206: Loading proactive conversation context via MCP (interleaved format)');
 
       // Load conversation database config for adaptive limits
       final config = await _loadConversationDatabaseConfig();
@@ -865,7 +866,8 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
           ? (config['performance']?['max_interleaved_messages_oracle'] ?? 8)
           : (config['performance']?['max_interleaved_messages'] ?? 10);
 
-      _logger.debug('FT-206: Using limit=$limit messages (Oracle: $isOracleEnabled)');
+      _logger.debug(
+          'FT-206: Using limit=$limit messages (Oracle: $isOracleEnabled)');
 
       // Execute interleaved conversation MCP command
       final conversation = await _systemMCP!.processCommand(
@@ -901,13 +903,17 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
       buffer.writeln('**MANDATORY REVIEW BEFORE RESPONDING**:');
       buffer.writeln('1. What was just discussed in the conversation above?');
       buffer.writeln('2. What did you already say in your previous responses?');
-      buffer.writeln('3. What is the user\'s current context and what are they referring to?');
+      buffer.writeln(
+          '3. What is the user\'s current context and what are they referring to?');
       buffer.writeln('');
       buffer.writeln('**YOUR RESPONSE MUST**:');
       buffer.writeln('- Acknowledge and build on recent conversation flow');
-      buffer.writeln('- Provide NEW information or insights (never repeat previous responses)');
-      buffer.writeln('- Reference what user mentioned (e.g., if they say "I was talking with X", acknowledge it)');
-      buffer.writeln('- Maintain conversation continuity without starting fresh');
+      buffer.writeln(
+          '- Provide NEW information or insights (never repeat previous responses)');
+      buffer.writeln(
+          '- Reference what user mentioned (e.g., if they say "I was talking with X", acknowledge it)');
+      buffer
+          .writeln('- Maintain conversation continuity without starting fresh');
       buffer.writeln('');
       buffer.writeln('**CRITICAL BOUNDARIES**:');
       buffer.writeln('- Activity detection: ONLY current user message');
@@ -927,7 +933,8 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
 
       buffer.writeln('');
       buffer.writeln('---');
-      buffer.writeln('**REMINDER**: Process activities ONLY from current user message.');
+      buffer.writeln(
+          '**REMINDER**: Process activities ONLY from current user message.');
       buffer.writeln('');
 
       final result = buffer.toString();
@@ -945,7 +952,7 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
   /// Returns hint to inject into system prompt for explicit guidance
   String? _detectDataQueryPattern(String message) {
     final lowerMessage = message.toLowerCase();
-    
+
     // Temporal patterns (generic, language-agnostic where possible)
     final temporalPatterns = {
       r'\b(semana|week)\b': 7,
@@ -953,7 +960,7 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
       r'\b(mês|mes|month)\b': 30,
       r'\b(hoje|today)\b': 0,
     };
-    
+
     // Quantitative patterns
     final quantPatterns = [
       r'\b(quantas|quantos|how many|how much)\b',
@@ -961,21 +968,21 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
       r'\b(resumo|summary|overview)\b',
       r'\b(progresso|progress)\b',
     ];
-    
+
     // Check temporal patterns
     for (final entry in temporalPatterns.entries) {
       if (RegExp(entry.key, caseSensitive: false).hasMatch(lowerMessage)) {
         return '\n**QUERY HINT**: User is asking about ${entry.value} day(s) period. Use get_activity_stats(days: ${entry.value})\n';
       }
     }
-    
+
     // Check quantitative patterns
     for (final pattern in quantPatterns) {
       if (RegExp(pattern, caseSensitive: false).hasMatch(lowerMessage)) {
         return '\n**QUERY HINT**: User is asking for quantitative data. Use get_activity_stats to fetch precise numbers.\n';
       }
     }
-    
+
     return null;
   }
 
