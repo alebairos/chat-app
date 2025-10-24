@@ -54,6 +54,10 @@ void main() {
       when(() => mockConfigLoader.activePersonaKey).thenReturn('testPersona');
       when(() => mockConfigLoader.activePersonaDisplayName)
           .thenAnswer((_) async => 'Test Persona');
+      
+      // FT-206: Mock conversation context loading (default to empty)
+      when(() => mockStorageService.getMessages(limit: 10))
+          .thenAnswer((_) async => []);
     });
 
     group('Time Context Integration', () {
@@ -64,6 +68,13 @@ void main() {
         final now = DateTime.now();
         final recentMessage = now.subtract(const Duration(hours: 2));
 
+        final currentMessage = ChatMessageModel(
+          text: 'Current message',
+          isUser: true,
+          type: MessageType.text,
+          timestamp: now,
+        );
+
         final mockMessage = ChatMessageModel(
           text: 'Previous message',
           isUser: true,
@@ -71,8 +82,9 @@ void main() {
           timestamp: recentMessage,
         );
 
-        when(() => mockStorageService.getMessages(limit: 1))
-            .thenAnswer((_) async => [mockMessage]);
+        // FT-206: _getLastMessageTimestamp now fetches 2 messages
+        when(() => mockStorageService.getMessages(limit: 2))
+            .thenAnswer((_) async => [currentMessage, mockMessage]);
 
         when(() => mockClient.post(
               any(),
@@ -114,8 +126,15 @@ void main() {
       test('should include only current time context when no previous messages',
           () async {
         // Arrange
-        when(() => mockStorageService.getMessages(limit: 1))
-            .thenAnswer((_) async => []);
+        // FT-206: _getLastMessageTimestamp now fetches 2 messages, return 1 for first conversation
+        final currentMessage = ChatMessageModel(
+          text: 'First message',
+          isUser: true,
+          type: MessageType.text,
+          timestamp: DateTime.now(),
+        );
+        when(() => mockStorageService.getMessages(limit: 2))
+            .thenAnswer((_) async => [currentMessage]);
 
         when(() => mockClient.post(
               any(),
@@ -155,7 +174,8 @@ void main() {
 
       test('should handle storage service errors gracefully', () async {
         // Arrange
-        when(() => mockStorageService.getMessages(limit: 1))
+        // FT-206: _getLastMessageTimestamp now fetches 2 messages
+        when(() => mockStorageService.getMessages(limit: 2))
             .thenThrow(Exception('Storage error'));
 
         when(() => mockClient.post(
@@ -240,6 +260,12 @@ void main() {
           () async {
         // Test yesterday gap
         final now = DateTime.now();
+        final currentMessage = ChatMessageModel(
+          text: 'Current message',
+          isUser: true,
+          type: MessageType.text,
+          timestamp: now,
+        );
         final yesterdayMessage = ChatMessageModel(
           text: 'Yesterday message',
           isUser: true,
@@ -247,8 +273,9 @@ void main() {
           timestamp: now.subtract(const Duration(days: 1)),
         );
 
-        when(() => mockStorageService.getMessages(limit: 1))
-            .thenAnswer((_) async => [yesterdayMessage]);
+        // FT-206: _getLastMessageTimestamp now fetches 2 messages
+        when(() => mockStorageService.getMessages(limit: 2))
+            .thenAnswer((_) async => [currentMessage, yesterdayMessage]);
 
         when(() => mockClient.post(
               any(),
@@ -287,6 +314,12 @@ void main() {
       test('should preserve MCP data integration with time context', () async {
         // Arrange
         final now = DateTime.now();
+        final currentMessage = ChatMessageModel(
+          text: 'Current message',
+          isUser: true,
+          type: MessageType.text,
+          timestamp: now,
+        );
         final recentMessage = ChatMessageModel(
           text: 'Previous message',
           isUser: true,
@@ -294,8 +327,9 @@ void main() {
           timestamp: now.subtract(const Duration(hours: 1)),
         );
 
-        when(() => mockStorageService.getMessages(limit: 1))
-            .thenAnswer((_) async => [recentMessage]);
+        // FT-206: _getLastMessageTimestamp now fetches 2 messages
+        when(() => mockStorageService.getMessages(limit: 2))
+            .thenAnswer((_) async => [currentMessage, recentMessage]);
 
         when(() => mockClient.post(
               any(),
@@ -339,7 +373,14 @@ void main() {
 
       test('should validate timestamps before using them', () async {
         // Arrange - create a future timestamp (invalid)
-        final futureTimestamp = DateTime.now().add(const Duration(minutes: 5));
+        final now = DateTime.now();
+        final futureTimestamp = now.add(const Duration(minutes: 5));
+        final currentMessage = ChatMessageModel(
+          text: 'Current message',
+          isUser: true,
+          type: MessageType.text,
+          timestamp: now,
+        );
         final invalidMessage = ChatMessageModel(
           text: 'Future message',
           isUser: true,
@@ -347,8 +388,9 @@ void main() {
           timestamp: futureTimestamp,
         );
 
-        when(() => mockStorageService.getMessages(limit: 1))
-            .thenAnswer((_) async => [invalidMessage]);
+        // FT-206: _getLastMessageTimestamp now fetches 2 messages
+        when(() => mockStorageService.getMessages(limit: 2))
+            .thenAnswer((_) async => [currentMessage, invalidMessage]);
 
         when(() => mockClient.post(
               any(),
