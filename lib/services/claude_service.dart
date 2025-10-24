@@ -905,23 +905,32 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
       buffer.writeln('2. What did you already say in your previous responses?');
       buffer.writeln(
           '3. What is the user\'s current context and what are they referring to?');
+      buffer.writeln('4. CRITICAL: Check if you already gave this exact response - if yes, provide a DIFFERENT response');
       buffer.writeln('');
       buffer.writeln('**YOUR RESPONSE MUST**:');
       buffer.writeln('- Acknowledge and build on recent conversation flow');
       buffer.writeln(
-          '- Provide NEW information or insights (never repeat previous responses)');
+          '- Provide NEW information or insights (NEVER repeat previous responses word-for-word)');
+      buffer.writeln(
+          '- If user gives a short answer, acknowledge it and move the conversation forward');
       buffer.writeln(
           '- Reference what user mentioned (e.g., if they say "I was talking with X", acknowledge it)');
       buffer
           .writeln('- Maintain conversation continuity without starting fresh');
       buffer.writeln('');
       buffer.writeln('**NATURAL CONVERSATION FLOW**:');
-      buffer.writeln('- Vary your transition phrases and openings between responses');
-      buffer.writeln('- Use "deixa eu ver seus registros" ONLY when actually fetching data via MCP');
-      buffer.writeln('- When not querying data, acknowledge patterns naturally without implying a data fetch');
-      buffer.writeln('- Avoid formulaic phrases (e.g., "Estou aqui pra explorar...") in consecutive messages');
-      buffer.writeln('- Lead with what\'s most relevant to the user\'s current message');
-      buffer.writeln('- Each response should feel fresh and context-driven, not template-based');
+      buffer.writeln(
+          '- Vary your transition phrases and openings between responses');
+      buffer.writeln(
+          '- Use "deixa eu ver seus registros" ONLY when actually fetching data via MCP');
+      buffer.writeln(
+          '- When not querying data, acknowledge patterns naturally without implying a data fetch');
+      buffer.writeln(
+          '- Avoid formulaic phrases (e.g., "Estou aqui pra explorar...") in consecutive messages');
+      buffer.writeln(
+          '- Lead with what\'s most relevant to the user\'s current message');
+      buffer.writeln(
+          '- Each response should feel fresh and context-driven, not template-based');
       buffer.writeln('');
       buffer.writeln('**CRITICAL BOUNDARIES**:');
       buffer.writeln('- Activity detection: ONLY current user message');
