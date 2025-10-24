@@ -915,6 +915,14 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
       buffer
           .writeln('- Maintain conversation continuity without starting fresh');
       buffer.writeln('');
+      buffer.writeln('**NATURAL CONVERSATION FLOW**:');
+      buffer.writeln('- Vary your transition phrases and openings between responses');
+      buffer.writeln('- Use "deixa eu ver seus registros" ONLY when actually fetching data via MCP');
+      buffer.writeln('- When not querying data, acknowledge patterns naturally without implying a data fetch');
+      buffer.writeln('- Avoid formulaic phrases (e.g., "Estou aqui pra explorar...") in consecutive messages');
+      buffer.writeln('- Lead with what\'s most relevant to the user\'s current message');
+      buffer.writeln('- Each response should feel fresh and context-driven, not template-based');
+      buffer.writeln('');
       buffer.writeln('**CRITICAL BOUNDARIES**:');
       buffer.writeln('- Activity detection: ONLY current user message');
       buffer.writeln('- Do NOT extract codes or metadata from history');
