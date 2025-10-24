@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/config_loader.dart';
 import '../persona_selection_screen.dart';
 import 'chat_management_screen.dart';
+import 'context_logging_settings_screen.dart';
 import 'widgets/settings_section_header.dart';
 import 'widgets/settings_card.dart';
 
@@ -54,6 +55,18 @@ class SettingsHubScreen extends StatelessWidget {
             onTap: () => _navigateToChatManagement(context),
           ),
 
+          const SizedBox(height: 32),
+
+          // Developer Tools Section
+          const SettingsSectionHeader(title: 'Developer Tools'),
+          const SizedBox(height: 16),
+          SettingsCard(
+            icon: Icons.bug_report_outlined,
+            title: 'Context Logging',
+            subtitle: 'Debug mode: Log complete AI context',
+            onTap: () => _navigateToContextLogging(context),
+          ),
+
           const SizedBox(height: 32), // Bottom padding
         ],
       ),
@@ -78,6 +91,15 @@ class SettingsHubScreen extends StatelessWidget {
         builder: (context) => ChatManagementScreen(
           onCharacterSelected: onCharacterSelected,
         ),
+      ),
+    );
+  }
+
+  void _navigateToContextLogging(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ContextLoggingSettingsScreen(),
       ),
     );
   }
