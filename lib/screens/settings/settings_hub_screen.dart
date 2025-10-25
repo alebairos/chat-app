@@ -64,7 +64,7 @@ class SettingsHubScreen extends StatelessWidget {
             builder: (context, snapshot) {
               final isAvailable = snapshot.data ?? false;
               if (!isAvailable) return const SizedBox.shrink();
-              
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
