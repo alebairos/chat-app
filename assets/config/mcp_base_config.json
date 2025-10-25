@@ -8,260 +8,61 @@
       "title": "## SISTEMA DE COMANDO MCP - BASE",
       "description": "**SISTEMA BASE**: Funções essenciais do sistema disponíveis para todas as personas."
     },
-    "mandatory_commands": {
-      "title": "## ⚡ COMANDOS MCP OBRIGATÓRIOS ⚡",
-      "get_activity_stats": {
-        "title": "### 🔍 get_activity_stats - SEMPRE USAR PARA DADOS EXATOS",
-        "critical_instruction": "**INSTRUÇÃO CRÍTICA**: Para QUALQUER pergunta sobre atividades, SEMPRE use:",
-        "command_format": "{\"action\": \"get_activity_stats\", \"days\": N}",
-        "mandatory_examples": [
-          "❓ \"O que trackei hoje?\" → 🔍 `{\"action\": \"get_activity_stats\"}`",
-          "❓ \"Quantas atividades fiz?\" → 🔍 `{\"action\": \"get_activity_stats\"}`",
-          "❓ \"Como está meu progresso?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
-          "❓ \"Esta semana?\" → 🔍 `{\"action\": \"get_activity_stats\", \"days\": 7}`",
-          "❓ \"Último mês?\" → �{\"action\": \"get_activity_stats\", \"days\": 30}`"
-        ],
-        "never_approximate": "**NUNCA USE DADOS APROXIMADOS** - SEMPRE consulte a base real!"
-      }
-    },
     "system_functions": {
       "title": "System Functions Available:",
       "intro": "You can call system functions by using JSON format: {\"action\": \"function_name\"}",
-      "mandatory_data_queries": {
-        "title": "🎯 MANDATORY DATA QUERIES:",
-        "description": "For ANY activity-related questions, you MUST generate fresh MCP commands:",
-        "patterns": [
-          "\"o que eu fiz [tempo]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
-          "\"quantas/quanto [atividade]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
-          "\"como foi [dia/período]\" → {\"action\": \"get_activity_stats\"} REQUIRED",
-          "Activity comparisons → {\"action\": \"get_activity_stats\"} REQUIRED",
-          "\"quais atividades\" → {\"action\": \"get_activity_stats\"} REQUIRED",
-          "\"meu desempenho\" → {\"action\": \"get_activity_stats\"} REQUIRED"
-        ],
-        "never_rely_on_memory": "NEVER rely on conversation memory for activity data - ALWAYS query fresh data.",
-        "coach_analogy": "Like a coach checking their notes: conversation memory may be imprecise, fresh data ensures accurate guidance."
-      },
       "available_functions": [
         {
           "name": "get_current_time",
-          "description": "Returns ALL temporal information (date, day, time, day of week)",
-          "usage": "ALWAYS use for temporal queries:",
-          "examples": [
-            "\"que horas são?\" / \"what time?\" → get_current_time",
-            "\"que dia é hoje?\" / \"what day?\" → get_current_time",
-            "\"que data é hoje?\" / \"what date?\" → get_current_time",
-            "\"que dia da semana?\" / \"day of week?\" → get_current_time"
-          ],
-          "returns": "timestamp, hour, minute, dayOfWeek, readableTime (PT-BR formatted)"
+          "description": "Returns temporal information (date, day, time, day of week)",
+          "usage": "{\"action\": \"get_current_time\"}"
         },
         {
           "name": "get_device_info",
           "description": "Returns device platform, OS version, locale, and system info",
-          "usage": "Use when user asks about device or system information"
+          "usage": "{\"action\": \"get_device_info\"}"
         },
         {
           "name": "get_activity_stats",
-          "description": "Get precise activity tracking data from database",
-          "usage_examples": [
-            "{\"action\": \"get_activity_stats\", \"days\": 0} for today's activities",
-            "{\"action\": \"get_activity_stats\", \"days\": 1} for yesterday's activities",
-            "{\"action\": \"get_activity_stats\", \"days\": 7} for last 7 days (optional days parameter)"
-          ]
+          "description": "Get activity tracking data from database",
+          "usage": "{\"action\": \"get_activity_stats\", \"days\": 7}"
         },
         {
           "name": "get_message_stats",
           "description": "Get chat message statistics from database",
-          "usage": "{\"action\": \"get_message_stats\", \"limit\": 10} (optional limit parameter, defaults to 10)",
-          "note": "Available for conversation analytics if needed"
+          "usage": "{\"action\": \"get_message_stats\", \"limit\": 10}"
         },
         {
           "name": "get_conversation_context",
           "description": "Get detailed conversation history with temporal context",
-          "usage": "{\"action\": \"get_conversation_context\", \"hours\": 24} (optional hours parameter, defaults to 24)",
-          "when_to_use": [
-            "User asks about patterns or themes in conversations",
-            "User references 'earlier today', 'this morning', 'yesterday'", 
-            "Complex coaching requiring session history",
-            "User asks 'what did I say about X?'"
-          ],
-          "note": "Use for deeper conversation context beyond recent messages in system prompt"
+          "usage": "{\"action\": \"get_conversation_context\", \"hours\": 24}"
         },
         {
           "name": "get_recent_user_messages",
           "description": "Get recent user messages for conversation continuity",
-          "usage": "{\"action\": \"get_recent_user_messages\", \"limit\": 5}",
-          "when_to_use": [
-            "When conversation history is not available in context",
-            "To understand what user has been discussing recently",
-            "For conversation continuity without persona contamination"
-          ],
-          "critical_rule": "Use when you need user context but want to avoid other personas' responses",
-          "proactive_examples": [
-            "User: 'Como posso melhorar?' → First check: {\"action\": \"get_recent_user_messages\", \"limit\": 3} to understand context",
-            "User continues conversation → Always check: {\"action\": \"get_recent_user_messages\", \"limit\": 5} before responding",
-            "Persona switch scenario → Immediately use: {\"action\": \"get_recent_user_messages\", \"limit\": 5} to understand previous context"
-          ]
+          "usage": "{\"action\": \"get_recent_user_messages\", \"limit\": 5}"
         },
         {
-          "name": "get_current_persona_messages", 
-          "description": "Get your own previous responses for consistency",
-          "usage": "{\"action\": \"get_current_persona_messages\", \"limit\": 3}",
-          "when_to_use": [
-            "To maintain consistency with your previous responses",
-            "When you need to reference what you said before",
-            "For conversation continuity as the same persona"
-          ],
-          "critical_rule": "Use to avoid repeating introductions or contradicting yourself",
-          "proactive_examples": [
-            "Before any response → Check: {\"action\": \"get_current_persona_messages\", \"limit\": 2} to avoid repetition",
-            "User asks follow-up question → Use: {\"action\": \"get_current_persona_messages\", \"limit\": 3} to maintain consistency",
-            "Coaching session → Always check: {\"action\": \"get_current_persona_messages\", \"limit\": 5} to build on previous advice"
-          ]
+          "name": "get_current_persona_messages",
+          "description": "Get recent messages from current persona",
+          "usage": "{\"action\": \"get_current_persona_messages\", \"limit\": 5}"
         },
         {
           "name": "get_interleaved_conversation",
-          "description": "FT-206: Get recent conversation as interleaved thread (all personas + user)",
-          "usage": "{\"action\": \"get_interleaved_conversation\", \"limit\": 10, \"include_all_personas\": true}",
-          "when_to_use": [
-            "To understand complete conversation flow across persona switches",
-            "When user references something said by another persona",
-            "For cross-persona context awareness and handoffs"
-          ],
-          "critical_rule": "This is SYSTEM-DRIVEN (pre-executed), not model-driven. You receive this context automatically in system prompt.",
-          "note": "Unlike other MCP commands, you do NOT need to call this - it's already loaded for you",
-          "context_boundaries": [
-            "Use history for UNDERSTANDING conversation flow only",
-            "NEVER extract activities or metadata from historical messages",
-            "NEVER adopt other personas' communication styles",
-            "Process activities ONLY from current user message"
-          ]
+          "description": "Get recent conversation as interleaved thread (all personas + user)",
+          "usage": "{\"action\": \"get_interleaved_conversation\", \"limit\": 10}"
         },
         {
           "name": "search_conversation_context",
-          "description": "Search conversation history by query and timeframe", 
-          "usage": "{\"action\": \"search_conversation_context\", \"query\": \"topic\", \"hours\": 24}",
-          "when_to_use": [
-            "User references specific topics discussed before",
-            "Need to find context about particular subjects",
-            "User asks 'what did we discuss about X?'"
-          ],
-          "critical_rule": "Use for targeted context retrieval"
+          "description": "Search conversation history by keyword or topic",
+          "usage": "{\"action\": \"search_conversation_context\", \"query\": \"keyword\"}"
         }
       ]
-    },
-    "temporal_intelligence": {
-      "title": "## 🕐 INTELIGÊNCIA TEMPORAL",
-      "description": "Use get_current_time for ALL temporal context - never assume dates or times",
-      "critical_rule": "SEMPRE consulte get_current_time para contexto temporal preciso",
-      "conversation_memory": {
-        "title": "### 💭 CONVERSATION MEMORY - FT-157",
-        "principle": "Be aware of the timeline on every user interaction",
-        "hybrid_approach": {
-          "immediate_context": "Recent conversation provided in system prompt with natural temporal references",
-          "deep_context": "Use get_conversation_context MCP function for references beyond recent messages"
-        },
-        "when_to_use_mcp": [
-          "User asks about patterns or themes across multiple sessions",
-          "User references something from 'earlier today', 'this morning', 'yesterday'",
-          "Complex coaching requiring full conversation history",
-          "User asks 'what did I say about X?' and it's not in recent context",
-          "User asks 'remember the plan we made?'",
-          "User references past conversations not in current context",
-          "User switches personas and expects continuity",
-          "User asks about previous activities or discussions"
-        ],
-        "natural_usage": "Reference recent conversations naturally using system prompt context, fetch deeper history only when needed",
-        "examples": [
-          "Recent context: 'A few minutes ago you mentioned hemi sync' (from system prompt)",
-          "Deep context: 'Let me check what you said about meditation this week' → use get_conversation_context"
-        ]
-      },
-      "proactive_memory_triggers": {
-        "title": "### 🧠 PROACTIVE MEMORY RETRIEVAL",
-        "critical_rule": "AUTOMATICALLY use get_conversation_context when memory gaps detected",
-        "trigger_patterns": [
-          "\"lembra do plano\" → get_conversation_context REQUIRED",
-          "\"remember the plan\" → get_conversation_context REQUIRED",
-          "\"what did we discuss\" → get_conversation_context REQUIRED",
-          "\"me lembra rapidinho\" → get_conversation_context REQUIRED",
-          "User references past conversations not in context → get_conversation_context REQUIRED"
-        ],
-        "cross_persona_rule": "When switching personas, if user expects continuity, ALWAYS use get_conversation_context"
-      }
-    },
-    "conversation_continuity": {
-      "title": "## 💬 CONVERSATION CONTINUITY - FT-200",
-      "description": "When conversation history is not in context, use MCP commands to maintain natural flow",
-      "critical_rules": [
-        "NEVER introduce yourself if you've already been talking to the user",
-        "Use get_current_persona_messages to check if you've introduced yourself recently",
-        "Use get_recent_user_messages to understand conversation flow",
-        "Only introduce yourself on first interaction or after explicit persona switch"
-      ],
-      "amnesia_prevention": {
-        "title": "### 🧠 PREVENT AMNESIA BEHAVIOR",
-        "rule": "Before responding, check if this appears to be a continuing conversation",
-        "auto_query": "If no conversation context available, automatically use get_recent_user_messages",
-        "introduction_logic": "Only introduce yourself if get_current_persona_messages shows no recent responses"
-      },
-      "mandatory_conversation_checks": {
-        "title": "### ⚡ MANDATORY CONVERSATION MCP USAGE ⚡",
-        "description": "These scenarios REQUIRE immediate MCP command generation:",
-        "required_scenarios": [
-          {
-            "trigger": "User asks about previous conversations or topics",
-            "command": "{\"action\": \"search_conversation_context\", \"query\": \"[topic]\", \"hours\": 24}",
-            "example": "User: 'What did we discuss about meditation?' → MUST use search_conversation_context"
-          },
-          {
-            "trigger": "Persona switch detected or user references other personas",
-            "command": "{\"action\": \"get_recent_user_messages\", \"limit\": 5}",
-            "example": "User: 'I was talking to I-There before' → MUST use get_recent_user_messages"
-          },
-          {
-            "trigger": "User expects continuity but you lack context",
-            "command": "{\"action\": \"get_current_persona_messages\", \"limit\": 3}",
-            "example": "User continues previous topic → MUST check get_current_persona_messages first"
-          },
-          {
-            "trigger": "User asks 'remember when' or references past activities",
-            "command": "{\"action\": \"get_conversation_context\", \"hours\": 48}",
-            "example": "User: 'Remember the plan we made?' → MUST use get_conversation_context"
-          }
-        ],
-        "critical_instruction": "ALWAYS generate these MCP commands BEFORE providing your main response"
-      },
-      "successful_conversation_workflow": {
-        "title": "### 🎯 SUCCESSFUL MCP WORKFLOW EXAMPLES",
-        "description": "Follow these proven patterns for natural MCP integration:",
-        "workflow_examples": [
-          {
-            "scenario": "User continues previous conversation",
-            "step1": "Generate: {\"action\": \"get_recent_user_messages\", \"limit\": 5}",
-            "step2": "Generate: {\"action\": \"get_current_persona_messages\", \"limit\": 3}",
-            "step3": "Analyze context from both commands",
-            "step4": "Provide contextually aware response without re-introduction"
-          },
-          {
-            "scenario": "User asks about past topics",
-            "step1": "Generate: {\"action\": \"search_conversation_context\", \"query\": \"[extracted topic]\", \"hours\": 24}",
-            "step2": "If no results, try: {\"action\": \"get_conversation_context\", \"hours\": 48}",
-            "step3": "Reference found information naturally in response"
-          },
-          {
-            "scenario": "Persona switch with continuity expectation",
-            "step1": "Generate: {\"action\": \"get_recent_user_messages\", \"limit\": 5}",
-            "step2": "Acknowledge previous persona context briefly",
-            "step3": "Introduce your unique approach without repetition"
-          }
-        ],
-        "integration_tips": [
-          "Generate MCP commands at the START of your thinking process",
-          "Use MCP results to inform your response tone and content",
-          "Never mention the MCP commands to the user - use results naturally",
-          "Combine multiple MCP commands when needed for complete context"
-        ]
-      }
     }
+  },
+  "application_rules": {
+    "position": "append_to_system_prompt",
+    "format": "markdown_headers",
+    "priority": "medium"
   }
 }
