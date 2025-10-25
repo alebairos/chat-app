@@ -294,10 +294,8 @@ void main() {
       const message = 'Hello';
       print('📤 Sending message: $message');
 
-      // FT-206: Normal messages now trigger interleaved conversation context MCP call
-      // Mock the conversation MCP command that is now expected
-      when(() => mockMCP.processCommand(any(that: contains('get_interleaved_conversation'))))
-          .thenAnswer((_) async => '{"status":"success","data":{"conversation_thread":[],"total_messages":0}}');
+      // FT-221: With FT-200 disabled (legacy mode), no MCP calls for conversation context
+      // Conversation history is injected directly into messages array instead
 
       when(() => mockClient.post(
             any(),
@@ -325,9 +323,10 @@ void main() {
       expect(response, equals('Normal response'),
           reason: 'Response should match expected normal response');
 
-      // FT-206: Verify that interleaved conversation context MCP command was called
-      verify(() => mockMCP.processCommand(any(that: contains('get_interleaved_conversation')))).called(1);
-      print('✓ Test completed successfully - conversation MCP call verified');
+      // FT-221: With FT-200 disabled, no conversation MCP calls should be made
+      // (conversation history is in messages array instead)
+      verifyNever(() => mockMCP.processCommand(any(that: contains('get_interleaved_conversation'))));
+      print('✓ Test completed successfully - legacy mode verified (no MCP calls)');
     });
   });
 }
