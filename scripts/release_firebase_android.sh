@@ -30,20 +30,45 @@ fi
 VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
 BUILD_NUMBER=$(grep "^version:" pubspec.yaml | sed 's/.*+//')
 
+# Get Git metadata
+GIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+GIT_SHORT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+GIT_TAG=$(git describe --tags --exact-match 2>/dev/null || echo "")
+GIT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+BUILD_DATE=$(date '+%Y-%m-%d %H:%M')
+
 echo -e "${BLUE}📦 Version: ${VERSION} (Build ${BUILD_NUMBER})${NC}"
+echo -e "${BLUE}📋 Git: ${GIT_SHORT_HASH} @ ${GIT_BRANCH}${NC}"
+if [ -n "$GIT_TAG" ]; then
+    echo -e "${BLUE}🏷️  Tag: ${GIT_TAG}${NC}"
+fi
 echo ""
 
 # Prompt for release notes
 echo -e "${YELLOW}📝 Enter release notes (press Ctrl+D when done):${NC}"
-RELEASE_NOTES=$(cat)
+USER_NOTES=$(cat)
 
-if [ -z "$RELEASE_NOTES" ]; then
-    RELEASE_NOTES="Android release v${VERSION} (${BUILD_NUMBER})"
+if [ -z "$USER_NOTES" ]; then
+    USER_NOTES="Android release v${VERSION} (${BUILD_NUMBER})"
 fi
+
+# Append Git metadata to release notes
+TAG_INFO=""
+if [ -n "$GIT_TAG" ]; then
+    TAG_INFO=" (${GIT_TAG})"
+fi
+
+RELEASE_NOTES="${USER_NOTES}
+
+---
+Build Info:
+Version ${VERSION} (Build ${BUILD_NUMBER})${TAG_INFO}
+Git: ${GIT_SHORT_HASH} @ ${GIT_BRANCH}
+Released: ${BUILD_DATE}"
 
 # Save release notes to file
 echo "$RELEASE_NOTES" > RELEASE_NOTES.txt
-echo -e "${GREEN}✓ Release notes saved${NC}"
+echo -e "${GREEN}✓ Release notes saved with Git metadata${NC}"
 echo ""
 
 # Apply Android namespace patches
@@ -75,11 +100,17 @@ firebase appdistribution:distribute \
 if [ $? -eq 0 ]; then
     echo ""
     echo -e "${GREEN}✅ Distribution successful!${NC}"
-    echo -e "${GREEN}   Version: ${VERSION} (${BUILD_NUMBER})${NC}"
+    echo -e "${GREEN}   Version: ${VERSION} (${BUILD_NUMBER})${TAG_INFO}${NC}"
+    echo -e "${GREEN}   Git: ${GIT_SHORT_HASH} @ ${GIT_BRANCH}${NC}"
     echo -e "${GREEN}   APK Size: ${APK_SIZE}${NC}"
     echo -e "${GREEN}   Testers will receive email notifications${NC}"
     echo ""
     echo -e "${BLUE}📊 View distribution: https://console.firebase.google.com/project/ai-personas-app/appdistribution${NC}"
+    echo ""
+    echo -e "${BLUE}📝 Git metadata included in release notes:${NC}"
+    echo -e "${BLUE}   Commit: ${GIT_HASH}${NC}"
+    echo -e "${BLUE}   Short: ${GIT_SHORT_HASH}${NC}"
+    echo -e "${BLUE}   Branch: ${GIT_BRANCH}${NC}"
 else
     echo -e "${RED}❌ Distribution failed${NC}"
     exit 1

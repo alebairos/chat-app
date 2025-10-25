@@ -87,11 +87,13 @@ make distribute-android
 ```
 
 **What happens:**
-1. Prompts for release notes (type and press Ctrl+D)
-2. Applies Android namespace patches automatically
-3. Builds release APK (~2-3 minutes)
-4. Uploads to Firebase App Distribution
-5. Sends email notifications to testers
+1. Collects Git metadata (commit hash, branch, tag)
+2. Prompts for release notes (type and press Ctrl+D)
+3. Appends Git metadata to release notes automatically
+4. Applies Android namespace patches automatically
+5. Builds release APK (~2-3 minutes)
+6. Uploads to Firebase App Distribution
+7. Sends email notifications to testers with Git info
 
 **Manual Distribution:**
 ```bash
@@ -153,10 +155,12 @@ python3 scripts/release_testflight.py --force-branch --version-bump patch
 - ✅ Updates `CHANGELOG.md` with release notes
 - ✅ Commits version changes to git
 - ✅ Creates git tag (e.g., `v2.1.1`)
+- ✅ Collects Git metadata (commit hash, branch, tag)
 - ✅ Builds Flutter app for iOS
 - ✅ Creates Xcode archive
 - ✅ Exports IPA for App Store
 - ✅ Uploads to TestFlight
+- ✅ Displays Git metadata for TestFlight notes
 
 **Setup Requirements:**
 - Create `.env` file with Apple credentials (see setup docs)
@@ -167,6 +171,36 @@ python3 scripts/release_testflight.py --force-branch --version-bump patch
 1. Install TestFlight app from App Store
 2. Accept invitation email
 3. Download and install builds directly from TestFlight app
+
+**📋 Git Metadata in Releases:**
+
+Both iOS and Android releases automatically include Git metadata in release notes for easy build tracking:
+
+**iOS (TestFlight):**
+After upload completes, the script displays formatted notes to copy into TestFlight "What to Test":
+```
+Version 2.3.1 (Build 30) (v2.3.1)
+Git: abc1234 @ develop
+Released: 2025-10-25 14:30
+```
+
+**Android (Firebase):**
+Git metadata is automatically appended to your release notes:
+```
+Your release notes here...
+
+---
+Build Info:
+Version 2.3.1 (Build 30) (v2.3.1)
+Git: abc1234 @ develop
+Released: 2025-10-25 14:30
+```
+
+This allows you to:
+- ✅ Identify exact Git commit for any build
+- ✅ Track which branch a build came from
+- ✅ Correlate builds with Git tags
+- ✅ Debug issues by checking out the exact source code
 
 ### Development Commands
 

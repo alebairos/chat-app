@@ -589,6 +589,60 @@ class TestFlightRelease:
         with open(plist_path, 'w') as f:
             f.write(plist_content)
     
+    def get_git_metadata(self):
+        """Get Git metadata for build tracking"""
+        try:
+            # Get full commit hash
+            result = subprocess.run(
+                "git rev-parse HEAD",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            full_hash = result.stdout.strip() if result.returncode == 0 else "unknown"
+            
+            # Get short commit hash
+            result = subprocess.run(
+                "git rev-parse --short HEAD",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            short_hash = result.stdout.strip() if result.returncode == 0 else "unknown"
+            
+            # Get current tag (if on a tag)
+            result = subprocess.run(
+                "git describe --tags --exact-match 2>/dev/null",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            tag = result.stdout.strip() if result.returncode == 0 else None
+            
+            # Get branch name
+            result = subprocess.run(
+                "git branch --show-current",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            branch = result.stdout.strip() if result.returncode == 0 else "unknown"
+            
+            return {
+                'full_hash': full_hash,
+                'short_hash': short_hash,
+                'tag': tag,
+                'branch': branch
+            }
+        except Exception as e:
+            print(f"⚠️  Could not retrieve Git metadata: {e}")
+            return {
+                'full_hash': 'unknown',
+                'short_hash': 'unknown',
+                'tag': None,
+                'branch': 'unknown'
+            }
+    
     def upload_to_testflight(self, ipa_path):
         """Upload IPA to TestFlight"""
         print("🚀 Uploading to TestFlight...")
@@ -612,12 +666,34 @@ class TestFlightRelease:
         print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print()
         
+        # Get Git metadata for tracking
+        git_metadata = self.get_git_metadata()
+        
         # Handle version bumping if requested
         if self.version_bump:
             print("📈 Version Management")
             print("=" * 50)
             version_info = self.bump_version(self.version_bump)
             print()
+        else:
+            # Get current version if not bumping
+            current_version = self.get_current_version()
+            parsed = self.parse_version(current_version)
+            version_info = {
+                'version': parsed['version'],
+                'full': parsed['full'],
+                'build': parsed['build']
+            }
+        
+        # Display Git metadata
+        print("📋 Build Metadata")
+        print("=" * 50)
+        print(f"Version: {version_info['version']} (Build {version_info['build']})")
+        print(f"Git Commit: {git_metadata['short_hash']} ({git_metadata['full_hash'][:12]}...)")
+        if git_metadata['tag']:
+            print(f"Git Tag: {git_metadata['tag']}")
+        print(f"Git Branch: {git_metadata['branch']}")
+        print()
         
         if self.dry_run:
             print("🔍 DRY RUN COMPLETE - No actual build or upload performed")
@@ -634,6 +710,14 @@ class TestFlightRelease:
         print("📱 Your team will receive TestFlight notification when processing completes")
         print("⏱️  Processing usually takes 5-10 minutes")
         print("🔗 Check status: https://appstoreconnect.apple.com")
+        print()
+        print("📝 Add this to TestFlight 'What to Test' notes:")
+        print("-" * 50)
+        tag_info = f" ({git_metadata['tag']})" if git_metadata['tag'] else ""
+        print(f"Version {version_info['version']} (Build {version_info['build']}){tag_info}")
+        print(f"Git: {git_metadata['short_hash']} @ {git_metadata['branch']}")
+        print(f"Released: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        print("-" * 50)
 
 def main():
     parser = argparse.ArgumentParser(description='TestFlight Release Tool')
