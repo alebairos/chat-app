@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "description": "FT-220: Complete context logging for debugging and optimization (MVP)",
   "version": "1.0.0",
   "settings": {
