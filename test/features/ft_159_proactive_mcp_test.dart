@@ -25,11 +25,13 @@ void main() {
       final instructions = config['instructions'] as Map<String, dynamic>?;
       expect(instructions, isNotNull, reason: 'Instructions should be present');
 
-      final systemFunctions = instructions!['system_functions'] as Map<String, dynamic>?;
+      final systemFunctions =
+          instructions!['system_functions'] as Map<String, dynamic>?;
       expect(systemFunctions, isNotNull,
           reason: 'System functions section should be present');
 
-      final availableFunctions = systemFunctions!['available_functions'] as List<dynamic>?;
+      final availableFunctions =
+          systemFunctions!['available_functions'] as List<dynamic>?;
       expect(availableFunctions, isNotNull,
           reason: 'Available functions should be present');
 

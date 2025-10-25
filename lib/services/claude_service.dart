@@ -858,9 +858,8 @@ class ClaudeService {
     for (final msg in messages.reversed) {
       final timeDiff = now.difference(msg.timestamp);
       final timeAgo = _formatNaturalTime(timeDiff);
-      final speaker = msg.isUser
-          ? 'User'
-          : '[${msg.personaDisplayName ?? msg.personaKey}]';
+      final speaker =
+          msg.isUser ? 'User' : '[${msg.personaDisplayName ?? msg.personaKey}]';
       contextLines.add('$timeAgo: $speaker: "${msg.text}"');
     }
 
