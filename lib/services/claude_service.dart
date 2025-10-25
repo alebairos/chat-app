@@ -8,6 +8,7 @@ import 'package:ai_personas_app/config/character_config_manager.dart';
 import 'system_mcp_service.dart';
 import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
+import '../utils/mcp_pattern_detector.dart';
 import '../services/flat_metadata_parser.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
@@ -387,6 +388,13 @@ class ClaudeService {
       final messageId = MessageIdGenerator.generate();
       _logger.debug(
           'Generated message ID: $messageId for message: ${message.length > 50 ? '${message.substring(0, 50)}...' : message}');
+
+      // FT-206: Detect patterns and inject MCP command hints
+      final patternHint = MCPPatternDetector.detectPattern(message);
+      if (patternHint != null) {
+        message = '$message\n\n$patternHint';
+        _logger.info('FT-206: Pattern detected, hint injected');
+      }
 
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
@@ -787,6 +795,7 @@ class ClaudeService {
 
   /// Build system prompt with time context and MCP documentation
   /// FT-206: Simplified structure (like 2.0.1) - no priority header
+  /// FT-221: Conversation context conditional on FT-200 status
   Future<String> _buildSystemPrompt() async {
     // Generate enhanced time-aware context (FT-060)
     final lastMessageTime = await _getLastMessageTimestamp();
@@ -794,14 +803,17 @@ class ClaudeService {
       lastMessageTime,
     );
 
-    // FT-206: Add recent conversation context (simplified format)
-    final conversationContext = await _buildRecentConversationContext();
+    // FT-221: Add conversation context ONLY if FT-200 is disabled (legacy mode)
+    String conversationContext = '';
+    if (!await _isConversationDatabaseEnabled()) {
+      conversationContext = await _buildRecentConversationContext();
+    }
 
     // Build enhanced system prompt with time context
     String systemPrompt = _systemPrompt ?? '';
 
     // FT-206: Simple structure (like 2.0.1)
-    // 1. Add conversation context first
+    // 1. Add conversation context first (only in legacy mode)
     if (conversationContext.isNotEmpty) {
       systemPrompt = '$conversationContext\n\n$systemPrompt';
     }
@@ -821,10 +833,12 @@ class ClaudeService {
           '- get_current_time: Current temporal information\n'
           '- get_device_info: Device and system information\n'
           '- get_activity_stats: Activity tracking data\n'
-          '- get_message_stats: Chat statistics\n\n'
+          '- get_message_stats: Chat statistics\n'
+          '- get_conversation_context: Query conversation history\n\n'
           '**Session Rules**:\n'
           '- Always use fresh data from MCP commands\n'
-          '- Never rely on conversation memory for activity data\n'
+          '- Query conversation history via get_conversation_context when needed\n'
+          '- Never rely on pre-loaded conversation memory\n'
           '- Calculate precise temporal offsets based on current time\n'
           '- Present data naturally while maintaining accuracy';
 

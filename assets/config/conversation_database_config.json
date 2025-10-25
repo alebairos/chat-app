@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "description": "FT-200/FT-206: Conversation History Database Queries with Interleaved Context",
   "fallback_to_history_injection": true,
   "mcp_commands": {
