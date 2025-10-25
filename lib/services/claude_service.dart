@@ -8,6 +8,7 @@ import 'package:ai_personas_app/config/character_config_manager.dart';
 import 'system_mcp_service.dart';
 import '../utils/activity_detection_utils.dart';
 import '../utils/logger.dart';
+import '../utils/mcp_pattern_detector.dart';
 import '../services/flat_metadata_parser.dart';
 import '../features/audio_assistant/tts_service.dart';
 import '../models/claude_audio_response.dart';
@@ -387,6 +388,13 @@ class ClaudeService {
       final messageId = MessageIdGenerator.generate();
       _logger.debug(
           'Generated message ID: $messageId for message: ${message.length > 50 ? '${message.substring(0, 50)}...' : message}');
+
+      // FT-206: Detect patterns and inject MCP command hints
+      final patternHint = MCPPatternDetector.detectPattern(message);
+      if (patternHint != null) {
+        message = '$message\n\n$patternHint';
+        _logger.info('FT-206: Pattern detected, hint injected');
+      }
 
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
