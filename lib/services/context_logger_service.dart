@@ -24,6 +24,10 @@ class ContextLoggerService {
   /// Check if logging is enabled
   bool get isEnabled => _enabled;
 
+  /// Check if feature is available (from config)
+  /// Returns false if config has enabled = false, preventing UI from showing the feature
+  bool get isFeatureAvailable => _config?['enabled'] ?? false;
+
   /// Initialize service and load configuration
   Future<void> initialize() async {
     if (_initialized) return;
