@@ -325,8 +325,10 @@ void main() {
 
       // FT-221: With FT-200 disabled, no conversation MCP calls should be made
       // (conversation history is in messages array instead)
-      verifyNever(() => mockMCP.processCommand(any(that: contains('get_interleaved_conversation'))));
-      print('✓ Test completed successfully - legacy mode verified (no MCP calls)');
+      verifyNever(() => mockMCP
+          .processCommand(any(that: contains('get_interleaved_conversation'))));
+      print(
+          '✓ Test completed successfully - legacy mode verified (no MCP calls)');
     });
   });
 }
