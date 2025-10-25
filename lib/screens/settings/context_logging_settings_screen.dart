@@ -86,7 +86,9 @@ class _ContextLoggingSettingsScreenState
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
             SizedBox(width: 8),
-            Text('Enable Context Logging?'),
+            Expanded(
+              child: Text('Enable Context Logging?'),
+            ),
           ],
         ),
         content: SingleChildScrollView(
