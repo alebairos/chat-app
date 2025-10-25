@@ -14,7 +14,7 @@ void main() {
     });
 
     test('should validate MCP base config has proactive triggers', () async {
-      // Load MCP base config directly
+      // FT-206: Config simplified - verify basic structure and conversation functions
       final String configString =
           await rootBundle.loadString('assets/config/mcp_base_config.json');
       final Map<String, dynamic> config = json.decode(configString);
@@ -25,31 +25,24 @@ void main() {
       final instructions = config['instructions'] as Map<String, dynamic>?;
       expect(instructions, isNotNull, reason: 'Instructions should be present');
 
-      final temporalIntelligence =
-          instructions!['temporal_intelligence'] as Map<String, dynamic>?;
-      expect(temporalIntelligence, isNotNull,
-          reason: 'Temporal intelligence section should be present');
+      final systemFunctions =
+          instructions!['system_functions'] as Map<String, dynamic>?;
+      expect(systemFunctions, isNotNull,
+          reason: 'System functions section should be present');
 
-      final proactiveMemory = temporalIntelligence!['proactive_memory_triggers']
-          as Map<String, dynamic>?;
-      expect(proactiveMemory, isNotNull,
-          reason: 'Proactive memory triggers should be present');
+      final availableFunctions =
+          systemFunctions!['available_functions'] as List<dynamic>?;
+      expect(availableFunctions, isNotNull,
+          reason: 'Available functions should be present');
 
-      expect(proactiveMemory!['critical_rule'], isNotNull,
-          reason: 'Critical rule should be defined');
-      expect(proactiveMemory['trigger_patterns'], isNotNull,
-          reason: 'Trigger patterns should be defined');
-      expect(proactiveMemory['cross_persona_rule'], isNotNull,
-          reason: 'Cross-persona rule should be defined');
-
-      // Verify specific trigger patterns
-      final List<dynamic> patterns = proactiveMemory['trigger_patterns'];
-      expect(
-          patterns.any((p) => p.toString().contains('lembra do plano')), isTrue,
-          reason: 'Should include Portuguese trigger pattern');
-      expect(patterns.any((p) => p.toString().contains('remember the plan')),
-          isTrue,
-          reason: 'Should include English trigger pattern');
+      // Verify conversation context functions are present
+      final functionNames = availableFunctions!.map((f) => f['name']).toList();
+      expect(functionNames.contains('get_conversation_context'), isTrue,
+          reason: 'get_conversation_context function should be available');
+      expect(functionNames.contains('get_recent_user_messages'), isTrue,
+          reason: 'get_recent_user_messages function should be available');
+      expect(functionNames.contains('get_current_persona_messages'), isTrue,
+          reason: 'get_current_persona_messages function should be available');
     });
 
     test('should handle enhanced MCP function parameters', () async {
@@ -72,31 +65,34 @@ void main() {
     });
 
     test('should validate proactive memory trigger content', () async {
-      // Load and validate the specific content of proactive memory triggers
+      // FT-206: Config simplified - verify function descriptions are clear
       final String configString =
           await rootBundle.loadString('assets/config/mcp_base_config.json');
       final Map<String, dynamic> config = json.decode(configString);
 
-      final proactiveMemory = config['instructions']['temporal_intelligence']
-          ['proactive_memory_triggers'] as Map<String, dynamic>;
+      final availableFunctions = config['instructions']['system_functions']
+          ['available_functions'] as List<dynamic>;
 
-      // Verify critical rule mentions automatic usage
-      final criticalRule = proactiveMemory['critical_rule'] as String;
-      expect(criticalRule.toLowerCase().contains('automatically'), isTrue,
-          reason: 'Critical rule should emphasize automatic usage');
-      expect(criticalRule.toLowerCase().contains('get_conversation_context'),
-          isTrue,
-          reason: 'Critical rule should mention the specific function to use');
+      // Find get_conversation_context function
+      final conversationContextFunc = availableFunctions.firstWhere(
+        (f) => f['name'] == 'get_conversation_context',
+        orElse: () => null,
+      );
 
-      // Verify cross-persona rule exists
-      final crossPersonaRule = proactiveMemory['cross_persona_rule'] as String;
-      expect(crossPersonaRule.toLowerCase().contains('persona'), isTrue,
-          reason: 'Cross-persona rule should mention persona switching');
-      expect(
-          crossPersonaRule.toLowerCase().contains('get_conversation_context'),
-          isTrue,
-          reason:
-              'Cross-persona rule should mention the specific function to use');
+      expect(conversationContextFunc, isNotNull,
+          reason: 'get_conversation_context function should be present');
+      expect(conversationContextFunc['description'], isNotNull,
+          reason: 'Function should have a description');
+      expect(conversationContextFunc['usage'], isNotNull,
+          reason: 'Function should have usage example');
+
+      // Verify get_recent_user_messages exists
+      final userMessagesFunc = availableFunctions.firstWhere(
+        (f) => f['name'] == 'get_recent_user_messages',
+        orElse: () => null,
+      );
+      expect(userMessagesFunc, isNotNull,
+          reason: 'get_recent_user_messages function should be present');
     });
   });
 }

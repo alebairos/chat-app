@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/context_logger_service.dart';
 
 /// FT-220: Context Logging Settings Screen
-/// 
+///
 /// Allows users to enable/disable context logging for debugging.
 /// MVP: Toggle + warning only. Export/clear deferred to Phase 5.
 class ContextLoggingSettingsScreen extends StatefulWidget {
@@ -28,7 +28,7 @@ class _ContextLoggingSettingsScreenState
 
   Future<void> _loadSettings() async {
     setState(() => _isLoading = true);
-    
+
     try {
       _loggingEnabled = _contextLogger.isEnabled;
       if (_loggingEnabled) {
@@ -51,7 +51,7 @@ class _ContextLoggingSettingsScreenState
     try {
       await _contextLogger.setEnabled(value);
       _loggingEnabled = value;
-      
+
       if (value) {
         _logDirectoryPath = await _contextLogger.getLogDirectoryPath();
       } else {
@@ -86,7 +86,9 @@ class _ContextLoggingSettingsScreenState
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
             SizedBox(width: 8),
-            Text('Enable Context Logging?'),
+            Expanded(
+              child: Text('Enable Context Logging?'),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -186,9 +188,8 @@ class _ContextLoggingSettingsScreenState
                           children: [
                             Icon(
                               Icons.bug_report_outlined,
-                              color: _loggingEnabled
-                                  ? Colors.orange
-                                  : Colors.grey,
+                              color:
+                                  _loggingEnabled ? Colors.orange : Colors.grey,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -377,4 +378,3 @@ class _ContextLoggingSettingsScreenState
     );
   }
 }
-

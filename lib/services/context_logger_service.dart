@@ -5,16 +5,17 @@ import 'package:path_provider/path_provider.dart';
 import '../utils/logger.dart';
 
 /// FT-220: Context logging service for debugging and optimization
-/// 
+///
 /// Logs complete API request/response context to local files for analysis.
 /// Zero overhead when disabled via guard pattern.
 class ContextLoggerService {
-  static final ContextLoggerService _instance = ContextLoggerService._internal();
+  static final ContextLoggerService _instance =
+      ContextLoggerService._internal();
   factory ContextLoggerService() => _instance;
   ContextLoggerService._internal();
 
   final _logger = Logger();
-  
+
   bool _enabled = false;
   bool _initialized = false;
   String? _sessionId;
@@ -23,6 +24,10 @@ class ContextLoggerService {
 
   /// Check if logging is enabled
   bool get isEnabled => _enabled;
+
+  /// Check if feature is available (from config)
+  /// Returns false if config has enabled = false, preventing UI from showing the feature
+  bool get isFeatureAvailable => _config?['enabled'] ?? false;
 
   /// Initialize service and load configuration
   Future<void> initialize() async {
@@ -92,7 +97,7 @@ class ContextLoggerService {
   }
 
   /// Log complete context
-  /// 
+  ///
   /// Returns file path if successful, null otherwise.
   /// NO-OP if logging is disabled (guard pattern).
   Future<String?> logContext({
@@ -105,7 +110,8 @@ class ContextLoggerService {
     try {
       _contextCounter++;
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final contextId = 'ctx_${_contextCounter.toString().padLeft(3, '0')}_$timestamp';
+      final contextId =
+          'ctx_${_contextCounter.toString().padLeft(3, '0')}_$timestamp';
 
       // Build context data
       final contextData = {
@@ -122,7 +128,7 @@ class ContextLoggerService {
       // Write to file
       final filePath = await _writeContextFile(contextId, contextData);
       _logger.info('✅ Context logged: $contextId');
-      
+
       return filePath;
     } catch (e) {
       _logger.error('❌ Failed to log context: $e');
@@ -131,7 +137,7 @@ class ContextLoggerService {
   }
 
   /// Update context log with API response
-  /// 
+  ///
   /// NO-OP if logging is disabled (guard pattern).
   Future<void> updateWithResponse({
     required String contextFilePath,
@@ -159,7 +165,8 @@ class ContextLoggerService {
         JsonEncoder.withIndent('  ').convert(contextData),
       );
 
-      _logger.info('✅ Updated context with response: ${contextData['metadata']['context_id']}');
+      _logger.info(
+          '✅ Updated context with response: ${contextData['metadata']['context_id']}');
     } catch (e) {
       _logger.error('❌ Failed to update context with response: $e');
     }
@@ -168,7 +175,7 @@ class ContextLoggerService {
   /// Sanitize API request (redact API key)
   Map<String, dynamic> _sanitizeApiRequest(Map<String, dynamic> request) {
     final sanitized = Map<String, dynamic>.from(request);
-    
+
     // Redact API key from headers
     if (sanitized.containsKey('headers')) {
       final headers = Map<String, dynamic>.from(
@@ -218,7 +225,7 @@ class ContextLoggerService {
   /// Get log directory path (for display in UI)
   Future<String?> getLogDirectoryPath() async {
     if (!_enabled || _sessionId == null) return null;
-    
+
     try {
       final directory = await _getContextDirectory();
       return directory.path;
@@ -228,4 +235,3 @@ class ContextLoggerService {
     }
   }
 }
-

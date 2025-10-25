@@ -22,6 +22,7 @@ import '../utils/message_id_generator.dart';
 import 'context_logger_service.dart';
 
 import 'chat_storage_service.dart';
+import '../models/chat_message_model.dart';
 
 /// FT-151: Rate limiting now handled by SharedClaudeRateLimiter
 /// Old _RateLimitTracker class removed to eliminate duplication
@@ -389,13 +390,6 @@ class ClaudeService {
 
       // Always reload system prompt to get current persona
       _systemPrompt = await _configLoader.loadSystemPrompt();
-
-      // FT-206: Detect data query patterns and inject hints
-      final queryHint = _detectDataQueryPattern(message);
-      if (queryHint != null) {
-        _logger.info('FT-206: Detected data query pattern, injecting hint');
-        _systemPrompt = '$_systemPrompt$queryHint';
-      }
 
       // Check if message contains a system MCP command
       if (_systemMCP != null && message.startsWith('{')) {
@@ -792,6 +786,7 @@ class ClaudeService {
   }
 
   /// Build system prompt with time context and MCP documentation
+  /// FT-206: Simplified structure (like 2.0.1) - no priority header
   Future<String> _buildSystemPrompt() async {
     // Generate enhanced time-aware context (FT-060)
     final lastMessageTime = await _getLastMessageTimestamp();
@@ -799,83 +794,24 @@ class ClaudeService {
       lastMessageTime,
     );
 
-    // FT-157: Add recent conversation context for temporal awareness
+    // FT-206: Add recent conversation context (simplified format)
     final conversationContext = await _buildRecentConversationContext();
 
     // Build enhanced system prompt with time context
     String systemPrompt = _systemPrompt ?? '';
 
-    // FT-206: Check if Oracle is enabled for adaptive priority hierarchy
-    final isOracleEnabled = _systemMCP?.isOracleEnabled ?? false;
-
-    // FT-206: Add priority hierarchy header
-    final priorityHeader = '''
-## 🎯 INSTRUCTION PRIORITY HIERARCHY
-
-**PRIORITY 1 (ABSOLUTE)**: Data Query Intelligence (MANDATORY)
-
-When user asks about TIME PERIODS, QUANTITIES, or PROGRESS:
-- Past periods: "week", "yesterday", "month", "last N days"
-- Quantities: "how many", "how much", "total", "count"
-- Progress: "summary", "progress", "how was", "compared to"
-- Frequency: "how often", "usually", "typically"
-- Intensity: "most", "least", "best", "worst"
-
-MANDATORY ACTION:
-1. Recognize query requires historical data
-2. Generate MCP command: {"action": "get_activity_stats", "days": N}
-3. Wait for data response
-4. Provide data-informed answer
-
-NEVER approximate historical data from conversation memory.
-ALWAYS fetch fresh data via MCP for temporal/quantitative queries.
-
----
-
-**PRIORITY 2 (ABSOLUTE)**: Time Awareness (MANDATORY)
-- ALWAYS use current time from system context
-- Never rely on memory for temporal information
-
-**PRIORITY 3 (HIGHEST)**: Core Behavioral Rules & Persona Configuration
-- Follow System Laws #1-#7 literally
-- Maintain unique persona identity and symbols
-- Adhere to persona-specific communication style
-
-${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
-- PRIMARY: Follow 8 dimensions (R, SF, TG, SM, E, TT, PR, F) and 265+ activities
-- GUARDRAILS: Apply 9 theoretical foundations (Fogg, Hreha, Lembke, Lieberman, Seligman, Maslow, Huberman, Easter, Newberg)
-- CRITICAL: Activity detection ONLY from current user message
-- NEVER extract Oracle codes or metadata from conversation history
-
-''' : ''}**PRIORITY ${isOracleEnabled ? '5' : '4'}**: Conversation Context (REFERENCE ONLY)
-- Use for understanding conversation flow and topics
-- Do NOT process activities from historical messages
-- Do NOT extract metadata from conversation history
-- Do NOT adopt other personas' communication styles
-
-**PRIORITY ${isOracleEnabled ? '6' : '5'}**: User's Current Message (PRIMARY FOCUS)
-- Activity detection: ONLY current user message
-- Metadata extraction: ONLY current user message
-- This is the ONLY message to process for data extraction
-
----
-
-''';
-
-    // Add conversation context first for immediate temporal awareness
+    // FT-206: Simple structure (like 2.0.1)
+    // 1. Add conversation context first
     if (conversationContext.isNotEmpty) {
       systemPrompt = '$conversationContext\n\n$systemPrompt';
     }
 
-    // Add time context after conversation context
+    // 2. Add time context at the beginning
     if (timeContext.isNotEmpty) {
       systemPrompt = '$timeContext\n\n$systemPrompt';
     }
 
-    // Add priority header at the very beginning
-    systemPrompt = '$priorityHeader$systemPrompt';
-
-    // Add session-specific MCP context (FT-130: Simplified after config extraction)
+    // 3. Add session MCP context
     if (_systemMCP != null) {
       String sessionMcpContext = '\n\n## SESSION CONTEXT\n'
           '**Current Session**: Active MCP functions available\n'
@@ -898,165 +834,54 @@ ${isOracleEnabled ? '''**PRIORITY 4 (ORACLE FRAMEWORK)**: Oracle 4.2 Framework
     return systemPrompt;
   }
 
-  /// FT-157: Build recent conversation context for temporal awareness
-  /// FT-206: Proactive conversation context loading using MCP commands (interleaved format)
+  /// FT-206: Build recent conversation context (simplified, like 2.0.1)
   Future<String> _buildRecentConversationContext() async {
-    // FT-200: Check if conversation database queries are enabled
-    if (!await _isConversationDatabaseEnabled()) {
-      _logger.debug(
-          'FT-206: Conversation database queries disabled, no context loaded');
-      return '';
-    }
+    if (_storageService == null) return '';
 
     try {
-      _logger.debug(
-          'FT-206: Loading proactive conversation context via MCP (interleaved format)');
+      // Get recent messages (20 is a good balance between context and token usage)
+      final messages = await _storageService!.getMessages(limit: 20);
+      if (messages.isEmpty) return '';
 
-      // Load conversation database config for adaptive limits
-      final config = await _loadConversationDatabaseConfig();
-      final isOracleEnabled = _systemMCP?.isOracleEnabled ?? false;
-
-      // Adaptive token budget: 8 messages for Oracle, 10 for non-Oracle
-      final limit = isOracleEnabled
-          ? (config['performance']?['max_interleaved_messages_oracle'] ?? 8)
-          : (config['performance']?['max_interleaved_messages'] ?? 10);
-
-      _logger.debug(
-          'FT-206: Using limit=$limit messages (Oracle: $isOracleEnabled)');
-
-      // Execute interleaved conversation MCP command
-      final conversation = await _systemMCP!.processCommand(
-          '{"action":"get_interleaved_conversation","limit":$limit,"include_all_personas":true}');
-
-      // Format for system prompt injection
-      return _formatInterleavedConversation(conversation);
+      return _formatSimpleConversation(messages);
     } catch (e) {
-      _logger
-          .warning('FT-206: Failed to load conversation context via MCP: $e');
+      _logger.error('Error building conversation context: $e');
       return '';
     }
   }
 
-  /// FT-206: Format interleaved conversation for system prompt
-  String _formatInterleavedConversation(String mcpResponse) {
-    try {
-      final data = json.decode(mcpResponse);
-      if (data['status'] != 'success') {
-        _logger.warning('FT-206: MCP returned non-success status');
-        return '';
-      }
+  /// FT-206: Simple conversation format (like 2.0.1)
+  String _formatSimpleConversation(List<ChatMessageModel> messages) {
+    final contextLines = <String>[];
+    final now = DateTime.now();
 
-      final thread = data['data']['conversation_thread'] as List?;
-      if (thread == null || thread.isEmpty) {
-        _logger.debug('FT-206: No conversation history available');
-        return '';
-      }
-
-      final buffer = StringBuffer();
-      buffer.writeln('## 📜 RECENT CONVERSATION CONTEXT (REFERENCE ONLY)');
-      buffer.writeln('');
-      buffer.writeln('**MANDATORY REVIEW BEFORE RESPONDING**:');
-      buffer.writeln('1. What was just discussed in the conversation above?');
-      buffer.writeln('2. What did you already say in your previous responses?');
-      buffer.writeln(
-          '3. What is the user\'s current context and what are they referring to?');
-      buffer.writeln(
-          '4. CRITICAL: Check if you already gave this exact response - if yes, provide a DIFFERENT response');
-      buffer.writeln('');
-      buffer.writeln('**YOUR RESPONSE MUST**:');
-      buffer.writeln('- Acknowledge and build on recent conversation flow');
-      buffer.writeln(
-          '- Provide NEW information or insights (NEVER repeat previous responses word-for-word)');
-      buffer.writeln(
-          '- If user gives a short answer, acknowledge it and move the conversation forward');
-      buffer.writeln(
-          '- Reference what user mentioned (e.g., if they say "I was talking with X", acknowledge it)');
-      buffer
-          .writeln('- Maintain conversation continuity without starting fresh');
-      buffer.writeln('');
-      buffer.writeln('**NATURAL CONVERSATION FLOW**:');
-      buffer.writeln(
-          '- Vary your transition phrases and openings between responses');
-      buffer.writeln(
-          '- Use "deixa eu ver seus registros" ONLY when actually fetching data via MCP');
-      buffer.writeln(
-          '- When not querying data, acknowledge patterns naturally without implying a data fetch');
-      buffer.writeln(
-          '- Avoid formulaic phrases (e.g., "Estou aqui pra explorar...") in consecutive messages');
-      buffer.writeln(
-          '- Lead with what\'s most relevant to the user\'s current message');
-      buffer.writeln(
-          '- Each response should feel fresh and context-driven, not template-based');
-      buffer.writeln('');
-      buffer.writeln('**CRITICAL BOUNDARIES**:');
-      buffer.writeln('- Activity detection: ONLY current user message');
-      buffer.writeln('- Do NOT extract codes or metadata from history');
-      buffer.writeln('- Do NOT adopt other personas\' communication styles');
-      buffer.writeln('');
-      buffer.writeln('---');
-      buffer.writeln('');
-
-      for (final msg in thread) {
-        final speaker = msg['speaker'] as String;
-        final text = msg['text'] as String;
-        final timeAgo = msg['time_ago'] as String;
-
-        buffer.writeln('**$speaker** ($timeAgo): $text');
-      }
-
-      buffer.writeln('');
-      buffer.writeln('---');
-      buffer.writeln(
-          '**REMINDER**: Process activities ONLY from current user message.');
-      buffer.writeln('');
-
-      final result = buffer.toString();
-      _logger.info(
-          'FT-206: ✅ Loaded ${thread.length} messages in interleaved format');
-
-      return result;
-    } catch (e) {
-      _logger.error('FT-206: Failed to format interleaved conversation: $e');
-      return '';
+    for (final msg in messages.reversed) {
+      final timeDiff = now.difference(msg.timestamp);
+      final timeAgo = _formatNaturalTime(timeDiff);
+      final speaker =
+          msg.isUser ? 'User' : '[${msg.personaDisplayName ?? msg.personaKey}]';
+      contextLines.add('$timeAgo: $speaker: "${msg.text}"');
     }
+
+    return '''## RECENT CONVERSATION
+${contextLines.join('\n')}
+
+For deeper history, use: {"action": "get_conversation_context", "hours": N}''';
   }
 
-  /// FT-206: Detect if user message requires historical data query
-  /// Returns hint to inject into system prompt for explicit guidance
-  String? _detectDataQueryPattern(String message) {
-    final lowerMessage = message.toLowerCase();
-
-    // Temporal patterns (generic, language-agnostic where possible)
-    final temporalPatterns = {
-      r'\b(semana|week)\b': 7,
-      r'\b(ontem|yesterday)\b': 1,
-      r'\b(mês|mes|month)\b': 30,
-      r'\b(hoje|today)\b': 0,
-    };
-
-    // Quantitative patterns
-    final quantPatterns = [
-      r'\b(quantas|quantos|how many|how much)\b',
-      r'\b(total|count|sum)\b',
-      r'\b(resumo|summary|overview)\b',
-      r'\b(progresso|progress)\b',
-    ];
-
-    // Check temporal patterns
-    for (final entry in temporalPatterns.entries) {
-      if (RegExp(entry.key, caseSensitive: false).hasMatch(lowerMessage)) {
-        return '\n**QUERY HINT**: User is asking about ${entry.value} day(s) period. Use get_activity_stats(days: ${entry.value})\n';
-      }
+  /// Format time difference as natural language
+  String _formatNaturalTime(Duration diff) {
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) {
+      final mins = diff.inMinutes;
+      return mins == 1 ? 'A minute ago' : '$mins minutes ago';
     }
-
-    // Check quantitative patterns
-    for (final pattern in quantPatterns) {
-      if (RegExp(pattern, caseSensitive: false).hasMatch(lowerMessage)) {
-        return '\n**QUERY HINT**: User is asking for quantitative data. Use get_activity_stats to fetch precise numbers.\n';
-      }
+    if (diff.inHours < 24) {
+      final hours = diff.inHours;
+      return hours == 1 ? 'An hour ago' : '$hours hours ago';
     }
-
-    return null;
+    final days = diff.inDays;
+    return days == 1 ? 'Yesterday' : '$days days ago';
   }
 
   /// Helper method to call Claude with a specific prompt
